@@ -1,8 +1,0 @@
-prefix=/home/encheng/mygit/ui/ui/devel
-
-Name: arbe_msgs
-Description: Description of arbe_msgs
-Version: 0.0.0
-Cflags: -I/home/encheng/mygit/ui/ui/devel/include
-Libs: -L${prefix}/lib 
-Requires: roscpp

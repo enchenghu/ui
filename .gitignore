@@ -1,7 +1,7 @@
 # 忽略node_modules目录
 ui/build/
 ui/.catkin_workspace 
-ui/deploy/
+ui/devel/
 ui/tmp/
 ui/.vscode
 # 忽略Logs

@@ -1,8 +1,0 @@
-prefix=/home/encheng/mygit/ui/ui/devel
-
-Name: arbe_api_common
-Description: Description of arbe_api_common
-Version: 0.0.0
-Cflags: -I/home/encheng/mygit/ui/ui/src/arbe_api_common/Utilities/inc/ -I/home/encheng/mygit/ui/ui/src/arbe_api_common/Reference_Design_Driver/inc/ -I/home/encheng/mygit/ui/ui/src/arbe_api_common/RAF_API_Library/inc/ -I/home/encheng/mygit/ui/ui/src/arbe_api_common/Common/
-Libs: -L${prefix}/lib -larbe_api_common
-Requires: roscpp

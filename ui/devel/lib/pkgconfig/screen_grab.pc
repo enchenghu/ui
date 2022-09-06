@@ -1,8 +1,0 @@
-prefix=/home/encheng/mygit/ui/ui/devel
-
-Name: screen_grab
-Description: Description of screen_grab
-Version: 0.0.2
-Cflags: -I/home/encheng/mygit/ui/ui/devel/include -I/usr/include -I/usr/include/opencv
-Libs: -L${prefix}/lib -lscreen_grab /usr/lib/x86_64-linux-gnu/libopencv_highgui.so.3.2.0
-Requires: dynamic_reconfigure nodelet roscpp sensor_msgs std_msgs
