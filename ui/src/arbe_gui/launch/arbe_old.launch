@@ -1,0 +1,27 @@
+<!--
+  arbe_phoenix_radar_driver Launch 
+-->
+<launch>
+
+	<node name="dsp_node" pkg="arbe_phoenix_radar_driver" type="dsp_node" output="screen" >
+		<param name="moment_length_in_m" value="3.0" />
+	</node>
+
+	<node name="free_space_node" pkg="arbe_phoenix_radar_driver" type="free_space_node" output="screen" required="false">
+		<param name="moment_length_in_m" value="3.0" />
+	</node>
+
+	####  for GDB launch-prefix="gdb -ex run --args" ####
+	<node name="arbe_gui" pkg="arbe_phoenix_radar_driver" type="arbe_gui" output="screen" required="true">
+		<param name="AntennaHeight" value="1.0" />
+		<param name="Mode" value = "4d" />
+		<param name="ColoringType" value = "Elevation" />
+		<param name="RangeType" value = "Mid" />
+		<param name="Threshold4d" value="15" />
+		<param name="DynamicAzimuth" value="15" />
+		<param name="DynamicElevation" value="16" />
+		<param name="MinDoppler" value="-70" />
+		<param name="MaxDoppler" value="70" />
+		<param name="RecordFileName" value="arbe-rosbag" />
+	</node>
+</launch>

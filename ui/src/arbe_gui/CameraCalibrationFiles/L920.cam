@@ -1,0 +1,6 @@
+# intrinsic (assumed 1920 x 1080)
+1526.971189792104,0,0934.046578547313
+0,1533.028974477207,0537.371259813793
+0,0,1
+#translation -- location of image center wrt antenna center [right, up, depth] (in meters)
+0,0.08,0.02

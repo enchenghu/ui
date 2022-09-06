@@ -1,0 +1,114 @@
+<!--
+  arbe_phoenix_radar_driver Launch 
+-->
+<launch>
+#enum console_level
+#{
+#  Debug = 0,
+# Info = 1,
+#  Warn = 2,
+#  Error = 3,
+#  Fatal = 4,
+#  Count = 5
+#}
+  <arg name="console_level" default="2" />
+  <arg name="Basler_cal_file" default="$(find arbe_phoenix_radar_driver)/CameraCalibrationFiles/Basler.cam" />
+  <arg name="Radar_base_freq" default="[-1,-1]"/> #-1 = don't change base freq
+  <arg name="n_radars" default="2" />
+  <arg name="yaw_in_degrees" default="[0, 180]"/>
+  <arg name="pitch_in_degrees" default="[0,0]"/>
+  <arg name="Radar_X_Offset" default="[0,0]"/>
+  <arg name="Radar_Y_Offset" default="[0,-5.0]"/>
+  <arg name="Radar_Z_Offset" default="[0.8,1.04]"/>
+  <arg name="Radar_Name" default="[Front,Back]"/>
+  <arg name="Radar_IP" default="[10.20.30.40,20.20.30.40]"/>
+  <arg name="Ctrl_Port" default="[6001,6002]"/>
+  <arg name="Data_Port" default="[6003,6004]"/>
+  <arg name="Logs_Port" default="[6010,6011]"/>
+  <arg name="moment_length_in_m" default="[3.75,1.5]"/>
+  <arg name="camera_id" default="[0,1]"/>
+  <arg name="camera_calib_file" default="[$(arg Basler_cal_file),$(arg Basler_cal_file)]"/>
+
+
+	####  for GDB launch-prefix="gdb -ex run --args" ####
+	<node name="arbe_gui" pkg="arbe_phoenix_radar_driver" type="arbe_gui" output="screen" required="true">
+		<param name="AntennaHeight" value="1.0" />
+		<param name="Mode" value = "4d" />
+		<param name="ColoringType" value = "Elevation" />
+		<param name="RangeType" value = "Mid" />
+		<param name="Threshold4d" value="15" />
+		<param name="DynamicAzimuth" value="15" />
+		<param name="DynamicElevation" value="16" />
+		<param name="MinDoppler" value="-70" />
+		<param name="MaxDoppler" value="70" />
+		<param name="RecordFileName" value="arbe-rosbag" />
+		<param name="console_level" value="$(arg console_level)" />
+		<param name="n_radars" value="$(arg n_radars)" />
+		<rosparam param="yaw_in_degrees" subst_value="True"> $(arg yaw_in_degrees) </rosparam>
+		<rosparam param="pitch_in_degrees" subst_value="True"> $(arg pitch_in_degrees) </rosparam>
+		<rosparam param="Radar_base_freq" subst_value="True"> $(arg Radar_base_freq) </rosparam>
+		<rosparam param="Radar_X_Offset" subst_value="True"> $(arg Radar_X_Offset) </rosparam>
+		<rosparam param="Radar_Y_Offset" subst_value="True"> $(arg Radar_Y_Offset) </rosparam>
+		<rosparam param="Radar_Z_Offset" subst_value="True"> $(arg Radar_Z_Offset) </rosparam>
+		<rosparam param="Radar_Name" subst_value="True"> $(arg Radar_Name) </rosparam>
+		<rosparam param="Radar_IP" subst_value="True"> $(arg Radar_IP) </rosparam>
+		<rosparam param="Ctrl_Port" subst_value="True"> $(arg Ctrl_Port) </rosparam>
+		<rosparam param="Data_Port" subst_value="True"> $(arg Data_Port) </rosparam>
+		<rosparam param="Logs_Port" subst_value="True"> $(arg Logs_Port) </rosparam>
+		<rosparam param="moment_length_in_m" subst_value="True"> $(arg moment_length_in_m) </rosparam>
+		<rosparam param="camera_id" subst_value="True"> $(arg camera_id) </rosparam>
+		<rosparam param="camera_calib_file" subst_value="True"> $(arg camera_calib_file) </rosparam>
+	</node>
+  #### IMU Driver ###########################################################
+
+  <node pkg="phidgets_imu" type="phidgets_imu_node" name="phidgets_imu_node" 
+    output="screen">
+
+    # supported data rates: 4 8 16 24 32 40 ... 1000 (in ms)
+    <param name="period" value="48"/>
+
+    # compass correction params (see http://www.phidgets.com/docs/1044_User_Guide)
+    <!-- <param name="cc_mag_field" value="0.52859"/>
+         <param name="cc_offset0" value="0.03921"/>
+         <param name="cc_offset1" value="0.19441"/>
+         <param name="cc_offset2" value="-0.03493"/>
+         <param name="cc_gain0" value="1.81704"/>
+         <param name="cc_gain1" value="1.81028"/>
+         <param name="cc_gain2" value="2.04819"/>
+         <param name="cc_t0" value="0.00142"/>
+         <param name="cc_t1" value="-0.03591"/>
+         <param name="cc_t2" value="0.00160 "/>
+         <param name="cc_t3" value="-0.05038"/>
+         <param name="cc_t4" value="-0.03942"/>
+         <param name="cc_t5" value="-0.05673"/> -->
+  </node>
+
+  #### IMU Orientation Filter ###############################################
+
+  <node pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter_node" 
+    output="screen">
+
+    <param name="use_mag" value="true"/>
+    <param name="use_magnetic_field_msg" value="true"/>
+  </node>
+
+  <arg name="zed_f9p.yaml"     doc="name of param file, e.g. rover" />
+  <arg name="/home/arbe/.config/Arbe/ublox/"      doc="directory to look for zed_f9p.yaml"
+                                  default="/home/arbe/.config/Arbe/ublox/" />
+
+  <arg name="node_name"           doc="name of this node"
+                                  default="ublox" />
+  <arg name="output"              default="screen" />
+  <arg name="respawn"             default="true" />
+  <arg name="respawn_delay"       default="30" />
+  <arg name="clear_params"        default="true" />
+
+  <node pkg="ublox_gps" type="ublox_gps" name="$(arg node_name)1"
+	output="$(arg output)"
+	clear_params="$(arg clear_params)"
+	respawn="$(arg respawn)"
+	respawn_delay="$(arg respawn_delay)">
+	<rosparam command="load"
+        	file="/home/arbe/.config/Arbe/ublox/zed_f9p1.yaml" />
+  </node>
+</launch>

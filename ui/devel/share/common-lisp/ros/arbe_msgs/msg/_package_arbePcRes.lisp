@@ -1,0 +1,10 @@
+(cl:in-package arbe_msgs-msg)
+(cl:export '(RANGE_RESOLUTION-VAL
+          RANGE_RESOLUTION
+          DOPPLER_RESOLUTION-VAL
+          DOPPLER_RESOLUTION
+          AZIMUTH_COEFFICIENT-VAL
+          AZIMUTH_COEFFICIENT
+          ELEVATION_COEFFICIENT-VAL
+          ELEVATION_COEFFICIENT
+))

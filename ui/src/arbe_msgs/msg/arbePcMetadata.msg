@@ -1,0 +1,8 @@
+arbePcRes PcResolution
+float32 range_offset
+float32 range_res_in_db
+uint32 azimuth_fft_size
+uint32 elevation_fft_size
+uint32 azimuth_fft_padding
+uint32 elevation_fft_padding
+

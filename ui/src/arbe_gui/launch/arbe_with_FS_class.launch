@@ -1,0 +1,89 @@
+<!--
+  arbe_phoenix_radar_driver Launch 
+-->
+<launch>
+	<node name="arbe_pointcloud_receiver" pkg="arbe_phoenix_radar_driver" type="arbe_pointcloud_receiver" output="screen" required="false">
+	</node>
+
+	<node name="dsp_node" pkg="arbe_phoenix_radar_driver" type="dsp_node" output="screen" >
+		<param name="moment_length_in_m" value="3.75" />
+	</node>
+
+	<node name="arbe_classification" pkg="arbe_phoenix_radar_driver" type="arbe_classification_node" output="screen">
+	<param name="model_path" value="/home/arbe/arbeROS/src/arbe_phoenix_radar_driver/arbe_gui/addons/model_w_msk.pt" />
+	</node>
+
+	<node name="free_space" pkg="arbe_phoenix_radar_driver" type="free_space_node" output="screen">
+	</node>
+
+	####  for GDB launch-prefix="gdb -ex run --args" ####
+	<node name="arbe_gui" pkg="arbe_phoenix_radar_driver" type="arbe_gui" output="screen" required="true">
+		<param name="AntennaHight" value="1.0" />
+		<param name="Mode" value = "4d" />
+		<param name="ColoringType" value = "Elevation" />
+		<param name="RangeType" value = "Mid" />
+		<param name="Threshold3d" value="25" />
+		<param name="Threshold4d" value="25" />
+		<param name="DynamicAzimuth" value="15" />
+		<param name="DynamicElevation" value="18" />
+		<param name="MinDoppler" value="-70" />
+		<param name="MaxDoppler" value="70" />
+		<param name="RecordFileName" value="arbe-rosbag" />
+	</node>
+
+  #### IMU Driver ###########################################################
+
+  <node pkg="phidgets_imu" type="phidgets_imu_node" name="phidgets_imu_node" 
+    output="screen">
+
+    # supported data rates: 4 8 16 24 32 40 ... 1000 (in ms)
+    <param name="period" value="48" />
+
+    # compass correction params (see http://www.phidgets.com/docs/1044_User_Guide)
+    <!-- <param name="cc_mag_field" value="0.52859"/>
+         <param name="cc_offset0" value="0.03921"/>
+         <param name="cc_offset1" value="0.19441"/>
+         <param name="cc_offset2" value="-0.03493"/>
+         <param name="cc_gain0" value="1.81704"/>
+         <param name="cc_gain1" value="1.81028"/>
+         <param name="cc_gain2" value="2.04819"/>
+         <param name="cc_t0" value="0.00142"/>
+         <param name="cc_t1" value="-0.03591"/>
+         <param name="cc_t2" value="0.00160 "/>
+         <param name="cc_t3" value="-0.05038"/>
+         <param name="cc_t4" value="-0.03942"/>
+         <param name="cc_t5" value="-0.05673"/> -->
+  </node>
+
+  #### IMU Orientation Filter ###############################################
+
+  <node pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter_node" 
+    output="screen">
+
+    <param name="use_mag" value="true"/>
+    <param name="use_magnetic_field_msg" value="true"/>
+    <param name="remove_gravity_vector" value="true"/>
+  </node>
+
+
+  <arg name="zed_f9p.yaml"     doc="name of param file, e.g. rover" />
+  <arg name="/home/arbe/.config/Arbe/ublox/"      doc="directory to look for zed_f9p.yaml"
+                                  default="/home/arbe/.config/Arbe/ublox/" />
+
+  <arg name="node_name"           doc="name of this node"
+                                  default="ublox" />
+  <arg name="output"              default="screen" />
+  <arg name="respawn"             default="true" />
+  <arg name="respawn_delay"       default="30" />
+  <arg name="clear_params"        default="true" />
+
+  <node pkg="ublox_gps" type="ublox_gps" name="$(arg node_name)1"
+	output="$(arg output)"
+	clear_params="$(arg clear_params)"
+	respawn="$(arg respawn)"
+	respawn_delay="$(arg respawn_delay)">
+	<rosparam command="load"
+        	file="/home/arbe/.config/Arbe/ublox/zed_f9p1.yaml" />
+  </node>
+
+</launch>

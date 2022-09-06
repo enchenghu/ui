@@ -1,0 +1,2 @@
+arbeNewPcMsg pc
+bool[] valid

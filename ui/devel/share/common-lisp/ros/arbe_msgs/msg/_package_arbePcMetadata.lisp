@@ -1,0 +1,16 @@
+(cl:in-package arbe_msgs-msg)
+(cl:export '(PCRESOLUTION-VAL
+          PCRESOLUTION
+          RANGE_OFFSET-VAL
+          RANGE_OFFSET
+          RANGE_RES_IN_DB-VAL
+          RANGE_RES_IN_DB
+          AZIMUTH_FFT_SIZE-VAL
+          AZIMUTH_FFT_SIZE
+          ELEVATION_FFT_SIZE-VAL
+          ELEVATION_FFT_SIZE
+          AZIMUTH_FFT_PADDING-VAL
+          AZIMUTH_FFT_PADDING
+          ELEVATION_FFT_PADDING-VAL
+          ELEVATION_FFT_PADDING
+))

@@ -1,0 +1,7 @@
+bool slam_on_camera
+bool disp_dist_on_cam
+bool color_by_class
+bool show_classification
+bool disp_funnel
+bool disp_FS_on_cam
+bool disp_slam_eco_mode

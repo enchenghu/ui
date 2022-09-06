@@ -1,0 +1,8 @@
+<!--
+  arbe_phoenix_radar_driver Slam CAN Publisher Launch 
+-->
+<launch>
+	<node name="arbe_slam_can_publisher" pkg="arbe_phoenix_radar_driver" type="arbe_slam_can_publisher" output="screen" required="false">
+		<param name="can_port" value = "vcan0" />
+	</node>
+</launch>

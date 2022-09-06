@@ -1,0 +1,9 @@
+float32 d_perp_th
+float32 d_par_th
+float32 dX_dot_th
+float32 dY_dot_th
+float32 dR_dot_th
+float32 dR_dot_2_th
+float32 tot_th
+float32 dR_weakMatch
+float32 dphi_weakMatch_deg

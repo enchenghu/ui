@@ -1,0 +1,8 @@
+prefix=/home/encheng/mygit/ui/ui/devel
+
+Name: arbe_phoenix_radar_driver
+Description: Description of arbe_phoenix_radar_driver
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib -limage_radar_driver
+Requires: message_runtime roscpp

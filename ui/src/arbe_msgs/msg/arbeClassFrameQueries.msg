@@ -1,0 +1,5 @@
+std_msgs/Header Header
+arbeClassificationMetadata class_metadata
+uint16 frame_counter
+arbeClassSingleQuery[] queries
+uint16 mutual_len

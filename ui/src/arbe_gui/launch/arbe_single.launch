@@ -1,0 +1,64 @@
+<!--
+  arbe_phoenix_radar_driver Launch 
+-->
+<launch>
+#enum console_level
+#{
+#  Debug = 0,
+# Info = 1,
+#  Warn = 2,
+#  Error = 3,
+#  Fatal = 4,
+#  Count = 5
+#}
+  <arg name="console_level" default="2" />
+  <arg name="Basler_cal_file" default="$(find arbe_phoenix_radar_driver)/CameraCalibrationFiles/Basler.cam" />
+  <arg name="Radar_base_freq" default="[-1]"/> #-1 = don't change base freq
+  <arg name="n_radars" default="1" />
+  <arg name="yaw_in_degrees" default="[0]"/>
+  <arg name="pitch_in_degrees" default="[0]"/>
+  <arg name="Radar_X_Offset" default="[0]"/>
+  <arg name="Radar_Y_Offset" default="[0]"/>
+  <arg name="Radar_Z_Offset" default="[1.05]"/>
+  <arg name="Radar_Name" default="[Front]"/>
+  <arg name="Radar_IP" default="[10.20.30.41]"/>
+  <arg name="Ctrl_Port" default="[6012]"/>
+  <arg name="Data_Port" default="[6013]"/>
+  <arg name="Logs_Port" default="[6014]"/>
+  <arg name="moment_length_in_m" default="[4.4]"/>
+  <arg name="camera_id" default="[1]"/>
+  <arg name="camera_calib_file" default="[$(arg Basler_cal_file)]"/>
+
+
+	####  for GDB launch-prefix="gdb -ex run --args" ####
+	<node name="arbe_gui" pkg="arbe_phoenix_radar_driver" type="arbe_gui" output="screen" required="true">
+		<param name="AntennaHeight" value="1.0" />
+		<param name="Mode" value = "4d" />
+		<param name="ColoringType" value = "Elevation" />
+		<param name="RangeType" value = "Mid" />
+		<param name="Threshold4d" value="15" />
+		<param name="DynamicAzimuth" value="15" />
+		<param name="DynamicElevation" value="16" />
+		<param name="MinDoppler" value="-70" />
+		<param name="MaxDoppler" value="70" />
+		<param name="RecordFileName" value="arbe-rosbag" />
+		<param name="console_level" value="$(arg console_level)" />
+		<param name="n_radars" value="$(arg n_radars)" />
+		<rosparam param="yaw_in_degrees" subst_value="True"> $(arg yaw_in_degrees) </rosparam>
+		<rosparam param="pitch_in_degrees" subst_value="True"> $(arg pitch_in_degrees) </rosparam>
+		<rosparam param="Radar_base_freq" subst_value="True"> $(arg Radar_base_freq) </rosparam>
+		<rosparam param="Radar_X_Offset" subst_value="True"> $(arg Radar_X_Offset) </rosparam>
+		<rosparam param="Radar_Y_Offset" subst_value="True"> $(arg Radar_Y_Offset) </rosparam>
+		<rosparam param="Radar_Z_Offset" subst_value="True"> $(arg Radar_Z_Offset) </rosparam>
+		<rosparam param="Radar_Name" subst_value="True"> $(arg Radar_Name) </rosparam>
+		<rosparam param="Radar_IP" subst_value="True"> $(arg Radar_IP) </rosparam>
+		<rosparam param="Ctrl_Port" subst_value="True"> $(arg Ctrl_Port) </rosparam>
+		<rosparam param="Data_Port" subst_value="True"> $(arg Data_Port) </rosparam>
+		<rosparam param="Logs_Port" subst_value="True"> $(arg Logs_Port) </rosparam>
+		<rosparam param="moment_length_in_m" subst_value="True"> $(arg moment_length_in_m) </rosparam>
+		<rosparam param="camera_id" subst_value="True"> $(arg camera_id) </rosparam>
+		<rosparam param="camera_calib_file" subst_value="True"> $(arg camera_calib_file) </rosparam>
+	</node>
+
+
+</launch>

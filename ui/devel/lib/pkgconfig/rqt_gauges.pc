@@ -1,0 +1,8 @@
+prefix=/home/encheng/mygit/ui/ui/devel
+
+Name: rqt_gauges
+Description: Description of rqt_gauges
+Version: 1.0.7
+Cflags: -I/home/encheng/mygit/ui/ui/src/gauges/include
+Libs: -L${prefix}/lib -lrqt_gauges -lqcgaugewidget
+Requires: roscpp rqt_gui rqt_gui_cpp std_msgs

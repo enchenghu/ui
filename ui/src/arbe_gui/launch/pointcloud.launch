@@ -1,0 +1,10 @@
+<!--
+  arbe_phoenix_radar_driver Launch 
+-->
+<launch>
+    ####  for GDB launch-prefix="gdb -ex run --args" ####
+    <node name="arbe_pointcloud_receiver" pkg="arbe_phoenix_radar_driver" type="arbe_pointcloud_receiver" output="screen" launch-prefix="gdb -ex run --args">
+	<param name="socket_file_descriptor" value="0" />
+    </node>
+</launch>
+

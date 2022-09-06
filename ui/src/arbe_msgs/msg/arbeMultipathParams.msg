@@ -1,0 +1,9 @@
+    bool filterEnable
+    uint16 r_th
+    uint16 v_th
+    uint32 power_th
+    uint16 rvTot_th
+    uint16 az_th
+    uint16 el_th
+    uint16 mirror_rTh
+    uint16 min_mirror_frames

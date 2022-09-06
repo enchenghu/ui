@@ -1,0 +1,7 @@
+<!--
+  arbe_phoenix_radar_driver Launch 
+ -->
+<launch>
+	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find arbe_phoenix_radar_driver)/launch/arbe-short-3d.rviz"/>
+</launch>
+

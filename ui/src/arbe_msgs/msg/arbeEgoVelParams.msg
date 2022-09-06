@@ -1,0 +1,15 @@
+bool enable
+uint32 egoCalibRequired
+float32 leftSigmaCoeff
+float32 rightSigmaCoeff
+float32 zeroVelEnv
+float32 leftSigma_withinZeroEnv
+float32 rightSigma_withinZeroEnv
+float32 spur_th_db
+bool  spurRemoveEnable
+float32 lucky_fraction
+bool  luckyCalibEnable
+float32 calib_vel_m2sec
+float32 L_for_omega
+float32 max_installation_offset
+float32 min_speed_ls

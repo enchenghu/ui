@@ -1,0 +1,25 @@
+bool show_dopp_amb_box
+bool filter_dopp_amb
+bool detector
+uint16 detectorBackOff
+bool StatTargetRemove
+bool AmbTargetRemove
+bool enableDoubleRecording
+bool isRecording
+bool isNewFile
+bool cleanMode 
+
+arbeGpsData gpsData
+arbeImuData imuData
+arbeHornData hornParams
+arbeMultipathParams multipathParams
+arbeVisParams visParams
+arbeClusteringParams clusteringParams
+arbeMatchParams matchParams
+arbeObjTrackParams objTrckParams
+arbeEgoVelParams egoVelParams
+arbeMagCalParams magCalParams
+arbeVerbosityParams verbosityParams
+
+uint8 rfu_out
+
