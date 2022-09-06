@@ -132,11 +132,11 @@ void imu_egoYaw_cb(float yaw);
 void gps_egoVel_cb(float gps_speed);
 void pub_egoVel_cb(float egoVel, float w_z);
 
-class viewpanel: public QWidget
+class viewpanel: public QTabWidget
 {
 Q_OBJECT
 public:
-	viewpanel( QWidget* parent = 0 );
+	viewpanel( QTabWidget* parent = 0 );
 	virtual ~viewpanel();
 	void on_cmnd_line_view_callback(std_msgs::UInt8 msg );
 	void on_cmnd_line_colorcoding_callback(std_msgs::UInt8 msg );
@@ -152,6 +152,7 @@ public:
 	void printView();
     bool get_3rd_prs( void );
     static viewpanel* Instance();
+    //static viewpanel* Instance();
 	void on_status_mesage(std_msgs::String msg);
 	void register_pointcloud_displays(int radar_num);
 	void register_slam_displays(int radar_num);

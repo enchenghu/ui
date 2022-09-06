@@ -380,7 +380,15 @@ MainWindow::MainWindow()
 	int height = 300;
 	viewPanel->setMinimumSize(width, height);
 
-	this->layout()->addWidget(viewPanel);
+	//this->layout()->addWidget(viewPanel);
+	///this->addDockWidget(Qt::AllDockWidgetAreas, viewPanel);
+
+#if 0
+	QDockWidget* dockDebug = new QDockWidget(tr("Lidar Debug window"), this);
+    dockDebug->setFeatures(QDockWidget::DockWidgetClosable );
+	this->tabifyDockWidget(viewPanel,  dockDebug);
+#endif
+
 	setCentralWidget(viewPanel);
 
 
@@ -1605,10 +1613,11 @@ void MainWindow::createActions()
 	setRecFolderAct->setStatusTip(tr("Set default path for recording"));
 	connect(setRecFolderAct, SIGNAL(triggered()), this, SLOT(setSaveFolder()));
 
+#if 0
 	loadCamCalibAct = new QAction(tr("Load &camera calibration"), this);
 	loadCamCalibAct->setStatusTip(tr("Load camera calibration from file"));
 	connect(loadCamCalibAct, SIGNAL(triggered()), this, SLOT(load_camera_calibration()));
-
+#endif
 	closeAct = new QAction(tr("&Close Recording"), this);
 	closeAct->setStatusTip(tr("Stop Playback"));
 	connect(closeAct, SIGNAL(triggered()), this, SLOT(stopPlayback()));

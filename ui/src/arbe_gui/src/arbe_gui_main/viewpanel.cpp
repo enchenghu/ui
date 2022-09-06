@@ -332,8 +332,8 @@ void pub_radar_height_and_pitch(int index)
 }
 
 /* Constructor for the viewpanel. */
-viewpanel::viewpanel( QWidget* parent )
-	: QWidget( parent )
+viewpanel::viewpanel(QTabWidget* parent )
+	: QTabWidget( parent )
 {
 	const QSize button_size = QSize(200, 30);
 	const QSize view_button_side = QSize(60, 25);
@@ -370,14 +370,6 @@ viewpanel::viewpanel( QWidget* parent )
 #if ONLY_SHOW_UI
 	setradarXOffset( radar_x_offset * 100);
 #endif
-
-//	radar_y_offset_label = new QLabel( "Y Offset("+QString::number( radar_y_offset * 100)+"cm)" );
-//	radar_y_offset_slider = new QSlider( Qt::Horizontal );
-//	radar_y_offset_slider->setMinimum( -500 );
-//	radar_y_offset_slider->setMaximum( 500 );
-//	setradarYOffset( radar_y_offset * 100);
-
-
 #if 0
 	radar_z_offset_label = new QLabel( "Z Offset("+QString::number( radar_z_offset * 100)+"cm)" );
 	radar_z_offset_slider = new QSlider( Qt::Horizontal );
@@ -550,11 +542,6 @@ viewpanel::viewpanel( QWidget* parent )
 
 #endif
 
-	//view_label = new QLabel( "View Angle:");
-
-/* dock plane*/
-
-	dock = new QDockWidget(tr("Lidar Ui Mainwindow"), this);
 #if 0
 	delete dock->titleBarWidget(); 
 	QWidget *widget_empty = new QWidget();
@@ -562,6 +549,7 @@ viewpanel::viewpanel( QWidget* parent )
 #endif
 	//dock_param = new QDockWidget(tr("para show Panel"), this);
 	QWidget* multiWidget = new QWidget();
+	QWidget* multiWidget_new = new QWidget();
 	//QVBoxLayout* controls = new QVBoxLayout ;
 	QGridLayout* controls = new QGridLayout ;
     //controls->setColumnStretch(0, 1);  
@@ -755,7 +743,7 @@ for(int j = 0;  j < 3; j++){
 	//multiWidget->setMaximumHeight(140);
 
 	QPushButton *config_button = new QPushButton("config&ure", this);
-	radar_connect_button = new QPushButton("Radar &Connect", this);
+	radar_connect_button = new QPushButton("Lidar &Connect", this);
 	record_button = new QPushButton("Rec&ord", this);
 	screen_record_button = new QPushButton("Screen R&ecord", this);
 	radar_start_stop_button = new QPushButton("Start &Tx", this);
@@ -778,7 +766,7 @@ for(int j = 0;  j < 3; j++){
 	selection_panel_ = new rviz::SelectionPanel();
 	controls->addWidget ( controlsBox, 0, 0, 1, 2, Qt::AlignLeft);
 	controls->addWidget ( render_panel_, 1,  0,  5,  5);
-	controls->addWidget ( selection_panel_, 1,  0, 5, 1, Qt::AlignRight);
+	controls->addWidget ( selection_panel_, 1,  0, 5, 1, Qt::AlignLeft);
 
 	//QGridLayout* radar_layout = new QGridLayout;
     QHBoxLayout* buttons_layout = new QHBoxLayout();
@@ -789,19 +777,15 @@ for(int j = 0;  j < 3; j++){
 	buttons_layout->addWidget( screen_record_button );
 	buttons_layout->addWidget( bookmark_button );
 	buttons_layout->addWidget( radar_pause_button );
-	controls->addLayout(buttons_layout, 6, 0);
+	controls->addLayout(buttons_layout, 6, 0, 1, 5);
 	multiWidget->setLayout(controls);
+	//multiWidget_new->setLayout(controls);
 
 	//multiWidget->setMaximumHeight(140);
-	dock->setFeatures(QDockWidget::DockWidgetClosable );
-	dock->setWidget(multiWidget);
-	/**/
-	QDockWidget* dockDebug = new QDockWidget(tr("Lidar Debug window"), this);
-    dockDebug->setFeatures(QDockWidget::DockWidgetClosable );
-	//this->tabifyDockWidget(dock,  dockDebug);
-
-	QVBoxLayout* main_layout = new QVBoxLayout;
-	main_layout->addWidget( dock);
+	//this->setFeatures(QDockWidget::DockWidgetClosable );
+	//this->setWidget(multiWidget);
+	this->addTab(multiWidget,  "Lidar Ui Mainwindow");
+	this->addTab(multiWidget_new,  "Lidar Debug Mainwindow");
 
 #if 0
 	radar_layout->addWidget( render_panel_ ,0,0,5,5);
@@ -828,7 +812,7 @@ for(int j = 0;  j < 3; j++){
 	std::cout << " until here " <<  __LINE__ << std::endl;
 
 	/* Set the top-level layout for this viewpanel widget. */
-	setLayout( main_layout );
+	//setLayout( main_layout );
 
 	/* Initialize the main RViz classes */
 	manager_ = new rviz::VisualizationManager( render_panel_ );
@@ -1497,7 +1481,7 @@ void viewpanel::setColoring( void )
 		azimuth_bin_label->setEnabled(false);
 		azimuth_bin_slider->setEnabled(false);
 	}
-	dock->show();
+	//dock->show();
 	float cc_min, cc_max;
 	Color_Coding_Min_Max::Instance()->get_converted_values(ColoringType, cc_min, cc_max);
 	setMinColorCoding((int)cc_min);
@@ -1561,7 +1545,7 @@ void viewpanel::setPreRadarSliders( void )
 
 void viewpanel::show_configuration_dock( void )
 {
-	dock->show();
+	//dock->show();
 }
 
 void viewpanel::screen_record( void )
@@ -3290,7 +3274,7 @@ viewpanel* viewpanel::Instance()
 {
 	std::cout << " until here " <<  __LINE__ << std::endl;
     if (!m_pInstance)
-        m_pInstance = new viewpanel;
+        m_pInstance = new viewpanel();
 
     return m_pInstance;
 }
