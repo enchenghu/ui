@@ -178,8 +178,7 @@ src/arbe_gui_main/common.cpp
 src/arbe_gui_main/terminal.cpp
 src/arbe_gui_main/ctkrangeslider.cpp
 src/arbe_gui_main/Per_radar_settings.cpp
-
-
+src/arbe_gui_main/osc_chart.cpp
 #src/ArbeApiCommon/RAF_API_Library/src/Raf_Api.c
 #src/ArbeApiCommon/RAF_API_Library/src/User_Extended.c
 #src/ArbeApiCommon/Utilities/src/Utils.c

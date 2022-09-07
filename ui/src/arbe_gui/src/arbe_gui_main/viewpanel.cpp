@@ -549,7 +549,6 @@ viewpanel::viewpanel(QTabWidget* parent )
 #endif
 	//dock_param = new QDockWidget(tr("para show Panel"), this);
 	QWidget* multiWidget = new QWidget();
-	QWidget* multiWidget_new = new QWidget();
 	//QVBoxLayout* controls = new QVBoxLayout ;
 	QGridLayout* controls = new QGridLayout ;
     //controls->setColumnStretch(0, 1);  
@@ -559,8 +558,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	//QVBoxLayout* views = new QVBoxLayout;
 	//views_layout->addWidget( view_label, 0, 6);
 /*  view box */
-	QGroupBox *viewsBox = new QGroupBox(tr("Data indicators:"));
-	QGridLayout* views_layout = new QGridLayout;
+
 #if 0
 	car_view_button = new QPushButton("Car", this);
 	car_view_button->setFixedSize(view_button_side);
@@ -571,6 +569,8 @@ viewpanel::viewpanel(QTabWidget* parent )
 	side_view_button = new QPushButton("3rd prs.", this);
 	side_view_button->setFixedSize(view_button_side);
 #endif
+QGroupBox *viewsBox = new QGroupBox(tr("Data indicators:"));
+QGridLayout* views_layout = new QGridLayout;
 std::vector<QLabel* > paraLabel;
 std::vector<QTextEdit* > paraText;
 for(int i = 0 ; i < 21 ; i++){
@@ -780,17 +780,12 @@ for(int j = 0;  j < 3; j++){
 	controls->addLayout(buttons_layout, 6, 0, 1, 5);
 	multiWidget->setLayout(controls);
 	//multiWidget_new->setLayout(controls);
-
 	//multiWidget->setMaximumHeight(140);
 	//this->setFeatures(QDockWidget::DockWidgetClosable );
 	//this->setWidget(multiWidget);
 	this->addTab(multiWidget,  "Lidar Ui Mainwindow");
-	this->addTab(multiWidget_new,  "Lidar Debug Mainwindow");
 
-#if 0
-	radar_layout->addWidget( render_panel_ ,0,0,5,5);
-	radar_layout->addWidget( selection_panel_ ,0,4,5,1,Qt::AlignRight);
-#endif
+	CreatDebugWindow();
 
 	overlay_text_label = new QLabel;
 	overlay_text_label->setAutoFillBackground(true);
@@ -3277,4 +3272,121 @@ viewpanel* viewpanel::Instance()
         m_pInstance = new viewpanel();
 
     return m_pInstance;
+}
+
+
+void viewpanel::CreatDebugWindow()
+{
+	/* Debug window*/ 
+	QWidget* multiWidget_new = new QWidget();
+	QGroupBox *chartADCBox = new QGroupBox(tr("ADC  chart:"));
+	QGridLayout* chartADCLayout = new QGridLayout ;
+	QGroupBox *chartFFTBox = new QGroupBox(tr("FFT  chart:"));
+	QGridLayout* chartFFTLayout = new QGridLayout ;
+
+	std::cout << "this->width() is "  << this->width() << " this->height() is " << this->height() << std::endl;
+
+    OSC_chart *label_OSC_0 = new OSC_chart(this);
+    label_OSC_0->set_chart(10,20,this->width() /  2 -20,this->height()  / 2-20);
+    label_OSC_0->Add_Line_Data(0, 100);
+    label_OSC_0->View_Chart();
+	chartADCLayout->addWidget(label_OSC_0,  0 , 0);
+	chartADCBox->setLayout(chartADCLayout);
+#if 1
+    OSC_chart *label_OSC_1 = new OSC_chart(this);
+    label_OSC_1->set_chart(10,20,this->width() /  2 - 20,this->height() / 2 - 20);
+    label_OSC_1->Add_Line_Data(0, 100);
+    label_OSC_1->View_Chart();
+	chartFFTLayout->addWidget(label_OSC_1,  0, 0);
+	chartFFTBox->setLayout(chartFFTLayout);
+#endif
+	QGridLayout* main_show= new QGridLayout ;
+
+	QVBoxLayout* charts= new QVBoxLayout ;
+	charts->addWidget(chartADCBox);
+	charts->addWidget(chartFFTBox);
+
+	QHBoxLayout* configs = new QHBoxLayout ;
+	QGroupBox *addrConfigsBox = new QGroupBox(tr("addr configs:"));
+	QGroupBox *settingBox = new QGroupBox(tr("settings:"));
+	QGroupBox *settingADCBox = new QGroupBox(tr("ADC:"));
+	QGroupBox *settingFFTBox = new QGroupBox(tr("FFT:"));
+
+	QGridLayout* addrConfigLayout = new QGridLayout;
+
+	QVBoxLayout* settingLayout = new QVBoxLayout;
+	QGridLayout* settingADCLayout = new QGridLayout;
+	QGridLayout* settingFFTLayout = new QGridLayout;
+
+
+	std::vector<QLabel* > paraLabel;
+	std::vector<QLineEdit* > paraReadText;
+	std::vector<QLineEdit* > paraWriteText;
+	std::vector<QLineEdit* > paraAddrText;
+
+	QPushButton * writeAddrbutton = new QPushButton("W&rite");
+	QPushButton * readAddrbutton = new QPushButton("R&ead");
+
+	QPushButton * settingADCSavebutton = new QPushButton("save  data");
+	QPushButton * settingADCConfigbutton = new QPushButton("config");
+	QPushButton * settingFFTSavebutton = new QPushButton("save  data");
+	QPushButton * settingFFTConfigbutton = new QPushButton("config");
+	settingADCLayout->addWidget(settingADCSavebutton, 0, 0, Qt::AlignTop | Qt::AlignLeft);
+	settingADCLayout->addWidget(settingADCConfigbutton, 0, 1, Qt::AlignTop | Qt::AlignLeft);
+	settingADCBox->setLayout(settingADCLayout);
+	settingFFTLayout->addWidget(settingFFTSavebutton, 0, 0, Qt::AlignTop | Qt::AlignLeft);
+	settingFFTLayout->addWidget(settingFFTConfigbutton, 0, 1, Qt::AlignTop | Qt::AlignLeft);
+	settingFFTBox->setLayout(settingFFTLayout);
+
+	settingLayout->addWidget(settingADCBox);
+	settingLayout->addWidget(settingFFTBox);
+	settingBox->setLayout(settingLayout);
+
+
+	QLabel* addrLabel = new QLabel("Addr");
+	QLabel* regLabel = new QLabel("name");
+	QLabel* valueLabel = new QLabel("Value");
+	QLabel* valueLabel1 = new QLabel("Value");
+
+	addrConfigLayout->addWidget(regLabel, 0 ,  0, 1,  1, Qt::AlignTop | Qt::AlignLeft);
+	addrConfigLayout->addWidget(addrLabel, 0 ,  1, 2,  3, Qt::AlignTop | Qt::AlignLeft);
+	addrConfigLayout->addWidget(valueLabel, 0 ,  2, 2,  3, Qt::AlignTop | Qt::AlignLeft);
+	addrConfigLayout->addWidget(valueLabel1, 0 ,  3, 2,  3, Qt::AlignTop | Qt::AlignLeft);
+	//addrConfigLayout->addWidget(readAddrbutton, 0 ,  3);
+
+	for(int i = 0 ; i < 5 ; i++){
+		paraLabel.emplace_back(new QLabel("para  "+QString::number( i )));
+		paraWriteText.emplace_back(new QLineEdit);
+		paraWriteText[i]->setText(QString::number( i ));
+		paraAddrText.emplace_back(new QLineEdit);
+		paraAddrText[i]->setText(QString::number( i ));
+		//paraWriteText[i]->setPlaceholderText("please input ...");
+		//paraWriteText[i]->setValidator( new QIntValidator(-50, 50, this) );
+		paraReadText.emplace_back(new QLineEdit);
+		paraReadText[i]->setReadOnly(true);
+		//paraWriteText[i]->setPlaceholderText("");
+	}
+
+	for(int j = 0;  j < 5; j++){
+		addrConfigLayout->addWidget(paraLabel[j], j + 1, 0, 1,  1, Qt::AlignTop | Qt::AlignLeft);
+		addrConfigLayout->addWidget(paraAddrText[j], j + 1, 1, 2,  3, Qt::AlignTop | Qt::AlignLeft);
+		addrConfigLayout->addWidget(paraWriteText[j], j + 1, 2, 2,  3, Qt::AlignTop | Qt::AlignLeft);
+		addrConfigLayout->addWidget(paraReadText[j], j + 1, 3, 2,  3, Qt::AlignTop | Qt::AlignLeft);
+	}
+
+	addrConfigLayout->addWidget(writeAddrbutton, 6, 2, 2,  3, Qt::AlignTop | Qt::AlignLeft);
+	addrConfigLayout->addWidget(readAddrbutton, 6, 3, 2,  3, Qt::AlignTop | Qt::AlignLeft);
+
+	addrConfigsBox->setLayout(addrConfigLayout);
+
+	configs->addWidget(settingBox);
+	configs->addWidget(addrConfigsBox);
+
+	main_show->addLayout(charts, 0, 0 );
+	main_show->addLayout(configs, 0, 1);
+
+	multiWidget_new->setLayout(main_show);
+
+	this->addTab(multiWidget_new,  "Lidar Debug Mainwindow");
+
 }

@@ -1328,7 +1328,7 @@ void MainWindow::ConfigDialog()
 
 	QDialog config_dialog(this);
 	config_dialog.setWindowModality(Qt::WindowModal); 
-	config_dialog.setWindowTitle(tr("Systen Settings"));
+	config_dialog.setWindowTitle(tr("System Settings"));
 	config_dialog.setWindowFlags(Qt::Dialog | Qt::Desktop | Qt::WindowStaysOnTopHint);
 	config_dialog.resize(300, 300);
 

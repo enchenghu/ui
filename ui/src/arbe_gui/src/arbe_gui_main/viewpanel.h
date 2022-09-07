@@ -76,6 +76,8 @@
 #include <arbe_msgs/arbeGUIsettings.h>
 #include <arbe_msgs/arbeNewPcMsg.h>
 
+#include "osc_chart.h"
+
 #define MAX_RADARS 10
 
 namespace rviz
@@ -250,6 +252,7 @@ private Q_SLOTS:
     void calc_ant_height_tilt();
 
 private:
+	void CreatDebugWindow();
 	rviz::VisualizationManager* manager_;
 	rviz::RenderPanel* render_panel_;
 	rviz::SelectionPanel* selection_panel_;
