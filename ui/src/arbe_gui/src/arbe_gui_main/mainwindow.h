@@ -165,6 +165,7 @@ private:
 	QAction *exitAct;
 	QAction *cutAct;
 	QAction *aboutAct;
+	QAction *updateAct;
 	QAction *aboutQtAct;
 	QAction *configAct;
 	QAction *debugAct;

@@ -335,455 +335,12 @@ void pub_radar_height_and_pitch(int index)
 viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent )
 {
-	const QSize button_size = QSize(200, 30);
-	const QSize view_button_side = QSize(60, 25);
-	const QSize slider_size = QSize(200, 20);
 
 #if ONLY_SHOW_UI
 	init_pubs();
 #endif
-	/* Construct and lay out labels and slider controls. */
 
-#if 0
-	thickness_label = new QLabel( "Point Thickness (40cm)" );
-	thickness_slider = new QSlider( Qt::Horizontal );
-	thickness_slider->setMinimum( 1 );
-	thickness_slider->setMaximum( 200 );
-	//thickness_slider->setFixedSize(slider_size);
-	//int default_cell_size = grid_cell_size;
-	cell_size_label = new QLabel( "Grid Cell Size(" + QString::number( grid_cell_size ) + "m)" );
-	cell_size_slider = new QSlider( Qt::Horizontal );
-	cell_size_slider->setMinimum( 1 );
-	cell_size_slider->setMaximum( 100 );
-
-	decay_time_label = new QLabel( "Points Decay Time("+QString::number( DetectionMemoryTime )+"msec)" );
-	QSlider* decay_time_slider = new QSlider( Qt::Horizontal );
-	decay_time_slider->setMinimum( 0 );
-	decay_time_slider->setMaximum( 500 );
-
-	radar_x_offset_label = new QLabel( "X Offset("+QString::number( radar_x_offset * 100)+"cm)" );
-	radar_x_offset_slider = new QSlider( Qt::Horizontal );
-	radar_x_offset_slider->setMinimum( -500 );
-	radar_x_offset_slider->setMaximum( 500 );
-
-#endif
-#if ONLY_SHOW_UI
-	setradarXOffset( radar_x_offset * 100);
-#endif
-#if 0
-	radar_z_offset_label = new QLabel( "Z Offset("+QString::number( radar_z_offset * 100)+"cm)" );
-	radar_z_offset_slider = new QSlider( Qt::Horizontal );
-	radar_z_offset_slider->setMinimum( -500 );
-	radar_z_offset_slider->setMaximum( 500 );
-	setradarZOffset( radar_z_offset * 100);
-	std::cout << " until here " <<  __LINE__ << std::endl;
-
-	radar_yaw_angle_label = new QLabel( "Yaw Angle ("+QString::number( (int)(radar_yaw_angle/3.1415*180) )+" deg)" );
-	radar_yaw_angle_slider = new QSlider( Qt::Horizontal );
-	radar_yaw_angle_slider->setMinimum( -180 );
-	radar_yaw_angle_slider->setMaximum( 180 );
-	setRadarYawAngle(radar_yaw_angle/*/3.1415*180*/);
-	std::cout << " until here " <<  __LINE__ << std::endl;
-
-	radar_pitch_angle_label = new QLabel( "Pitch ("+QString::number( (int)(radar_pitch_angle/3.1415*180/10) )+" deg)" );
-	radar_pitch_angle_slider = new QSlider( Qt::Horizontal );
-	radar_pitch_angle_slider->setMinimum( -100 );
-	radar_pitch_angle_slider->setMaximum( 100 );
-	setRadarPitchAngle(radar_pitch_angle/*/3.1415*180*/);
-	std::cout << " until here " <<  __LINE__ << std::endl;
-
-
-#endif
-
-	QLabel* coloring_label = new QLabel( "Color By" );
-	ColoringCombo = new QComboBox;
-	ColoringCombo->addItem(tr("Doppler"));
-	ColoringCombo->addItem(tr("Doppler Gradient"));
-	ColoringCombo->addItem(tr("Amplitude"));
-	ColoringCombo->addItem(tr("Amplitude-Flat"));
-	ColoringCombo->addItem(tr("Elevation"));
-	ColoringCombo->addItem(tr("Range/Doppler"));
-#if 0
-	azimuth_bin_label = new QLabel( "Azimuth Bin ("+QString::number( DEFAULT_AZIMUTH_BIN )+")" );
-	azimuth_bin_slider = new QSlider( Qt::Horizontal );
-	azimuth_bin_slider->setMinimum( -64 );
-	azimuth_bin_slider->setMaximum( 64 );
-
-	QLabel* range_label = new QLabel( "Range" );
-	RangeCombo = new QComboBox;
-	/* No Short Range mode in Japan */
-	ROS_DEBUG("radar region = %s\n",radar_region.toStdString().c_str());
-	if (radar_region != "Japan")
-		RangeCombo->addItem(tr("Short"));
-	RangeCombo->addItem(tr("Mid"));
-	RangeCombo->addItem(tr("Long"));
-	if (radar_region != "Japan")
-	RangeCombo->addItem(tr("Ultra-Long"));
-
-	QLabel* mode_label = new QLabel( "Mode" );
-	ModeCombo = new QComboBox;
-	ModeCombo->addItem(tr("3d"));
-	ModeCombo->addItem(tr("4d"));
-
-	min_height_label = new QLabel( "Min Height ("+QString::number( (float)MinHeight ,'f',2 )+"m)" );
-	min_height_slider = new QSlider( Qt::Horizontal );
-	min_height_slider->setMinimum( -1000 );
-	min_height_slider->setMaximum( 200 );
-
-	max_height_label = new QLabel( "Max Height ("+QString::number( (float)MaxHeight,'f',2 )+"m)" );
-	max_height_slider = new QSlider( Qt::Horizontal );
-	max_height_slider->setMinimum( 0 );
-	max_height_slider->setMaximum( 2000 );
-
-	sensitivity_label = new QLabel( "Sensitivity ("+QString::number( threshold4d )+")" );
-	sensitivity_hint_label_l = new QLabel( "(Low)");
-        sensitivity_hint_label_l->setWindowOpacity(0.5);
-	sensitivity_hint_label_l->setAlignment(Qt::AlignLeft | Qt::AlignBottom);
-	sensitivity_hint_label_h = new QLabel( "(High)");
-        sensitivity_hint_label_h->setWindowOpacity(0.5);
-	sensitivity_hint_label_h->setAlignment(Qt::AlignRight | Qt::AlignBottom);
-
-	mm_doppler_label = new QLabel( "Doppler [m/s]");
-	mm_doppler_slider = new ctkRangeSlider(Qt::Horizontal);
-	mm_doppler_slider->setMinimum( -1000 );
-	mm_doppler_slider->setMaximum( 1000 );
-
-	mm_doppler_min_label = new QLabel( QString::number( MinDoppler ,'f',1 ));
-		mm_doppler_min_label->setWindowOpacity(0.5);
-	mm_doppler_min_label->setAlignment(Qt::AlignLeft | Qt::AlignBottom);
-	mm_doppler_max_label = new QLabel( QString::number( MaxDoppler ,'f',1 ));
-		mm_doppler_max_label->setWindowOpacity(0.5);
-	mm_doppler_max_label->setAlignment(Qt::AlignRight | Qt::AlignBottom);
-	mm_doppler_slider->setStyleSheet("QSlider::groove:horizontal { "
-					  "border: 1px solid #999999; "
-					  "height: 3px; "
-					  "background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #B1B1B1, stop:1 #c4c4c4); "
-					  "background-color: rgba(255, 255, 255, 10);"
-					  "margin: 30px; "
-					  "} "
-					  "QSlider::handle:horizontal { "
-					  "background-color: white; "
-					  "border: 1px solid #999999; "
-					  "width: 10px; "
-					  "height: 40px; "
-					  "margin: -6px 1px; "
-					  "} ");
-
-	cc_label = new QLabel( "Color coding");
-	cc_slider = new ctkRangeSlider(Qt::Horizontal);
-	cc_slider->setMinimum(-100);
-	cc_slider->setMaximum(100);
-	cc_min_label = new QLabel( "0");
-		cc_min_label->setWindowOpacity(0.5);
-	cc_min_label->setAlignment(Qt::AlignLeft | Qt::AlignBottom);
-	cc_max_label = new QLabel( "8");
-		cc_max_label->setWindowOpacity(0.5);
-	cc_max_label->setAlignment(Qt::AlignRight | Qt::AlignBottom);
-	cc_slider->setStyleSheet("QSlider::groove:horizontal { "
-					  "border: 1px solid #999999; "
-					  "height: 3px; "
-					  "background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #B1B1B1, stop:1 #c4c4c4); "
-					  "background-color: rgba(255, 255, 255, 10);"
-					  "margin: 30px; "
-					  "} "
-					  "QSlider::handle:horizontal { "
-					  "background-color: white; "
-					  "border: 1px solid #999999; "
-					  "width: 10px; "
-					  "height: 40px; "
-					  "margin: -6px 1px; "
-					  "} ");
-	cc_slider->setFixedSize(slider_size);
-
-
-	sensitivity_slider = new QSlider( Qt::Horizontal );
-	sensitivity_slider->setStyleSheet("QSlider::groove:horizontal { "
-                      "border: 1px solid #999999; "
-                      "height: 3px; "
-                      "background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #B1B1B1, stop:1 #c4c4c4); "
-                      "background-color: rgba(255, 255, 255, 10);"
-                      "margin: 45px; "
-                      "} "
-                      "QSlider::handle:horizontal { "
-                      "background-color: white; "	
-                      "border: 1px solid #999999; "
-                      "width: 10px; "
-                      "height: 40px; "
-                      "margin: -6px 1px; "
-                      "} ");
-
-	sensitivity_slider->setMinimum( -10 );
-	sensitivity_slider->setMaximum( 50 );
-        sensitivity_slider->setWindowOpacity(0.5);
-	sensitivity_slider->setFixedSize(slider_size);
-	sensitivity_slider->setInvertedAppearance(true);
-
-
-	asphalt_roughness_label = new QLabel( "Asphalt roughness" );
-	asphalt_roughness_slider = new QSlider( Qt::Horizontal );
-	asphalt_roughness_slider->setMinimum( -5 );
-	asphalt_roughness_slider->setMaximum( 5 );
-
-	vis_text_phi_label = new QLabel( "Floating text phi" );
-	vis_text_phi_slider = new QSlider( Qt::Horizontal );
-	vis_text_phi_slider->setMinimum( 0 );
-	vis_text_phi_slider->setMaximum( 360 );
-
-
-	dynamic_azimuth_label = new QLabel( "Dynamic Azimuth ("+QString::number( DynamicAzimuth )+")" );
-	dynamic_azimuth_slider = new QSlider( Qt::Horizontal );
-	dynamic_azimuth_slider->setMinimum( 1 );
-	dynamic_azimuth_slider->setMaximum( 50 );
-
-	dynamic_elevation_label = new QLabel( "Dynamic Elevation ("+QString::number( DynamicElevation )+")");
-	dynamic_elevation_slider = new QSlider( Qt::Horizontal );
-	dynamic_elevation_slider->setMinimum( 1 );
-	dynamic_elevation_slider->setMaximum( 50 );
-
-#endif
-
-#if 0
-	delete dock->titleBarWidget(); 
-	QWidget *widget_empty = new QWidget();
-	dock->setTitleBarWidget(widget_empty);
-#endif
-	//dock_param = new QDockWidget(tr("para show Panel"), this);
-	QWidget* multiWidget = new QWidget();
-	//QVBoxLayout* controls = new QVBoxLayout ;
-	QGridLayout* controls = new QGridLayout ;
-    //controls->setColumnStretch(0, 1);  
-    //controls->setColumnStretch(1, 3); 
-	QGroupBox *controlsBox = new QGroupBox(tr("Basic Controls:"));
-	QGridLayout* controls_layout = new QGridLayout;
-	//QVBoxLayout* views = new QVBoxLayout;
-	//views_layout->addWidget( view_label, 0, 6);
-/*  view box */
-
-#if 0
-	car_view_button = new QPushButton("Car", this);
-	car_view_button->setFixedSize(view_button_side);
-	top_car_view_button = new QPushButton("Top Car", this);
-	top_car_view_button->setFixedSize(view_button_side);
-	top_view_button = new QPushButton("Top", this);
-	top_view_button->setFixedSize(view_button_side);
-	side_view_button = new QPushButton("3rd prs.", this);
-	side_view_button->setFixedSize(view_button_side);
-#endif
-QGroupBox *viewsBox = new QGroupBox(tr("Data indicators:"));
-QGridLayout* views_layout = new QGridLayout;
-std::vector<QLabel* > paraLabel;
-std::vector<QTextEdit* > paraText;
-for(int i = 0 ; i < 21 ; i++){
-	paraLabel.emplace_back(new QLabel("para  "+QString::number( i )));
-	paraText.emplace_back(new QTextEdit);
-	paraText[i]->setReadOnly(true);
-}
-
-#if 1
-for(int j = 0;  j < 3; j++){
-	for(int k = 0 ; k  < 7;  k++){
-		views_layout->addWidget(paraLabel[j * 7 + k],  j,  2 * k);
-		views_layout->addWidget(paraText[j  * 7 + k],  j,  1 + 2 * k);
-	}
-}
-#endif
-
-#if 0
-	views_layout->addWidget( top_view_button, 0, 0);
-	views_layout->addWidget( top_car_view_button, 0, 1);
-	views_layout->addWidget( car_view_button, 1, 0);
-	views_layout->addWidget( side_view_button, 1, 1);
-#endif
-	viewsBox->setLayout(views_layout);
-
-#if 0
-	cam_alpha_label = new QLabel( "a ("+QString::number( cam_euler_alpha,'f',1 )+")" );
-	cam_rel_alpha = new QSlider( Qt::Horizontal );
-	cam_rel_alpha->setMinimum( -150 );
-	cam_rel_alpha->setMaximum( 150 );
-	cam_rel_alpha->setValue(cam_euler_alpha*10);
-	cam_beta_label = new QLabel( "b ("+QString::number( cam_euler_beta,'f',1 )+")" );
-	cam_rel_beta = new QSlider( Qt::Horizontal );
-	cam_rel_beta->setMinimum( -150 );
-	cam_rel_beta->setMaximum( 150 );
-	cam_rel_beta->setValue(cam_euler_beta*10);
-	cam_gamma_label = new QLabel( "g ("+QString::number( cam_euler_gamma,'f',1 )+")" );
-	cam_rel_gamma = new QSlider( Qt::Horizontal );
-	cam_rel_gamma->setMinimum( -150 );
-	cam_rel_gamma->setMaximum( 150 );
-	cam_rel_gamma->setValue(cam_euler_gamma*10);
-#endif
-
-#if 0
-	QGroupBox *radar_calibration = new QGroupBox(tr("Radar Calibration:"));
-	QGridLayout* radar_calibration_layout = new QGridLayout;
-	cam_calib_btn = new QPushButton("Camera calib", this);
-	cam_calib_btn->setFixedSize(QSize(100,25));
-	btn_calc_ant_height_tilt = new QPushButton("Ant. calib", this);
-	btn_calc_ant_height_tilt->setFixedSize(QSize(100,25));
-	radar_text_radio = new QRadioButton("Disp. text", this);
-	QLabel* radar_id_label = new QLabel( "Radar ID" );
-	RadarIdCombo = new QComboBox;
-//	radar_text_radio->setFixedSize(QSize(100,30));
-	radar_calibration_layout->addWidget( radar_id_label, 0, 0 );
-	radar_calibration_layout->addWidget( RadarIdCombo, 0, 1);
-//	radar_calibration_layout->addWidget( radar_yaw_angle_label, 0, 2);
-//	radar_calibration_layout->addWidget( radar_yaw_angle_slider, 0, 3);
-	radar_calibration_layout->addWidget( radar_pitch_angle_label, 1, 0);
-	radar_calibration_layout->addWidget( radar_pitch_angle_slider, 1, 1);
-//	radar_calibration_layout->addWidget( radar_x_offset_label, 1, 2 );
-//	radar_calibration_layout->addWidget( radar_x_offset_slider, 1, 3 );
-//	radar_calibration_layout->addWidget( radar_y_offset_label, 2, 0 );
-//	radar_calibration_layout->addWidget( radar_y_offset_slider, 2, 1 );
-	radar_calibration_layout->addWidget( radar_z_offset_label, 2, 0 );
-	radar_calibration_layout->addWidget( radar_z_offset_slider, 2, 1 );
-	radar_calibration_layout->addWidget( cam_alpha_label, 0, 2);
-	radar_calibration_layout->addWidget( cam_rel_alpha, 0, 3);
-	radar_calibration_layout->addWidget( cam_beta_label, 1, 2);
-	radar_calibration_layout->addWidget( cam_rel_beta, 1, 3);
-	radar_calibration_layout->addWidget( cam_gamma_label, 2, 2);
-	radar_calibration_layout->addWidget( cam_rel_gamma, 2, 3);
-	radar_calibration_layout->addWidget( cam_calib_btn, 0, 4);
-    radar_calibration_layout->addWidget(btn_calc_ant_height_tilt, 2 , 4);
-	radar_calibration_layout->addWidget( radar_text_radio, 1, 4);
-	radar_calibration->setLayout(radar_calibration_layout);
-#endif
-	//lidar_connect_label = new QLabel( "Connect");
-	lidar_connect_button = new QPushButton("Connect", this);
-	//lidar_disconnect_label = new QLabel( "Disconnect");
-	lidar_disconnect_button = new QPushButton("Disconnect", this);
-	lidar_start_button = new QPushButton("Start", this);
-	lidar_stop_button = new QPushButton("Stop", this);
-	lidarIdCombo =  new QComboBox;
-	QLabel* lidar_id_label = new QLabel( "Lidar ID" );
-
-	QLabel* mode_label = new QLabel( "Mode" );
-	ModeCombo = new QComboBox;
-	ModeCombo->addItem(tr("3d"));
-	ModeCombo->addItem(tr("4d"));
-
-	QLabel* range_label = new QLabel( "Range" );
-	RangeCombo = new QComboBox;
-	RangeCombo->addItem(tr("Short"));
-	RangeCombo->addItem(tr("Mid"));
-	RangeCombo->addItem(tr("Long"));
-	RangeCombo->addItem(tr("Ultra-Long"));
-
-	controls_layout->addWidget( lidar_id_label, 0, 0 );
-	controls_layout->addWidget( lidarIdCombo, 0, 1 );
-	controls_layout->addWidget( lidar_connect_button, 1, 0 );
-	controls_layout->addWidget( lidar_disconnect_button, 1, 1 );
-	controls_layout->addWidget( lidar_start_button, 2, 0 );
-	controls_layout->addWidget( lidar_stop_button, 2, 1 );
-
-	controls_layout->addWidget( coloring_label, 0, 2 );
-	controls_layout->addWidget( ColoringCombo, 0, 3);
-	controls_layout->addWidget( mode_label, 1, 2 );
-	controls_layout->addWidget( ModeCombo, 1, 3);
-	controls_layout->addWidget( range_label, 2, 2 );
-	controls_layout->addWidget( RangeCombo, 2, 3 );
-
-#if 0
-	controls_layout->addWidget( thickness_label, 0, 0 );
-	controls_layout->addWidget( thickness_slider, 0, 1 );
-	controls_layout->addWidget( cell_size_label, 0, 2 );
-	controls_layout->addWidget( cell_size_slider, 0, 3 );
-	//controls_layout->addWidget( min_height_label, 1, 4);
-	//controls_layout->addWidget( min_height_slider, 1, 5);
-	//controls_layout->addWidget( max_height_label, 1, 6);
-	//controls_layout->addWidget( max_height_slider, 1, 7);
-	controls_layout->addWidget( mode_label, 2, 0 );
-
-	controls_layout->addWidget( asphalt_roughness_label, 2, 4 );
-	controls_layout->addWidget( asphalt_roughness_slider, 2, 5 );
-	controls_layout->addWidget( vis_text_phi_label, 2, 4 );
-	controls_layout->addWidget( vis_text_phi_slider, 2, 5 );
-	vis_text_phi_label->setVisible(false);
-	vis_text_phi_slider->setVisible(false);
-	vis_text_phi_slider->setEnabled(false);
-
-
-	controls_layout->addWidget( ModeCombo, 2, 1 );
-	controls_layout->addWidget( range_label, 2, 2 );
-	controls_layout->addWidget( RangeCombo, 2, 3 );
-	controls_layout->addWidget( coloring_label, 0, 4 );
-	controls_layout->addWidget( ColoringCombo, 0, 5);
-	controls_layout->addWidget( azimuth_bin_label, 1, 4 );
-	controls_layout->addWidget( azimuth_bin_slider, 1, 5 );
-	controls_layout->addWidget( sensitivity_label, 3, 0);
-	controls_layout->addWidget( sensitivity_hint_label_l, 3, 1);
-	controls_layout->addWidget( sensitivity_hint_label_h, 3, 1);
-	controls_layout->addWidget( sensitivity_slider, 3, 1);
-	controls_layout->addWidget( dynamic_azimuth_label, 3, 2);
-	controls_layout->addWidget( dynamic_azimuth_slider, 3, 3);
-	controls_layout->addWidget( dynamic_elevation_label, 3, 4);
-	controls_layout->addWidget( dynamic_elevation_slider, 3, 5);
-	controls_layout->addWidget( cc_label, 1, 2);
-	controls_layout->addWidget( cc_min_label, 1, 3);
-	controls_layout->addWidget( cc_max_label, 1, 3);
-	controls_layout->addWidget( cc_slider, 1, 3);
-	controls_layout->addWidget( mm_doppler_label, 1, 0);
-	controls_layout->addWidget( mm_doppler_min_label, 1, 1);
-	controls_layout->addWidget( mm_doppler_max_label, 1, 1);
-	controls_layout->addWidget( mm_doppler_slider, 1, 1);
-#endif
-	controlsBox->setLayout(controls_layout);
-
-	//controls->addLayout ( controls_layout );
-
-	//controls->addWidget ( viewsBox, 0, 1 );
-//	controls->addWidget ( cam_euler_angs );
-//controls->addWidget ( radar_calibration );
-
-//	cam_euler_angs->show();
-	//radar_calibration->show(); ///?
-
-	//QHBoxLayout* controls_views = new QHBoxLayout;
-	//controls_views->addLayout(controls);
-	//multiWidget->setMaximumHeight(140);
-
-	QPushButton *config_button = new QPushButton("config&ure", this);
-	radar_connect_button = new QPushButton("Lidar &Connect", this);
-	record_button = new QPushButton("Rec&ord", this);
-	screen_record_button = new QPushButton("Screen R&ecord", this);
-	radar_start_stop_button = new QPushButton("Start &Tx", this);
-	radar_pause_button = new QPushButton("&>>", this);
-	bookmark_button = new QPushButton("&Bookmark", this);
-
-	config_button->setFixedSize(button_size);
-	screen_record_button->setFixedSize(button_size);
-	radar_connect_button->setFixedSize(button_size);
-	record_button->setFixedSize(button_size);
-	radar_start_stop_button->setFixedSize(button_size);
-	radar_pause_button->setFixedSize(button_size);
-	bookmark_button->setFixedSize(button_size);
-	std::cout << " until here " <<  __LINE__ << std::endl;
-
-
-	/* Construct and lay out render panel. */
-	render_panel_ = new rviz::RenderPanel();
-	/* Construct and lay out selection panel. */
-	selection_panel_ = new rviz::SelectionPanel();
-	controls->addWidget ( controlsBox, 0, 0, 1, 2, Qt::AlignLeft);
-	controls->addWidget ( render_panel_, 1,  0,  5,  5);
-	controls->addWidget ( selection_panel_, 1,  0, 5, 1, Qt::AlignLeft);
-
-	//QGridLayout* radar_layout = new QGridLayout;
-    QHBoxLayout* buttons_layout = new QHBoxLayout();
- 	buttons_layout->addWidget( config_button );
-	buttons_layout->addWidget( radar_start_stop_button );
-	buttons_layout->addWidget( radar_connect_button );
-	buttons_layout->addWidget( record_button );
-	buttons_layout->addWidget( screen_record_button );
-	buttons_layout->addWidget( bookmark_button );
-	buttons_layout->addWidget( radar_pause_button );
-	controls->addLayout(buttons_layout, 6, 0, 1, 5);
-	multiWidget->setLayout(controls);
-	//multiWidget_new->setLayout(controls);
-	//multiWidget->setMaximumHeight(140);
-	//this->setFeatures(QDockWidget::DockWidgetClosable );
-	//this->setWidget(multiWidget);
-	this->addTab(multiWidget,  "Lidar Ui Mainwindow");
+	CreatUIWindow();
 
 	CreatDebugWindow();
 
@@ -793,21 +350,6 @@ for(int j = 0;  j < 3; j++){
 	QPalette p( overlay_text_label->palette());
 	p.setColor( QPalette::Window, QColor(Qt::black));
 	overlay_text_label->setPalette(p);
-
-	/* Hide the selection panel on start */
-	//selection_panel_->hide();
-	std::cout << " until here " <<  __LINE__ << std::endl;
-
-#if 0
-	showSpeedometer(radar_layout);
-	showTurnRate(radar_layout);
-#endif
-	//main_layout->addLayout(radar_layout);
-	//main_layout->addLayout(buttons_layout);
-	std::cout << " until here " <<  __LINE__ << std::endl;
-
-	/* Set the top-level layout for this viewpanel widget. */
-	//setLayout( main_layout );
 
 	/* Initialize the main RViz classes */
 	manager_ = new rviz::VisualizationManager( render_panel_ );
@@ -926,7 +468,7 @@ for(int j = 0;  j < 3; j++){
 	//connect( RadarIdCombo, SIGNAL( currentIndexChanged(int )), this, SLOT( setPreRadarSliders( void )));
 
 	//connect( decay_time_slider, SIGNAL( valueChanged( int )), this, SLOT( setPointDecayTime( int )));
-        connect( ModeCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( setMode( void )));
+    connect( ModeCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( setMode( void )));
 	connect( RangeCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( setRange( void )));
 	connect( ColoringCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( setColoring( void )));
 	connect( sensitivity_slider, SIGNAL( valueChanged( int )), this, SLOT( setThreshold4D( int )));
@@ -1038,6 +580,37 @@ void viewpanel::load_camera_calibration( void )
 {
 	load_camera_calib(false);
 	return;
+}
+
+void viewpanel::loadLidarFile(void){
+
+	setLoadFileType();
+	if(loadFileType_ ==  "Config file") {
+		loadLidarFile_  =  QFileDialog::getOpenFileName(
+												viewpanel::Instance(),
+												"Choose config file",
+												QDir::currentPath(),
+												"Configration files (*.conf)",0,QFileDialog::DontUseNativeDialog);
+	} else if (loadFileType_ ==  "DAC file") {
+		loadLidarFile_  =  QFileDialog::getOpenFileName(
+												viewpanel::Instance(),
+												"Choose DAC data file",
+												QDir::currentPath(),
+												"DAC data  files (*.bin)",0,QFileDialog::DontUseNativeDialog);
+	} else if (loadFileType_ ==  "Cali file"){
+		loadLidarFile_  =  QFileDialog::getOpenFileName(
+												viewpanel::Instance(),
+												"Choose  calibration file",
+												QDir::currentPath(),
+												"Calibration files (*.cali)",0,QFileDialog::DontUseNativeDialog);
+	} else {
+
+	}
+
+	if( !loadLidarFile_.isNull() )
+	{
+		qDebug() << "selected file path : " << loadLidarFile_.toUtf8();
+	}	
 }
 
 void viewpanel::calc_ant_height_tilt(void)
@@ -1506,6 +1079,11 @@ void viewpanel::setMode( void )
 	mode.assign(str.toStdString());
         radar_change_seq();
 	qApp->processEvents();
+}
+
+void viewpanel::setLoadFileType( void ){
+	QString str = loadDataCombo->currentText();
+	loadFileType_.assign(str.toStdString());
 }
 
 void viewpanel::setPreRadarSliders( void )
@@ -3389,4 +2967,131 @@ void viewpanel::CreatDebugWindow()
 
 	this->addTab(multiWidget_new,  "Lidar Debug Mainwindow");
 
+}
+
+
+void viewpanel::CreatUIWindow()
+{
+	const QSize button_size = QSize(200, 30);
+	const QSize view_button_side = QSize(60, 25);
+	const QSize slider_size = QSize(200, 20);
+
+	QLabel* coloring_label = new QLabel( "Color By" );
+	ColoringCombo = new QComboBox;
+	ColoringCombo->addItem(tr("Doppler"));
+	ColoringCombo->addItem(tr("Doppler Gradient"));
+	ColoringCombo->addItem(tr("Amplitude"));
+	ColoringCombo->addItem(tr("Amplitude-Flat"));
+	ColoringCombo->addItem(tr("Elevation"));
+	ColoringCombo->addItem(tr("Range/Doppler"));
+
+	QWidget* multiWidget = new QWidget();
+	QGridLayout* controls = new QGridLayout ;
+	QGroupBox *controlsBox = new QGroupBox(tr("Basic Controls:"));
+	QGridLayout* controls_layout = new QGridLayout;
+
+	QGroupBox *fileBox  = new QGroupBox(tr("File Operations:"));
+	QVBoxLayout* fileLayout = new QVBoxLayout;
+
+	QGroupBox *savefileBox  = new QGroupBox(tr("Save:"));
+	QGridLayout* saveLayout = new QGridLayout;
+	QLabel* saveDatalabel = new QLabel( "Select" );
+	QComboBox*saveDataCombo = new QComboBox;
+	QPushButton*  saveBtn = new QPushButton("Save", this);
+	saveDataCombo->addItem(tr("point cloud "));
+	saveDataCombo->addItem(tr("data stream 1"));
+	saveDataCombo->addItem(tr("data stream 2"));
+	saveDataCombo->addItem(tr("data stream 3"));
+	saveDataCombo->addItem(tr("data stream 4"));
+	saveDataCombo->setCurrentIndex(0);
+	saveLayout->addWidget(saveDatalabel, 0, 0);
+	saveLayout->addWidget(saveDataCombo, 0, 1);
+	saveLayout->addWidget(saveBtn, 0, 2);
+
+	//saveLayout->setColumnStretch(0, 1);
+	//saveLayout->setColumnStretch(1, 2);
+	//saveLayout->setColumnStretch(2, 2);
+
+	savefileBox->setLayout(saveLayout);
+	fileLayout->addWidget(savefileBox);
+
+#if 1
+	QGroupBox *loadfileBox  = new QGroupBox(tr("Load:"));
+	QGridLayout* loadLayout = new QGridLayout;
+	QLabel* loadDatalabel = new QLabel( "Select" );
+	loadDataCombo = new QComboBox;
+	QPushButton*  loadBtn = new QPushButton("Load", this);
+	loadDataCombo->addItem(tr("Config file"));
+	loadDataCombo->addItem(tr("DAC file"));
+	loadDataCombo->addItem(tr("Cali file"));
+	//saveDataCombo->setCurrentIndex(0);
+	loadLayout->addWidget(loadDatalabel, 0, 0);
+	loadLayout->addWidget(loadDataCombo, 0, 1);
+	loadLayout->addWidget(loadBtn, 0, 2);
+
+	loadfileBox->setLayout(loadLayout);
+	fileLayout->addWidget(loadfileBox);
+#endif
+
+	fileBox->setLayout(fileLayout);
+    connect( loadDataCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( setLoadFileType( void )));
+	connect( loadBtn, SIGNAL( clicked()), this, SLOT( loadLidarFile( void )));
+#if 0
+std::vector<QLabel* > paraLabel;
+std::vector<QTextEdit* > paraText;
+for(int i = 0 ; i < 21 ; i++){
+	paraLabel.emplace_back(new QLabel("para  "+QString::number( i )));
+	paraText.emplace_back(new QTextEdit);
+	paraText[i]->setReadOnly(true);
+}
+
+for(int j = 0;  j < 3; j++){
+	for(int k = 0 ; k  < 7;  k++){
+		views_layout->addWidget(paraLabel[j * 7 + k],  j,  2 * k);
+		views_layout->addWidget(paraText[j  * 7 + k],  j,  1 + 2 * k);
+	}
+}
+#endif
+	lidar_connect_button = new QPushButton("Connect", this);
+	lidar_disconnect_button = new QPushButton("Disconnect", this);
+	lidar_start_button = new QPushButton("Start", this);
+	lidar_stop_button = new QPushButton("Stop", this);
+	lidarIdCombo =  new QComboBox;
+	QLabel* lidar_id_label = new QLabel( "Lidar ID" );
+
+	QLabel* mode_label = new QLabel( "Mode" );
+	ModeCombo = new QComboBox;
+	ModeCombo->addItem(tr("3d"));
+	ModeCombo->addItem(tr("4d"));
+
+	QLabel* range_label = new QLabel( "Range" );
+	RangeCombo = new QComboBox;
+	RangeCombo->addItem(tr("Short"));
+	RangeCombo->addItem(tr("Mid"));
+	RangeCombo->addItem(tr("Long"));
+	RangeCombo->addItem(tr("Ultra-Long"));
+
+	controls_layout->addWidget( lidar_id_label, 0, 0 );
+	controls_layout->addWidget( lidarIdCombo, 0, 1 );
+	controls_layout->addWidget( lidar_connect_button, 1, 0 );
+	controls_layout->addWidget( lidar_disconnect_button, 1, 1 );
+	controls_layout->addWidget( lidar_start_button, 2, 0 );
+	controls_layout->addWidget( lidar_stop_button, 2, 1 );
+
+	controls_layout->addWidget( coloring_label, 0, 2 );
+	controls_layout->addWidget( ColoringCombo, 0, 3);
+	controls_layout->addWidget( mode_label, 1, 2 );
+	controls_layout->addWidget( ModeCombo, 1, 3);
+	controls_layout->addWidget( range_label, 2, 2 );
+	controls_layout->addWidget( RangeCombo, 2, 3 );
+
+	controlsBox->setLayout(controls_layout);
+	render_panel_ = new rviz::RenderPanel();
+	selection_panel_ = new rviz::SelectionPanel();
+	controls->addWidget ( controlsBox, 0, 0);
+	controls->addWidget ( fileBox, 0, 1);
+	controls->addWidget ( render_panel_, 1,  0,  5,  5);
+	controls->addWidget ( selection_panel_, 1,  0, 5, 1, Qt::AlignLeft);
+	multiWidget->setLayout(controls);
+	this->addTab(multiWidget,  "Lidar Ui Mainwindow");
 }

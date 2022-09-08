@@ -1581,7 +1581,7 @@ void MainWindow::save_settings(void )
 void MainWindow::about()
 {
 	QMessageBox::about(this, tr("Program Info"),
-	tr("<b>Arbe</b> LIDAR control GUI Demo Version 0.1"));
+	tr("<b>Autox</b> LIDAR control GUI Demo Version 0.1"));
 }
 
 void MainWindow::quit( void )
@@ -1635,9 +1635,12 @@ void MainWindow::createActions()
 	exitAct->setStatusTip(tr("Exit the application"));
 	connect(exitAct, SIGNAL(triggered()), this, SLOT(quit()));
 
-	aboutAct = new QAction(tr("&About"), this);
+	aboutAct = new QAction(tr("&About this app"), this);
 	aboutAct->setStatusTip(tr("Show the application's About box"));
 	connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
+
+	updateAct = new QAction(tr("&System update"), this);
+
 
 	GigEcameraAct = new QAction(tr("Launch GigE Camera"), this);
 	GigEcameraAct->setStatusTip(tr("Launch GigE Camera"));
@@ -2052,8 +2055,9 @@ void MainWindow::createMenus()
 	recordingMenu->addAction(recRvizPointcloudAct);
 	menuBar()->addSeparator();
 #endif
-	helpMenu = menuBar()->addMenu(tr("&Help"));
+	helpMenu = menuBar()->addMenu(tr("&Update"));
 	helpMenu->addAction(aboutAct);
+	helpMenu->addAction(updateAct);
 }
 
 void MainWindow::readSettings()

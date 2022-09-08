@@ -196,6 +196,7 @@ private Q_SLOTS:
 	void setColoring( void );
 	void setRange( void );
 	void setMode( void );
+	void setLoadFileType( void );
 	void setPreRadarSliders( void );
 	void setThreshold4D( int sensitivity_slider_value );
 	void setAsphaltRoughness( int AsphaltRoughness_slider_value );
@@ -251,8 +252,12 @@ private Q_SLOTS:
 	void choose_which_radars_text();
     void calc_ant_height_tilt();
 
+	void loadLidarFile();
+
+
 private:
 	void CreatDebugWindow();
+	void CreatUIWindow();
 	rviz::VisualizationManager* manager_;
 	rviz::RenderPanel* render_panel_;
 	rviz::SelectionPanel* selection_panel_;
@@ -283,6 +288,10 @@ private:
     double display_offset_h_;
     bool  follower_view_;
 	bool recalc_display_offsets;
+	QComboBox* loadDataCombo;
+	std::string loadFileType_;
+	QString  loadLidarFile_;
+
 };
 
 int read_camera_calibration_from_file(const char * file_name, bool do_for_all_radars);
