@@ -207,10 +207,6 @@ QPushButton *top_car_view_button;
 QPushButton *top_view_button;
 QPushButton *side_view_button;
 
-QPushButton *lidar_connect_button;
-QPushButton *lidar_disconnect_button;
-QPushButton *lidar_start_button;
-QPushButton *lidar_stop_button;
 
 QWidget* CameraWidget[MAX_RADARS];
 QWidget* FreeSpaceWidget;
@@ -333,7 +329,7 @@ void pub_radar_height_and_pitch(int index)
 
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
-	: QTabWidget( parent )
+	: QTabWidget( parent ), ifConnected(false)
 {
 
 #if ONLY_SHOW_UI
@@ -425,8 +421,6 @@ viewpanel::viewpanel(QTabWidget* parent )
 	azimuth_bin_slider->setEnabled(false);
 	mm_doppler_slider->setValues(MinDoppler * 10, MaxDoppler * 10);
 
-#endif
-
 	int index = ModeCombo->findText(mode.c_str());
 	ModeCombo->setCurrentIndex(index);
 	index = RangeCombo->findText(RangeType.c_str());
@@ -434,6 +428,9 @@ viewpanel::viewpanel(QTabWidget* parent )
 	index = ColoringCombo->findText(ColoringType.c_str());
 	ColoringCombo->setCurrentIndex(index);
 	std::cout << " until here " <<  __LINE__ << std::endl;
+#endif
+
+
 
 #if 0
 	float cc_min, cc_max;
@@ -1204,6 +1201,31 @@ void viewpanel::bookmark_control( void )
 	bookmark_pub.publish(msg);
 //    pubGUIcontrols();
 
+}
+
+
+void viewpanel::startControl(void){
+	if(!ifConnected){
+		lidar_start_button->setStyleSheet("color: green");
+		lidar_start_button->setText("&Stop");
+		ifConnected = true;
+	}else {
+		lidar_start_button->setStyleSheet("color: black");
+		lidar_start_button->setText("&Start");
+		ifConnected = false;
+	}
+}
+
+void viewpanel::connectControl(void){
+	if(!ifStarted){
+		lidar_connect_button->setStyleSheet("color: green");
+		lidar_connect_button->setText("&Disconnect");
+		ifStarted = true;
+	}else {
+		lidar_connect_button->setStyleSheet("color: black");
+		lidar_connect_button->setText("&Connect");
+		ifStarted = false;
+	}
 }
 
 void viewpanel::radar_start_stop_control( void )
@@ -2902,13 +2924,13 @@ void viewpanel::CreatDebugWindow()
 	std::vector<QLineEdit* > paraWriteText;
 	std::vector<QLineEdit* > paraAddrText;
 
-	QPushButton * writeAddrbutton = new QPushButton("W&rite");
-	QPushButton * readAddrbutton = new QPushButton("R&ead");
+	QPushButton * writeAddrbutton = new QPushButton("&Write");
+	QPushButton * readAddrbutton = new QPushButton("&Read");
 
-	QPushButton * settingADCSavebutton = new QPushButton("save  data");
-	QPushButton * settingADCConfigbutton = new QPushButton("config");
-	QPushButton * settingFFTSavebutton = new QPushButton("save  data");
-	QPushButton * settingFFTConfigbutton = new QPushButton("config");
+	QPushButton * settingADCSavebutton = new QPushButton("&Save");
+	QPushButton * settingADCConfigbutton = new QPushButton("&Config");
+	QPushButton * settingFFTSavebutton = new QPushButton("&Save");
+	QPushButton * settingFFTConfigbutton = new QPushButton("&Config");
 	settingADCLayout->addWidget(settingADCSavebutton, 0, 0, Qt::AlignTop | Qt::AlignLeft);
 	settingADCLayout->addWidget(settingADCConfigbutton, 0, 1, Qt::AlignTop | Qt::AlignLeft);
 	settingADCBox->setLayout(settingADCLayout);
@@ -2942,6 +2964,10 @@ void viewpanel::CreatDebugWindow()
 		//paraWriteText[i]->setValidator( new QIntValidator(-50, 50, this) );
 		paraReadText.emplace_back(new QLineEdit);
 		paraReadText[i]->setReadOnly(true);
+		QPalette palette = paraReadText[i]->palette();
+		palette.setBrush(QPalette::Base,
+						palette.brush(QPalette::Disabled, QPalette::Base));
+		paraReadText[i]->setPalette(palette);
 		//paraWriteText[i]->setPlaceholderText("");
 	}
 
@@ -2976,15 +3002,6 @@ void viewpanel::CreatUIWindow()
 	const QSize view_button_side = QSize(60, 25);
 	const QSize slider_size = QSize(200, 20);
 
-	QLabel* coloring_label = new QLabel( "Color By" );
-	ColoringCombo = new QComboBox;
-	ColoringCombo->addItem(tr("Doppler"));
-	ColoringCombo->addItem(tr("Doppler Gradient"));
-	ColoringCombo->addItem(tr("Amplitude"));
-	ColoringCombo->addItem(tr("Amplitude-Flat"));
-	ColoringCombo->addItem(tr("Elevation"));
-	ColoringCombo->addItem(tr("Range/Doppler"));
-
 	QWidget* multiWidget = new QWidget();
 	QGridLayout* controls = new QGridLayout ;
 	QGroupBox *controlsBox = new QGroupBox(tr("Basic Controls:"));
@@ -3015,7 +3032,6 @@ void viewpanel::CreatUIWindow()
 	savefileBox->setLayout(saveLayout);
 	fileLayout->addWidget(savefileBox);
 
-#if 1
 	QGroupBox *loadfileBox  = new QGroupBox(tr("Load:"));
 	QGridLayout* loadLayout = new QGridLayout;
 	QLabel* loadDatalabel = new QLabel( "Select" );
@@ -3031,61 +3047,33 @@ void viewpanel::CreatUIWindow()
 
 	loadfileBox->setLayout(loadLayout);
 	fileLayout->addWidget(loadfileBox);
-#endif
 
 	fileBox->setLayout(fileLayout);
     connect( loadDataCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( setLoadFileType( void )));
 	connect( loadBtn, SIGNAL( clicked()), this, SLOT( loadLidarFile( void )));
-#if 0
-std::vector<QLabel* > paraLabel;
-std::vector<QTextEdit* > paraText;
-for(int i = 0 ; i < 21 ; i++){
-	paraLabel.emplace_back(new QLabel("para  "+QString::number( i )));
-	paraText.emplace_back(new QTextEdit);
-	paraText[i]->setReadOnly(true);
-}
+	lidar_connect_button = new QPushButton("&Connect", this);
+	//lidar_disconnect_button = new QPushButton("Disconnect", this);
+	lidar_start_button = new QPushButton("&Start", this);
+	//lidar_stop_button = new QPushButton("Stop", this);
+	//lidarIdCombo =  new QComboBox;
+	connect( lidar_connect_button, SIGNAL(clicked()), this, SLOT( connectControl( void )));
+	connect( lidar_start_button, SIGNAL(clicked()), this, SLOT( startControl( void )));
 
-for(int j = 0;  j < 3; j++){
-	for(int k = 0 ; k  < 7;  k++){
-		views_layout->addWidget(paraLabel[j * 7 + k],  j,  2 * k);
-		views_layout->addWidget(paraText[j  * 7 + k],  j,  1 + 2 * k);
-	}
-}
-#endif
-	lidar_connect_button = new QPushButton("Connect", this);
-	lidar_disconnect_button = new QPushButton("Disconnect", this);
-	lidar_start_button = new QPushButton("Start", this);
-	lidar_stop_button = new QPushButton("Stop", this);
-	lidarIdCombo =  new QComboBox;
-	QLabel* lidar_id_label = new QLabel( "Lidar ID" );
+	QLabel* lidar_IP_label = new QLabel( "IP addr" );
+	QLabel* lidar_port_label = new QLabel( "Port" );
+	QLineEdit *ip_edit =  new QLineEdit();
+	QLineEdit *port_edit =  new QLineEdit();
+	ip_edit->setPlaceholderText("input ip addr");
+	port_edit->setPlaceholderText("input ip port");
 
-	QLabel* mode_label = new QLabel( "Mode" );
-	ModeCombo = new QComboBox;
-	ModeCombo->addItem(tr("3d"));
-	ModeCombo->addItem(tr("4d"));
-
-	QLabel* range_label = new QLabel( "Range" );
-	RangeCombo = new QComboBox;
-	RangeCombo->addItem(tr("Short"));
-	RangeCombo->addItem(tr("Mid"));
-	RangeCombo->addItem(tr("Long"));
-	RangeCombo->addItem(tr("Ultra-Long"));
-
-	controls_layout->addWidget( lidar_id_label, 0, 0 );
-	controls_layout->addWidget( lidarIdCombo, 0, 1 );
-	controls_layout->addWidget( lidar_connect_button, 1, 0 );
-	controls_layout->addWidget( lidar_disconnect_button, 1, 1 );
-	controls_layout->addWidget( lidar_start_button, 2, 0 );
-	controls_layout->addWidget( lidar_stop_button, 2, 1 );
-
-	controls_layout->addWidget( coloring_label, 0, 2 );
-	controls_layout->addWidget( ColoringCombo, 0, 3);
-	controls_layout->addWidget( mode_label, 1, 2 );
-	controls_layout->addWidget( ModeCombo, 1, 3);
-	controls_layout->addWidget( range_label, 2, 2 );
-	controls_layout->addWidget( RangeCombo, 2, 3 );
-
+	controls_layout->addWidget( lidar_IP_label, 0, 0, Qt::AlignLeft);
+	controls_layout->addWidget( ip_edit, 0, 1, Qt::AlignLeft);
+	controls_layout->addWidget( lidar_port_label, 1, 0, Qt::AlignLeft);
+	controls_layout->addWidget( port_edit, 1, 1, Qt::AlignLeft);
+	controls_layout->addWidget( lidar_connect_button, 2, 0, Qt::AlignLeft);
+	controls_layout->addWidget( lidar_start_button, 2, 1, Qt::AlignLeft);
 	controlsBox->setLayout(controls_layout);
+
 	render_panel_ = new rviz::RenderPanel();
 	selection_panel_ = new rviz::SelectionPanel();
 	controls->addWidget ( controlsBox, 0, 0);

@@ -165,6 +165,8 @@ public:
 
 public Q_SLOTS:
 	void radar_start_stop_control( void );
+	void startControl( void );
+	void connectControl(void);
     void setCamera_sub_topic(bool flag );
 	void enableCamera(bool isUSB );
 	void enableFreeSpaceView( void );
@@ -291,7 +293,10 @@ private:
 	QComboBox* loadDataCombo;
 	std::string loadFileType_;
 	QString  loadLidarFile_;
-
+	bool ifConnected;
+	bool ifStarted;
+	QPushButton *lidar_connect_button;
+	QPushButton *lidar_start_button;
 };
 
 int read_camera_calibration_from_file(const char * file_name, bool do_for_all_radars);
