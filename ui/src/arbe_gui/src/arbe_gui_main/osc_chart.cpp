@@ -27,17 +27,17 @@
 #include "QPixmap"
 #include "QPainter"
 #include "QtMath"
+#include <QThread>
 
 //int chart_x[10000];
 //int chart_y[10000];
-
 
 #include "QDebug"
 
 
 
 OSC_chart::OSC_chart( QWidget * parent )
-    :QLabel(parent)
+    :QLabel(parent), index_(0)
 {
 
     set_chart(0, 0, parent->size().width(),parent->size().height());
@@ -50,7 +50,7 @@ OSC_chart::OSC_chart( QWidget * parent )
     // 2.主窗口调节也受限也子窗口，假如子窗口无法进行调节的话那么主窗口也无法调节。
     // 3.实际加载图片的时候发现对窗口调用resize只能放大窗口，缩小无效。 把QLabel的sizePolicy设置为Ignored就可以自由放大缩小了。
     this->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Ignored);
-
+    std::cout << "!!!!now OSC_chart build "  << index_ << std::endl;
     OSC_multiple=50;
 }
 
@@ -95,9 +95,13 @@ void OSC_chart::set_chart(int x, int y, int w, int h)
 
 
 //查看图表，相当于激活一次鼠标移动槽
-void OSC_chart::View_Chart()
+void OSC_chart::View_Chart(uint32_t nums)
 {
     //emit moveing(externevent);
+    timer_  = new QTimer(this);
+    timer_->setInterval(50);
+    connect(timer_, SIGNAL(timeout()), this, SLOT(updateViews(void)));
+    timer_->start();    
     pixmap.fill(Qt::transparent);
     Draw_Chart();
     setPixmap(pixmap);
@@ -109,7 +113,24 @@ void OSC_chart::sethide(bool hide)
 {
     hide_pixmap=hide;
 }
+void OSC_chart::UpdateData(){
+    //data_x[0].clear();
+    //data_y[0].clear();
+    //qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
+    ///for(int i = 0; i < nums; i++){
+    Add_Line_Data_XY(0, index_++, qrand()%100);
+    std::cout << "!!!!now UpdateData, index is "  << index_ << std::endl;
+        //data_x[0].append(index_++);
+        //data_y[0].append(qrand()%100);        
+    //}
+}
 
+void OSC_chart::updateViews(void){
+    //std::cout << "!!!!now updateViews, index is "  << index_ << std::endl;
+    UpdateData();
+    Draw_Chart();
+    //Draw_Wave(data_x[0],data_y[0]);
+}
 //求范围公式 舍去输入值除最高位以外的值
 int arange(int x)
 {

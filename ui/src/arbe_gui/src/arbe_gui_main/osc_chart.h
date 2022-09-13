@@ -32,6 +32,9 @@
 #include "QMouseEvent"
 #include "QWheelEvent"
 #include "QList"
+#include <QDateTime>
+#include <QTimer>
+#include <iostream>
 //重要提示：使用ui设计时一定要设置最小值，否则无法随窗口改变大小
 class OSC_chart : public QLabel
 {
@@ -40,6 +43,7 @@ class OSC_chart : public QLabel
 private:
     //是否隐藏指针label
     bool hide_pixmap=false;
+    uint64_t index_;
     //坐标点显示
     bool viewPos=true;
     //坐标点分度值
@@ -56,8 +60,9 @@ private:
 
     QPixmap pixmap;//画布
     QPainter painter;//绘图
+    QTimer* timer_;
 
-    QColor Color_Box[10]={Qt::black,Qt::red,Qt::green,Qt::blue,Qt::cyan,
+    QColor Color_Box[10]={Qt::red,Qt::black,Qt::green,Qt::blue,Qt::cyan,
                           Qt::magenta,Qt::yellow,Qt::gray,Qt::darkRed,Qt::darkBlue};
 
 
@@ -74,8 +79,8 @@ public:
     //外联函数 是否隐藏指针label
     void sethide(bool hide);
     void set_chart(int x, int y, int w, int h);
-    void View_Chart();
-
+    void View_Chart(uint32_t nums);
+    void UpdateData();
     void Set_Line_name(int Line_num,QString name);
     void Add_Line_Data(int Line_num,int pos_y);
     void Add_Line_Data_XY(int Line_num,int pos_x,int pos_y);
@@ -104,6 +109,7 @@ public slots:
     void slotClicked(QMouseEvent *event);
     void slotmoveing(QMouseEvent *event);
     void slotdoubleClicked(QMouseEvent *event);
+    void updateViews(void);
 
 protected:
     public:

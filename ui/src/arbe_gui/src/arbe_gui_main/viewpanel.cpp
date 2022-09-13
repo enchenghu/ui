@@ -2889,14 +2889,14 @@ void viewpanel::CreatDebugWindow()
     OSC_chart *label_OSC_0 = new OSC_chart(this);
     label_OSC_0->set_chart(10,20,this->width() /  2 -20,this->height()  / 2-20);
     label_OSC_0->Add_Line_Data(0, 100);
-    label_OSC_0->View_Chart();
+    label_OSC_0->View_Chart(1000);
 	chartADCLayout->addWidget(label_OSC_0,  0 , 0);
 	chartADCBox->setLayout(chartADCLayout);
 #if 1
     OSC_chart *label_OSC_1 = new OSC_chart(this);
     label_OSC_1->set_chart(10,20,this->width() /  2 - 20,this->height() / 2 - 20);
     label_OSC_1->Add_Line_Data(0, 100);
-    label_OSC_1->View_Chart();
+    //label_OSC_1->View_Chart(10000);
 	chartFFTLayout->addWidget(label_OSC_1,  0, 0);
 	chartFFTBox->setLayout(chartFFTLayout);
 #endif
