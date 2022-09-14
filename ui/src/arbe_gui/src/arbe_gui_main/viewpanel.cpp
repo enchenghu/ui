@@ -2901,18 +2901,25 @@ void viewpanel::CreatDebugWindow()
 	chartFFTBox->setLayout(chartFFTLayout);
 #endif
 	QGridLayout* main_show= new QGridLayout ;
+	main_show->setColumnStretch(0, 5);
+	main_show->setColumnStretch(1, 1);
 
 	QVBoxLayout* charts= new QVBoxLayout ;
 	charts->addWidget(chartADCBox);
 	charts->addWidget(chartFFTBox);
 
 	QHBoxLayout* configs = new QHBoxLayout ;
-	QGroupBox *addrConfigsBox = new QGroupBox(tr("addr configs:"));
-	QGroupBox *settingBox = new QGroupBox(tr("settings:"));
+	QGroupBox *addrConfigsBox = new QGroupBox(tr("Configs:"));
+	QGroupBox *settingBox = new QGroupBox(tr("Settings:"));
+	QGroupBox *addrBox = new QGroupBox(tr("addr config:"));
 	QGroupBox *settingADCBox = new QGroupBox(tr("ADC:"));
 	QGroupBox *settingFFTBox = new QGroupBox(tr("FFT:"));
 
-	QGridLayout* addrConfigLayout = new QGridLayout;
+	QVBoxLayout* addrConfigLayout = new QVBoxLayout;
+	QGridLayout* addrLayout = new QGridLayout;
+	addrLayout->setColumnStretch(0, 1);
+	for(int i = 1; i < 4; i++)
+		addrLayout->setColumnStretch(i, 2);
 
 	QVBoxLayout* settingLayout = new QVBoxLayout;
 	QGridLayout* settingADCLayout = new QGridLayout;
@@ -2931,11 +2938,11 @@ void viewpanel::CreatDebugWindow()
 	QPushButton * settingADCConfigbutton = new QPushButton("&Config");
 	QPushButton * settingFFTSavebutton = new QPushButton("&Save");
 	QPushButton * settingFFTConfigbutton = new QPushButton("&Config");
-	settingADCLayout->addWidget(settingADCSavebutton, 0, 0, Qt::AlignTop | Qt::AlignLeft);
-	settingADCLayout->addWidget(settingADCConfigbutton, 0, 1, Qt::AlignTop | Qt::AlignLeft);
+	settingADCLayout->addWidget(settingADCSavebutton, 0, 0);
+	settingADCLayout->addWidget(settingADCConfigbutton, 0, 1);
 	settingADCBox->setLayout(settingADCLayout);
-	settingFFTLayout->addWidget(settingFFTSavebutton, 0, 0, Qt::AlignTop | Qt::AlignLeft);
-	settingFFTLayout->addWidget(settingFFTConfigbutton, 0, 1, Qt::AlignTop | Qt::AlignLeft);
+	settingFFTLayout->addWidget(settingFFTSavebutton, 0, 0);
+	settingFFTLayout->addWidget(settingFFTConfigbutton, 0, 1);
 	settingFFTBox->setLayout(settingFFTLayout);
 
 	settingLayout->addWidget(settingADCBox);
@@ -2948,14 +2955,16 @@ void viewpanel::CreatDebugWindow()
 	QLabel* valueLabel = new QLabel("Value");
 	QLabel* valueLabel1 = new QLabel("Value");
 
-	addrConfigLayout->addWidget(regLabel, 0 ,  0, 1,  1, Qt::AlignTop | Qt::AlignLeft);
-	addrConfigLayout->addWidget(addrLabel, 0 ,  1, 2,  3, Qt::AlignTop | Qt::AlignLeft);
-	addrConfigLayout->addWidget(valueLabel, 0 ,  2, 2,  3, Qt::AlignTop | Qt::AlignLeft);
-	addrConfigLayout->addWidget(valueLabel1, 0 ,  3, 2,  3, Qt::AlignTop | Qt::AlignLeft);
+	addrConfigLayout->addWidget(settingBox);
+
+	addrLayout->addWidget(regLabel, 1, 0, Qt::AlignTop);
+	addrLayout->addWidget(addrLabel, 1, 1, Qt::AlignTop);
+	addrLayout->addWidget(valueLabel, 1, 2, Qt::AlignTop);
+	addrLayout->addWidget(valueLabel1, 1, 3, Qt::AlignTop);
 	//addrConfigLayout->addWidget(readAddrbutton, 0 ,  3);
 
 	for(int i = 0 ; i < 5 ; i++){
-		paraLabel.emplace_back(new QLabel("para  "+QString::number( i )));
+		paraLabel.emplace_back(new QLabel("para "+QString::number( i )));
 		paraWriteText.emplace_back(new QLineEdit);
 		paraWriteText[i]->setText(QString::number( i ));
 		paraAddrText.emplace_back(new QLineEdit);
@@ -2972,18 +2981,19 @@ void viewpanel::CreatDebugWindow()
 	}
 
 	for(int j = 0;  j < 5; j++){
-		addrConfigLayout->addWidget(paraLabel[j], j + 1, 0, 1,  1, Qt::AlignTop | Qt::AlignLeft);
-		addrConfigLayout->addWidget(paraAddrText[j], j + 1, 1, 2,  3, Qt::AlignTop | Qt::AlignLeft);
-		addrConfigLayout->addWidget(paraWriteText[j], j + 1, 2, 2,  3, Qt::AlignTop | Qt::AlignLeft);
-		addrConfigLayout->addWidget(paraReadText[j], j + 1, 3, 2,  3, Qt::AlignTop | Qt::AlignLeft);
+		addrLayout->addWidget(paraLabel[j], j + 2, 0, Qt::AlignTop);
+		addrLayout->addWidget(paraAddrText[j], j + 2, 1, Qt::AlignTop);
+		addrLayout->addWidget(paraWriteText[j], j + 2, 2, Qt::AlignTop);
+		addrLayout->addWidget(paraReadText[j], j + 2, 3, Qt::AlignTop);
 	}
 
-	addrConfigLayout->addWidget(writeAddrbutton, 6, 2, 2,  3, Qt::AlignTop | Qt::AlignLeft);
-	addrConfigLayout->addWidget(readAddrbutton, 6, 3, 2,  3, Qt::AlignTop | Qt::AlignLeft);
-
+	addrLayout->addWidget(writeAddrbutton, 7, 2, Qt::AlignTop);
+	addrLayout->addWidget(readAddrbutton, 7, 3, Qt::AlignTop);
+	addrBox->setLayout(addrLayout);
+	addrConfigLayout->addWidget(addrBox);
 	addrConfigsBox->setLayout(addrConfigLayout);
 
-	configs->addWidget(settingBox);
+	//configs->addWidget(settingBox);
 	configs->addWidget(addrConfigsBox);
 
 	main_show->addLayout(charts, 0, 0 );
