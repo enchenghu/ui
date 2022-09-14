@@ -110,15 +110,17 @@ public slots:
     void slotmoveing(QMouseEvent *event);
     void slotdoubleClicked(QMouseEvent *event);
     void updateViews(void);
-
+    void slotshow(void);
 protected:
     public:
+#if 1
         void mousePressEvent ( QMouseEvent * event ) ;
         void mouseMoveEvent( QMouseEvent * event ) ;
         void mouseDoubleClickEvent(QMouseEvent *event);
         void wheelEvent(QWheelEvent  *event);
         void mouseReleaseEvent(QMouseEvent  *event);
         void resizeEvent(QResizeEvent *event);
+#endif
 };
 
 #endif // OSC_CHART_H

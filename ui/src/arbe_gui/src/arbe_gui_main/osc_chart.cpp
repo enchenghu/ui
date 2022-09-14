@@ -40,20 +40,21 @@ OSC_chart::OSC_chart( QWidget * parent )
     :QLabel(parent), index_(0)
 {
 
-    set_chart(0, 0, parent->size().width(),parent->size().height());
-
+    //set_chart(0, 0, parent->size().width(),parent->size().height());
+#if 1
     connect(this, SIGNAL(clicked( QMouseEvent* )), this, SLOT(slotClicked(QMouseEvent*)));
     connect(this, SIGNAL(moveing( QMouseEvent* )), this, SLOT(slotmoveing(QMouseEvent*)));
     connect(this, SIGNAL(doubleClicked( QMouseEvent* )), this, SLOT(slotdoubleClicked(QMouseEvent*)));
     this->setMouseTracking(true);
+#endif
     // 1.QLabel是放在布局里面的，所以无法直接调节QLabel大小，只能设置窗口大小。
     // 2.主窗口调节也受限也子窗口，假如子窗口无法进行调节的话那么主窗口也无法调节。
     // 3.实际加载图片的时候发现对窗口调用resize只能放大窗口，缩小无效。 把QLabel的sizePolicy设置为Ignored就可以自由放大缩小了。
     this->setSizePolicy(QSizePolicy::Ignored,QSizePolicy::Ignored);
-    std::cout << "!!!!now OSC_chart build "  << index_ << std::endl;
     OSC_multiple=50;
 }
 
+#if 1
 void OSC_chart::resizeEvent(QResizeEvent *event)
 {
     painter.end();
@@ -63,6 +64,7 @@ void OSC_chart::resizeEvent(QResizeEvent *event)
     Draw_Chart();
     setPixmap(pixmap);
 }
+#endif
 
 //设置图标大小 初始化绘图设备 (首次初始化使用 ，可设为私有函数并去除else部分 因为在resizeEvent已经实现)
 void OSC_chart::set_chart(int x, int y, int w, int h)
@@ -118,8 +120,9 @@ void OSC_chart::UpdateData(){
     //data_y[0].clear();
     //qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
     ///for(int i = 0; i < nums; i++){
-    Add_Line_Data_XY(0, index_++, qrand()%100);
-    std::cout << "!!!!now UpdateData, index is "  << index_ << std::endl;
+    //Add_Line_Data_XY(0, index_++, qrand()%100);
+    Add_Line_Data(0, qrand()%100);
+    //std::cout << "!!!!now UpdateData, index is "  << index_ << std::endl;
         //data_x[0].append(index_++);
         //data_y[0].append(qrand()%100);        
     //}
@@ -128,9 +131,15 @@ void OSC_chart::UpdateData(){
 void OSC_chart::updateViews(void){
     //std::cout << "!!!!now updateViews, index is "  << index_ << std::endl;
     UpdateData();
-    Draw_Chart();
-    //Draw_Wave(data_x[0],data_y[0]);
+    emit slotshow();
 }
+
+void OSC_chart::slotshow(void){
+    pixmap.fill(Qt::transparent);
+    Draw_Chart();
+    setPixmap(pixmap);    
+}
+
 //求范围公式 舍去输入值除最高位以外的值
 int arange(int x)
 {
@@ -149,6 +158,7 @@ int arange(int x)
 }
 
 //鼠标滚轮事件
+#if 1
 void OSC_chart::wheelEvent(QWheelEvent  *event)
 {
 
@@ -282,11 +292,10 @@ void OSC_chart::wheelEvent(QWheelEvent  *event)
     //emit slotmoveing(externevent);
 }
 
-
+#endif
 
 void OSC_chart::Draw_Chart(/*QPainter *painter*/)
 {
-
     //画背景
     //实线
     painter.setPen(Qt::SolidLine);
@@ -558,6 +567,7 @@ void OSC_chart::Add_Line_Data_XY(int Line_num,int pos_x,int pos_y)
     }
 }
 //表格自动设置（自动调整纵坐标显示范围）
+#if 1
 double OSC_chart::Set_Chart_Auto()
 {
     int Max_of_All=0,Min_of_All=0;
@@ -611,6 +621,7 @@ double OSC_chart::Set_Chart_Auto()
     else
         return -1;
 }
+#endif
 //画指针线和指针坐标
 void OSC_chart::Draw_Cross_pointer(/*QPainter *painter,*/int pos_x,int pos_y)
 {
@@ -640,6 +651,7 @@ void OSC_chart::Draw_Cross_pointer(/*QPainter *painter,*/int pos_x,int pos_y)
 
 void OSC_chart::slotmoveing(QMouseEvent *event)
 {
+#if 1
 //    painter.end();
 //    pixmap=QPixmap(this->width(),this->height());//画布
 //    pixmap.fill(Qt::transparent);
@@ -655,13 +667,14 @@ void OSC_chart::slotmoveing(QMouseEvent *event)
 
 
     externevent=event;
+
     Draw_Chart();
 
     painter.setPen(Qt::blue);//设置指针颜色
     Draw_Cross_pointer(position.x(),position.y());
 
     setPixmap(pixmap);
-
+#endif
 
 }
 void OSC_chart::slotdoubleClicked(QMouseEvent *event)
@@ -697,6 +710,8 @@ void OSC_chart::slotClicked(QMouseEvent *event)
     }
 
 }
+
+#if 1
 void OSC_chart::mousePressEvent(QMouseEvent *event)
 {
 #if (QT_VERSION <= QT_VERSION_CHECK(6,0,0))
@@ -744,3 +759,5 @@ void OSC_chart::mouseReleaseEvent(QMouseEvent  *event)
 {
     start_flag=0;
 }
+
+#endif
