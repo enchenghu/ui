@@ -3013,7 +3013,24 @@ void viewpanel::CreatUIWindow()
 	const QSize slider_size = QSize(200, 20);
 
 	QWidget* multiWidget = new QWidget();
+	QDockWidget* ctrlDock = new QDockWidget();
+	QWidget* ctrlDockWidget = new QWidget();
+
+	ctrlDock->setFeatures(QDockWidget::DockWidgetClosable );
+	//dock->setWidget(multiWidget);
+	ctrlDock->setMaximumHeight(250);
+
+	//QDockWidget去掉标题栏
+	//QWidget * titleBarWidget= ctrlDock->titleBarWidget();
+	//QWidget *pEmptyWidget = new QWidget();
+	//ctrlDock->setTitleBarWidget(pEmptyWidget);//设置一个空的widget作为标题栏
+	//delete titleBarWidget;//删除原标题栏
+
 	QGridLayout* controls = new QGridLayout ;
+	QGridLayout* mainLayout = new QGridLayout ;
+	//mainLayout->setRowStretch(0, 1);
+	//mainLayout->setRowStretch(1, 5);
+
 	QGroupBox *controlsBox = new QGroupBox(tr("Basic Controls:"));
 	QGridLayout* controls_layout = new QGridLayout;
 
@@ -3031,9 +3048,9 @@ void viewpanel::CreatUIWindow()
 	saveDataCombo->addItem(tr("data stream 3"));
 	saveDataCombo->addItem(tr("data stream 4"));
 	saveDataCombo->setCurrentIndex(0);
-	saveLayout->addWidget(saveDatalabel, 0, 0);
-	saveLayout->addWidget(saveDataCombo, 0, 1);
-	saveLayout->addWidget(saveBtn, 0, 2);
+	saveLayout->addWidget(saveDatalabel, 0, 0, Qt::AlignLeft);
+	saveLayout->addWidget(saveDataCombo, 0, 1, Qt::AlignLeft);
+	saveLayout->addWidget(saveBtn, 0, 2, Qt::AlignLeft);
 
 	//saveLayout->setColumnStretch(0, 1);
 	//saveLayout->setColumnStretch(1, 2);
@@ -3051,9 +3068,9 @@ void viewpanel::CreatUIWindow()
 	loadDataCombo->addItem(tr("DAC file"));
 	loadDataCombo->addItem(tr("Cali file"));
 	//saveDataCombo->setCurrentIndex(0);
-	loadLayout->addWidget(loadDatalabel, 0, 0);
-	loadLayout->addWidget(loadDataCombo, 0, 1);
-	loadLayout->addWidget(loadBtn, 0, 2);
+	loadLayout->addWidget(loadDatalabel, 0, 0, Qt::AlignLeft);
+	loadLayout->addWidget(loadDataCombo, 0, 1, Qt::AlignLeft);
+	loadLayout->addWidget(loadBtn, 0, 2, Qt::AlignLeft);
 
 	loadfileBox->setLayout(loadLayout);
 	fileLayout->addWidget(loadfileBox);
@@ -3082,14 +3099,23 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( port_edit, 1, 1, Qt::AlignLeft);
 	controls_layout->addWidget( lidar_connect_button, 2, 0, Qt::AlignLeft);
 	controls_layout->addWidget( lidar_start_button, 2, 1, Qt::AlignLeft);
+
 	controlsBox->setLayout(controls_layout);
 
 	render_panel_ = new rviz::RenderPanel();
 	selection_panel_ = new rviz::SelectionPanel();
-	controls->addWidget ( controlsBox, 0, 0);
-	controls->addWidget ( fileBox, 0, 1);
-	controls->addWidget ( render_panel_, 1,  0,  5,  5);
-	controls->addWidget ( selection_panel_, 1,  0, 5, 1, Qt::AlignLeft);
-	multiWidget->setLayout(controls);
+	controls->addWidget ( controlsBox, 0, 0, Qt::AlignLeft);
+	controls->addWidget ( fileBox, 0, 1, Qt::AlignLeft);
+	for(int i = 0; i < 6;i++)
+		controls->setColumnStretch(i,1);
+
+	ctrlDockWidget->setLayout(controls);
+	ctrlDock->setWidget(ctrlDockWidget);
+
+	mainLayout->addWidget ( ctrlDock, 0,  0);
+	mainLayout->addWidget ( render_panel_, 1,  0,  5,  5);
+	mainLayout->addWidget ( selection_panel_, 1,  0, 5, 1, Qt::AlignLeft);
+
+	multiWidget->setLayout(mainLayout);
 	this->addTab(multiWidget,  "Lidar Ui Mainwindow");
 }
