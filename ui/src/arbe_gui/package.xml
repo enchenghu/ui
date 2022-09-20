@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>arbe_phoenix_radar_driver</name>
+  <name>autox_ui</name>
   <version>0.0.0</version>
-  <description>The arbe_phoenix_radar_driver package</description>
+  <description>The autox_ui package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

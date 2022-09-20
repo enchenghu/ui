@@ -13,7 +13,7 @@
 #}
   <arg name="enable_gui" default="true" />
   <arg name="console_level" default="2" />
-  <arg name="Basler_cal_file" default="$(find arbe_phoenix_radar_driver)/CameraCalibrationFiles/Basler.cam" />
+  <arg name="Basler_cal_file" default="$(find autox_ui)/CameraCalibrationFiles/Basler.cam" />
   <arg name="Radar_base_freq" default="[-1]"/> #-1 = don't change base freq
   <arg name="n_radars" default="1" />
   <arg name="yaw_in_degrees" default="[0]"/>
@@ -32,7 +32,7 @@
 
 
 	####  For GDB add: launch-prefix="gdb -ex run --args" ####
-	<node name="arbe_gui" pkg="arbe_phoenix_radar_driver" type="arbe_gui" output="screen" required="true">
+	<node name="arbe_gui" pkg="autox_ui" type="arbe_gui" output="screen" required="true">
 		<param name="AntennaHeight" value="1.0" />
 		<param name="Mode" value = "4d" />
 		<param name="ColoringType" value = "Elevation" />

@@ -126,6 +126,7 @@ extern "C"
 	{
 
 		float coef = RAF_COM_CALC_CalcRangeCoefficient(meta->range);
+		
 
 		if (meta->doppler.tFields.isFine == 1)
 		{
