@@ -1258,14 +1258,18 @@ void viewpanel::readPower(void){
 		QMessageBox msgBox;
 		msgBox.setText("read power failed!");
 		msgBox.exec();
+		return;
 	}
 	commandMsg cmdMsg;
 	memset(&cmdMsg, 0, sizeof(cmdMsg));
+	bool ifread = true;
 	while(1){
-		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0){
+		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
+			sleep(1);
+			ifread = false;
 			continue;
 		}else{
-			if(cmdMsg.mHead.usCommand = commandType::POWER_READ){
+			if(cmdMsg.mHead.usCommand == commandType::POWER_READ){
 				ctlReadLine_[0]->setText(QString::number(cmdMsg.mCommandVal));
 			}
 			break;
@@ -1289,16 +1293,19 @@ void viewpanel::readCFAR(void){
 	cmdMsg_.mHead.usCommand = commandType::CFAR_READ;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
-		msgBox.setText("read power failed!");
+		msgBox.setText("read CFAR failed!");
 		msgBox.exec();
+		return;
 	}
 	commandMsg cmdMsg;
-	memset(&cmdMsg, 0, sizeof(cmdMsg));
+	bool ifread = true;
 	while(1){
-		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0){
+		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
+			sleep(1);
+			ifread = false;
 			continue;
 		}else{
-			if(cmdMsg.mHead.usCommand = commandType::CFAR_READ){
+			if(cmdMsg.mHead.usCommand == commandType::CFAR_READ){
 				ctlReadLine_[1]->setText(QString::number(cmdMsg.mCommandVal));
 			}
 			break;
@@ -1322,16 +1329,20 @@ void viewpanel::read3DFT(void){
 	cmdMsg_.mHead.usCommand = commandType::DFT3_READ;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
-		msgBox.setText("read power failed!");
+		msgBox.setText("read 3DFT failed!");
 		msgBox.exec();
+		return;
 	}
 	commandMsg cmdMsg;
 	memset(&cmdMsg, 0, sizeof(cmdMsg));
+	bool ifread = true;
 	while(1){
-		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0){
+		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
+			sleep(1);
+			ifread = false;
 			continue;
 		}else{
-			if(cmdMsg.mHead.usCommand = commandType::DFT3_READ){
+			if(cmdMsg.mHead.usCommand == commandType::DFT3_READ){
 				ctlReadLine_[2]->setText(QString::number(cmdMsg.mCommandVal));
 			}
 			break;
@@ -1355,16 +1366,20 @@ void viewpanel::readDiff(void){
 	cmdMsg_.mHead.usCommand = commandType::DIFF_READ;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
-		msgBox.setText("read power failed!");
+		msgBox.setText("read Diff failed!");
 		msgBox.exec();
+		return;
 	}
 	commandMsg cmdMsg;
 	memset(&cmdMsg, 0, sizeof(cmdMsg));
+	bool ifread = true;
 	while(1){
-		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0){
+		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
+			sleep(1);
+			ifread = false;
 			continue;
 		}else{
-			if(cmdMsg.mHead.usCommand = commandType::DIFF_READ){
+			if(cmdMsg.mHead.usCommand == commandType::DIFF_READ){
 				ctlReadLine_[3]->setText(QString::number(cmdMsg.mCommandVal));
 			}
 			break;
