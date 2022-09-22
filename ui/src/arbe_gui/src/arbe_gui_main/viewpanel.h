@@ -35,6 +35,11 @@
 #ifndef viewpanel_H
 #define viewpanel_H
 
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <pthread.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
 #include <QApplication>
 #include <QWidget>
 #include <QSlider>
@@ -100,6 +105,34 @@ typedef enum
     VT_BOUTIQUE_2,
     VT_BOUTIQUE_3
 }eViewType;
+
+typedef enum
+{
+    POWER_WRITE = 1, 
+    CFAR_WRITE,
+    DFT3_WRITE,
+    DIFF_WRITE,
+    POWER_READ,
+    CFAR_READ,
+    DFT3_READ,
+    DIFF_READ	
+}commandType;
+
+typedef struct API_Header
+{
+	uint16_t 	usPrefix; // 0xeeff
+	uint16_t 	usType; // 0x10 version 1.0
+	uint16_t 	usCommand; // command enum
+	uint16_t 	usPayloadCrc;
+	uint32_t 	unLength;
+}API_Header;
+
+typedef struct 
+{
+	API_Header 	mHead; // 0xeeff
+	uint32_t 	mCommandVal;
+} commandMsg;
+
 
 typedef struct view_vals_t {
         QVariant distance;
@@ -167,6 +200,16 @@ public Q_SLOTS:
 	void radar_start_stop_control( void );
 	void startControl( void );
 	void connectControl(void);
+	void configPower(void);
+	void configCFAR(void);
+	void config3DFT(void);
+	void configDiff(void);
+
+	void readPower(void);
+	void readCFAR(void);
+	void read3DFT(void);
+	void readDiff(void);
+	
     void setCamera_sub_topic(bool flag );
 	void enableCamera(bool isUSB );
 	void enableFreeSpaceView( void );
@@ -260,6 +303,12 @@ private Q_SLOTS:
 private:
 	void CreatDebugWindow();
 	void CreatUIWindow();
+	void CreatCtlPanel();
+	int lidarConnect();
+	void CreatConnect();
+	int ctrl_sock;
+	std::string lidar_ip;
+	int lidar_ctrl_port;
 	rviz::VisualizationManager* manager_;
 	rviz::RenderPanel* render_panel_;
 	rviz::SelectionPanel* selection_panel_;
@@ -284,6 +333,7 @@ private:
 
 	QGridLayout * mainRadarLayout;
     static viewpanel* m_pInstance;
+	commandMsg cmdMsg_;
 
     double display_offset_x_;
     double display_offset_y_;
@@ -291,12 +341,23 @@ private:
     bool  follower_view_;
 	bool recalc_display_offsets;
 	QComboBox* loadDataCombo;
+	QComboBox* m3DFTCombo;
+	QComboBox* CFARCombo;
+	QComboBox* PowerCombo;
+	QComboBox* DiffCombo;
+	QLineEdit *ip_edit;
+	QLineEdit *port_edit;
+
 	std::string loadFileType_;
 	QString  loadLidarFile_;
 	bool ifConnected;
 	bool ifStarted;
 	QPushButton *lidar_connect_button;
 	QPushButton *lidar_start_button;
+	std::vector<QPushButton* > ctlWriteBtn_;
+	std::vector<QPushButton* > ctlReadBtn_;
+	std::vector<QLineEdit* > ctlReadLine_;
+
 };
 
 int read_camera_calibration_from_file(const char * file_name, bool do_for_all_radars);

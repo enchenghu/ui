@@ -335,9 +335,14 @@ viewpanel::viewpanel(QTabWidget* parent )
 #if ONLY_SHOW_UI
 	init_pubs();
 #endif
+	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
+	cmdMsg_.mHead.usPrefix = 0xeeff;
+	cmdMsg_.mHead.usType = 0x10;
+	cmdMsg_.mHead.usPayloadCrc = 0x00;
+	cmdMsg_.mHead.unLength = 4;
 
 	CreatUIWindow();
-
+	CreatConnect();
 	CreatDebugWindow();
 
 	overlay_text_label = new QLabel;
@@ -1218,14 +1223,153 @@ void viewpanel::startControl(void){
 
 void viewpanel::connectControl(void){
 	if(!ifStarted){
-		lidar_connect_button->setStyleSheet("color: green");
-		lidar_connect_button->setText("&Disconnect");
-		ifStarted = true;
+		if(lidarConnect() < 0){
+			QMessageBox msgBox;
+			msgBox.setText("connect to the lidar failed!");
+			msgBox.exec();
+		}else {
+			lidar_connect_button->setStyleSheet("color: green");
+			lidar_connect_button->setText("&Disconnect");
+			ifStarted = true;
+		}
 	}else {
 		lidar_connect_button->setStyleSheet("color: black");
 		lidar_connect_button->setText("&Connect");
 		ifStarted = false;
+		::close(ctrl_sock);
 	}
+}
+
+void viewpanel::configPower(void){
+
+	QString str = PowerCombo->currentText();
+	cmdMsg_.mCommandVal = str.toInt();
+	cmdMsg_.mHead.usCommand = commandType::POWER_WRITE;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("config power failed!");
+		msgBox.exec();
+	}
+}
+
+void viewpanel::readPower(void){
+	cmdMsg_.mHead.usCommand = commandType::POWER_READ;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("read power failed!");
+		msgBox.exec();
+	}
+	commandMsg cmdMsg;
+	memset(&cmdMsg, 0, sizeof(cmdMsg));
+	while(1){
+		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0){
+			continue;
+		}else{
+			if(cmdMsg.mHead.usCommand = commandType::POWER_READ){
+				ctlReadLine_[0]->setText(QString::number(cmdMsg.mCommandVal));
+			}
+			break;
+		}
+	}	
+}
+
+void viewpanel::configCFAR(void){
+
+	QString str = CFARCombo->currentText();
+	cmdMsg_.mCommandVal = str.toInt();
+	cmdMsg_.mHead.usCommand = commandType::CFAR_WRITE;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("config CFAR failed!");
+		msgBox.exec();
+	}
+}
+
+void viewpanel::readCFAR(void){
+	cmdMsg_.mHead.usCommand = commandType::CFAR_READ;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("read power failed!");
+		msgBox.exec();
+	}
+	commandMsg cmdMsg;
+	memset(&cmdMsg, 0, sizeof(cmdMsg));
+	while(1){
+		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0){
+			continue;
+		}else{
+			if(cmdMsg.mHead.usCommand = commandType::CFAR_READ){
+				ctlReadLine_[1]->setText(QString::number(cmdMsg.mCommandVal));
+			}
+			break;
+		}
+	}	
+}
+
+void viewpanel::config3DFT(void){
+
+	QString str = m3DFTCombo->currentText();
+	cmdMsg_.mCommandVal = str.toInt();
+	cmdMsg_.mHead.usCommand = commandType::DFT3_WRITE;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("config3DFT failed!");
+		msgBox.exec();
+	}
+}
+
+void viewpanel::read3DFT(void){
+	cmdMsg_.mHead.usCommand = commandType::DFT3_READ;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("read power failed!");
+		msgBox.exec();
+	}
+	commandMsg cmdMsg;
+	memset(&cmdMsg, 0, sizeof(cmdMsg));
+	while(1){
+		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0){
+			continue;
+		}else{
+			if(cmdMsg.mHead.usCommand = commandType::DFT3_READ){
+				ctlReadLine_[2]->setText(QString::number(cmdMsg.mCommandVal));
+			}
+			break;
+		}
+	}	
+}
+
+void viewpanel::configDiff(void){
+
+	QString str = DiffCombo->currentText();
+	cmdMsg_.mCommandVal = str.toInt();
+	cmdMsg_.mHead.usCommand = commandType::DIFF_WRITE;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("config Diff failed!");
+		msgBox.exec();
+	}
+}
+
+void viewpanel::readDiff(void){
+	cmdMsg_.mHead.usCommand = commandType::DIFF_READ;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("read power failed!");
+		msgBox.exec();
+	}
+	commandMsg cmdMsg;
+	memset(&cmdMsg, 0, sizeof(cmdMsg));
+	while(1){
+		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0){
+			continue;
+		}else{
+			if(cmdMsg.mHead.usCommand = commandType::DIFF_READ){
+				ctlReadLine_[3]->setText(QString::number(cmdMsg.mCommandVal));
+			}
+			break;
+		}
+	}	
 }
 
 void viewpanel::radar_start_stop_control( void )
@@ -3005,6 +3149,21 @@ void viewpanel::CreatDebugWindow()
 
 }
 
+void viewpanel::CreatConnect()
+{
+	//connect( RangeCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( setRange( void )));
+	
+	connect(lidar_connect_button, SIGNAL(clicked()), this, SLOT( connectControl( void )));
+	connect(ctlWriteBtn_[0], SIGNAL(clicked()), this, SLOT( configPower( void )));
+	connect(ctlWriteBtn_[1], SIGNAL(clicked()), this, SLOT( configCFAR( void )));
+	connect(ctlWriteBtn_[2], SIGNAL(clicked()), this, SLOT( config3DFT( void )));
+	connect(ctlWriteBtn_[3], SIGNAL(clicked()), this, SLOT( configDiff( void )));
+
+	connect(ctlReadBtn_[0], SIGNAL(clicked()), this, SLOT( readPower( void )));
+	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
+	connect(ctlReadBtn_[2], SIGNAL(clicked()), this, SLOT( read3DFT( void )));
+	connect(ctlReadBtn_[3], SIGNAL(clicked()), this, SLOT( readDiff( void )));
+}
 
 void viewpanel::CreatUIWindow()
 {
@@ -3083,13 +3242,11 @@ void viewpanel::CreatUIWindow()
 	lidar_start_button = new QPushButton("&Start", this);
 	//lidar_stop_button = new QPushButton("Stop", this);
 	//lidarIdCombo =  new QComboBox;
-	connect( lidar_connect_button, SIGNAL(clicked()), this, SLOT( connectControl( void )));
-	connect( lidar_start_button, SIGNAL(clicked()), this, SLOT( startControl( void )));
 
 	QLabel* lidar_IP_label = new QLabel( "IP addr" );
 	QLabel* lidar_port_label = new QLabel( "Port" );
-	QLineEdit *ip_edit =  new QLineEdit();
-	QLineEdit *port_edit =  new QLineEdit();
+	ip_edit =  new QLineEdit();
+	port_edit =  new QLineEdit();
 	ip_edit->setPlaceholderText("input ip addr");
 	port_edit->setPlaceholderText("input ip port");
 
@@ -3100,13 +3257,65 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( lidar_connect_button, 2, 0, Qt::AlignLeft);
 	controls_layout->addWidget( lidar_start_button, 2, 1, Qt::AlignLeft);
 
-	controlsBox->setLayout(controls_layout);
+	QLabel* CFAR_label = new QLabel( "CFAR" );
+	QLabel* m3DFT_label = new QLabel( "3DFT" );
+	QLabel* Power_label = new QLabel( "Power/mW" );
+	QLabel* diff_label = new QLabel( "Diff" );
+	CFARCombo = new QComboBox;
+	m3DFTCombo = new QComboBox;
+	PowerCombo = new QComboBox;
+	DiffCombo = new QComboBox;
 
+	CFARCombo->addItem(tr("1"));
+	CFARCombo->addItem(tr("3"));
+	CFARCombo->addItem(tr("5"));
+	CFARCombo->addItem(tr("7"));
+
+	PowerCombo->addItem(tr("70"));
+	PowerCombo->addItem(tr("140"));
+	PowerCombo->addItem(tr("500"));
+	PowerCombo->addItem(tr("1000"));
+	PowerCombo->addItem(tr("1600"));
+
+	m3DFTCombo->addItem(tr("0"));
+	m3DFTCombo->addItem(tr("1"));
+
+	DiffCombo->addItem(tr("0"));
+	DiffCombo->addItem(tr("1"));
+
+	controls_layout->addWidget( Power_label, 0, 2, Qt::AlignLeft);	
+	controls_layout->addWidget( CFAR_label, 1, 2, Qt::AlignLeft);			
+	controls_layout->addWidget( m3DFT_label, 2, 2, Qt::AlignLeft);			
+	controls_layout->addWidget( diff_label, 3, 2, Qt::AlignLeft);	
+
+	controls_layout->addWidget( PowerCombo, 0, 3, Qt::AlignLeft);	
+	controls_layout->addWidget( CFARCombo, 1, 3, Qt::AlignLeft);			
+	controls_layout->addWidget( m3DFTCombo, 2, 3, Qt::AlignLeft);			
+	controls_layout->addWidget( DiffCombo, 3, 3, Qt::AlignLeft);	
+
+	for(int i = 0; i < 4; i++){
+		ctlWriteBtn_.emplace_back(new QPushButton("&Cfg", this));
+		ctlReadBtn_.emplace_back(new QPushButton("&Read", this));
+		ctlReadLine_.emplace_back(new QLineEdit);
+		ctlReadLine_[i]->setReadOnly(true);
+		QPalette palette = ctlReadLine_[i]->palette();
+		palette.setBrush(QPalette::Base,
+						palette.brush(QPalette::Disabled, QPalette::Base));
+		ctlReadLine_[i]->setPalette(palette);
+		controls_layout->addWidget( ctlWriteBtn_[i], i, 4, Qt::AlignLeft);	
+		controls_layout->addWidget( ctlReadLine_[i], i, 5, Qt::AlignLeft);			
+		controls_layout->addWidget( ctlReadBtn_[i], i, 6, Qt::AlignLeft);			
+
+	}
+
+	controlsBox->setLayout(controls_layout);
 	render_panel_ = new rviz::RenderPanel();
 	selection_panel_ = new rviz::SelectionPanel();
 	controls->addWidget ( controlsBox, 0, 0, Qt::AlignLeft);
 	controls->addWidget ( fileBox, 0, 1, Qt::AlignLeft);
-	for(int i = 0; i < 6;i++)
+
+	controls->setColumnStretch(0,2);
+	for(int i = 1; i < 4;i++)
 		controls->setColumnStretch(i,1);
 
 	ctrlDockWidget->setLayout(controls);
@@ -3118,4 +3327,128 @@ void viewpanel::CreatUIWindow()
 
 	multiWidget->setLayout(mainLayout);
 	this->addTab(multiWidget,  "Lidar Ui Mainwindow");
+}
+
+int viewpanel::lidarConnect()
+{
+	int err;
+	int one = 1;
+
+	lidar_ip = ip_edit->text().toStdString();
+	lidar_ctrl_port = port_edit->text().toInt();
+	ROS_INFO("lidar_ip is %s, lidar_ctrl_port is %d", lidar_ip.c_str(), lidar_ctrl_port);
+
+
+	struct sockaddr_in ctrl_serv_addr;
+	struct sockaddr_in data_serv_addr;
+	struct sockaddr_in logs_serv_addr;
+	//pthread_t eth_logs_thread_id;
+
+	// create TCP socket that will be used to control the rada
+	if ((ctrl_sock=socket(AF_INET, SOCK_STREAM, 0))==-1){
+		ROS_DEBUG("ERROR: Could not create socket!");
+		return -1;
+	}
+	setsockopt(ctrl_sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+
+	struct timeval timeout;
+	timeout.tv_sec  = 3;  // after 2 seconds connect() will timeout
+	timeout.tv_usec = 0;
+	setsockopt(ctrl_sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+
+	memset(&ctrl_serv_addr, 0, sizeof(ctrl_serv_addr));
+	ctrl_serv_addr.sin_family = AF_INET;
+	ctrl_serv_addr.sin_addr.s_addr = inet_addr(lidar_ip.c_str());
+	ctrl_serv_addr.sin_port = htons(lidar_ctrl_port);
+
+	if(::connect(ctrl_sock, (struct sockaddr*)&ctrl_serv_addr, sizeof(ctrl_serv_addr))<0)
+	{
+		ROS_INFO("Failed to connect to lidar_ip %s", lidar_ip.c_str());
+		return -2; /* Completely fail only if first radar didn't connect */
+	}
+	fcntl(ctrl_sock, F_SETFL, O_NONBLOCK); /* Set the socket to non blocking mode */
+
+
+#if 0
+	ROS_INFO("Connecting to the Radar data socket using UDP port %d",arg_data_port);
+	// create UDP socket that will be used to receive data from the Radar
+	if ((radar_sock=socket(AF_INET, SOCK_DGRAM, 0))==-1){
+		ROS_DEBUG("ERROR: Could not create UDP socket!");
+	}
+
+	setsockopt(radar_sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+	setsockopt(radar_sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+
+	memset(&data_serv_addr, 0, sizeof(data_serv_addr));
+	data_serv_addr.sin_family = AF_INET;
+	data_serv_addr.sin_addr.s_addr = INADDR_ANY;
+	data_serv_addr.sin_port = htons(arg_data_port);
+
+	ROS_DEBUG("data Port: %d",data_serv_addr.sin_port);
+
+	if ( bind(radar_sock, (const struct sockaddr*)&data_serv_addr,sizeof(data_serv_addr)) < 0 ) 
+	{ 
+		ROS_DEBUG("Failed to connect to the Data socket");
+		return 1;
+	} 
+
+	// create UDP socket that will be used to receive logs over thernet from the Radar
+	ROS_INFO("Openning a UDP socket using port %d to the radar for receiving debug logs", arg_logs_port);
+
+	if ((logs_sock=socket(AF_INET, SOCK_DGRAM, 0))==-1){
+		ROS_INFO("ERROR: Could not create Logs UDP socket!");
+	}
+
+	setsockopt(logs_sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+	setsockopt(logs_sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+
+	memset(&logs_serv_addr, 0, sizeof(logs_serv_addr));
+	logs_serv_addr.sin_family = AF_INET;
+	logs_serv_addr.sin_addr.s_addr = INADDR_ANY;
+	/* The logs port number is the UDP port used for PointCLoud + 1 */
+	logs_serv_addr.sin_port = htons(arg_logs_port);
+
+	if ( bind(logs_sock, (const struct sockaddr*)&logs_serv_addr,sizeof(logs_serv_addr)) < 0 ) 
+	{ 
+		ROS_INFO("Failed to connect to the Ethernet logger socket");
+	} else {
+		/* spawn the Radar Ethernet logger  thread */
+		pthread_create(&eth_logs_thread_id,NULL,&radar_ethernet_logger_thread,NULL);
+	}
+	fcntl(logs_sock, F_SETFL, O_NONBLOCK); /* Set the socket to non blocking mode */
+	ROS_INFO("Radar Connected");
+
+	/* Set radar time as ros time */
+	uint64_t time =(uint64_t)(ros::Time::now().toSec()*1000); //= (((((uint64_t)tPointCloud_V1_1->unTimeMsb) << 32)) | ((uint64_t)tPointCloud_V1_1->unTimeLsb))>>16;
+	TSetTimeInfo info;
+	if(0)
+	{
+		time = time<<16;
+		info.unInitateTimeLsb = (uint32_t)((time & 0xffffffff));
+		info.unInitateTimeMsb = (uint32_t)(time>>32);
+		ROS_INFO("time: %lu MSB %d LSB %d AM I INVERTIBLE? %lu",time,info.unInitateTimeMsb,info.unInitateTimeLsb,
+				 (((uint64_t)(info.unInitateTimeMsb)<<32 | ((uint64_t)info.unInitateTimeLsb))>>16));
+	}
+	else
+	{
+		info.unInitateTimeLsb = (uint32_t)((time & 0xffffffffffffffff));
+		info.unInitateTimeMsb = (uint32_t)((time>>32) & 0xffff);
+		ROS_INFO("time: %lu MSB %d LSB %d AM I INVERTIBLE? %lu",time,info.unInitateTimeLsb,info.unInitateTimeMsb,
+				 (((uint64_t)(info.unInitateTimeMsb)<<32 | ((uint64_t)info.unInitateTimeLsb))));
+	}
+	RAF_API_SysCfg_SetTime(&tArbeApiMailBox,info);
+	if(radar_base_freq>76.0 && radar_base_freq<81.0)
+	{
+		ROS_INFO("Requested base freq : %f",radar_base_freq);
+		PTCtrlFrameControlInfo FreqInfo;
+		FreqInfo->unBandwidth = -1;//hz -1=DC
+		FreqInfo->unBaseFreq =radar_base_freq*1e6;//khz
+		for(int type =0; type<EFrameTypeUser::FrameTypeLast; type++){
+			FreqInfo->unFrameType = type;
+			RAF_API_RdrCtrl_SetFrameControlData(&tArbeApiMailBox, FreqInfo);
+			sleep(1);
+		}
+	}
+#endif
+	return 0;
 }
