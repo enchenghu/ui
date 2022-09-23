@@ -1265,7 +1265,7 @@ void viewpanel::readPower(void){
 	bool ifread = true;
 	while(1){
 		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
-			sleep(1);
+			usleep(500*1000);
 			ifread = false;
 			continue;
 		}else{
@@ -1301,7 +1301,7 @@ void viewpanel::readCFAR(void){
 	bool ifread = true;
 	while(1){
 		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
-			sleep(1);
+			usleep(500*1000);
 			ifread = false;
 			continue;
 		}else{
@@ -1338,7 +1338,7 @@ void viewpanel::read3DFT(void){
 	bool ifread = true;
 	while(1){
 		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
-			sleep(1);
+			usleep(500*1000);
 			ifread = false;
 			continue;
 		}else{
@@ -1375,7 +1375,7 @@ void viewpanel::readDiff(void){
 	bool ifread = true;
 	while(1){
 		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
-			sleep(1);
+			usleep(500*1000);
 			ifread = false;
 			continue;
 		}else{
