@@ -131,7 +131,7 @@ typedef struct
 {
 	API_Header 	mHead; // 0xeeff
 	uint32_t 	mCommandVal;
-	float 	mCommandVal_f;
+	//float 	mCommandVal_f;
 } commandMsg;
 
 

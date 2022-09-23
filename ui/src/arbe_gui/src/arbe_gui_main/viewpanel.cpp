@@ -1246,7 +1246,7 @@ void viewpanel::connectControl(void){
 void viewpanel::configPower(void){
 
 	QString str = PowerCombo->currentText();
-	cmdMsg_.mCommandVal_f = str.toDouble();
+	cmdMsg_.mCommandVal = str.toDouble() * 100;
 	cmdMsg_.mHead.usCommand = commandType::POWER_WRITE;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
@@ -1273,7 +1273,8 @@ void viewpanel::readPower(void){
 			continue;
 		}else{
 			if(cmdMsg.mHead.usCommand == commandType::POWER_READ){
-				ctlReadLine_[0]->setText(QString::number(cmdMsg.mCommandVal_f));
+				double power = cmdMsg.mCommandVal / 100.0;
+				ctlReadLine_[0]->setText(QString::number(power));
 			}
 			break;
 		}
