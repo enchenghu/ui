@@ -341,6 +341,9 @@ viewpanel::viewpanel(QTabWidget* parent )
 	cmdMsg_.mHead.usPayloadCrc = 0x00;
 	cmdMsg_.mHead.unLength = 4;
 
+	power_index = {0.2, 12, 20, 70, 290, 346, 347, 
+				   397, 415, 500, 510, 560, 625, 1000, 
+				   1130, 1450, 1580, 1600};
 	CreatUIWindow();
 	CreatConnect();
 	CreatDebugWindow();
@@ -1243,7 +1246,7 @@ void viewpanel::connectControl(void){
 void viewpanel::configPower(void){
 
 	QString str = PowerCombo->currentText();
-	cmdMsg_.mCommandVal = str.toInt();
+	cmdMsg_.mCommandVal_f = str.toDouble();
 	cmdMsg_.mHead.usCommand = commandType::POWER_WRITE;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
@@ -1270,7 +1273,7 @@ void viewpanel::readPower(void){
 			continue;
 		}else{
 			if(cmdMsg.mHead.usCommand == commandType::POWER_READ){
-				ctlReadLine_[0]->setText(QString::number(cmdMsg.mCommandVal));
+				ctlReadLine_[0]->setText(QString::number(cmdMsg.mCommandVal_f));
 			}
 			break;
 		}
@@ -1298,6 +1301,7 @@ void viewpanel::readCFAR(void){
 		return;
 	}
 	commandMsg cmdMsg;
+	memset(&cmdMsg, 0, sizeof(cmdMsg));
 	bool ifread = true;
 	while(1){
 		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
@@ -3281,16 +3285,13 @@ void viewpanel::CreatUIWindow()
 	PowerCombo = new QComboBox;
 	DiffCombo = new QComboBox;
 
-	CFARCombo->addItem(tr("1"));
-	CFARCombo->addItem(tr("3"));
-	CFARCombo->addItem(tr("5"));
-	CFARCombo->addItem(tr("7"));
+	for (int i = 0; i < 8; i++){
+		CFARCombo->addItem(QString::number(i));
+	}
 
-	PowerCombo->addItem(tr("70"));
-	PowerCombo->addItem(tr("140"));
-	PowerCombo->addItem(tr("500"));
-	PowerCombo->addItem(tr("1000"));
-	PowerCombo->addItem(tr("1600"));
+	for (int i = 0; i < power_index.size(); i++){
+		PowerCombo->addItem(QString::number(power_index[i]));
+	}
 
 	m3DFTCombo->addItem(tr("0"));
 	m3DFTCombo->addItem(tr("1"));

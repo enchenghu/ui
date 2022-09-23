@@ -131,6 +131,7 @@ typedef struct
 {
 	API_Header 	mHead; // 0xeeff
 	uint32_t 	mCommandVal;
+	float 	mCommandVal_f;
 } commandMsg;
 
 
@@ -357,6 +358,7 @@ private:
 	std::vector<QPushButton* > ctlWriteBtn_;
 	std::vector<QPushButton* > ctlReadBtn_;
 	std::vector<QLineEdit* > ctlReadLine_;
+	std::vector<double> power_index;
 
 };
 
