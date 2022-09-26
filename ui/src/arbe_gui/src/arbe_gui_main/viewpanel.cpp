@@ -1246,7 +1246,7 @@ void viewpanel::connectControl(void){
 void viewpanel::configPower(void){
 
 	QString str = PowerCombo->currentText();
-	cmdMsg_.mCommandVal = str.toDouble() * 100;
+	cmdMsg_.mCommandVal[0] = str.toDouble() * 100;
 	cmdMsg_.mHead.usCommand = commandType::POWER_WRITE;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
@@ -1273,7 +1273,7 @@ void viewpanel::readPower(void){
 			continue;
 		}else{
 			if(cmdMsg.mHead.usCommand == commandType::POWER_READ){
-				double power = cmdMsg.mCommandVal / 100.0;
+				double power = cmdMsg.mCommandVal[0] / 100.0;
 				ctlReadLine_[0]->setText(QString::number(power));
 				break;
 			}else {
@@ -1286,7 +1286,7 @@ void viewpanel::readPower(void){
 void viewpanel::configCFAR(void){
 
 	QString str = CFARCombo->currentText();
-	cmdMsg_.mCommandVal = str.toInt();
+	cmdMsg_.mCommandVal[0] = str.toInt();
 	cmdMsg_.mHead.usCommand = commandType::CFAR_WRITE;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
@@ -1313,7 +1313,7 @@ void viewpanel::readCFAR(void){
 			continue;
 		}else{
 			if(cmdMsg.mHead.usCommand == commandType::CFAR_READ){
-				ctlReadLine_[1]->setText(QString::number(cmdMsg.mCommandVal));
+				ctlReadLine_[1]->setText(QString::number(cmdMsg.mCommandVal[0]));
 			}
 			break;
 		}
@@ -1323,7 +1323,7 @@ void viewpanel::readCFAR(void){
 void viewpanel::config3DFT(void){
 
 	QString str = m3DFTCombo->currentText();
-	cmdMsg_.mCommandVal = str.toInt();
+	cmdMsg_.mCommandVal[0] = str.toInt();
 	cmdMsg_.mHead.usCommand = commandType::DFT3_WRITE;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
@@ -1350,7 +1350,7 @@ void viewpanel::read3DFT(void){
 			continue;
 		}else{
 			if(cmdMsg.mHead.usCommand == commandType::DFT3_READ){
-				ctlReadLine_[2]->setText(QString::number(cmdMsg.mCommandVal));
+				ctlReadLine_[2]->setText(QString::number(cmdMsg.mCommandVal[0]));
 			}
 			break;
 		}
@@ -1360,7 +1360,7 @@ void viewpanel::read3DFT(void){
 void viewpanel::configDiff(void){
 
 	QString str = DiffCombo->currentText();
-	cmdMsg_.mCommandVal = str.toInt();
+	cmdMsg_.mCommandVal[0] = str.toInt();
 	cmdMsg_.mHead.usCommand = commandType::DIFF_WRITE;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
@@ -1374,10 +1374,10 @@ void viewpanel::configReg(void){
 	//unsigned int x;
 	std::stringstream ss;
 	ss << std::hex << strAddr.toStdString();
-	ss >> cmdMsg_.regAddr;
-	cmdMsg_.regVal = strValue.toInt();
+	ss >> cmdMsg_.mCommandVal[0];
+	cmdMsg_.mCommandVal[1] = strValue.toInt();
 	cmdMsg_.mHead.usCommand = commandType::REG_WRITE;
-	std::cout << "cmdMsg_.regAddr is " << cmdMsg_.regAddr << " cmdMsg_.regVal " << cmdMsg_.regVal << std::endl;
+	std::cout << "cmdMsg_.regAddr is " << cmdMsg_.mCommandVal[0] << " cmdMsg_.regVal " << cmdMsg_.mCommandVal[1] << std::endl;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
 		msgBox.setText("config register failed!");
@@ -1391,7 +1391,7 @@ void viewpanel::readReg(void){
 	QString strAddr = regAddr_line->text();
 	std::stringstream ss;
 	ss << std::hex << strAddr.toStdString();
-	ss >> cmdMsg_.regAddr;
+	ss >> cmdMsg_.mCommandVal[0];
 
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
@@ -1409,7 +1409,7 @@ void viewpanel::readReg(void){
 			continue;
 		}else{
 			if(cmdMsg.mHead.usCommand == commandType::REG_READ){
-				regRead_line->setText(QString::number(cmdMsg.regVal));
+				regRead_line->setText(QString::number(cmdMsg.mCommandVal[1]));
 			}
 			break;
 		}
@@ -1434,7 +1434,7 @@ void viewpanel::readDiff(void){
 			continue;
 		}else{
 			if(cmdMsg.mHead.usCommand == commandType::DIFF_READ){
-				ctlReadLine_[3]->setText(QString::number(cmdMsg.mCommandVal));
+				ctlReadLine_[3]->setText(QString::number(cmdMsg.mCommandVal[0]));
 			}
 			break;
 		}

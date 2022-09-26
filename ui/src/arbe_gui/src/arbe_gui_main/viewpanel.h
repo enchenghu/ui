@@ -133,9 +133,7 @@ typedef struct API_Header
 typedef struct 
 {
 	API_Header 	mHead; // 0xeeff
-	uint32_t 	mCommandVal;
-	uint32_t 	regAddr;
-	uint32_t 	regVal;
+	uint32_t 	mCommandVal[2];
 	//float 	mCommandVal_f;
 } commandMsg;
 
