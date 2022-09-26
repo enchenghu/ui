@@ -313,6 +313,7 @@ private:
 	int lidarConnect();
 	void CreatConnect();
 	void saveDataThead();
+	std::string tohex(uint32_t a);
 	static void *saveData(void *arg);
 	int ctrl_sock;
 	std::string lidar_ip;

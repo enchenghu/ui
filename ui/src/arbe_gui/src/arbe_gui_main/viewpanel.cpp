@@ -1375,7 +1375,12 @@ void viewpanel::configReg(void){
 	std::stringstream ss;
 	ss << std::hex << strAddr.toStdString();
 	ss >> cmdMsg_.mCommandVal[0];
-	cmdMsg_.mCommandVal[1] = strValue.toInt();
+
+	std::stringstream tt;
+	tt << std::hex << strValue.toStdString();
+	tt >> cmdMsg_.mCommandVal[1];
+
+	//cmdMsg_.mCommandVal[1] = strValue.toInt();
 	cmdMsg_.mHead.usCommand = commandType::REG_WRITE;
 	std::cout << "cmdMsg_.regAddr is " << cmdMsg_.mCommandVal[0] << " cmdMsg_.regVal " << cmdMsg_.mCommandVal[1] << std::endl;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
@@ -1384,7 +1389,21 @@ void viewpanel::configReg(void){
 		msgBox.exec();
 	}
 }
-
+std::string viewpanel::tohex(uint32_t a){
+	std::string res;
+	if(a == 0) return std::string("0");
+	uint32_t y = 0;
+	while(a > 0)//大于0的数
+	{
+		y = a % 16;  //求余
+		if(y < 10)   //小于10的余数
+		 res =char('0'+ y) + res;  //利用字符的ascll码在字符串前面拼接
+		else
+		 res = char('A'- 10 + y) + res;  //大于9的余数用ABCDE表示
+		a = a / 16; 
+	} 
+	return res; 	
+}
 void viewpanel::readReg(void){
 	cmdMsg_.mHead.usCommand = commandType::REG_READ;
 
@@ -1402,6 +1421,7 @@ void viewpanel::readReg(void){
 	commandMsg cmdMsg;
 	memset(&cmdMsg, 0, sizeof(cmdMsg));
 	bool ifread = true;
+	usleep(500*1000);
 	while(1){
 		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
 			usleep(500*1000);
@@ -1409,7 +1429,9 @@ void viewpanel::readReg(void){
 			continue;
 		}else{
 			if(cmdMsg.mHead.usCommand == commandType::REG_READ){
-				regRead_line->setText(QString::number(cmdMsg.mCommandVal[1]));
+				std::string tmp = tohex(cmdMsg.mCommandVal[1]);
+				//regRead_line->setText(QString::number(cmdMsg.mCommandVal[1]));
+				regRead_line->setText(QString::fromStdString(tmp));
 			}
 			break;
 		}
@@ -1420,13 +1442,14 @@ void viewpanel::readDiff(void){
 	cmdMsg_.mHead.usCommand = commandType::DIFF_READ;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
-		msgBox.setText("read Diff failed!");
+		msgBox.setText("write Diff failed!");
 		msgBox.exec();
 		return;
 	}
 	commandMsg cmdMsg;
 	memset(&cmdMsg, 0, sizeof(cmdMsg));
 	bool ifread = true;
+	usleep(500*1000);
 	while(1){
 		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
 			usleep(500*1000);
@@ -3232,6 +3255,7 @@ void viewpanel::CreatConnect()
 	connect(ctlReadBtn_[0], SIGNAL(clicked()), this, SLOT( readPower( void )));
 	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
 	connect(ctlReadBtn_[2], SIGNAL(clicked()), this, SLOT( read3DFT( void )));
+	connect(ctlReadBtn_[3], SIGNAL(clicked()), this, SLOT( readDiff( void )));
 	connect(regBtnRead, SIGNAL(clicked()), this, SLOT( readReg( void )));
 }
 
