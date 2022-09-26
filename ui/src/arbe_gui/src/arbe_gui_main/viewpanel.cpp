@@ -87,7 +87,7 @@ extern int terminating;
 extern std::string ColoringType;
 extern std::string RangeType;
 extern std::string mode;
-
+extern QString save_folder;
 extern int radar_id;
 extern float radar_x_offset;
 extern float radar_y_offset;
@@ -339,7 +339,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	cmdMsg_.mHead.usPrefix = 0xeeff;
 	cmdMsg_.mHead.usType = 0x10;
 	cmdMsg_.mHead.usPayloadCrc = 0x00;
-	cmdMsg_.mHead.unLength = 4;
+	cmdMsg_.mHead.unLength = 12;
 
 	power_index = {0.2, 12, 20, 70, 290, 346, 347, 
 				   397, 415, 500, 510, 560, 625, 1000, 
@@ -1275,8 +1275,10 @@ void viewpanel::readPower(void){
 			if(cmdMsg.mHead.usCommand == commandType::POWER_READ){
 				double power = cmdMsg.mCommandVal / 100.0;
 				ctlReadLine_[0]->setText(QString::number(power));
+				break;
+			}else {
+				continue;
 			}
-			break;
 		}
 	}	
 }
@@ -1365,6 +1367,53 @@ void viewpanel::configDiff(void){
 		msgBox.setText("config Diff failed!");
 		msgBox.exec();
 	}
+}
+void viewpanel::configReg(void){
+	QString strAddr = regAddr_line->text();
+	QString strValue = regVal_line->text();
+	//unsigned int x;
+	std::stringstream ss;
+	ss << std::hex << strAddr.toStdString();
+	ss >> cmdMsg_.regAddr;
+	cmdMsg_.regVal = strValue.toInt();
+	cmdMsg_.mHead.usCommand = commandType::REG_WRITE;
+	std::cout << "cmdMsg_.regAddr is " << cmdMsg_.regAddr << " cmdMsg_.regVal " << cmdMsg_.regVal << std::endl;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("config register failed!");
+		msgBox.exec();
+	}
+}
+
+void viewpanel::readReg(void){
+	cmdMsg_.mHead.usCommand = commandType::REG_READ;
+
+	QString strAddr = regAddr_line->text();
+	std::stringstream ss;
+	ss << std::hex << strAddr.toStdString();
+	ss >> cmdMsg_.regAddr;
+
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("read Diff failed!");
+		msgBox.exec();
+		return;
+	}
+	commandMsg cmdMsg;
+	memset(&cmdMsg, 0, sizeof(cmdMsg));
+	bool ifread = true;
+	while(1){
+		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
+			usleep(500*1000);
+			ifread = false;
+			continue;
+		}else{
+			if(cmdMsg.mHead.usCommand == commandType::REG_READ){
+				regRead_line->setText(QString::number(cmdMsg.regVal));
+			}
+			break;
+		}
+	}	
 }
 
 void viewpanel::readDiff(void){
@@ -3178,11 +3227,12 @@ void viewpanel::CreatConnect()
 	connect(ctlWriteBtn_[1], SIGNAL(clicked()), this, SLOT( configCFAR( void )));
 	connect(ctlWriteBtn_[2], SIGNAL(clicked()), this, SLOT( config3DFT( void )));
 	connect(ctlWriteBtn_[3], SIGNAL(clicked()), this, SLOT( configDiff( void )));
+	connect(regBtnWrite, SIGNAL(clicked()), this, SLOT( configReg( void )));
 
 	connect(ctlReadBtn_[0], SIGNAL(clicked()), this, SLOT( readPower( void )));
 	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
 	connect(ctlReadBtn_[2], SIGNAL(clicked()), this, SLOT( read3DFT( void )));
-	connect(ctlReadBtn_[3], SIGNAL(clicked()), this, SLOT( readDiff( void )));
+	connect(regBtnRead, SIGNAL(clicked()), this, SLOT( readReg( void )));
 }
 
 void viewpanel::CreatUIWindow()
@@ -3281,6 +3331,21 @@ void viewpanel::CreatUIWindow()
 	QLabel* m3DFT_label = new QLabel( "3DFT" );
 	QLabel* Power_label = new QLabel( "Power/mW" );
 	QLabel* diff_label = new QLabel( "Diff" );
+	QLabel* regAddr_label = new QLabel( "Register Addr" );
+	QLabel* regVal_label = new QLabel( "Register value" );
+
+	regAddr_line = new QLineEdit;
+	regVal_line = new QLineEdit;
+	regRead_line = new QLineEdit;
+	regRead_line->setReadOnly(true);
+	QPalette palette_0 = regRead_line->palette();
+	palette_0.setBrush(QPalette::Base,
+					palette_0.brush(QPalette::Disabled, QPalette::Base));
+	regRead_line->setPalette(palette_0);
+
+	regBtnWrite = new QPushButton("&Write", this);
+	regBtnRead = new QPushButton("&Read", this);
+
 	CFARCombo = new QComboBox;
 	m3DFTCombo = new QComboBox;
 	PowerCombo = new QComboBox;
@@ -3322,17 +3387,25 @@ void viewpanel::CreatUIWindow()
 		controls_layout->addWidget( ctlWriteBtn_[i], i, 4, Qt::AlignLeft);	
 		controls_layout->addWidget( ctlReadLine_[i], i, 5, Qt::AlignLeft);			
 		controls_layout->addWidget( ctlReadBtn_[i], i, 6, Qt::AlignLeft);			
-
 	}
 
+	controls_layout->addWidget( regAddr_label, 0, 7, Qt::AlignLeft);
+	controls_layout->addWidget( regAddr_line, 0, 8, Qt::AlignLeft);	
+	controls_layout->addWidget( regVal_label, 0, 9, Qt::AlignLeft);	
+	controls_layout->addWidget( regVal_line, 0, 10, Qt::AlignLeft);	
+	controls_layout->addWidget( regBtnWrite, 0, 11, Qt::AlignLeft);	
+#if 1
+	controls_layout->addWidget( regRead_line, 0, 12, Qt::AlignLeft);	
+	controls_layout->addWidget( regBtnRead, 0, 13, Qt::AlignLeft);	
+#endif
 	controlsBox->setLayout(controls_layout);
 	render_panel_ = new rviz::RenderPanel();
 	selection_panel_ = new rviz::SelectionPanel();
 	controls->addWidget ( controlsBox, 0, 0, Qt::AlignLeft);
 	controls->addWidget ( fileBox, 0, 1, Qt::AlignLeft);
 
-	controls->setColumnStretch(0,2);
-	for(int i = 1; i < 4;i++)
+	controls->setColumnStretch(0,4);
+	for(int i = 1; i < 2;i++)
 		controls->setColumnStretch(i,1);
 
 	ctrlDockWidget->setLayout(controls);
@@ -3345,6 +3418,42 @@ void viewpanel::CreatUIWindow()
 	multiWidget->setLayout(mainLayout);
 	this->addTab(multiWidget,  "Lidar Ui Mainwindow");
 }
+
+void *viewpanel::saveData(void *arg){
+
+#if 0
+	std::string csvPath;
+	long long index = 0;
+	std::vector<uint32_t> mv;
+	while(!terminating){
+		for(int i = 0; i < 6000; i++){
+			::read(ctrl_sock, &msg, sizeof(msg));
+			std::vector<uint32_t> tmp(begin, end);
+			mv.insert(mv.end(), tmp.begin(), tmp.end());		
+		}
+		csvPath = save_folder.toStdString() + "/data_index" + std::to_string(index) +".csv";
+		ROS_INFO("frame index %d: csvPath is %s \n", index++, csvPath.c_str());
+		std::ofstream csvfile; 
+		csvfile.open(csvPath,ios::out); 
+		csvfile << image_path << "," << label << "," << prediction << "," << probability << "\n";
+		csvfile.close();
+	}
+#endif
+}
+
+void viewpanel::saveDataThead()
+{
+	pthread_t save_thread_id;
+
+	if(pthread_create(&save_thread_id, NULL, saveData, NULL) < 0)
+	{
+		printf("create saveDataThead failed erron= %d/n",errno);
+		QMessageBox msgBox;
+		msgBox.setText("create saveDataThead failed!");
+		msgBox.exec();
+	};
+}
+
 
 int viewpanel::lidarConnect()
 {

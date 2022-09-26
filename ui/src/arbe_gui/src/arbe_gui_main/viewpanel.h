@@ -112,10 +112,13 @@ typedef enum
     CFAR_WRITE,
     DFT3_WRITE,
     DIFF_WRITE,
+	REG_WRITE,
     POWER_READ,
     CFAR_READ,
     DFT3_READ,
-    DIFF_READ	
+    DIFF_READ,
+	REG_READ
+
 }commandType;
 
 typedef struct API_Header
@@ -131,6 +134,8 @@ typedef struct
 {
 	API_Header 	mHead; // 0xeeff
 	uint32_t 	mCommandVal;
+	uint32_t 	regAddr;
+	uint32_t 	regVal;
 	//float 	mCommandVal_f;
 } commandMsg;
 
@@ -205,11 +210,13 @@ public Q_SLOTS:
 	void configCFAR(void);
 	void config3DFT(void);
 	void configDiff(void);
+	void configReg(void);
 
 	void readPower(void);
 	void readCFAR(void);
 	void read3DFT(void);
 	void readDiff(void);
+	void readReg(void);
 	
     void setCamera_sub_topic(bool flag );
 	void enableCamera(bool isUSB );
@@ -307,6 +314,8 @@ private:
 	void CreatCtlPanel();
 	int lidarConnect();
 	void CreatConnect();
+	void saveDataThead();
+	static void *saveData(void *arg);
 	int ctrl_sock;
 	std::string lidar_ip;
 	int lidar_ctrl_port;
@@ -349,12 +358,18 @@ private:
 	QLineEdit *ip_edit;
 	QLineEdit *port_edit;
 
+	QLineEdit* regAddr_line ;
+	QLineEdit* regVal_line ;
+	QLineEdit* regRead_line;
+
 	std::string loadFileType_;
 	QString  loadLidarFile_;
 	bool ifConnected;
 	bool ifStarted;
 	QPushButton *lidar_connect_button;
 	QPushButton *lidar_start_button;
+	QPushButton *regBtnWrite;
+	QPushButton *regBtnRead;
 	std::vector<QPushButton* > ctlWriteBtn_;
 	std::vector<QPushButton* > ctlReadBtn_;
 	std::vector<QLineEdit* > ctlReadLine_;
