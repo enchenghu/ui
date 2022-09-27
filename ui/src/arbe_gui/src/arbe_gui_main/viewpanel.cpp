@@ -329,7 +329,7 @@ void pub_radar_height_and_pitch(int index)
 
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
-	: QTabWidget( parent ), ifConnected(false)
+	: QTabWidget( parent ), ifConnected(false), ifSave(false)
 {
 
 #if ONLY_SHOW_UI
@@ -3251,6 +3251,7 @@ void viewpanel::CreatConnect()
 	connect(ctlWriteBtn_[2], SIGNAL(clicked()), this, SLOT( config3DFT( void )));
 	connect(ctlWriteBtn_[3], SIGNAL(clicked()), this, SLOT( configDiff( void )));
 	connect(regBtnWrite, SIGNAL(clicked()), this, SLOT( configReg( void )));
+	connect(saveBtn, SIGNAL(clicked()), this, SLOT( saveDataThead( void )));
 
 	connect(ctlReadBtn_[0], SIGNAL(clicked()), this, SLOT( readPower( void )));
 	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
@@ -3294,7 +3295,7 @@ void viewpanel::CreatUIWindow()
 	QGridLayout* saveLayout = new QGridLayout;
 	QLabel* saveDatalabel = new QLabel( "Select" );
 	QComboBox*saveDataCombo = new QComboBox;
-	QPushButton*  saveBtn = new QPushButton("Save", this);
+	saveBtn = new QPushButton("Save", this);
 	saveDataCombo->addItem(tr("point cloud "));
 	saveDataCombo->addItem(tr("data stream 1"));
 	saveDataCombo->addItem(tr("data stream 2"));
@@ -3443,32 +3444,130 @@ void viewpanel::CreatUIWindow()
 	this->addTab(multiWidget,  "Lidar Ui Mainwindow");
 }
 
-void *viewpanel::saveData(void *arg){
-
-#if 0
+void viewpanel::Save2filecsv(std::vector<uint8_t> &data, long long findex)
+{
 	std::string csvPath;
-	long long index = 0;
-	std::vector<uint32_t> mv;
-	while(!terminating){
-		for(int i = 0; i < 6000; i++){
-			::read(ctrl_sock, &msg, sizeof(msg));
-			std::vector<uint32_t> tmp(begin, end);
-			mv.insert(mv.end(), tmp.begin(), tmp.end());		
+	csvPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".csv";
+	ROS_INFO("frame index %d: csvPath is %s \n", findex, csvPath.c_str());
+	std::ofstream csvfile; 
+	csvfile.open(csvPath, std::ios::out); 
+	uint32_t cur_data = 0;
+	uint32_t indensity_1 = 0;
+	uint32_t distance = 0;
+	uint32_t speed = 0;
+	uint32_t reserved = 0;
+	int index = 0;
+	csvfile << "indensity_0" << "," << "indensity_1" << "," 
+	<< "distance(m)" << "," << "speed(m/s)" << "," << "reserved" << "\n";	
+	for(int i = 0; i < data.size(); i++) {
+		index += 1;
+		if(index < 5)
+			cur_data = cur_data + data[i] << 8 * (index - 1);
+		else if (index < 9)
+			cur_data = cur_data + data[i] << 8 * (index - 5);
+		else if (index < 12)
+			cur_data = cur_data + data[i] << 8 * (index - 9);
+		else if (index < 15)
+			cur_data = cur_data + data[i] << 8 * (index - 12);
+
+		if(index == 4 || index == 8){
+			csvfile << cur_data << ",";	
+			cur_data = 0;
 		}
-		csvPath = save_folder.toStdString() + "/data_index" + std::to_string(index) +".csv";
-		ROS_INFO("frame index %d: csvPath is %s \n", index++, csvPath.c_str());
-		std::ofstream csvfile; 
-		csvfile.open(csvPath,ios::out); 
-		csvfile << image_path << "," << label << "," << prediction << "," << probability << "\n";
-		csvfile.close();
+
+		if(index == 11){
+			csvfile << cur_data / 65536.0 << ",";	
+			cur_data = 0;
+		}
+
+		if(index == 14){
+			if(cur_data > 0x800000)
+				cur_data = cur_data - 0x1000000;
+			csvfile << cur_data / 65536.0 << ",";	
+			cur_data = 0;
+		}
+
+		if(index == 16){
+			csvfile << cur_data << "\n";	
+			cur_data = 0;
+			index = 0;
+		}
 	}
+	csvfile.close();
+}
+
+
+void viewpanel::saveData(){
+
+#if 1
+	pcData_t msg;
+	long long index = 0;
+	msg.pcTcpData = new uint8_t[TCP_PC_SIZE];
+	while(!terminating && ifSave){
+		std::cout << "saveing times: " << index << std::endl;
+		std::vector<uint8_t> mv;
+		for(int i = 0; i < 200; i++){
+			memset(msg.pcTcpData, 0, TCP_PC_SIZE);
+			::read(ctrl_sock, &msg, sizeof(msg));
+			if(msg.cmdmsg.mCommandVal[1] != i){
+				std::cout << "index is " << i << "msg count is " << msg.cmdmsg.mCommandVal[1];
+				QMessageBox msgBox;
+				msgBox.setText("TCP data loss, save quit!");
+				msgBox.exec();	
+				delete [] msg.pcTcpData;
+				return;			
+			}
+			//std::vector<uint8_t> tmp(msg.pcTcpData, msg.pcTcpData + TCP_PC_SIZE);
+			mv.insert(mv.end(), msg.pcTcpData, msg.pcTcpData + TCP_PC_SIZE);		
+		}
+		Save2filecsv(mv, index++);
+	}
+	delete [] msg.pcTcpData;
+	std::cout << "save data finished ..." << std::endl;
 #endif
 }
 
+void viewpanel::TaskFunc(void *arg){
+    viewpanel *pSave = (viewpanel *)arg;
+
+    if (pSave && pSave->TaskFunc) {
+        pSave->saveData();
+    }
+}
+
+void viewpanel::start_save_task()
+{
+
+}
 void viewpanel::saveDataThead()
 {
-	pthread_t save_thread_id;
 
+	cmdMsg_.mHead.usCommand = commandType::PC_READ;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("pc data save failed!");
+		msgBox.exec();
+	}
+	pthread_t save_thread_id;
+	if(!ifSave && ifStarted){
+		saveBtn->setStyleSheet("color: green");
+		saveBtn->setText("Saving..");
+		ifSave = true;
+	}else {
+		saveBtn->setStyleSheet("color: black");
+		saveBtn->setText("Save");
+		ifSave = false;
+		return;		
+	}
+	usleep(100*1000);
+    vx_task_set_default_create_params(&bst_params);
+    bst_params.app_var = this;
+    bst_params.task_mode = 0;
+    bst_params.task_main = TaskFunc;
+    vx_task_create(&bst_task[0], &bst_params);    
+
+#if 0
+	usleep(100*1000);
 	if(pthread_create(&save_thread_id, NULL, saveData, NULL) < 0)
 	{
 		printf("create saveDataThead failed erron= %d/n",errno);
@@ -3476,6 +3575,7 @@ void viewpanel::saveDataThead()
 		msgBox.setText("create saveDataThead failed!");
 		msgBox.exec();
 	};
+#endif
 }
 
 

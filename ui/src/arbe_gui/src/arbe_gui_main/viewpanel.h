@@ -40,6 +40,11 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <iostream>
+#include "vx_task.h"
+#include "vx_queue.h"
+#include "vx_mutex.h"
+
 #include <QApplication>
 #include <QWidget>
 #include <QSlider>
@@ -82,8 +87,12 @@
 #include <arbe_msgs/arbeNewPcMsg.h>
 
 #include "osc_chart.h"
-
+#include <fstream>
+#include <sstream>
 #define MAX_RADARS 10
+#define TCP_PC_SIZE 32000
+#define BST_MAX_TASK_NUM		(16)
+
 
 namespace rviz
 {
@@ -117,8 +126,8 @@ typedef enum
     CFAR_READ,
     DFT3_READ,
     DIFF_READ,
-	REG_READ
-
+	REG_READ,
+	PC_READ
 }commandType;
 
 typedef struct API_Header
@@ -132,11 +141,15 @@ typedef struct API_Header
 
 typedef struct 
 {
-	API_Header 	mHead; // 0xeeff
+	API_Header 	mHead; 
 	uint32_t 	mCommandVal[2];
-	//float 	mCommandVal_f;
 } commandMsg;
 
+typedef struct 
+{
+	commandMsg 	cmdmsg; 
+	uint8_t* 	pcTcpData;
+} pcData_t;
 
 typedef struct view_vals_t {
         QVariant distance;
@@ -302,19 +315,22 @@ private Q_SLOTS:
 	void load_camera_calibration();
 	void choose_which_radars_text();
     void calc_ant_height_tilt();
+	void start_save_task();
+	void saveDataThead();
 
 	void loadLidarFile();
 
-
+protected:
+    static void TaskFunc(void *arg);
 private:
 	void CreatDebugWindow();
 	void CreatUIWindow();
 	void CreatCtlPanel();
 	int lidarConnect();
 	void CreatConnect();
-	void saveDataThead();
+	void Save2filecsv(std::vector<uint8_t> &, long long );
 	std::string tohex(uint32_t a);
-	static void *saveData(void *arg);
+	void saveData();
 	int ctrl_sock;
 	std::string lidar_ip;
 	int lidar_ctrl_port;
@@ -360,11 +376,13 @@ private:
 	QLineEdit* regAddr_line ;
 	QLineEdit* regVal_line ;
 	QLineEdit* regRead_line;
+	QPushButton*  saveBtn;
 
 	std::string loadFileType_;
 	QString  loadLidarFile_;
 	bool ifConnected;
 	bool ifStarted;
+	bool ifSave;
 	QPushButton *lidar_connect_button;
 	QPushButton *lidar_start_button;
 	QPushButton *regBtnWrite;
@@ -373,6 +391,8 @@ private:
 	std::vector<QPushButton* > ctlReadBtn_;
 	std::vector<QLineEdit* > ctlReadLine_;
 	std::vector<double> power_index;
+	vx_task bst_task[BST_MAX_TASK_NUM];
+	vx_task_create_params_t bst_params;
 
 };
 

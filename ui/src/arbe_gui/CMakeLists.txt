@@ -158,7 +158,10 @@ include_directories(
  include ${catkin_INCLUDE_DIRS}
  include ${PCL_LIBRARY_DIRS}
 include ${CMAKE_BINARY_DIR}/gauges/
+include os
 )
+
+add_subdirectory(os)
 
 link_directories(${catkin_LIBRARY_DIRS})
 
@@ -225,6 +228,7 @@ endif()
 ## Specify libraries to link a library or executable target against
 add_dependencies(arbe_gui ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(arbe_gui
+   os
    ${catkin_LIBRARIES}
    ${PCL_LIBRARIES}
    ${QT_LIBRARIES}
