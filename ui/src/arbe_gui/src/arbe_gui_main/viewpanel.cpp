@@ -3530,9 +3530,9 @@ void viewpanel::saveData(){
 				i--;
 				continue;
 			}
-        	std::cout << "receive byte is " << ret << std::endl;
+        	//std::cout << "receive byte is " << ret << std::endl;
 			if(g_msg.cmdmsg.mHead.usCommand == commandType::PC_READ){
-				std::cout << "current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
+				//std::cout << "current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
 				if(g_msg.cmdmsg.mCommandVal[1] != i){
 					std::cout << "!!!error!!! current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
 					//QMessageBox msgBox;
