@@ -3447,12 +3447,24 @@ void viewpanel::CreatUIWindow()
 
 void viewpanel::Save2filecsv(std::vector<uint8_t> &data, long long findex)
 {
+#if 0
+	std::string datPath;
+	datPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".dat";
+	std::ofstream datfile; 
+	datfile.open(datPath, std::ios::out | std::ios::binary); 
+	for(int i = 0; i < data.size(); i++) {
+		datfile << data[i];
+	}
+	datfile.close();
+#endif
+
+#if 1
 	std::string csvPath;
 	csvPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".csv";
 	ROS_INFO("frame index %d: csvPath is %s \n", findex, csvPath.c_str());
 	std::ofstream csvfile; 
 	csvfile.open(csvPath, std::ios::out); 
-	uint32_t cur_data = 0;
+	int32_t cur_data = 0;
 	uint32_t indensity_1 = 0;
 	uint32_t distance = 0;
 	uint32_t speed = 0;
@@ -3463,13 +3475,13 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, long long findex)
 	for(int i = 0; i < data.size(); i++) {
 		index += 1;
 		if(index < 5)
-			cur_data = cur_data + data[i] << 8 * (index - 1);
+			cur_data += data[i] << (8 * (index - 1));
 		else if (index < 9)
-			cur_data = cur_data + data[i] << 8 * (index - 5);
+			cur_data += data[i] << (8 * (index - 5));
 		else if (index < 12)
-			cur_data = cur_data + data[i] << 8 * (index - 9);
+			cur_data += data[i] << (8 * (index - 9));
 		else if (index < 15)
-			cur_data = cur_data + data[i] << 8 * (index - 12);
+			cur_data += data[i] << (8 * (index - 12));
 
 		if(index == 4 || index == 8){
 			csvfile << cur_data << ",";	
@@ -3477,14 +3489,14 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, long long findex)
 		}
 
 		if(index == 11){
-			csvfile << cur_data / 65536.0 << ",";	
+			csvfile << (double)(cur_data / 65536.0) << ",";	
 			cur_data = 0;
 		}
 
 		if(index == 14){
 			if(cur_data > 0x800000)
 				cur_data = cur_data - 0x1000000;
-			csvfile << cur_data / 65536.0 << ",";	
+			csvfile << (double)(cur_data / 65536.0) << ",";	
 			cur_data = 0;
 		}
 
@@ -3495,6 +3507,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, long long findex)
 		}
 	}
 	csvfile.close();
+#endif
 }
 
 
@@ -3507,7 +3520,7 @@ void viewpanel::saveData(){
 	uint8_t* allbuff = new uint8_t[TCP_PC_SIZE * 201];
 	while(!terminating && ifSave){
 		//std::cout << "saveing times: " << index++ << std::endl;
-		//std::vector<uint8_t> mv;
+		std::vector<uint8_t> mv;
 		for(int i = 0; i < 200; i++){
 			memset(&g_msg, 0, sizeof(g_msg));
 			ret = ::recv(ctrl_sock, &g_msg, sizeof(g_msg), MSG_WAITALL);
@@ -3529,9 +3542,9 @@ void viewpanel::saveData(){
 					delete [] allbuff;
 					return;			
 				}
-				//std::vector<uint8_t> tmp(msg.pcTcpData, msg.pcTcpData + TCP_PC_SIZE);
+				//std::vector<uint8_t> tmp(g_msg.pcTcpData, g_msg.pcTcpData + TCP_PC_SIZE);
 				//memcpy(allbuff + i * TCP_PC_SIZE, g_msg.pcTcpData, TCP_PC_SIZE);
-				//mv.insert(mv.end(), msg.pcTcpData, msg.pcTcpData + TCP_PC_SIZE);
+				mv.insert(mv.end(), g_msg.pcTcpData, g_msg.pcTcpData + TCP_PC_SIZE);
 			}else {
 				ROS_INFO("msg is %d, not read pc data msg, continue\n", g_msg.cmdmsg.mHead.usCommand);
 				i--;
@@ -3539,7 +3552,7 @@ void viewpanel::saveData(){
 			}
 		
 		}
-		//Save2filecsv(mv, index++);
+		Save2filecsv(mv, index++);
 	}
 	//delete [] msg.pcTcpData;
 	delete [] allbuff;
