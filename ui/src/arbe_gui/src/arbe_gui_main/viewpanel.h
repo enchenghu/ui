@@ -148,7 +148,7 @@ typedef struct
 typedef struct 
 {
 	commandMsg 	cmdmsg; 
-	uint8_t* 	pcTcpData;
+	uint8_t 	pcTcpData[TCP_PC_SIZE];
 } pcData_t;
 
 typedef struct view_vals_t {

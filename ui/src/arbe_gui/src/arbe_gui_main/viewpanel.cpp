@@ -74,6 +74,7 @@ extern void radar_set_params();
 extern void radar_change_seq();
 extern void radar_start_transmit();
 extern void radar_stop_transmit();
+pcData_t g_msg;
 
 extern void radar_launch_pointcloud_nodes();
 extern void radar_quit();
@@ -3500,29 +3501,48 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, long long findex)
 void viewpanel::saveData(){
 
 #if 1
-	pcData_t msg;
 	long long index = 0;
-	msg.pcTcpData = new uint8_t[TCP_PC_SIZE];
+	int ret = 0;
+	//msg.pcTcpData = new uint8_t[TCP_PC_SIZE];
+	uint8_t* allbuff = new uint8_t[TCP_PC_SIZE * 201];
 	while(!terminating && ifSave){
-		std::cout << "saveing times: " << index << std::endl;
-		std::vector<uint8_t> mv;
+		//std::cout << "saveing times: " << index++ << std::endl;
+		//std::vector<uint8_t> mv;
 		for(int i = 0; i < 200; i++){
-			memset(msg.pcTcpData, 0, TCP_PC_SIZE);
-			::read(ctrl_sock, &msg, sizeof(msg));
-			if(msg.cmdmsg.mCommandVal[1] != i){
-				std::cout << "index is " << i << "msg count is " << msg.cmdmsg.mCommandVal[1];
-				QMessageBox msgBox;
-				msgBox.setText("TCP data loss, save quit!");
-				msgBox.exec();	
-				delete [] msg.pcTcpData;
-				return;			
+			memset(&g_msg, 0, sizeof(g_msg));
+			ret = ::read(ctrl_sock, &g_msg, sizeof(g_msg));
+			if(ret < 0){
+				ROS_INFO("read pc data failed, continue\n");
+				sleep(1);
+				i--;
+				continue;
 			}
-			//std::vector<uint8_t> tmp(msg.pcTcpData, msg.pcTcpData + TCP_PC_SIZE);
-			mv.insert(mv.end(), msg.pcTcpData, msg.pcTcpData + TCP_PC_SIZE);		
+        	std::cout << "receive byte is " << ret << std::endl;
+			if(g_msg.cmdmsg.mHead.usCommand == commandType::PC_READ){
+				std::cout << "current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
+				if(g_msg.cmdmsg.mCommandVal[1] != i){
+					std::cout << "!!!error!!! current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
+					//QMessageBox msgBox;
+					//msgBox.setText("TCP data loss, save quit!");
+					//msgBox.exec();	
+					//delete [] msg.pcTcpData;
+					delete [] allbuff;
+					return;			
+				}
+				//std::vector<uint8_t> tmp(msg.pcTcpData, msg.pcTcpData + TCP_PC_SIZE);
+				//memcpy(allbuff + i * TCP_PC_SIZE, g_msg.pcTcpData, TCP_PC_SIZE);
+				//mv.insert(mv.end(), msg.pcTcpData, msg.pcTcpData + TCP_PC_SIZE);
+			}else {
+				ROS_INFO("msg is %d, not read pc data msg, continue\n", g_msg.cmdmsg.mHead.usCommand);
+				i--;
+				continue;
+			}
+		
 		}
-		Save2filecsv(mv, index++);
+		//Save2filecsv(mv, index++);
 	}
-	delete [] msg.pcTcpData;
+	//delete [] msg.pcTcpData;
+	delete [] allbuff;
 	std::cout << "save data finished ..." << std::endl;
 #endif
 }
@@ -3599,13 +3619,20 @@ int viewpanel::lidarConnect()
 		ROS_DEBUG("ERROR: Could not create socket!");
 		return -1;
 	}
+
+	int nRecvBuf=320 * 1024;//设置为32K
+	setsockopt(ctrl_sock, SOL_SOCKET,SO_RCVBUF,(const char*)&nRecvBuf,sizeof(int));
+
+	int nSendBuf=320 * 1024;//设置为32K
+	setsockopt(ctrl_sock, SOL_SOCKET,SO_SNDBUF,(const char*)&nSendBuf,sizeof(int));
+#if 1
 	setsockopt(ctrl_sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
 
 	struct timeval timeout;
 	timeout.tv_sec  = 3;  // after 2 seconds connect() will timeout
 	timeout.tv_usec = 0;
 	setsockopt(ctrl_sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
-
+#endif
 	memset(&ctrl_serv_addr, 0, sizeof(ctrl_serv_addr));
 	ctrl_serv_addr.sin_family = AF_INET;
 	ctrl_serv_addr.sin_addr.s_addr = inet_addr(lidar_ip.c_str());
@@ -3616,7 +3643,7 @@ int viewpanel::lidarConnect()
 		ROS_INFO("Failed to connect to lidar_ip %s", lidar_ip.c_str());
 		return -2; /* Completely fail only if first radar didn't connect */
 	}
-	fcntl(ctrl_sock, F_SETFL, O_NONBLOCK); /* Set the socket to non blocking mode */
+	//fcntl(ctrl_sock, F_SETFL, O_NONBLOCK); /* Set the socket to non blocking mode */
 
 
 #if 0
