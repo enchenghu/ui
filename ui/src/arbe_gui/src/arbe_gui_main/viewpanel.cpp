@@ -3510,7 +3510,7 @@ void viewpanel::saveData(){
 		//std::vector<uint8_t> mv;
 		for(int i = 0; i < 200; i++){
 			memset(&g_msg, 0, sizeof(g_msg));
-			ret = ::read(ctrl_sock, &g_msg, sizeof(g_msg));
+			ret = ::recv(ctrl_sock, &g_msg, sizeof(g_msg), MSG_WAITALL);
 			if(ret < 0){
 				ROS_INFO("read pc data failed, continue\n");
 				sleep(1);
