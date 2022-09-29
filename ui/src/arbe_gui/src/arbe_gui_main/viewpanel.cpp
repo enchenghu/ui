@@ -3589,7 +3589,7 @@ void viewpanel::saveData(){
 					std::cout << "!!!error!!! current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
 					ifsave  =false;
 					QMessageBox msgBox;
-					msgBox.setText("TCP data loss, save quit!");
+					msgBox.setText("error!!TCP data loss, save task quit!");
 					msgBox.exec();	
 					break;			
 				}
@@ -3607,10 +3607,12 @@ void viewpanel::saveData(){
 	//}
 	saveBtn->setStyleSheet("color: black");
 	saveBtn->setText("Save");
+	if(ifsave){
+		QMessageBox msgBox;
+		msgBox.setText("save pc data successfully!");
+		msgBox.exec();
+	}
 	ifSave = false;
-	QMessageBox msgBox;
-	msgBox.setText("save pc data successfully!");
-	msgBox.exec();
 }
 
 void viewpanel::TaskFunc(void *arg){
