@@ -3608,7 +3608,9 @@ void viewpanel::saveData(){
 	saveBtn->setStyleSheet("color: black");
 	saveBtn->setText("Save");
 	ifSave = false;
-	std::cout << "save data finished ..." << std::endl;
+	QMessageBox msgBox;
+	msgBox.setText("save pc data successfully!");
+	msgBox.exec();
 }
 
 void viewpanel::TaskFunc(void *arg){
