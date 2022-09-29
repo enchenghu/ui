@@ -319,6 +319,7 @@ private Q_SLOTS:
 	void saveDataThead();
 
 	void loadLidarFile();
+	void setSaveFolder();
 
 protected:
     static void TaskFunc(void *arg);
@@ -328,7 +329,7 @@ private:
 	void CreatCtlPanel();
 	int lidarConnect();
 	void CreatConnect();
-	void Save2filecsv(std::vector<uint8_t> &, long long );
+	void Save2filecsv(std::vector<uint8_t> &, bool );
 	std::string tohex(uint32_t a);
 	void saveData();
 	int ctrl_sock;
@@ -372,6 +373,7 @@ private:
 	QComboBox* DiffCombo;
 	QLineEdit *ip_edit;
 	QLineEdit *port_edit;
+	QString save_folder_;
 
 	QLineEdit* regAddr_line ;
 	QLineEdit* regVal_line ;
@@ -384,7 +386,7 @@ private:
 	bool ifStarted;
 	bool ifSave;
 	QPushButton *lidar_connect_button;
-	QPushButton *lidar_start_button;
+	QPushButton *setSaveBtn;
 	QPushButton *regBtnWrite;
 	QPushButton *regBtnRead;
 	std::vector<QPushButton* > ctlWriteBtn_;

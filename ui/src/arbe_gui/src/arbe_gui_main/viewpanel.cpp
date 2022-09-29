@@ -88,7 +88,6 @@ extern int terminating;
 extern std::string ColoringType;
 extern std::string RangeType;
 extern std::string mode;
-extern QString save_folder;
 extern int radar_id;
 extern float radar_x_offset;
 extern float radar_y_offset;
@@ -330,7 +329,7 @@ void pub_radar_height_and_pitch(int index)
 
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
-	: QTabWidget( parent ), ifConnected(false), ifSave(false)
+	: QTabWidget( parent ), ifConnected(false), ifSave(false), save_folder_(QString("."))
 {
 
 #if ONLY_SHOW_UI
@@ -1214,15 +1213,6 @@ void viewpanel::bookmark_control( void )
 
 
 void viewpanel::startControl(void){
-	if(!ifConnected){
-		lidar_start_button->setStyleSheet("color: green");
-		lidar_start_button->setText("&Stop");
-		ifConnected = true;
-	}else {
-		lidar_start_button->setStyleSheet("color: black");
-		lidar_start_button->setText("&Start");
-		ifConnected = false;
-	}
 }
 
 void viewpanel::connectControl(void){
@@ -1253,7 +1243,11 @@ void viewpanel::configPower(void){
 		QMessageBox msgBox;
 		msgBox.setText("config power failed!");
 		msgBox.exec();
+		return;
 	}
+	QMessageBox msgBox;
+	msgBox.setText("config power success!");
+	msgBox.exec();
 }
 
 void viewpanel::readPower(void){
@@ -1285,7 +1279,6 @@ void viewpanel::readPower(void){
 }
 
 void viewpanel::configCFAR(void){
-
 	QString str = CFARCombo->currentText();
 	cmdMsg_.mCommandVal[0] = str.toInt();
 	cmdMsg_.mHead.usCommand = commandType::CFAR_WRITE;
@@ -1293,12 +1286,17 @@ void viewpanel::configCFAR(void){
 		QMessageBox msgBox;
 		msgBox.setText("config CFAR failed!");
 		msgBox.exec();
+		return;
 	}
+	QMessageBox msgBox;
+	msgBox.setText("config CFAR success!");
+	msgBox.exec();
 }
 
 void viewpanel::readCFAR(void){
 	cmdMsg_.mHead.usCommand = commandType::CFAR_READ;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		ctlReadBtn_[1]->setStyleSheet("color: black");
 		QMessageBox msgBox;
 		msgBox.setText("read CFAR failed!");
 		msgBox.exec();
@@ -1318,24 +1316,31 @@ void viewpanel::readCFAR(void){
 			}
 			break;
 		}
-	}	
+	}
+	QMessageBox msgBox;
+	msgBox.setText("read CFAR success!");
+	msgBox.exec();
 }
 
 void viewpanel::config3DFT(void){
-
 	QString str = m3DFTCombo->currentText();
 	cmdMsg_.mCommandVal[0] = str.toInt();
 	cmdMsg_.mHead.usCommand = commandType::DFT3_WRITE;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
-		msgBox.setText("config3DFT failed!");
+		msgBox.setText("config 3DFT failed!");
 		msgBox.exec();
+		return;
 	}
+	QMessageBox msgBox;
+	msgBox.setText("config 3DFT success!");
+	msgBox.exec();
 }
 
 void viewpanel::read3DFT(void){
 	cmdMsg_.mHead.usCommand = commandType::DFT3_READ;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		ctlReadBtn_[2]->setStyleSheet("color: black");
 		QMessageBox msgBox;
 		msgBox.setText("read 3DFT failed!");
 		msgBox.exec();
@@ -1355,11 +1360,13 @@ void viewpanel::read3DFT(void){
 			}
 			break;
 		}
-	}	
+	}
+	QMessageBox msgBox;
+	msgBox.setText("read 3DFT success!");
+	msgBox.exec();
 }
 
 void viewpanel::configDiff(void){
-
 	QString str = DiffCombo->currentText();
 	cmdMsg_.mCommandVal[0] = str.toInt();
 	cmdMsg_.mHead.usCommand = commandType::DIFF_WRITE;
@@ -1367,7 +1374,11 @@ void viewpanel::configDiff(void){
 		QMessageBox msgBox;
 		msgBox.setText("config Diff failed!");
 		msgBox.exec();
+		return;
 	}
+	QMessageBox msgBox;
+	msgBox.setText("config Diff success!");
+	msgBox.exec();
 }
 void viewpanel::configReg(void){
 	QString strAddr = regAddr_line->text();
@@ -1388,8 +1399,13 @@ void viewpanel::configReg(void){
 		QMessageBox msgBox;
 		msgBox.setText("config register failed!");
 		msgBox.exec();
+		return;
 	}
+	QMessageBox msgBox;
+	msgBox.setText("write register success!");
+	msgBox.exec();
 }
+
 std::string viewpanel::tohex(uint32_t a){
 	std::string res;
 	if(a == 0) return std::string("0");
@@ -1407,15 +1423,15 @@ std::string viewpanel::tohex(uint32_t a){
 }
 void viewpanel::readReg(void){
 	cmdMsg_.mHead.usCommand = commandType::REG_READ;
-
 	QString strAddr = regAddr_line->text();
 	std::stringstream ss;
 	ss << std::hex << strAddr.toStdString();
 	ss >> cmdMsg_.mCommandVal[0];
 
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		regBtnRead->setStyleSheet("color: black");	
 		QMessageBox msgBox;
-		msgBox.setText("read Diff failed!");
+		msgBox.setText("read Reg failed!");
 		msgBox.exec();
 		return;
 	}
@@ -1436,12 +1452,16 @@ void viewpanel::readReg(void){
 			}
 			break;
 		}
-	}	
+	}
+	QMessageBox msgBox;
+	msgBox.setText("read register success!");
+	msgBox.exec();
 }
 
 void viewpanel::readDiff(void){
 	cmdMsg_.mHead.usCommand = commandType::DIFF_READ;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		ctlReadBtn_[3]->setStyleSheet("color: black");
 		QMessageBox msgBox;
 		msgBox.setText("write Diff failed!");
 		msgBox.exec();
@@ -1462,7 +1482,10 @@ void viewpanel::readDiff(void){
 			}
 			break;
 		}
-	}	
+	}
+	QMessageBox msgBox;
+	msgBox.setText("read diff success!");
+	msgBox.exec();
 }
 
 void viewpanel::radar_start_stop_control( void )
@@ -3253,6 +3276,7 @@ void viewpanel::CreatConnect()
 	connect(ctlWriteBtn_[3], SIGNAL(clicked()), this, SLOT( configDiff( void )));
 	connect(regBtnWrite, SIGNAL(clicked()), this, SLOT( configReg( void )));
 	connect(saveBtn, SIGNAL(clicked()), this, SLOT( saveDataThead( void )));
+	connect(setSaveBtn, SIGNAL(clicked()), this, SLOT( setSaveFolder( void )));
 
 	connect(ctlReadBtn_[0], SIGNAL(clicked()), this, SLOT( readPower( void )));
 	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
@@ -3335,7 +3359,7 @@ void viewpanel::CreatUIWindow()
 	connect( loadBtn, SIGNAL( clicked()), this, SLOT( loadLidarFile( void )));
 	lidar_connect_button = new QPushButton("&Connect", this);
 	//lidar_disconnect_button = new QPushButton("Disconnect", this);
-	lidar_start_button = new QPushButton("&Start", this);
+	setSaveBtn = new QPushButton("&Set save folder", this);
 	//lidar_stop_button = new QPushButton("Stop", this);
 	//lidarIdCombo =  new QComboBox;
 
@@ -3351,7 +3375,7 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( lidar_port_label, 1, 0, Qt::AlignLeft);
 	controls_layout->addWidget( port_edit, 1, 1, Qt::AlignLeft);
 	controls_layout->addWidget( lidar_connect_button, 2, 0, Qt::AlignLeft);
-	controls_layout->addWidget( lidar_start_button, 2, 1, Qt::AlignLeft);
+	controls_layout->addWidget( setSaveBtn, 3, 0, Qt::AlignLeft);
 
 	QLabel* CFAR_label = new QLabel( "CFAR" );
 	QLabel* m3DFT_label = new QLabel( "3DFT" );
@@ -3445,8 +3469,25 @@ void viewpanel::CreatUIWindow()
 	this->addTab(multiWidget,  "Lidar Ui Mainwindow");
 }
 
-void viewpanel::Save2filecsv(std::vector<uint8_t> &data, long long findex)
+void viewpanel::setSaveFolder()
 {
+
+	save_folder_ =  QFileDialog::getExistingDirectory(this, "Choose folder for saving pc data", QDir::currentPath(),
+		QFileDialog::DontUseNativeDialog | QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+	if( !save_folder_.isNull() )
+	{
+		qDebug() << "selected default recording folder : " << save_folder_.toUtf8();
+	}
+	else
+	{
+		save_folder_ = QString(".");
+	}
+}
+
+void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
+{
+	if(!ifsave) return;
 #if 0
 	std::string datPath;
 	datPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".dat";
@@ -3457,11 +3498,24 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, long long findex)
 	}
 	datfile.close();
 #endif
-
+	time_t rawtime;
+	struct tm *ptminfo;
+	time(&rawtime);
+	ptminfo = localtime(&rawtime);
+	printf("current: %02d-%02d-%02d %02d:%02d:%02d\n",
+	ptminfo->tm_year + 1900, ptminfo->tm_mon + 1, ptminfo->tm_mday,
+	ptminfo->tm_hour, ptminfo->tm_min, ptminfo->tm_sec);
 #if 1
 	std::string csvPath;
-	csvPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".csv";
-	ROS_INFO("frame index %d: csvPath is %s \n", findex, csvPath.c_str());
+	csvPath = save_folder_.toStdString() + "/data_convert_" + 
+	std::to_string(ptminfo->tm_year + 1900) + 
+	"-" + std::to_string(ptminfo->tm_mon + 1) +
+	"-" + std::to_string(ptminfo->tm_mday) +
+	"-" + std::to_string(ptminfo->tm_hour) +
+	"-" + std::to_string(ptminfo->tm_min) +
+	"-" + std::to_string(ptminfo->tm_sec) +
+	+".csv";
+	ROS_INFO("csvPath is %s \n", csvPath.c_str());
 	std::ofstream csvfile; 
 	csvfile.open(csvPath, std::ios::out); 
 	int32_t cur_data = 0;
@@ -3513,12 +3567,10 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, long long findex)
 
 void viewpanel::saveData(){
 
-#if 1
 	long long index = 0;
 	int ret = 0;
-	//msg.pcTcpData = new uint8_t[TCP_PC_SIZE];
-	uint8_t* allbuff = new uint8_t[TCP_PC_SIZE * 201];
-	while(!terminating && ifSave){
+	bool ifsave = true;
+	//while(!terminating && ifSave){
 		//std::cout << "saveing times: " << index++ << std::endl;
 		std::vector<uint8_t> mv;
 		for(int i = 0; i < 200; i++){
@@ -3535,12 +3587,11 @@ void viewpanel::saveData(){
 				//std::cout << "current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
 				if(g_msg.cmdmsg.mCommandVal[1] != i){
 					std::cout << "!!!error!!! current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
-					//QMessageBox msgBox;
-					//msgBox.setText("TCP data loss, save quit!");
-					//msgBox.exec();	
-					//delete [] msg.pcTcpData;
-					delete [] allbuff;
-					return;			
+					ifsave  =false;
+					QMessageBox msgBox;
+					msgBox.setText("TCP data loss, save quit!");
+					msgBox.exec();	
+					break;			
 				}
 				//std::vector<uint8_t> tmp(g_msg.pcTcpData, g_msg.pcTcpData + TCP_PC_SIZE);
 				//memcpy(allbuff + i * TCP_PC_SIZE, g_msg.pcTcpData, TCP_PC_SIZE);
@@ -3552,12 +3603,12 @@ void viewpanel::saveData(){
 			}
 		
 		}
-		Save2filecsv(mv, index++);
-	}
-	//delete [] msg.pcTcpData;
-	delete [] allbuff;
+		Save2filecsv(mv, ifsave);
+	//}
+	saveBtn->setStyleSheet("color: black");
+	saveBtn->setText("Save");
+	ifSave = false;
 	std::cout << "save data finished ..." << std::endl;
-#endif
 }
 
 void viewpanel::TaskFunc(void *arg){
@@ -3580,8 +3631,8 @@ void viewpanel::saveDataThead()
 		QMessageBox msgBox;
 		msgBox.setText("pc data save failed!");
 		msgBox.exec();
+		return;
 	}
-	pthread_t save_thread_id;
 	if(!ifSave && ifStarted){
 		saveBtn->setStyleSheet("color: green");
 		saveBtn->setText("Saving..");
@@ -3592,7 +3643,7 @@ void viewpanel::saveDataThead()
 		ifSave = false;
 		return;		
 	}
-	usleep(100*1000);
+	//usleep(100*1000);
     vx_task_set_default_create_params(&bst_params);
     bst_params.app_var = this;
     bst_params.task_mode = 0;
@@ -3600,6 +3651,7 @@ void viewpanel::saveDataThead()
     vx_task_create(&bst_task[0], &bst_params);    
 
 #if 0
+	pthread_t save_thread_id;
 	usleep(100*1000);
 	if(pthread_create(&save_thread_id, NULL, saveData, NULL) < 0)
 	{
