@@ -3567,43 +3567,52 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 
 void viewpanel::saveData(){
 
-	long long index = 0;
 	int ret = 0;
 	bool ifsave = true;
 	//while(!terminating && ifSave){
-		//std::cout << "saveing times: " << index++ << std::endl;
-		std::vector<uint8_t> mv;
-		for(int i = 0; i < 200; i++){
-			memset(&g_msg, 0, sizeof(g_msg));
-			ret = ::recv(ctrl_sock, &g_msg, sizeof(g_msg), MSG_WAITALL);
-			if(ret < 0){
-				ROS_INFO("read pc data failed, continue\n");
-				sleep(1);
-				i--;
-				continue;
-			}
-        	//std::cout << "receive byte is " << ret << std::endl;
-			if(g_msg.cmdmsg.mHead.usCommand == commandType::PC_READ){
-				//std::cout << "current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
-				if(g_msg.cmdmsg.mCommandVal[1] != i){
-					std::cout << "!!!error!!! current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
-					ifsave  =false;
-					QMessageBox msgBox;
-					msgBox.setText("error!!TCP data loss, save task quit!");
-					msgBox.exec();	
-					break;			
-				}
-				//std::vector<uint8_t> tmp(g_msg.pcTcpData, g_msg.pcTcpData + TCP_PC_SIZE);
-				//memcpy(allbuff + i * TCP_PC_SIZE, g_msg.pcTcpData, TCP_PC_SIZE);
-				mv.insert(mv.end(), g_msg.pcTcpData, g_msg.pcTcpData + TCP_PC_SIZE);
-			}else {
-				ROS_INFO("msg is %d, not read pc data msg, continue\n", g_msg.cmdmsg.mHead.usCommand);
-				i--;
-				continue;
-			}
-		
+	cmdMsg_.mHead.usCommand = commandType::PC_READ;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("pc data save failed!");
+		msgBox.exec();
+		return;
+	}
+	std::vector<uint8_t> mv;
+	for(int i = 0; i < TCP_TIMES_PER_FRAME; i++){
+		memset(&g_msg, 0, sizeof(g_msg));
+		ret = ::recv(ctrl_sock, &g_msg, sizeof(g_msg), MSG_WAITALL);  //will be blocked until recv all data 
+		if(ret < 0){
+			ROS_INFO("saveData tcp recv failed, continue\n");
+			sleep(1);
+			i--;
+			continue;
 		}
-		Save2filecsv(mv, ifsave);
+		//std::cout << "receive byte is " << ret << std::endl;
+		if(g_msg.cmdmsg.mHead.usCommand == commandType::PC_READ){
+			//std::cout << "current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
+			if(g_msg.cmdmsg.mCommandVal[1] != i){
+				std::cout << "!!!error!!! current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
+				ifsave  =false;
+				QMessageBox msgBox;
+				msgBox.setText("error!!TCP data loss, save task quit!");
+				msgBox.exec();	
+				break;			
+			}
+			mv.insert(mv.end(), g_msg.pcTcpData, g_msg.pcTcpData + TCP_PC_SIZE_SINGLE);
+		}else {
+			ROS_INFO("msg is %d, not pc data msg, continue\n", g_msg.cmdmsg.mHead.usCommand);
+			cmdMsg_.mHead.usCommand = commandType::PC_READ;
+			if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+				QMessageBox msgBox;
+				msgBox.setText("pc data save failed!");
+				msgBox.exec();
+				return;
+			}
+			i--;
+			continue;
+		}		
+	}
+	Save2filecsv(mv, ifsave);
 	//}
 	saveBtn->setStyleSheet("color: black");
 	saveBtn->setText("Save");
@@ -3613,6 +3622,7 @@ void viewpanel::saveData(){
 		msgBox.exec();
 	}
 	ifSave = false;
+	vx_task_delete(&bst_task[0]);
 }
 
 void viewpanel::TaskFunc(void *arg){
@@ -3629,14 +3639,6 @@ void viewpanel::start_save_task()
 }
 void viewpanel::saveDataThead()
 {
-
-	cmdMsg_.mHead.usCommand = commandType::PC_READ;
-	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
-		QMessageBox msgBox;
-		msgBox.setText("pc data save failed!");
-		msgBox.exec();
-		return;
-	}
 	if(!ifSave && ifStarted){
 		saveBtn->setStyleSheet("color: green");
 		saveBtn->setText("Saving..");

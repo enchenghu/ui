@@ -90,7 +90,8 @@
 #include <fstream>
 #include <sstream>
 #define MAX_RADARS 10
-#define TCP_PC_SIZE 32000
+#define TCP_PC_SIZE_SINGLE 32000
+#define TCP_TIMES_PER_FRAME 200
 #define BST_MAX_TASK_NUM		(16)
 
 
@@ -148,7 +149,7 @@ typedef struct
 typedef struct 
 {
 	commandMsg 	cmdmsg; 
-	uint8_t 	pcTcpData[TCP_PC_SIZE];
+	uint8_t 	pcTcpData[TCP_PC_SIZE_SINGLE];
 } pcData_t;
 
 typedef struct view_vals_t {
