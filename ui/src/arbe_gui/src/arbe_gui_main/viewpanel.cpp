@@ -335,6 +335,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 #if ONLY_SHOW_UI
 	init_pubs();
 #endif
+	fmcwData_ = std::make_shared<autox_msgs::autoxFMCWPcV>();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
 	cmdMsg_.mHead.usPrefix = 0xeeff;
 	cmdMsg_.mHead.usType = 0x10;
@@ -3488,6 +3489,7 @@ void viewpanel::setSaveFolder()
 void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 {
 	if(!ifsave) return;
+	//memset(&curPcData, 0, sizeof(curPcData));
 #if 0
 	std::string datPath;
 	datPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".dat";
@@ -3539,11 +3541,16 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 
 		if(index == 4 || index == 8){
 			csvfile << cur_data << ",";	
+			if(index == 4) 
+				curPcData.indensity_0 = cur_data;
+			else
+				curPcData.indensity_1 = cur_data;
 			cur_data = 0;
 		}
 
 		if(index == 11){
 			csvfile << (double)(cur_data / 65536.0) << ",";	
+			curPcData.speed = (double)(cur_data / 65536.0);
 			cur_data = 0;
 		}
 
@@ -3551,11 +3558,15 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 			if(cur_data > 0x800000)
 				cur_data = cur_data - 0x1000000;
 			csvfile << (double)(cur_data / 65536.0) << ",";	
+			curPcData.distance = (double)(cur_data / 65536.0);
 			cur_data = 0;
 		}
 
 		if(index == 16){
 			csvfile << cur_data << "\n";	
+			curPcData.reserved = cur_data;
+			fmcwData_->emplace_back(curPcData);
+			memset(&curPcData, 0, sizeof(curPcData));
 			cur_data = 0;
 			index = 0;
 		}

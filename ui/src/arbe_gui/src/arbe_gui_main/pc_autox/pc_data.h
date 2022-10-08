@@ -10,6 +10,7 @@
 #include<stdlib.h> 
 #include<string.h> 
 #include<errno.h> 
+#include <vector>
 #include<sys/types.h> 
 #include<netinet/in.h> 
 
@@ -24,6 +25,8 @@ typedef struct
 	uint32_t reserved = 0;
 
 } autoxFMCWPc_t;
+
+typedef std::vector<autox_msgs::autoxFMCWPc_t> autoxFMCWPcV;
 
 }
 
