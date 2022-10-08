@@ -398,8 +398,8 @@ private:
 	std::vector<double> power_index;
 	vx_task bst_task[BST_MAX_TASK_NUM];
 	vx_task_create_params_t bst_params;
-	std::shared_ptr<autox_msgs::autoxFMCWPcV> fmcwData_;
-	autox_msgs::autoxFMCWPc_t curPcData;
+	std::shared_ptr<autox_msgs::fmcwPoints> fmcwPointsData_;
+	autox_msgs::fmcwPoint curPcPoint;
 
 };
 

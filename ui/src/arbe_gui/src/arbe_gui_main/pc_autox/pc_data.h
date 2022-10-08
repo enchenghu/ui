@@ -24,9 +24,9 @@ typedef struct
 	double speed = 0;
 	uint32_t reserved = 0;
 
-} autoxFMCWPc_t;
+} fmcwPoint;
 
-typedef std::vector<autox_msgs::autoxFMCWPc_t> autoxFMCWPcV;
+typedef std::vector<autox_msgs::fmcwPoint> fmcwPoints;
 
 }
 

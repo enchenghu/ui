@@ -335,7 +335,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 #if ONLY_SHOW_UI
 	init_pubs();
 #endif
-	fmcwData_ = std::make_shared<autox_msgs::autoxFMCWPcV>();
+	fmcwPointsData_ = std::make_shared<autox_msgs::fmcwPoints>();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
 	cmdMsg_.mHead.usPrefix = 0xeeff;
 	cmdMsg_.mHead.usType = 0x10;
@@ -3521,10 +3521,6 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	std::ofstream csvfile; 
 	csvfile.open(csvPath, std::ios::out); 
 	int32_t cur_data = 0;
-	uint32_t indensity_1 = 0;
-	uint32_t distance = 0;
-	uint32_t speed = 0;
-	uint32_t reserved = 0;
 	int index = 0;
 	csvfile << "indensity_0" << "," << "indensity_1" << "," 
 	<< "distance(m)" << "," << "speed(m/s)" << "," << "reserved" << "\n";	
@@ -3542,31 +3538,31 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 		if(index == 4 || index == 8){
 			csvfile << cur_data << ",";	
 			if(index == 4) 
-				curPcData.indensity_0 = cur_data;
+				curPcPoint.indensity_0 = cur_data;
 			else
-				curPcData.indensity_1 = cur_data;
+				curPcPoint.indensity_1 = cur_data;
 			cur_data = 0;
 		}
 
 		if(index == 11){
-			csvfile << (double)(cur_data / 65536.0) << ",";	
-			curPcData.speed = (double)(cur_data / 65536.0);
+			curPcPoint.distance = (double)(cur_data / 65536.0);
+			csvfile << curPcPoint.distance << ",";	
 			cur_data = 0;
 		}
 
 		if(index == 14){
 			if(cur_data > 0x800000)
 				cur_data = cur_data - 0x1000000;
-			csvfile << (double)(cur_data / 65536.0) << ",";	
-			curPcData.distance = (double)(cur_data / 65536.0);
+			curPcPoint.speed = (double)(cur_data / 65536.0);
+			csvfile << curPcPoint.speed << ",";	
 			cur_data = 0;
 		}
 
 		if(index == 16){
-			csvfile << cur_data << "\n";	
-			curPcData.reserved = cur_data;
-			fmcwData_->emplace_back(curPcData);
-			memset(&curPcData, 0, sizeof(curPcData));
+			curPcPoint.reserved = cur_data;
+			csvfile << curPcPoint.reserved << "\n";	
+			fmcwPointsData_->emplace_back(curPcPoint);
+			memset(&curPcPoint, 0, sizeof(curPcPoint));
 			cur_data = 0;
 			index = 0;
 		}
@@ -3706,7 +3702,7 @@ int viewpanel::lidarConnect()
 	setsockopt(ctrl_sock, SOL_SOCKET,SO_RCVBUF,(const char*)&nRecvBuf,sizeof(int));
 
 	int nSendBuf=320 * 1024;//设置为32K
-	setsockopt(ctrl_sock, SOL_SOCKET,SO_SNDBUF,(const char*)&nSendBuf,sizeof(int));
+	setsockopt(ctrl_sock, SOL_SOCKET, SO_SNDBUF,(const char*)&nSendBuf,sizeof(int));
 #if 1
 	setsockopt(ctrl_sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
 
