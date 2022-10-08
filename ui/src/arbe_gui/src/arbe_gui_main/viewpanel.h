@@ -89,6 +89,8 @@
 #include "osc_chart.h"
 #include <fstream>
 #include <sstream>
+#include <pc_data.h>
+#include "bst_msg_queue.h"
 #define MAX_RADARS 10
 #define TCP_PC_SIZE_SINGLE 32000
 #define TCP_TIMES_PER_FRAME 200

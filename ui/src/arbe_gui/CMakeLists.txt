@@ -154,14 +154,17 @@ catkin_package(CATKIN_DEPENDS
 ## Your package locations should be listed before other locations
 include_directories(
  include src/arbe_points_publisher/include/
+ include src/arbe_gui_main/pc_autox/
  include ${OpenCV_INCLUDE_DIRS}
  include ${catkin_INCLUDE_DIRS}
  include ${PCL_LIBRARY_DIRS}
 include ${CMAKE_BINARY_DIR}/gauges/
 include os
+include PolyM/include
 )
 
 add_subdirectory(os)
+add_subdirectory(PolyM)
 
 link_directories(${catkin_LIBRARY_DIRS})
 
@@ -229,6 +232,7 @@ endif()
 add_dependencies(arbe_gui ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(arbe_gui
    os
+   polym
    ${catkin_LIBRARIES}
    ${PCL_LIBRARIES}
    ${QT_LIBRARIES}
