@@ -41,6 +41,7 @@ class OSC_chart : public QLabel
     Q_OBJECT
 
 private:
+    std::chrono::duration<double> elapsed;
     //是否隐藏指针label
     bool hide_pixmap=false;
     uint64_t index_;

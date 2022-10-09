@@ -135,9 +135,13 @@ void OSC_chart::updateViews(void){
 }
 
 void OSC_chart::slotshow(void){
+    //auto start = std::chrono::steady_clock::now();
     pixmap.fill(Qt::transparent);
     Draw_Chart();
-    setPixmap(pixmap);    
+    setPixmap(pixmap); 
+    //auto end = std::chrono::steady_clock::now();
+    //elapsed = end - start;
+    //std::cout << "time for slotshow: " <<  elapsed.count() * 1000 << " ms" << std::endl;    
 }
 
 //求范围公式 舍去输入值除最高位以外的值
