@@ -101,7 +101,7 @@ void OSC_chart::View_Chart(uint32_t nums)
 {
     //emit moveing(externevent);
     timer_  = new QTimer(this);
-    timer_->setInterval(50);
+    //timer_->setInterval(50);
     connect(timer_, SIGNAL(timeout()), this, SLOT(updateViews(void)));
     timer_->start();    
     pixmap.fill(Qt::transparent);
