@@ -1479,7 +1479,8 @@ void viewpanel::readDiff(void){
 			continue;
 		}else{
 			if(cmdMsg.mHead.usCommand == commandType::DIFF_READ){
-				ctlReadLine_[3]->setText(QString::number(cmdMsg.mCommandVal[0]));
+				std::string tmp = tohex(cmdMsg.mCommandVal[0]);
+				ctlReadLine_[3]->setText(QString::fromStdString(tmp));
 			}
 			break;
 		}

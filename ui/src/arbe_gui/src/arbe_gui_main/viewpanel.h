@@ -93,6 +93,8 @@
 #include "bst_msg_queue.h"
 #define MAX_RADARS 10
 #define TCP_PC_SIZE_SINGLE 32000
+#define UDP_PC_SIZE_SINGLE 1024
+
 #define TCP_TIMES_PER_FRAME 200
 #define BST_MAX_TASK_NUM		(16)
 
@@ -130,7 +132,9 @@ typedef enum
     DFT3_READ,
     DIFF_READ,
 	REG_READ,
-	PC_READ
+	PC_READ,
+	FFT_ADC_READ_START,
+	FFT_ADC_READ_STOP
 }commandType;
 
 typedef struct API_Header
@@ -144,9 +148,27 @@ typedef struct API_Header
 
 typedef struct 
 {
+	uint16_t 	usPrefix; // 0xeeff
+	uint16_t 	usType; // 0x10 version 1.0
+	uint16_t 	usRollingCounter; 
+	uint16_t 	usPayloadCrc;
+	uint32_t 	usFrameCounter;
+	uint32_t 	unLength;
+}UDP_Header;
+
+typedef struct 
+{
 	API_Header 	mHead; 
 	uint32_t 	mCommandVal[2];
 } commandMsg;
+
+
+typedef struct 
+{
+	UDP_Header 	mHead; 
+	uint8_t 	pcUdpData[UDP_PC_SIZE_SINGLE];
+} udpMsg;
+
 
 typedef struct 
 {
