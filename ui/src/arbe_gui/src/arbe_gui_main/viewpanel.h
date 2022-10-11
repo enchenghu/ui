@@ -94,6 +94,7 @@
 #define MAX_RADARS 10
 #define TCP_PC_SIZE_SINGLE 32000
 #define UDP_PC_SIZE_SINGLE 1024
+#define BUFF_LEN 1024
 
 #define TCP_TIMES_PER_FRAME 200
 #define BST_MAX_TASK_NUM		(16)
@@ -345,10 +346,15 @@ private Q_SLOTS:
 
 	void loadLidarFile();
 	void setSaveFolder();
+	void udpConnect();
+	void udpClose();
 
 protected:
     static void TaskFunc(void *arg);
+    static void TaskFuncUdp(void *arg);
+
 private:
+	void udpRecvLoop();
 	void CreatDebugWindow();
 	void CreatUIWindow();
 	void CreatCtlPanel();
@@ -358,8 +364,11 @@ private:
 	std::string tohex(uint32_t a);
 	void saveData();
 	int ctrl_sock;
+	int udpRecvSocketFd_;
 	std::string lidar_ip;
 	int lidar_ctrl_port;
+	int lidar_UDP_port;
+	double distance_offset;
 	rviz::VisualizationManager* manager_;
 	rviz::RenderPanel* render_panel_;
 	rviz::SelectionPanel* selection_panel_;
@@ -398,6 +407,8 @@ private:
 	QComboBox* DiffCombo;
 	QLineEdit *ip_edit;
 	QLineEdit *port_edit;
+	QLineEdit *udp_port_edit;
+	QLineEdit *distance_Offset_edit;
 	QString save_folder_;
 
 	QLineEdit* regAddr_line ;
@@ -414,6 +425,8 @@ private:
 	QPushButton *setSaveBtn;
 	QPushButton *regBtnWrite;
 	QPushButton *regBtnRead;
+	QPushButton * settingADCSavebutton;
+	QPushButton * settingADCConfigbutton;
 	std::vector<QPushButton* > ctlWriteBtn_;
 	std::vector<QPushButton* > ctlReadBtn_;
 	std::vector<QLineEdit* > ctlReadLine_;

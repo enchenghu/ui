@@ -346,8 +346,8 @@ viewpanel::viewpanel(QTabWidget* parent )
 				   397, 415, 500, 510, 560, 625, 1000, 
 				   1130, 1450, 1580, 1600};
 	CreatUIWindow();
-	CreatConnect();
 	CreatDebugWindow();
+	CreatConnect();
 
 	overlay_text_label = new QLabel;
 	overlay_text_label->setAutoFillBackground(true);
@@ -3196,10 +3196,11 @@ void viewpanel::CreatDebugWindow()
 	QPushButton * writeAddrbutton = new QPushButton("&Write");
 	QPushButton * readAddrbutton = new QPushButton("&Read");
 
-	QPushButton * settingADCSavebutton = new QPushButton("&Save");
-	QPushButton * settingADCConfigbutton = new QPushButton("&Config");
+	settingADCSavebutton = new QPushButton("&Start");
+	settingADCConfigbutton = new QPushButton("&Stop");
 	QPushButton * settingFFTSavebutton = new QPushButton("&Save");
 	QPushButton * settingFFTConfigbutton = new QPushButton("&Config");
+
 	settingADCLayout->addWidget(settingADCSavebutton, 0, 0);
 	settingADCLayout->addWidget(settingADCConfigbutton, 0, 1);
 	settingADCBox->setLayout(settingADCLayout);
@@ -3279,6 +3280,10 @@ void viewpanel::CreatConnect()
 	connect(regBtnWrite, SIGNAL(clicked()), this, SLOT( configReg( void )));
 	connect(saveBtn, SIGNAL(clicked()), this, SLOT( saveDataThead( void )));
 	connect(setSaveBtn, SIGNAL(clicked()), this, SLOT( setSaveFolder( void )));
+
+	connect(settingADCSavebutton, SIGNAL(clicked()), this, SLOT( udpConnect( void )));
+	connect(settingADCConfigbutton, SIGNAL(clicked()), this, SLOT( udpClose( void )));
+
 
 	connect(ctlReadBtn_[0], SIGNAL(clicked()), this, SLOT( readPower( void )));
 	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
@@ -3366,18 +3371,30 @@ void viewpanel::CreatUIWindow()
 	//lidarIdCombo =  new QComboBox;
 
 	QLabel* lidar_IP_label = new QLabel( "IP addr" );
-	QLabel* lidar_port_label = new QLabel( "Port" );
+	QLabel* lidar_port_label = new QLabel( "TCP Port" );
+	QLabel* lidar_udp_port_label = new QLabel( "UDP Port" );
+	QLabel* distanceOffset_label = new QLabel( "distance Offset" );
+
 	ip_edit =  new QLineEdit();
 	port_edit =  new QLineEdit();
+	udp_port_edit =  new QLineEdit();
+	distance_Offset_edit = new QLineEdit();
+
 	ip_edit->setPlaceholderText("input ip addr");
-	port_edit->setPlaceholderText("input ip port");
+	port_edit->setPlaceholderText("input tcp port");
+	udp_port_edit->setPlaceholderText("input udp port");
+	distance_Offset_edit->setPlaceholderText("input distance offset ");
 
 	controls_layout->addWidget( lidar_IP_label, 0, 0, Qt::AlignLeft);
 	controls_layout->addWidget( ip_edit, 0, 1, Qt::AlignLeft);
 	controls_layout->addWidget( lidar_port_label, 1, 0, Qt::AlignLeft);
 	controls_layout->addWidget( port_edit, 1, 1, Qt::AlignLeft);
-	controls_layout->addWidget( lidar_connect_button, 2, 0, Qt::AlignLeft);
-	controls_layout->addWidget( setSaveBtn, 3, 0, Qt::AlignLeft);
+
+	controls_layout->addWidget( lidar_udp_port_label, 2, 0, Qt::AlignLeft);
+	controls_layout->addWidget( udp_port_edit, 2, 1, Qt::AlignLeft);
+
+	controls_layout->addWidget( lidar_connect_button, 3, 0, Qt::AlignLeft);
+	controls_layout->addWidget( setSaveBtn, 3, 1, Qt::AlignLeft);
 
 	QLabel* CFAR_label = new QLabel( "CFAR" );
 	QLabel* m3DFT_label = new QLabel( "3DFT" );
@@ -3442,7 +3459,11 @@ void viewpanel::CreatUIWindow()
 	}
 
 	controls_layout->addWidget( regAddr_label, 0, 7, Qt::AlignLeft);
+	controls_layout->addWidget( distanceOffset_label, 1, 7, Qt::AlignLeft);
+
 	controls_layout->addWidget( regAddr_line, 0, 8, Qt::AlignLeft);	
+	controls_layout->addWidget( distance_Offset_edit, 1, 8, Qt::AlignLeft);	
+
 	controls_layout->addWidget( regVal_label, 0, 9, Qt::AlignLeft);	
 	controls_layout->addWidget( regVal_line, 0, 10, Qt::AlignLeft);	
 	controls_layout->addWidget( regBtnWrite, 0, 11, Qt::AlignLeft);	
@@ -3546,7 +3567,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 		}
 
 		if(index == 11){
-			curPcPoint.distance = (double)(cur_data / 65536.0);
+			curPcPoint.distance = (double)(cur_data / 65536.0) - distance_offset;
 			csvfile << curPcPoint.distance << ",";	
 			cur_data = 0;
 		}
@@ -3578,6 +3599,9 @@ void viewpanel::saveData(){
 	int ret = 0;
 	bool ifsave = true;
 	//while(!terminating && ifSave){
+	distance_offset = distance_Offset_edit->text().toDouble();
+	std::cout << " distance_offset is " << distance_offset << std::endl;
+
 	cmdMsg_.mHead.usCommand = commandType::PC_READ;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
@@ -3641,6 +3665,14 @@ void viewpanel::TaskFunc(void *arg){
     }
 }
 
+void viewpanel::TaskFuncUdp(void *arg){
+    viewpanel *pSave = (viewpanel *)arg;
+
+    if (pSave && pSave->TaskFuncUdp) {
+        pSave->udpRecvLoop();
+    }
+}
+
 void viewpanel::start_save_task()
 {
 
@@ -3677,6 +3709,82 @@ void viewpanel::saveDataThead()
 #endif
 }
 
+void viewpanel::udpClose(){
+	cmdMsg_.mHead.usCommand = commandType::FFT_ADC_READ_STOP;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("UDP close failed!");
+		msgBox.exec();
+		return;
+	}
+	QMessageBox msgBox;
+	msgBox.setText("UDP close success!");
+	msgBox.exec();
+	::close(udpRecvSocketFd_);
+}
+
+void viewpanel::udpConnect() {
+
+    vx_task_set_default_create_params(&bst_params);
+    bst_params.app_var = this;
+    bst_params.task_mode = 0;
+    bst_params.task_main = TaskFuncUdp;
+    vx_task_create(&bst_task[1], &bst_params);  
+}
+
+void viewpanel::udpRecvLoop(){
+
+	//int client_fd;
+	cmdMsg_.mHead.usCommand = commandType::FFT_ADC_READ_START;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("UDP Connect failed!");
+		msgBox.exec();
+		return;
+	}
+
+	lidar_UDP_port = udp_port_edit->text().toInt();
+	struct sockaddr_in ser_addr;
+
+	udpRecvSocketFd_ = socket(AF_INET, SOCK_DGRAM, 0);
+	if(udpRecvSocketFd_ < 0)
+	{
+		printf("create socket fail!\n");
+	}
+
+	memset(&ser_addr, 0, sizeof(ser_addr));
+	ser_addr.sin_family = AF_INET;
+	ser_addr.sin_addr.s_addr = inet_addr(lidar_ip.c_str());
+	//ser_addr.sin_addr.s_addr = htonl(INADDR_ANY);  //注意网络序转换
+	ser_addr.sin_port = htons(lidar_UDP_port);  //注意网络序转换
+	std::cout << "lidar_UDP_port is " << lidar_UDP_port << std::endl;
+
+    int ret = ::bind(udpRecvSocketFd_, (struct sockaddr*)&ser_addr, sizeof(ser_addr));
+    if(ret < 0)
+    {
+        printf("socket bind fail!\n");
+    }
+
+	socklen_t len;
+	struct sockaddr_in src;
+	char buf[BUFF_LEN];
+	printf("ready recv udp msg!\n");
+	len = sizeof(sockaddr);
+	while(!terminating)
+	{
+		//printf("recv udp is : %s\n",buf);
+		//char buf[1024] = "client send: TEST UDP MSG!\n";
+		//printf("client send is :%s\n",buf);  //打印自己发送的信息
+		//sendto(udpRecvSocketFd_, buf, BUFF_LEN, 0, (struct sockaddr*)&ser_addr, len);
+		memset(buf, 0, BUFF_LEN);
+		recvfrom(udpRecvSocketFd_, buf, BUFF_LEN, 0, (struct sockaddr*)&src, &len);  //接收来自server的信息
+		printf("client recv is :%s\n",buf);  //打印自己发送的信息
+		//usleep(500 *1000);  //一秒发送一次消息
+	}
+     //handle_udp_msg(server_fd);   //处理接收到的数据
+ 
+    ::close(udpRecvSocketFd_);
+}
 
 int viewpanel::lidarConnect()
 {
