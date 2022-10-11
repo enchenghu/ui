@@ -1409,7 +1409,9 @@ void viewpanel::configReg(void){
 
 std::string viewpanel::tohex(uint32_t a){
 	std::string res;
-	if(a == 0) return std::string("0");
+	std::string temp;
+	int zerolen;
+	if(a == 0) return std::string("00000000");
 	uint32_t y = 0;
 	while(a > 0)//大于0的数
 	{
@@ -1420,6 +1422,13 @@ std::string viewpanel::tohex(uint32_t a){
 		 res = char('A'- 10 + y) + res;  //大于9的余数用ABCDE表示
 		a = a / 16; 
 	} 
+	zerolen = 8 - res.size();
+	while (zerolen > 0)
+	{
+		temp += "0";
+		zerolen--;
+	}
+	res = temp + res;
 	return res; 	
 }
 void viewpanel::readReg(void){
