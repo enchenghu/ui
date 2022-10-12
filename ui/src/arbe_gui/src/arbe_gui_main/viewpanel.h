@@ -87,6 +87,7 @@
 #include <arbe_msgs/arbeNewPcMsg.h>
 
 #include "osc_chart.h"
+#include "fft_charts.h"
 #include <fstream>
 #include <sstream>
 #include <pc_data.h>
@@ -435,6 +436,8 @@ private:
 	vx_task_create_params_t bst_params;
 	std::shared_ptr<autox_msgs::fmcwPoints> fmcwPointsData_;
 	autox_msgs::fmcwPoint curPcPoint;
+	Chart* fftChart;
+	Chart* fftChart_1;
 
 };
 

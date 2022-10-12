@@ -3149,6 +3149,23 @@ viewpanel* viewpanel::Instance()
 void viewpanel::CreatDebugWindow()
 {
 	/* Debug window*/ 
+	fftChart = new Chart();
+    fftChart->setAxis("X轴",0,200,11, "Y轴",0,800,11);
+    //设置离散点数据
+    //QList<QPointF> pointlist = {QPointF(0,1), QPointF(10,2), QPointF(20,4), QPointF(30,8), QPointF(40,16), \
+                                QPointF(50,16), QPointF(60,8), QPointF(70,4), QPointF(80,2), QPointF(90,1),};
+    //绘制
+    fftChart->buildChart();
+
+
+	fftChart_1 = new Chart();
+    fftChart_1->setAxis("X轴",0,200,11, "Y轴",0,800,11);
+    //设置离散点数据
+    //QList<QPointF> pointlist_1 = {QPointF(0,1), QPointF(10,2), QPointF(20,4), QPointF(30,8), QPointF(40,16), \
+                                QPointF(50,16), QPointF(60,8), QPointF(70,4), QPointF(80,2), QPointF(90,1),};
+    //绘制
+    fftChart_1->buildChart();
+	
 	QWidget* multiWidget_new = new QWidget();
 	QGroupBox *chartADCBox = new QGroupBox(tr("ADC  chart:"));
 	QGridLayout* chartADCLayout = new QGridLayout ;
@@ -3157,20 +3174,24 @@ void viewpanel::CreatDebugWindow()
 
 	std::cout << "this->width() is "  << this->width() << " this->height() is " << this->height() << std::endl;
 
+#if 0
     OSC_chart *label_OSC_0 = new OSC_chart(this);
     label_OSC_0->set_chart(10,20,this->width() /  2 -20,this->height()  / 2-20);
     label_OSC_0->Add_Line_Data(0, 100);
     label_OSC_0->View_Chart(1000);
-	chartADCLayout->addWidget(label_OSC_0,  0 , 0);
+#endif
+	chartADCLayout->addWidget(fftChart,  0 , 0);
 	chartADCBox->setLayout(chartADCLayout);
-#if 1
+#if 0
     OSC_chart *label_OSC_1 = new OSC_chart(this);
     label_OSC_1->set_chart(10,20,this->width() /  2 - 20,this->height() / 2 - 20);
     label_OSC_1->Add_Line_Data(0, 100);
     //label_OSC_1->View_Chart(10000);
-	chartFFTLayout->addWidget(label_OSC_1,  0, 0);
-	chartFFTBox->setLayout(chartFFTLayout);
 #endif
+
+	chartFFTLayout->addWidget(fftChart_1,  0, 0);
+	chartFFTBox->setLayout(chartFFTLayout);
+
 	QGridLayout* main_show= new QGridLayout ;
 	main_show->setColumnStretch(0, 5);
 	main_show->setColumnStretch(1, 1);
@@ -3663,7 +3684,7 @@ void viewpanel::saveData(){
 		msgBox.exec();
 	}
 	ifSave = false;
-	vx_task_delete(&bst_task[0]);
+	//vx_task_delete(&bst_task[0]);
 }
 
 void viewpanel::TaskFunc(void *arg){
@@ -3699,11 +3720,14 @@ void viewpanel::saveDataThead()
 		return;		
 	}
 	//usleep(100*1000);
+	saveData();
+#if 0
     vx_task_set_default_create_params(&bst_params);
     bst_params.app_var = this;
     bst_params.task_mode = 0;
     bst_params.task_main = TaskFunc;
     vx_task_create(&bst_task[0], &bst_params);    
+#endif
 
 #if 0
 	pthread_t save_thread_id;

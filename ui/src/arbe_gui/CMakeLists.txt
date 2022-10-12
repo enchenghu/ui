@@ -27,6 +27,8 @@ catkin_package()
 ## This setting causes Qt's "MOC" generation to happen automatically.
 set(CMAKE_AUTOMOC ON)
 
+find_package(Qt5 5.12 COMPONENTS Core Widgets Gui Charts REQUIRED)
+
 ## This plugin includes Qt widgets, so we must include Qt.
 ## We'll use the version that rviz used so they are compatible.
 if(rviz_QT_VERSION VERSION_LESS "5")
@@ -185,6 +187,9 @@ src/arbe_gui_main/terminal.cpp
 src/arbe_gui_main/ctkrangeslider.cpp
 src/arbe_gui_main/Per_radar_settings.cpp
 src/arbe_gui_main/osc_chart.cpp
+src/arbe_gui_main/fft_charts.cpp
+src/arbe_gui_main/fft_chartview.cpp
+
 #src/ArbeApiCommon/RAF_API_Library/src/Raf_Api.c
 #src/ArbeApiCommon/RAF_API_Library/src/User_Extended.c
 #src/ArbeApiCommon/Utilities/src/Utils.c
@@ -233,6 +238,7 @@ add_dependencies(arbe_gui ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_
 target_link_libraries(arbe_gui
    os
    polym
+   Qt5::Charts
    ${catkin_LIBRARIES}
    ${PCL_LIBRARIES}
    ${QT_LIBRARIES}
