@@ -9,6 +9,7 @@
 #include "fft_chartview.h"
 #include <QTimer>
 #include <unistd.h>
+#include <iostream>
 QT_CHARTS_USE_NAMESPACE
 class Chart : public QWidget
 {

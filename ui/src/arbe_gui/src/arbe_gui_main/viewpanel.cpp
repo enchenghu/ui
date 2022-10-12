@@ -3150,7 +3150,7 @@ void viewpanel::CreatDebugWindow()
 {
 	/* Debug window*/ 
 	fftChart = new Chart();
-    fftChart->setAxis("X轴",0,200,11, "Y轴",0,800,11);
+    fftChart->setAxis("X轴",0,2048,11, "Y轴",0,150,11);
     //设置离散点数据
     //QList<QPointF> pointlist = {QPointF(0,1), QPointF(10,2), QPointF(20,4), QPointF(30,8), QPointF(40,16), \
                                 QPointF(50,16), QPointF(60,8), QPointF(70,4), QPointF(80,2), QPointF(90,1),};
@@ -3159,7 +3159,7 @@ void viewpanel::CreatDebugWindow()
 
 
 	fftChart_1 = new Chart();
-    fftChart_1->setAxis("X轴",0,200,11, "Y轴",0,800,11);
+    fftChart_1->setAxis("X轴",0,2048,11, "Y轴",0,150,11);
     //设置离散点数据
     //QList<QPointF> pointlist_1 = {QPointF(0,1), QPointF(10,2), QPointF(20,4), QPointF(30,8), QPointF(40,16), \
                                 QPointF(50,16), QPointF(60,8), QPointF(70,4), QPointF(80,2), QPointF(90,1),};
@@ -3189,7 +3189,7 @@ void viewpanel::CreatDebugWindow()
     //label_OSC_1->View_Chart(10000);
 #endif
 
-	chartFFTLayout->addWidget(fftChart_1,  0, 0);
+	//chartFFTLayout->addWidget(fftChart_1,  0, 0);
 	chartFFTBox->setLayout(chartFFTLayout);
 
 	QGridLayout* main_show= new QGridLayout ;

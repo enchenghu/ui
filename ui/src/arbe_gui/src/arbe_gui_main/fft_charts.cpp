@@ -36,6 +36,8 @@ void Chart::setAxis(QString _xname, qreal _xmin, qreal _xmax, int _xtickc, \
 
     qchart->addAxis(axisX, Qt::AlignBottom); //下：Qt::AlignBottom  上：Qt::AlignTop
     qchart->addAxis(axisY, Qt::AlignLeft);   //左：Qt::AlignLeft    右：Qt::AlignRight
+    qchart->setAxisX(axisX, series);
+    qchart->setAxisX(axisY, series);
 }
 
 void Chart::buildChart()
@@ -48,14 +50,22 @@ void Chart::buildChart()
     //qchart->setAnimationOptions(QChart::SeriesAnimations);//设置曲线动画模式
     qchart->legend()->hide(); //隐藏图例
     //qchart->addSeries(series);//输入数据
-    qchart->setAxisX(axisX, series);
-    qchart->setAxisY(axisY, series);
+    std::chrono::duration<double> elapsed;
+    auto start = std::chrono::steady_clock::now();
+
     updateChart();
     qchart->addSeries(series);//输入数据
+    qchart->setAxisX(axisX, series);
+    qchart->setAxisY(axisY, series);
+    auto end = std::chrono::steady_clock::now();
+    elapsed = end - start;
+    std::cout << "time for updateChart total: " <<  elapsed.count() * 1000 << " ms" << std::endl;   
+#if 0
     timer_  = new QTimer(this);
     //timer_->setInterval(50);
     connect(timer_, SIGNAL(timeout()), this, SLOT(updateChart(void)));
     timer_->start(1000);
+#endif
 }
 
 void Chart::updateChart()
@@ -65,7 +75,7 @@ void Chart::updateChart()
     //delete series;
     //series = new QSplineSeries(this);
     QList<QPointF> points;
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i < 2047; i++)
 	{ 
 		points.append(QPointF(i, qrand() % 100));
 	}
