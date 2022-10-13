@@ -97,6 +97,7 @@
 #define TCP_PC_SIZE_SINGLE 32000
 #define UDP_PC_SIZE_SINGLE 1024
 #define BUFF_LEN 1024
+#define MAX_BUFF_LEN 8
 
 #define TCP_TIMES_PER_FRAME 200
 #define BST_MAX_TASK_NUM		(16)
@@ -172,6 +173,11 @@ typedef struct
 	uint8_t 	pcUdpData[UDP_PC_SIZE_SINGLE];
 } udpMsg;
 
+typedef struct 
+{
+	QVector<double> dataFFT_0;
+	QVector<double> dataFFT_1;
+}fftMsg;
 
 typedef struct 
 {
@@ -421,6 +427,10 @@ private:
 	QLineEdit* regVal_line ;
 	QLineEdit* regRead_line;
 	QPushButton*  saveBtn;
+
+	fftMsg fftBuff[MAX_BUFF_LEN];
+	bstMsgQueue<fftMsg*> fftMsg_free_buf_queue;
+	bstMsgQueue<fftMsg*> fftMsg_done_buf_queue;
 
 	std::string loadFileType_;
 	QString  loadLidarFile_;

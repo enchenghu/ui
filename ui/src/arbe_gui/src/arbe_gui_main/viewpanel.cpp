@@ -335,7 +335,29 @@ viewpanel::viewpanel(QTabWidget* parent )
 #if ONLY_SHOW_UI
 	init_pubs();
 #endif
+	x_FFT.clear();
+	//y_FFT.clear();
+	x_FFT_1.clear();
+	//y_FFT_1.clear();
+	for(int i = 0; i< 8192;i++) 
+	{
+		x_FFT.append(i);
+		x_FFT_1.append(i);
+		//y_FFT.append(qrand()%100);
+		//y_FFT_1.append(qrand()%100);
+	}
+	//std::cout << "x_FFT size is " << x_FFT.size() << endl;
+	//std::cout << "x_FFT_1 size is " << x_FFT_1.size() << endl;
 	fmcwPointsData_ = std::make_shared<autox_msgs::fmcwPoints>();
+
+    fftMsg_free_buf_queue.setParam("fftMsg_free_buf_queue", MAX_BUFF_LEN);
+    fftMsg_done_buf_queue.setParam("fftMsg_done_buf_queue", MAX_BUFF_LEN);
+ 
+    for (int loop = 0; loop < 4; loop++) {
+        fftMsg *fbuf = &fftBuff[loop];
+        fftMsg_free_buf_queue.put(fbuf);
+    }
+
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
 	cmdMsg_.mHead.usPrefix = 0xeeff;
 	cmdMsg_.mHead.usType = 0x10;
@@ -3153,11 +3175,11 @@ void viewpanel::CreatFFTcharts()
 	
 	//给曲线准备数据 设置数据
 
-	for(int i = 0; i< 8191;i++) 
-	{
-		x_FFT.append(i);
-		y_FFT.append(qrand()%100);
-	}
+	//for(int i = 0; i< 8191;i++) 
+	//{
+		//x_FFT.append(i);
+		//y_FFT.append(qrand()%100);
+	//}
 
 	//设置数据
 	pCustomPlot->graph(0)->setData(x_FFT,y_FFT);
@@ -3185,11 +3207,11 @@ void viewpanel::CreatFFTcharts1()
 	
 	//给曲线准备数据 设置数据
 
-	for(int i = 0; i< 8191;i++) 
-	{
-		x_FFT_1.append(i);
-		y_FFT_1.append(qrand()%100);
-	}
+	//for(int i = 0; i< 8191;i++) 
+	//{
+		//x_FFT_1.append(i);
+		//y_FFT_1.append(qrand()%100);
+	//}
 
 	//设置数据
 	pCustomPlot_1->graph(0)->setData(x_FFT_1, y_FFT_1);
@@ -3827,22 +3849,32 @@ void viewpanel::udpClose(){
 }
 
 void viewpanel::updateFFTdata() {
+#if 0
 	x_FFT.clear();
-	y_FFT.clear();
+	//y_FFT.clear();
 	x_FFT_1.clear();
-	y_FFT_1.clear();
+	//y_FFT_1.clear();
 	for(int i = 0; i< 8191;i++) 
 	{
 		x_FFT.append(i);
 		x_FFT_1.append(i);
-		y_FFT.append(qrand()%100);
-		y_FFT_1.append(qrand()%100);
+		//y_FFT.append(qrand()%100);
+		//y_FFT_1.append(qrand()%100);
 	}
-	pCustomPlot->graph(0)->setData(x_FFT,y_FFT);
-	pCustomPlot->replot();
+#endif
+	if(!fftMsg_done_buf_queue.empty()){
+		fftMsg* pfft = NULL;
+		fftMsg_done_buf_queue.get(pfft);
 
-	pCustomPlot_1->graph(0)->setData(x_FFT_1,y_FFT_1);
-	pCustomPlot_1->replot();
+		pCustomPlot->graph(0)->setData(x_FFT, pfft->dataFFT_0);
+		pCustomPlot->replot();
+
+		pCustomPlot_1->graph(0)->setData(x_FFT_1, pfft->dataFFT_1);
+		pCustomPlot_1->replot();
+
+		fftMsg_free_buf_queue.put(pfft);
+	}
+
 }
 void viewpanel::udpConnect() {
 
@@ -3897,9 +3929,24 @@ void viewpanel::udpRecvLoop(){
 		//char buf[1024] = "client send: TEST UDP MSG!\n";
 		//printf("client send is :%s\n",buf);  //打印自己发送的信息
 		//sendto(udpRecvSocketFd_, buf, BUFF_LEN, 0, (struct sockaddr*)&ser_addr, len);
+#if 0
 		memset(buf, 0, BUFF_LEN);
 		recvfrom(udpRecvSocketFd_, buf, BUFF_LEN, 0, (struct sockaddr*)&src, &len);  //接收来自server的信息
-		printf("client recv is :%s\n",buf);  //打印自己发送的信息
+#endif
+
+        fftMsg* pfft = NULL;
+        fftMsg_free_buf_queue.get(pfft);
+		y_FFT.clear();
+		y_FFT_1.clear();
+		for(int i = 0; i < 8192; i++){
+			y_FFT.append(qrand()%100);
+			y_FFT_1.append(qrand()%100);
+		}
+		pfft->dataFFT_0 = y_FFT;
+		pfft->dataFFT_1 = y_FFT_1;
+        fftMsg_done_buf_queue.put(pfft);
+
+		printf("fftMsg send finished\n");  //打印自己发送的信息
 		//usleep(500 *1000);  //一秒发送一次消息
 	}
      //handle_udp_msg(server_fd);   //处理接收到的数据
