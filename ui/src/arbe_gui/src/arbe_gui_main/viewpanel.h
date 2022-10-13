@@ -85,6 +85,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <arbe_msgs/arbeGUIsettings.h>
 #include <arbe_msgs/arbeNewPcMsg.h>
+#include "qcustomplot.h"
 
 #include "osc_chart.h"
 #include "fft_charts.h"
@@ -349,6 +350,7 @@ private Q_SLOTS:
 	void setSaveFolder();
 	void udpConnect();
 	void udpClose();
+	void updateFFTdata();
 
 protected:
     static void TaskFunc(void *arg);
@@ -361,8 +363,11 @@ private:
 	void CreatCtlPanel();
 	int lidarConnect();
 	void CreatConnect();
+	void CreatFFTcharts();
+	void CreatFFTcharts1();
 	void Save2filecsv(std::vector<uint8_t> &, bool );
 	std::string tohex(uint32_t a);
+    QTimer* timer_;
 	void saveData();
 	int ctrl_sock;
 	int udpRecvSocketFd_;
@@ -438,6 +443,12 @@ private:
 	autox_msgs::fmcwPoint curPcPoint;
 	Chart* fftChart;
 	Chart* fftChart_1;
+	QCustomPlot *pCustomPlot;
+	QCustomPlot *pCustomPlot_1;
+	QVector<double> x_FFT;
+	QVector<double> y_FFT;
+	QVector<double> x_FFT_1;
+	QVector<double> y_FFT_1;
 
 };
 

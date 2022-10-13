@@ -28,6 +28,7 @@ catkin_package()
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt5 5.12 COMPONENTS Core Widgets Gui Charts REQUIRED)
+find_package(Qt5PrintSupport REQUIRED)
 
 ## This plugin includes Qt widgets, so we must include Qt.
 ## We'll use the version that rviz used so they are compatible.
@@ -189,6 +190,7 @@ src/arbe_gui_main/Per_radar_settings.cpp
 src/arbe_gui_main/osc_chart.cpp
 src/arbe_gui_main/fft_charts.cpp
 src/arbe_gui_main/fft_chartview.cpp
+src/arbe_gui_main/qcustomplot.cpp
 
 #src/ArbeApiCommon/RAF_API_Library/src/Raf_Api.c
 #src/ArbeApiCommon/RAF_API_Library/src/User_Extended.c
@@ -239,6 +241,7 @@ target_link_libraries(arbe_gui
    os
    polym
    Qt5::Charts
+   Qt5PrintSupport
    ${catkin_LIBRARIES}
    ${PCL_LIBRARIES}
    ${QT_LIBRARIES}

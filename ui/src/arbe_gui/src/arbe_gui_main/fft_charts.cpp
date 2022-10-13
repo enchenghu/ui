@@ -45,7 +45,6 @@ void Chart::buildChart()
     //创建数据源
     series->setPen(QPen(Qt::blue,3,Qt::SolidLine));
     series->clear();
-    series->setUseOpenGL(true);//openGl 加速
     //qchart->setTitle(chartname);
     //qchart->setAnimationOptions(QChart::SeriesAnimations);//设置曲线动画模式
     qchart->legend()->hide(); //隐藏图例
@@ -57,6 +56,7 @@ void Chart::buildChart()
     qchart->addSeries(series);//输入数据
     qchart->setAxisX(axisX, series);
     qchart->setAxisY(axisY, series);
+    series->setUseOpenGL(true);//openGl 加速
     auto end = std::chrono::steady_clock::now();
     elapsed = end - start;
     std::cout << "time for updateChart total: " <<  elapsed.count() * 1000 << " ms" << std::endl;   
@@ -75,7 +75,7 @@ void Chart::updateChart()
     //delete series;
     //series = new QSplineSeries(this);
     QList<QPointF> points;
-	for (int i = 0; i < 2047; i++)
+	for (int i = 0; i < 8191; i++)
 	{ 
 		points.append(QPointF(i, qrand() % 100));
 	}

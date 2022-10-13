@@ -329,7 +329,7 @@ void pub_radar_height_and_pitch(int index)
 
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
-	: QTabWidget( parent ), ifConnected(false), ifSave(false), save_folder_(QString("."))
+	: QTabWidget( parent ), ifConnected(false), ifSave(false), save_folder_(QString(".")), pCustomPlot(nullptr)
 {
 
 #if ONLY_SHOW_UI
@@ -3145,21 +3145,83 @@ viewpanel* viewpanel::Instance()
     return m_pInstance;
 }
 
+void viewpanel::CreatFFTcharts()
+{
+	pCustomPlot = new QCustomPlot(this);
+	//添加一条曲线
+	QCPGraph* pgraph = pCustomPlot->addGraph();
+	
+	//给曲线准备数据 设置数据
+
+	for(int i = 0; i< 8191;i++) 
+	{
+		x_FFT.append(i);
+		y_FFT.append(qrand()%100);
+	}
+
+	//设置数据
+	pCustomPlot->graph(0)->setData(x_FFT,y_FFT);
+	//设置Y轴范围
+	pCustomPlot->yAxis->setRange(0,150);
+	pCustomPlot->xAxis->setRange(0,8192);
+	//x轴名字
+	//pCustomPlot->xAxis->setLabel("X");
+	//Y轴名字
+	pCustomPlot->yAxis->setLabel("Y");
+	//设置大小
+	//pCustomPlot->resize(ui->label->width(),ui->label->height());
+	//可以进行鼠标位置 放大缩小 拖拽  放大缩小坐标系！！！功能非常强大
+	pCustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+
+	//重绘 每次改变完以后都要调用这个进行重新绘制
+	pCustomPlot->replot();
+}
+
+void viewpanel::CreatFFTcharts1()
+{
+	pCustomPlot_1 = new QCustomPlot(this);
+	//添加一条曲线
+	QCPGraph* pgraph = pCustomPlot_1->addGraph();
+	
+	//给曲线准备数据 设置数据
+
+	for(int i = 0; i< 8191;i++) 
+	{
+		x_FFT_1.append(i);
+		y_FFT_1.append(qrand()%100);
+	}
+
+	//设置数据
+	pCustomPlot_1->graph(0)->setData(x_FFT_1, y_FFT_1);
+	//设置Y轴范围
+	pCustomPlot_1->yAxis->setRange(0,150);
+	pCustomPlot_1->xAxis->setRange(0,8192);
+	//x轴名字
+	//pCustomPlot_1->xAxis->setLabel("X");
+	//Y轴名字
+	pCustomPlot_1->yAxis->setLabel("Y");
+	//设置大小
+	//pCustomPlot->resize(ui->label->width(),ui->label->height());
+	//可以进行鼠标位置 放大缩小 拖拽  放大缩小坐标系！！！功能非常强大
+	pCustomPlot_1->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+
+	//重绘 每次改变完以后都要调用这个进行重新绘制
+	pCustomPlot_1->replot();
+}
 
 void viewpanel::CreatDebugWindow()
 {
 	/* Debug window*/ 
+
 	fftChart = new Chart();
-    fftChart->setAxis("X轴",0,2048,11, "Y轴",0,150,11);
+    fftChart->setAxis("X轴",0,8192,11, "Y轴",0,150,11);
     //设置离散点数据
     //QList<QPointF> pointlist = {QPointF(0,1), QPointF(10,2), QPointF(20,4), QPointF(30,8), QPointF(40,16), \
                                 QPointF(50,16), QPointF(60,8), QPointF(70,4), QPointF(80,2), QPointF(90,1),};
     //绘制
     fftChart->buildChart();
-
-
 	fftChart_1 = new Chart();
-    fftChart_1->setAxis("X轴",0,2048,11, "Y轴",0,150,11);
+    fftChart_1->setAxis("X轴",0,8192,11, "Y轴",0,150,11);
     //设置离散点数据
     //QList<QPointF> pointlist_1 = {QPointF(0,1), QPointF(10,2), QPointF(20,4), QPointF(30,8), QPointF(40,16), \
                                 QPointF(50,16), QPointF(60,8), QPointF(70,4), QPointF(80,2), QPointF(90,1),};
@@ -3173,14 +3235,16 @@ void viewpanel::CreatDebugWindow()
 	QGridLayout* chartFFTLayout = new QGridLayout ;
 
 	std::cout << "this->width() is "  << this->width() << " this->height() is " << this->height() << std::endl;
-
 #if 0
     OSC_chart *label_OSC_0 = new OSC_chart(this);
     label_OSC_0->set_chart(10,20,this->width() /  2 -20,this->height()  / 2-20);
     label_OSC_0->Add_Line_Data(0, 100);
     label_OSC_0->View_Chart(1000);
 #endif
-	chartADCLayout->addWidget(fftChart,  0 , 0);
+	CreatFFTcharts();
+	CreatFFTcharts1();
+	if(pCustomPlot)
+		chartADCLayout->addWidget(pCustomPlot,  0 , 0);
 	chartADCBox->setLayout(chartADCLayout);
 #if 0
     OSC_chart *label_OSC_1 = new OSC_chart(this);
@@ -3189,7 +3253,7 @@ void viewpanel::CreatDebugWindow()
     //label_OSC_1->View_Chart(10000);
 #endif
 
-	//chartFFTLayout->addWidget(fftChart_1,  0, 0);
+	chartFFTLayout->addWidget(pCustomPlot_1,  0, 0);
 	chartFFTBox->setLayout(chartFFTLayout);
 
 	QGridLayout* main_show= new QGridLayout ;
@@ -3320,6 +3384,12 @@ void viewpanel::CreatConnect()
 	connect(ctlReadBtn_[2], SIGNAL(clicked()), this, SLOT( read3DFT( void )));
 	connect(ctlReadBtn_[3], SIGNAL(clicked()), this, SLOT( readDiff( void )));
 	connect(regBtnRead, SIGNAL(clicked()), this, SLOT( readReg( void )));
+
+    timer_  = new QTimer(this);
+    //timer_->setInterval(50);
+    connect(timer_, SIGNAL(timeout()), this, SLOT(updateFFTdata(void)));
+    timer_->start(100);
+
 }
 
 void viewpanel::CreatUIWindow()
@@ -3756,6 +3826,24 @@ void viewpanel::udpClose(){
 	::close(udpRecvSocketFd_);
 }
 
+void viewpanel::updateFFTdata() {
+	x_FFT.clear();
+	y_FFT.clear();
+	x_FFT_1.clear();
+	y_FFT_1.clear();
+	for(int i = 0; i< 8191;i++) 
+	{
+		x_FFT.append(i);
+		x_FFT_1.append(i);
+		y_FFT.append(qrand()%100);
+		y_FFT_1.append(qrand()%100);
+	}
+	pCustomPlot->graph(0)->setData(x_FFT,y_FFT);
+	pCustomPlot->replot();
+
+	pCustomPlot_1->graph(0)->setData(x_FFT_1,y_FFT_1);
+	pCustomPlot_1->replot();
+}
 void viewpanel::udpConnect() {
 
     vx_task_set_default_create_params(&bst_params);
