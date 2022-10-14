@@ -3954,7 +3954,10 @@ void viewpanel::udpRecvLoop(){
 	udpRecvSocketFd_ = socket(AF_INET, SOCK_DGRAM, 0);
 	if(udpRecvSocketFd_ < 0)
 	{
-		printf("create socket fail!\n");
+		QMessageBox msgBox;
+		msgBox.setText("udp socket create fail!");
+		msgBox.exec();
+		return;
 	}
 
 	memset(&ser_addr, 0, sizeof(ser_addr));
@@ -3967,7 +3970,10 @@ void viewpanel::udpRecvLoop(){
     int ret = ::bind(udpRecvSocketFd_, (struct sockaddr*)&ser_addr, sizeof(ser_addr));
     if(ret < 0)
     {
-        printf("socket bind fail!\n");
+		QMessageBox msgBox;
+		msgBox.setText("udp socket bind fail!");
+		msgBox.exec();
+		return;
     }
 
 	socklen_t len;
@@ -3989,37 +3995,38 @@ void viewpanel::udpRecvLoop(){
 					return;
 				}
 				ROS_INFO("fft data recv failed, continue\n");
-				sleep(1);
+				usleep(100*1000);
 				i--;
 				continue;
 			}
 			if(i == 0) last_frame_index = g_udpMsg.mHead.usFrameCounter;
 			//std::cout << "receive byte is " << ret << std::endl;
 				//std::cout << "current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
-			if(g_udpMsg.mHead.usFrameCounter != last_frame_index){
+			if(g_udpMsg.mHead.usFrameCounter != last_frame_index) {
 				ifLost = true;
 				std::cout << "!!!warnning!!! current usFrameCounter is " << g_udpMsg.mHead.usFrameCounter
-				 << ", last_frame_index is " << last_frame_index << std::endl;
-				QMessageBox msgBox;
-				msgBox.setText("warnning!!udp data frame lost, contine!");
-				msgBox.exec();	
+				 << ", last_frame_index is " << last_frame_index << std::endl;	
 				break;
 			}
 			if(g_udpMsg.mHead.usRollingCounter != i) {
 				ifLost = true;
-				std::cout << "!!!warnning!!! current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
-				QMessageBox msgBox;
-				msgBox.setText("warnning!!udp data pkg lost, contine!");
-				msgBox.exec();	
+				std::cout << "!!!warnning!!! current index is " << i << ", udp msg usRollingCounter is " << g_udpMsg.mHead.usRollingCounter << std::endl;
 				break;			
 			}
+
+			std::cout << "!!recv udp pkg successfully! "  << std::endl;
+#if 0			
 			if(i < UDP_TIMES_PER_FRAME / 2) {
 				for(int j = 0; j < 16; j++)
 					fftDataV.insert(fftDataV.end(), g_udpMsg.pcUdpData + 32 + 64 * j, g_udpMsg.pcUdpData + 64 * (j + 1));
 			}
+#endif
 		}
+	
 		if(ifLost) continue;
+#if 0
 		parseFFTData(fftDataV);
+#endif
 	}
 	printf("fftMsg udp  quit!\n");  //打印自己发送的信息
  
