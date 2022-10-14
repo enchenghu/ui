@@ -100,6 +100,7 @@
 #define MAX_BUFF_LEN 8
 
 #define TCP_TIMES_PER_FRAME 200
+#define UDP_TIMES_PER_FRAME 256
 #define BST_MAX_TASK_NUM		(16)
 
 
@@ -372,8 +373,10 @@ private:
 	void CreatFFTcharts();
 	void CreatFFTcharts1();
 	void Save2filecsv(std::vector<uint8_t> &, bool );
+	void parseFFTData(std::vector<uint8_t> &data);
 	std::string tohex(uint32_t a);
     QTimer* timer_;
+	bool udpStop_;
 	void saveData();
 	int ctrl_sock;
 	int udpRecvSocketFd_;

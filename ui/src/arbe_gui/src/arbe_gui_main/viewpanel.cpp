@@ -74,7 +74,9 @@ extern void radar_set_params();
 extern void radar_change_seq();
 extern void radar_start_transmit();
 extern void radar_stop_transmit();
-pcData_t g_msg;
+static pcData_t g_msg;
+static udpMsg g_udpMsg;
+
 
 extern void radar_launch_pointcloud_nodes();
 extern void radar_quit();
@@ -329,7 +331,7 @@ void pub_radar_height_and_pitch(int index)
 
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
-	: QTabWidget( parent ), ifConnected(false), ifSave(false), save_folder_(QString(".")), pCustomPlot(nullptr)
+	: QTabWidget( parent ), ifConnected(false), ifSave(false), save_folder_(QString(".")), pCustomPlot(nullptr), udpStop_(false)
 {
 
 #if ONLY_SHOW_UI
@@ -3184,7 +3186,7 @@ void viewpanel::CreatFFTcharts()
 	//设置数据
 	pCustomPlot->graph(0)->setData(x_FFT,y_FFT);
 	//设置Y轴范围
-	pCustomPlot->yAxis->setRange(0,150);
+	pCustomPlot->yAxis->setRange(0,512);
 	pCustomPlot->xAxis->setRange(0,8192);
 	//x轴名字
 	//pCustomPlot->xAxis->setLabel("X");
@@ -3216,7 +3218,7 @@ void viewpanel::CreatFFTcharts1()
 	//设置数据
 	pCustomPlot_1->graph(0)->setData(x_FFT_1, y_FFT_1);
 	//设置Y轴范围
-	pCustomPlot_1->yAxis->setRange(0,150);
+	pCustomPlot_1->yAxis->setRange(0,512);
 	pCustomPlot_1->xAxis->setRange(0,8192);
 	//x轴名字
 	//pCustomPlot_1->xAxis->setLabel("X");
@@ -3630,6 +3632,55 @@ void viewpanel::setSaveFolder()
 	}
 }
 
+
+void viewpanel::parseFFTData(std::vector<uint8_t> &data)
+{
+#if 0
+	std::string datPath;
+	datPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".dat";
+	std::ofstream datfile; 
+	datfile.open(datPath, std::ios::out | std::ios::binary); 
+	for(int i = 0; i < data.size(); i++) {
+		datfile << data[i];
+	}
+	datfile.close();
+#endif
+	uint32_t cur_data  = 0;
+	int index = 0;
+	fftMsg* pfft = NULL;
+	fftMsg_free_buf_queue.get(pfft);
+	for(int i = 0; i < data.size(); i++) {
+		index += 1;
+		if(index < 5)
+			cur_data += data[i] << (8 * (index - 1));
+		else if (index < 9)
+			cur_data += data[i] << (8 * (index - 5));
+		else if (index < 13)
+			cur_data += data[i] << (8 * (index - 9));
+		else if (index < 17)
+			cur_data += data[i] << (8 * (index - 13));
+		else if (index < 21)
+			cur_data += data[i] << (8 * (index - 17));
+		else if (index < 25)
+			cur_data += data[i] << (8 * (index - 21));
+		else if (index < 29)
+			cur_data += data[i] << (8 * (index - 25));
+		else if (index < 33)
+			cur_data += data[i] << (8 * (index - 29));
+
+		if(index % 4 == 0 && index < 33){
+			if(i < data.size() / 2)
+				pfft->dataFFT_0.append(cur_data / 65536.0);
+			else
+				pfft->dataFFT_1.append(cur_data / 65536.0);
+		}
+		if(index == 32) index = 0;
+
+	}
+	fftMsg_done_buf_queue.put(pfft);
+	printf("fftMsg send finished\n");  //打印自己发送的信息
+}
+
 void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 {
 	if(!ifsave) return;
@@ -3842,6 +3893,7 @@ void viewpanel::udpClose(){
 		msgBox.exec();
 		return;
 	}
+	udpStop_ = true;
 	QMessageBox msgBox;
 	msgBox.setText("UDP close success!");
 	msgBox.exec();
@@ -3920,36 +3972,56 @@ void viewpanel::udpRecvLoop(){
 
 	socklen_t len;
 	struct sockaddr_in src;
-	char buf[BUFF_LEN];
 	printf("ready recv udp msg!\n");
 	len = sizeof(sockaddr);
-	while(!terminating)
+	std::vector<uint8_t> fftDataV;
+	uint32_t last_frame_index = 0;
+	bool ifLost  = false;
+	while(!terminating && !udpStop_)
 	{
-		//printf("recv udp is : %s\n",buf);
-		//char buf[1024] = "client send: TEST UDP MSG!\n";
-		//printf("client send is :%s\n",buf);  //打印自己发送的信息
-		//sendto(udpRecvSocketFd_, buf, BUFF_LEN, 0, (struct sockaddr*)&ser_addr, len);
-#if 0
-		memset(buf, 0, BUFF_LEN);
-		recvfrom(udpRecvSocketFd_, buf, BUFF_LEN, 0, (struct sockaddr*)&src, &len);  //接收来自server的信息
-#endif
-
-        fftMsg* pfft = NULL;
-        fftMsg_free_buf_queue.get(pfft);
-		y_FFT.clear();
-		y_FFT_1.clear();
-		for(int i = 0; i < 8192; i++){
-			y_FFT.append(qrand()%100);
-			y_FFT_1.append(qrand()%100);
+		fftDataV.clear();
+		for(int i = 0; i < UDP_TIMES_PER_FRAME; i++){
+			memset(&g_udpMsg, 0, sizeof(g_udpMsg));
+			ret = recvfrom(udpRecvSocketFd_, &g_udpMsg, sizeof(g_udpMsg), MSG_WAITALL, (struct sockaddr*)&src, &len);  //接收来自server的信息
+			if(ret <= 0){
+				if(udpStop_) {
+					printf("fftMsg udp  quit!\n"); 
+					return;
+				}
+				ROS_INFO("fft data recv failed, continue\n");
+				sleep(1);
+				i--;
+				continue;
+			}
+			if(i == 0) last_frame_index = g_udpMsg.mHead.usFrameCounter;
+			//std::cout << "receive byte is " << ret << std::endl;
+				//std::cout << "current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
+			if(g_udpMsg.mHead.usFrameCounter != last_frame_index){
+				ifLost = true;
+				std::cout << "!!!warnning!!! current usFrameCounter is " << g_udpMsg.mHead.usFrameCounter
+				 << ", last_frame_index is " << last_frame_index << std::endl;
+				QMessageBox msgBox;
+				msgBox.setText("warnning!!udp data frame lost, contine!");
+				msgBox.exec();	
+				break;
+			}
+			if(g_udpMsg.mHead.usRollingCounter != i) {
+				ifLost = true;
+				std::cout << "!!!warnning!!! current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
+				QMessageBox msgBox;
+				msgBox.setText("warnning!!udp data pkg lost, contine!");
+				msgBox.exec();	
+				break;			
+			}
+			if(i < UDP_TIMES_PER_FRAME / 2) {
+				for(int j = 0; j < 16; j++)
+					fftDataV.insert(fftDataV.end(), g_udpMsg.pcUdpData + 32 + 64 * j, g_udpMsg.pcUdpData + 64 * (j + 1));
+			}
 		}
-		pfft->dataFFT_0 = y_FFT;
-		pfft->dataFFT_1 = y_FFT_1;
-        fftMsg_done_buf_queue.put(pfft);
-
-		printf("fftMsg send finished\n");  //打印自己发送的信息
-		//usleep(500 *1000);  //一秒发送一次消息
+		if(ifLost) continue;
+		parseFFTData(fftDataV);
 	}
-     //handle_udp_msg(server_fd);   //处理接收到的数据
+	printf("fftMsg udp  quit!\n");  //打印自己发送的信息
  
     ::close(udpRecvSocketFd_);
 }
