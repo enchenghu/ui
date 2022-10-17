@@ -3962,8 +3962,8 @@ void viewpanel::udpRecvLoop(){
 
 	memset(&ser_addr, 0, sizeof(ser_addr));
 	ser_addr.sin_family = AF_INET;
-	ser_addr.sin_addr.s_addr = inet_addr(lidar_ip.c_str());
-	//ser_addr.sin_addr.s_addr = htonl(INADDR_ANY);  //注意网络序转换
+	//ser_addr.sin_addr.s_addr = inet_addr(lidar_ip.c_str());
+	ser_addr.sin_addr.s_addr = htonl(INADDR_ANY);  //注意网络序转换
 	ser_addr.sin_port = htons(lidar_UDP_port);  //注意网络序转换
 	std::cout << "lidar_UDP_port is " << lidar_UDP_port << std::endl;
 
@@ -3978,7 +3978,7 @@ void viewpanel::udpRecvLoop(){
 
 	socklen_t len;
 	struct sockaddr_in src;
-	printf("ready recv udp msg!\n");
+	//printf("ready recv udp msg!\n");
 	len = sizeof(sockaddr);
 	std::vector<uint8_t> fftDataV;
 	uint32_t last_frame_index = 0;
@@ -3988,7 +3988,9 @@ void viewpanel::udpRecvLoop(){
 		fftDataV.clear();
 		for(int i = 0; i < UDP_TIMES_PER_FRAME; i++){
 			memset(&g_udpMsg, 0, sizeof(g_udpMsg));
-			ret = recvfrom(udpRecvSocketFd_, &g_udpMsg, sizeof(g_udpMsg), MSG_WAITALL, (struct sockaddr*)&src, &len);  //接收来自server的信息
+			printf("ready recv udp msg!\n");
+			ret = recvfrom(udpRecvSocketFd_, &g_udpMsg, sizeof(g_udpMsg), 0, (struct sockaddr*)&src, &len);  //接收来自server的信息
+			printf("recv udp msg! ret is %d\n", ret);
 			if(ret <= 0){
 				if(udpStop_) {
 					printf("fftMsg udp  quit!\n"); 
