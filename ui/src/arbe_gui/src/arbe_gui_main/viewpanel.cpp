@@ -4017,7 +4017,7 @@ void viewpanel::udpRecvLoop(){
 			}
 
 			std::cout << "!!recv udp pkg successfully! "  << std::endl;
-#if 0			
+#if 1			
 			if(i < UDP_TIMES_PER_FRAME / 2) {
 				for(int j = 0; j < 16; j++)
 					fftDataV.insert(fftDataV.end(), g_udpMsg.pcUdpData + 32 + 64 * j, g_udpMsg.pcUdpData + 64 * (j + 1));
@@ -4026,7 +4026,7 @@ void viewpanel::udpRecvLoop(){
 		}
 	
 		if(ifLost) continue;
-#if 0
+#if 1
 		parseFFTData(fftDataV);
 #endif
 	}
