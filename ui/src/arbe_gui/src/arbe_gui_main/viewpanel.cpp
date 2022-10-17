@@ -3727,7 +3727,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 			cur_data += data[i] << (8 * (index - 5));
 		else if (index < 12)
 			cur_data += data[i] << (8 * (index - 9));
-		else if (index < 15)
+		else if (index < 16)
 			cur_data += data[i] << (8 * (index - 12));
 
 		if(index == 4 || index == 8){
@@ -3745,9 +3745,10 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 			cur_data = 0;
 		}
 
-		if(index == 14){
-			if(cur_data > 0x800000)
-				cur_data = cur_data - 0x1000000;
+		if(index == 15){
+			if(cur_data > 0x2000000)
+				cur_data = cur_data - 0x4000000;
+			cur_data >> 1;
 			curPcPoint.speed = (double)(cur_data / 65536.0);
 			csvfile << curPcPoint.speed << ",";	
 			cur_data = 0;
