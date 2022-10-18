@@ -3746,9 +3746,10 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 		}
 
 		if(index == 15){
-			if(cur_data > 0x2000000)
+			if(cur_data > 0x2000000){
 				cur_data = cur_data - 0x4000000;
-			cur_data >> 1;
+			}
+			cur_data  =  cur_data / 2;
 			curPcPoint.speed = (double)(cur_data / 65536.0);
 			csvfile << curPcPoint.speed << ",";	
 			cur_data = 0;
