@@ -3237,6 +3237,7 @@ void viewpanel::CreatDebugWindow()
 {
 	/* Debug window*/ 
 
+#if 0
 	fftChart = new Chart();
     fftChart->setAxis("X轴",0,8192,11, "Y轴",0,150,11);
     //设置离散点数据
@@ -3251,11 +3252,12 @@ void viewpanel::CreatDebugWindow()
                                 QPointF(50,16), QPointF(60,8), QPointF(70,4), QPointF(80,2), QPointF(90,1),};
     //绘制
     fftChart_1->buildChart();
-	
+#endif
+
 	QWidget* multiWidget_new = new QWidget();
-	QGroupBox *chartADCBox = new QGroupBox(tr("ADC  chart:"));
+	QGroupBox *chartADCBox = new QGroupBox(tr("FFT  chart 0:"));
 	QGridLayout* chartADCLayout = new QGridLayout ;
-	QGroupBox *chartFFTBox = new QGroupBox(tr("FFT  chart:"));
+	QGroupBox *chartFFTBox = new QGroupBox(tr("FFT  chart 1:"));
 	QGridLayout* chartFFTLayout = new QGridLayout ;
 
 	std::cout << "this->width() is "  << this->width() << " this->height() is " << this->height() << std::endl;
@@ -3675,7 +3677,9 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 			if(i < data.size() / 2)
 				pfft->dataFFT_0.append(cur_data / 65536.0);
 			else
-				pfft->dataFFT_1.append(cur_data / 65536.0);
+				pfft->dataFFT_1.append(cur_data / 65536.0);	
+
+			cur_data = 0;
 		}
 		if(index == 32) index = 0;
 
