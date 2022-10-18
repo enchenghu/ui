@@ -3635,6 +3635,7 @@ void viewpanel::setSaveFolder()
 
 void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 {
+	std::cout << "!!enter parseFFTData! "  << std::endl;
 #if 0
 	std::string datPath;
 	datPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".dat";
@@ -3649,6 +3650,8 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 	int index = 0;
 	fftMsg* pfft = NULL;
 	fftMsg_free_buf_queue.get(pfft);
+	pfft->dataFFT_0.clear();
+	pfft->dataFFT_1.clear();
 	for(int i = 0; i < data.size(); i++) {
 		index += 1;
 		if(index < 5)
@@ -3988,6 +3991,7 @@ void viewpanel::udpRecvLoop(){
 	while(!terminating && !udpStop_)
 	{
 		fftDataV.clear();
+		ifLost  = false;
 		for(int i = 0; i < UDP_TIMES_PER_FRAME; i++){
 			memset(&g_udpMsg, 0, sizeof(g_udpMsg));
 			printf("ready recv udp msg!\n");
