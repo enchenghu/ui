@@ -3186,7 +3186,7 @@ void viewpanel::CreatFFTcharts()
 	//设置数据
 	pCustomPlot->graph(0)->setData(x_FFT,y_FFT);
 	//设置Y轴范围
-	pCustomPlot->yAxis->setRange(0,512);
+	pCustomPlot->yAxis->setRange(0, 256*4096);
 	pCustomPlot->xAxis->setRange(0,8192);
 	//x轴名字
 	//pCustomPlot->xAxis->setLabel("X");
@@ -3218,7 +3218,7 @@ void viewpanel::CreatFFTcharts1()
 	//设置数据
 	pCustomPlot_1->graph(0)->setData(x_FFT_1, y_FFT_1);
 	//设置Y轴范围
-	pCustomPlot_1->yAxis->setRange(0,512);
+	pCustomPlot_1->yAxis->setRange(0,256*4096);
 	pCustomPlot_1->xAxis->setRange(0,8192);
 	//x轴名字
 	//pCustomPlot_1->xAxis->setLabel("X");
@@ -3675,9 +3675,9 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 
 		if(index % 4 == 0 && index < 33){
 			if(i < data.size() / 2)
-				pfft->dataFFT_0.append(cur_data / 65536.0);
+				pfft->dataFFT_0.append(cur_data);
 			else
-				pfft->dataFFT_1.append(cur_data / 65536.0);	
+				pfft->dataFFT_1.append(cur_data);	
 
 			cur_data = 0;
 		}
