@@ -93,6 +93,7 @@
 #include <sstream>
 #include <pc_data.h>
 #include "bst_msg_queue.h"
+#include  <cmath>
 #define MAX_RADARS 10
 #define TCP_PC_SIZE_SINGLE 32000
 #define UDP_PC_SIZE_SINGLE 1024
@@ -178,6 +179,9 @@ typedef struct
 {
 	QVector<double> dataFFT_0;
 	QVector<double> dataFFT_1;
+	QVector<double> dataFFTdB_0;
+	QVector<double> dataFFTdB_1;
+
 }fftMsg;
 
 typedef struct 
@@ -358,6 +362,7 @@ private Q_SLOTS:
 	void udpConnect();
 	void udpClose();
 	void updateFFTdata();
+	void showdBFFT();
 
 protected:
     static void TaskFunc(void *arg);
@@ -439,13 +444,16 @@ private:
 	QString  loadLidarFile_;
 	bool ifConnected;
 	bool ifStarted;
+	bool ifShowdB_;
 	bool ifSave;
+	bool rescalse_;
 	QPushButton *lidar_connect_button;
 	QPushButton *setSaveBtn;
 	QPushButton *regBtnWrite;
 	QPushButton *regBtnRead;
 	QPushButton * settingADCSavebutton;
 	QPushButton * settingADCConfigbutton;
+	QPushButton * mFFTShowdBBtn;
 	std::vector<QPushButton* > ctlWriteBtn_;
 	std::vector<QPushButton* > ctlReadBtn_;
 	std::vector<QLineEdit* > ctlReadLine_;

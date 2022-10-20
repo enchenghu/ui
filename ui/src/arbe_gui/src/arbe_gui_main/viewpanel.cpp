@@ -68,6 +68,7 @@
 
 #define CTRL_SOCKET 0
 #define DEFAULT_AZIMUTH_BIN 0
+#define DEBUG_UI 0
 extern void Ntc_Mode_Set();
 extern void Cfar_Mode_Set();
 extern void radar_set_params();
@@ -331,7 +332,7 @@ void pub_radar_height_and_pitch(int index)
 
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
-	: QTabWidget( parent ), ifConnected(false), ifSave(false), save_folder_(QString(".")), pCustomPlot(nullptr), udpStop_(false)
+	: QTabWidget( parent ), ifConnected(false), ifSave(false), save_folder_(QString(".")), pCustomPlot(nullptr), udpStop_(false), rescalse_(true)
 {
 
 #if ONLY_SHOW_UI
@@ -344,7 +345,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	for(int i = 0; i< 8192;i++) 
 	{
 		x_FFT.append(i);
-		x_FFT_1.append(i);
+		x_FFT_1.append(-8191 + i);
 		//y_FFT.append(qrand()%100);
 		//y_FFT_1.append(qrand()%100);
 	}
@@ -1257,6 +1258,19 @@ void viewpanel::connectControl(void){
 		ifStarted = false;
 		::close(ctrl_sock);
 	}
+}
+
+void viewpanel::showdBFFT(void){
+	if(!ifShowdB_){
+		mFFTShowdBBtn->setStyleSheet("color: green");
+		mFFTShowdBBtn->setText("&Show ori");
+		ifShowdB_ = true;		
+	}else {
+		mFFTShowdBBtn->setStyleSheet("color: black");
+		mFFTShowdBBtn->setText("&Show dB");
+		ifShowdB_ = false;
+	}
+	rescalse_ = true;
 }
 
 void viewpanel::configPower(void){
@@ -3196,6 +3210,7 @@ void viewpanel::CreatFFTcharts()
 	//pCustomPlot->resize(ui->label->width(),ui->label->height());
 	//可以进行鼠标位置 放大缩小 拖拽  放大缩小坐标系！！！功能非常强大
 	pCustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+	//pCustomPlot->xAxis->setNumberPrecision(1);
 
 	//重绘 每次改变完以后都要调用这个进行重新绘制
 	pCustomPlot->replot();
@@ -3219,7 +3234,7 @@ void viewpanel::CreatFFTcharts1()
 	pCustomPlot_1->graph(0)->setData(x_FFT_1, y_FFT_1);
 	//设置Y轴范围
 	pCustomPlot_1->yAxis->setRange(0,256*4096);
-	pCustomPlot_1->xAxis->setRange(0,8192);
+	pCustomPlot_1->xAxis->setRange(-8192,0);
 	//x轴名字
 	//pCustomPlot_1->xAxis->setLabel("X");
 	//Y轴名字
@@ -3228,7 +3243,7 @@ void viewpanel::CreatFFTcharts1()
 	//pCustomPlot->resize(ui->label->width(),ui->label->height());
 	//可以进行鼠标位置 放大缩小 拖拽  放大缩小坐标系！！！功能非常强大
 	pCustomPlot_1->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
-
+	//pCustomPlot_1->xAxis->setNumberPrecision(1);
 	//重绘 每次改变完以后都要调用这个进行重新绘制
 	pCustomPlot_1->replot();
 }
@@ -3283,7 +3298,7 @@ void viewpanel::CreatDebugWindow()
 	chartFFTBox->setLayout(chartFFTLayout);
 
 	QGridLayout* main_show= new QGridLayout ;
-	main_show->setColumnStretch(0, 5);
+	main_show->setColumnStretch(0, 9);
 	main_show->setColumnStretch(1, 1);
 
 	QVBoxLayout* charts= new QVBoxLayout ;
@@ -3294,7 +3309,7 @@ void viewpanel::CreatDebugWindow()
 	QGroupBox *addrConfigsBox = new QGroupBox(tr("Configs:"));
 	QGroupBox *settingBox = new QGroupBox(tr("Settings:"));
 	QGroupBox *addrBox = new QGroupBox(tr("addr config:"));
-	QGroupBox *settingADCBox = new QGroupBox(tr("ADC:"));
+	QGroupBox *settingADCBox = new QGroupBox(tr("FFT control:"));
 	QGroupBox *settingFFTBox = new QGroupBox(tr("FFT:"));
 
 	QVBoxLayout* addrConfigLayout = new QVBoxLayout;
@@ -3315,6 +3330,7 @@ void viewpanel::CreatDebugWindow()
 
 	QPushButton * writeAddrbutton = new QPushButton("&Write");
 	QPushButton * readAddrbutton = new QPushButton("&Read");
+	mFFTShowdBBtn = new QPushButton("&Show dB");
 
 	settingADCSavebutton = new QPushButton("&Start");
 	settingADCConfigbutton = new QPushButton("&Stop");
@@ -3323,6 +3339,8 @@ void viewpanel::CreatDebugWindow()
 
 	settingADCLayout->addWidget(settingADCSavebutton, 0, 0);
 	settingADCLayout->addWidget(settingADCConfigbutton, 0, 1);
+	settingADCLayout->addWidget(mFFTShowdBBtn, 1, 0);
+
 	settingADCBox->setLayout(settingADCLayout);
 	settingFFTLayout->addWidget(settingFFTSavebutton, 0, 0);
 	settingFFTLayout->addWidget(settingFFTConfigbutton, 0, 1);
@@ -3373,7 +3391,7 @@ void viewpanel::CreatDebugWindow()
 	addrLayout->addWidget(writeAddrbutton, 7, 2, Qt::AlignTop);
 	addrLayout->addWidget(readAddrbutton, 7, 3, Qt::AlignTop);
 	addrBox->setLayout(addrLayout);
-	addrConfigLayout->addWidget(addrBox);
+	//addrConfigLayout->addWidget(addrBox);
 	addrConfigsBox->setLayout(addrConfigLayout);
 
 	//configs->addWidget(settingBox);
@@ -3410,6 +3428,9 @@ void viewpanel::CreatConnect()
 	connect(ctlReadBtn_[2], SIGNAL(clicked()), this, SLOT( read3DFT( void )));
 	connect(ctlReadBtn_[3], SIGNAL(clicked()), this, SLOT( readDiff( void )));
 	connect(regBtnRead, SIGNAL(clicked()), this, SLOT( readReg( void )));
+
+	connect(mFFTShowdBBtn, SIGNAL(clicked()), this, SLOT( showdBFFT( void )));
+
 
     timer_  = new QTimer(this);
     //timer_->setInterval(50);
@@ -3637,7 +3658,7 @@ void viewpanel::setSaveFolder()
 
 void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 {
-	std::cout << "!!enter parseFFTData! "  << std::endl;
+	std::cout << "!!enter parseFFTData! input point num is  "  <<  data.size() / 4 << std::endl;
 #if 0
 	std::string datPath;
 	datPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".dat";
@@ -3654,6 +3675,8 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 	fftMsg_free_buf_queue.get(pfft);
 	pfft->dataFFT_0.clear();
 	pfft->dataFFT_1.clear();
+	pfft->dataFFTdB_0.clear();
+	pfft->dataFFTdB_1.clear();
 	for(int i = 0; i < data.size(); i++) {
 		index += 1;
 		if(index < 5)
@@ -3674,11 +3697,13 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 			cur_data += data[i] << (8 * (index - 29));
 
 		if(index % 4 == 0 && index < 33){
-			if(i < data.size() / 2)
+			if(i < data.size() / 2){
 				pfft->dataFFT_0.append(cur_data);
-			else
+				pfft->dataFFTdB_0.append(10 * log10((double)cur_data));
+			} else{
 				pfft->dataFFT_1.append(cur_data);	
-
+				pfft->dataFFTdB_1.append(10 * log10((double)cur_data));
+			}
 			cur_data = 0;
 		}
 		if(index == 32) index = 0;
@@ -3910,31 +3935,85 @@ void viewpanel::udpClose(){
 }
 
 void viewpanel::updateFFTdata() {
-#if 0
-	x_FFT.clear();
-	//y_FFT.clear();
-	x_FFT_1.clear();
-	//y_FFT_1.clear();
-	for(int i = 0; i< 8191;i++) 
+
+#if DEBUG_UI	
+	y_FFT.clear();
+	y_FFT_1.clear();
+	QVector<double> y_FFT_dB;
+	QVector<double> y_FFT_1_dB;
+	for(int i = 0; i< 8192; i++) 
 	{
-		x_FFT.append(i);
-		x_FFT_1.append(i);
-		//y_FFT.append(qrand()%100);
-		//y_FFT_1.append(qrand()%100);
+		double tmp = qrand() % 100000;
+		double tmp_log = 10 * log10(tmp);
+		y_FFT.append(tmp);
+		y_FFT_dB.append(tmp_log);
+		y_FFT_1.append(tmp);
+		y_FFT_1_dB.append(tmp_log);
 	}
-#endif
+
+	if(!ifShowdB_){
+		pCustomPlot->graph(0)->setData(x_FFT, y_FFT);
+		pCustomPlot->yAxis->setLabel("amplitude");
+		if(rescalse_) pCustomPlot->rescaleAxes(true);
+		pCustomPlot->replot();
+
+		pCustomPlot_1->graph(0)->setData(x_FFT_1, y_FFT_1);
+		pCustomPlot_1->yAxis->setLabel("amplitude");
+		if(rescalse_) {
+			pCustomPlot_1->rescaleAxes(true);
+			rescalse_ = false;
+		}
+		pCustomPlot_1->replot();
+	} else {
+		pCustomPlot->graph(0)->setData(x_FFT, y_FFT_dB);
+		pCustomPlot->yAxis->setLabel("amplitude/dB");
+		if(rescalse_) pCustomPlot->rescaleAxes(true);
+		pCustomPlot->replot();
+
+		pCustomPlot_1->graph(0)->setData(x_FFT_1, y_FFT_1_dB);
+		pCustomPlot_1->yAxis->setLabel("amplitude/dB");
+		if(rescalse_) {
+			pCustomPlot_1->rescaleAxes(true);
+			rescalse_ = false;
+		}
+		pCustomPlot_1->replot();
+	}
+#else 
 	if(!fftMsg_done_buf_queue.empty()){
 		fftMsg* pfft = NULL;
 		fftMsg_done_buf_queue.get(pfft);
 
-		pCustomPlot->graph(0)->setData(x_FFT, pfft->dataFFT_0);
-		pCustomPlot->replot();
+		if(!ifShowdB_){
+			pCustomPlot->graph(0)->setData(x_FFT, pfft->dataFFT_0);
+			pCustomPlot->yAxis->setLabel("amplitude");
+			if(rescalse_) pCustomPlot->rescaleAxes(true);
+			pCustomPlot->replot();
 
-		pCustomPlot_1->graph(0)->setData(x_FFT_1, pfft->dataFFT_1);
-		pCustomPlot_1->replot();
+			pCustomPlot_1->graph(0)->setData(x_FFT_1, pfft->dataFFT_1);
+			pCustomPlot_1->yAxis->setLabel("amplitude");
+			if(rescalse_) {
+				pCustomPlot_1->rescaleAxes(true);
+				rescalse_ = false;
+			}
+			pCustomPlot_1->replot();
+		} else {
+			pCustomPlot->graph(0)->setData(x_FFT, pfft->dataFFTdB_0);
+			pCustomPlot->yAxis->setLabel("amplitude/dB");
+			if(rescalse_) pCustomPlot->rescaleAxes(true);
+			pCustomPlot->replot();
+
+			pCustomPlot_1->graph(0)->setData(x_FFT_1, pfft->dataFFTdB_1);
+			pCustomPlot_1->yAxis->setLabel("amplitude/dB");
+			if(rescalse_) {
+				pCustomPlot_1->rescaleAxes(true);
+				rescalse_ = false;
+			}
+			pCustomPlot_1->replot();
+		}
 
 		fftMsg_free_buf_queue.put(pfft);
 	}
+#endif
 
 }
 void viewpanel::udpConnect() {
@@ -4000,7 +4079,7 @@ void viewpanel::udpRecvLoop(){
 			memset(&g_udpMsg, 0, sizeof(g_udpMsg));
 			printf("ready recv udp msg!\n");
 			ret = recvfrom(udpRecvSocketFd_, &g_udpMsg, sizeof(g_udpMsg), 0, (struct sockaddr*)&src, &len);  //接收来自server的信息
-			printf("recv udp msg! ret is %d\n", ret);
+			printf("recv udp msg! receive byte is %d\n", ret);
 			if(ret <= 0){
 				if(udpStop_) {
 					printf("fftMsg udp  quit!\n"); 
@@ -4011,19 +4090,21 @@ void viewpanel::udpRecvLoop(){
 				i--;
 				continue;
 			}
-			if(i == 0) last_frame_index = g_udpMsg.mHead.usFrameCounter;
 			//std::cout << "receive byte is " << ret << std::endl;
 				//std::cout << "current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
+			if(g_udpMsg.mHead.usRollingCounter != i) {
+				ifLost = true;
+				std::cout << "!!!warnning!!! current index is " << i << ", udp msg usRollingCounter is " << g_udpMsg.mHead.usRollingCounter << std::endl;
+				break;			
+			}
+
+			if(i == 0) last_frame_index = g_udpMsg.mHead.usFrameCounter;
+
 			if(g_udpMsg.mHead.usFrameCounter != last_frame_index) {
 				ifLost = true;
 				std::cout << "!!!warnning!!! current usFrameCounter is " << g_udpMsg.mHead.usFrameCounter
 				 << ", last_frame_index is " << last_frame_index << std::endl;	
 				break;
-			}
-			if(g_udpMsg.mHead.usRollingCounter != i) {
-				ifLost = true;
-				std::cout << "!!!warnning!!! current index is " << i << ", udp msg usRollingCounter is " << g_udpMsg.mHead.usRollingCounter << std::endl;
-				break;			
 			}
 
 			std::cout << "!!recv udp pkg successfully! "  << std::endl;
