@@ -4086,6 +4086,7 @@ void viewpanel::udpRecvLoop(){
 			if(ret <= 0){
 				if(udpStop_) {
 					printf("fftMsg udp  quit!\n"); 
+    				::close(udpRecvSocketFd_);
 					return;
 				}
 				ROS_INFO("fft data recv failed, continue\n");
