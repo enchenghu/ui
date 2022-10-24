@@ -4048,6 +4048,9 @@ void viewpanel::udpRecvLoop(){
 		return;
 	}
 
+	struct timeval timeout_recv = {3, 0};
+	setsockopt(udpRecvSocketFd_, SOL_SOCKET, SO_RCVTIMEO, &timeout_recv, sizeof(timeout_recv)); //recv timeout
+
 	memset(&ser_addr, 0, sizeof(ser_addr));
 	ser_addr.sin_family = AF_INET;
 	//ser_addr.sin_addr.s_addr = inet_addr(lidar_ip.c_str());
@@ -4152,13 +4155,16 @@ int viewpanel::lidarConnect()
 
 	int nSendBuf=320 * 1024;//设置为32K
 	setsockopt(ctrl_sock, SOL_SOCKET, SO_SNDBUF,(const char*)&nSendBuf,sizeof(int));
-#if 1
 	setsockopt(ctrl_sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
 
-	struct timeval timeout;
-	timeout.tv_sec  = 3;  // after 2 seconds connect() will timeout
-	timeout.tv_usec = 0;
-	setsockopt(ctrl_sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+
+#if 1
+	struct timeval timeout_send = {2, 0};
+	setsockopt(ctrl_sock, SOL_SOCKET, SO_SNDTIMEO, &timeout_send, sizeof(timeout_send)); //send timeout
+
+	struct timeval timeout_recv = {2, 0};
+	setsockopt(ctrl_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout_recv, sizeof(timeout_recv)); //recv timeout
+
 #endif
 	memset(&ctrl_serv_addr, 0, sizeof(ctrl_serv_addr));
 	ctrl_serv_addr.sin_family = AF_INET;
