@@ -3927,11 +3927,12 @@ void viewpanel::udpClose(){
 		msgBox.exec();
 		return;
 	}
+	vx_task_delete(&bst_task[1]);
 	udpStop_ = true;
+	::close(udpRecvSocketFd_);
 	QMessageBox msgBox;
 	msgBox.setText("UDP close success!");
 	msgBox.exec();
-	::close(udpRecvSocketFd_);
 }
 
 void viewpanel::updateFFTdata() {
@@ -4018,11 +4019,13 @@ void viewpanel::updateFFTdata() {
 }
 void viewpanel::udpConnect() {
 
+	udpStop_ = false;
     vx_task_set_default_create_params(&bst_params);
     bst_params.app_var = this;
     bst_params.task_mode = 0;
     bst_params.task_main = TaskFuncUdp;
     vx_task_create(&bst_task[1], &bst_params);  
+
 }
 
 void viewpanel::udpRecvLoop(){
