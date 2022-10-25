@@ -1298,23 +1298,38 @@ void viewpanel::readPower(void){
 		return;
 	}
 	commandMsg cmdMsg;
-	memset(&cmdMsg, 0, sizeof(cmdMsg));
 	bool ifread = true;
+	int ret = 0;
 	while(1){
-		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
-			usleep(500*1000);
+		memset(&cmdMsg, 0, sizeof(cmdMsg));
+		ret = ::recv(ctrl_sock, &cmdMsg, sizeof(commandMsg), MSG_WAITALL);
+		if (ret <= 0 && ifread){
+			if (ret < 0 && errno == EAGAIN){
+				QMessageBox msgBox;
+				msgBox.setText("read Power timeout!");
+				msgBox.exec();	
+				return;			
+			}
+			usleep(100*1000);
 			ifread = false;
 			continue;
-		}else{
-			if(cmdMsg.mHead.usCommand == commandType::POWER_READ){
+		} else {
+			if (cmdMsg.mHead.usCommand == commandType::POWER_READ){
 				double power = cmdMsg.mCommandVal[0] / 100.0;
 				ctlReadLine_[0]->setText(QString::number(power));
 				break;
-			}else {
-				continue;
+			} else {
+				QMessageBox msgBox;
+				msgBox.setText("read power failed!");
+				msgBox.exec();
+				return;
 			}
 		}
-	}	
+	}
+	QMessageBox msgBox;
+	msgBox.setText("read power success!");
+	msgBox.exec();
+	return;	
 }
 
 void viewpanel::configCFAR(void){
@@ -1342,18 +1357,31 @@ void viewpanel::readCFAR(void){
 		return;
 	}
 	commandMsg cmdMsg;
-	memset(&cmdMsg, 0, sizeof(cmdMsg));
 	bool ifread = true;
+	int ret = 0;
 	while(1){
-		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
-			usleep(500*1000);
+		memset(&cmdMsg, 0, sizeof(cmdMsg));
+		ret = ::recv(ctrl_sock, &cmdMsg, sizeof(commandMsg), MSG_WAITALL);
+		if(ret <= 0 && ifread){
+			if(ret < 0 && errno == EAGAIN){
+				QMessageBox msgBox;
+				msgBox.setText("read CFAR timeout!");
+				msgBox.exec();	
+				return;			
+			}
+			usleep(100*1000);
 			ifread = false;
 			continue;
-		}else{
-			if(cmdMsg.mHead.usCommand == commandType::CFAR_READ){
+		} else {
+			if (cmdMsg.mHead.usCommand == commandType::CFAR_READ){
 				ctlReadLine_[1]->setText(QString::number(cmdMsg.mCommandVal[0]));
+				break;
+			} else {
+				QMessageBox msgBox;
+				msgBox.setText("read CFAR failed!");
+				msgBox.exec();
+				return;				
 			}
-			break;
 		}
 	}
 	QMessageBox msgBox;
@@ -1386,18 +1414,31 @@ void viewpanel::read3DFT(void){
 		return;
 	}
 	commandMsg cmdMsg;
-	memset(&cmdMsg, 0, sizeof(cmdMsg));
 	bool ifread = true;
-	while(1){
-		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
-			usleep(500*1000);
+	int ret = 0;
+	while(1) {
+		memset(&cmdMsg, 0, sizeof(cmdMsg));
+		ret = ::recv(ctrl_sock, &cmdMsg, sizeof(commandMsg),MSG_WAITALL);
+		if(ret <= 0 && ifread){
+			if(ret < 0 && errno == EAGAIN){
+				QMessageBox msgBox;
+				msgBox.setText("read 3DFT timeout!");
+				msgBox.exec();	
+				return;			
+			}
+			usleep(100*1000);
 			ifread = false;
 			continue;
 		}else{
 			if(cmdMsg.mHead.usCommand == commandType::DFT3_READ){
 				ctlReadLine_[2]->setText(QString::number(cmdMsg.mCommandVal[0]));
+				break;
+			} else {
+				QMessageBox msgBox;
+				msgBox.setText("read 3DFT failed!");
+				msgBox.exec();
+				return;				
 			}
-			break;
 		}
 	}
 	QMessageBox msgBox;
@@ -1484,12 +1525,19 @@ void viewpanel::readReg(void){
 		return;
 	}
 	commandMsg cmdMsg;
-	memset(&cmdMsg, 0, sizeof(cmdMsg));
 	bool ifread = true;
-	usleep(500*1000);
+	int ret = 0;
 	while(1){
-		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
-			usleep(500*1000);
+		memset(&cmdMsg, 0, sizeof(cmdMsg));
+		ret = ::recv(ctrl_sock, &cmdMsg, sizeof(commandMsg), MSG_WAITALL);
+		if(ret <= 0 && ifread){
+			if(ret < 0 && errno == EAGAIN){
+				QMessageBox msgBox;
+				msgBox.setText("read Reg timeout!");
+				msgBox.exec();	
+				return;			
+			}
+			usleep(100*1000);
 			ifread = false;
 			continue;
 		}else{
@@ -1497,12 +1545,17 @@ void viewpanel::readReg(void){
 				std::string tmp = tohex(cmdMsg.mCommandVal[1]);
 				//regRead_line->setText(QString::number(cmdMsg.mCommandVal[1]));
 				regRead_line->setText(QString::fromStdString(tmp));
+				break;
+			} else {
+				QMessageBox msgBox;
+				msgBox.setText("read Reg failed!");
+				msgBox.exec();
+				return;				
 			}
-			break;
 		}
 	}
 	QMessageBox msgBox;
-	msgBox.setText("read register success!");
+	msgBox.setText("read Reg success!");
 	msgBox.exec();
 }
 
@@ -1511,25 +1564,37 @@ void viewpanel::readDiff(void){
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		ctlReadBtn_[3]->setStyleSheet("color: black");
 		QMessageBox msgBox;
-		msgBox.setText("write Diff failed!");
+		msgBox.setText("read Diff failed!");
 		msgBox.exec();
 		return;
 	}
 	commandMsg cmdMsg;
-	memset(&cmdMsg, 0, sizeof(cmdMsg));
 	bool ifread = true;
-	usleep(500*1000);
+	int ret = 0;
 	while(1){
-		if(::read(ctrl_sock, &cmdMsg, sizeof(commandMsg)) <= 0 && ifread){
-			usleep(500*1000);
+		memset(&cmdMsg, 0, sizeof(cmdMsg));
+		ret = ::recv(ctrl_sock, &cmdMsg, sizeof(commandMsg), MSG_WAITALL);
+		if(ret <= 0 && ifread){
+			if(ret < 0 && errno == EAGAIN){
+				QMessageBox msgBox;
+				msgBox.setText("read Diff timeout!");
+				msgBox.exec();	
+				return;			
+			}
+			usleep(100*1000);
 			ifread = false;
 			continue;
 		}else{
 			if(cmdMsg.mHead.usCommand == commandType::DIFF_READ){
 				std::string tmp = tohex(cmdMsg.mCommandVal[0]);
 				ctlReadLine_[3]->setText(QString::fromStdString(tmp));
+				break;
+			} else {
+				QMessageBox msgBox;
+				msgBox.setText("read Diff failed!");
+				msgBox.exec();
+				return;				
 			}
-			break;
 		}
 	}
 	QMessageBox msgBox;
