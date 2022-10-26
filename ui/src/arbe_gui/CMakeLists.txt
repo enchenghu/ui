@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   sensor_msgs
   pcl_ros
+  pcl_conversions
   arbe_api_common
   std_msgs
   image_transport
