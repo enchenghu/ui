@@ -3764,10 +3764,10 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 		if(index % 4 == 0 && index < 33){
 			if(i < data.size() / 2){
 				pfft->dataFFT_0.append(cur_data);
-				pfft->dataFFTdB_0.append(10 * log10((double)cur_data));
+				pfft->dataFFTdB_0.append(20 * log10((double)cur_data));
 			} else{
 				pfft->dataFFT_1.append(cur_data);	
-				pfft->dataFFTdB_1.append(10 * log10((double)cur_data));
+				pfft->dataFFTdB_1.append(20 * log10((double)cur_data));
 			}
 			cur_data = 0;
 		}
