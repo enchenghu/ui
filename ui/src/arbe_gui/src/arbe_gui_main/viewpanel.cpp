@@ -1468,9 +1468,19 @@ void viewpanel::configReg(void){
 	ss << std::hex << strAddr.toStdString();
 	ss >> cmdMsg_.mCommandVal[0];
 
+
 	std::stringstream tt;
 	tt << std::hex << strValue.toStdString();
 	tt >> cmdMsg_.mCommandVal[1];
+
+	if(cmdMsg_.mCommandVal[0] >= 0xffffffff || cmdMsg_.mCommandVal[0] < 0x0 ||
+	cmdMsg_.mCommandVal[1] >= 0xffffffff || cmdMsg_.mCommandVal[1] < 0x0 ){
+		QMessageBox msgBox;
+		msgBox.setText("error!!register addr or value is Invalid!");
+		msgBox.exec();
+		return;		
+	}
+
 
 	//cmdMsg_.mCommandVal[1] = strValue.toInt();
 	cmdMsg_.mHead.usCommand = commandType::REG_WRITE;
