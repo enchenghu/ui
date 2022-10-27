@@ -89,6 +89,8 @@
 
 #include "osc_chart.h"
 #include "fft_charts.h"
+
+#include "plot_tracer.h"
 #include <fstream>
 #include <sstream>
 #include <pc_data.h>
@@ -377,6 +379,7 @@ private:
 	void CreatConnect();
 	void CreatFFTcharts();
 	void CreatFFTcharts1();
+	void showTracer(QMouseEvent*);
 	void Save2filecsv(std::vector<uint8_t> &, bool );
 	void parseFFTData(std::vector<uint8_t> &data);
 	std::string tohex(uint32_t a);
@@ -470,6 +473,7 @@ private:
 	QVector<double> y_FFT;
 	QVector<double> x_FFT_1;
 	QVector<double> y_FFT_1;
+	myTracer* plotTracer;
 
 };
 

@@ -192,6 +192,7 @@ src/arbe_gui_main/osc_chart.cpp
 src/arbe_gui_main/fft_charts.cpp
 src/arbe_gui_main/fft_chartview.cpp
 src/arbe_gui_main/qcustomplot.cpp
+src/arbe_gui_main/plot_tracer.cpp
 
 #src/ArbeApiCommon/RAF_API_Library/src/Raf_Api.c
 #src/ArbeApiCommon/RAF_API_Library/src/User_Extended.c

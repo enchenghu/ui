@@ -3287,8 +3287,67 @@ void viewpanel::CreatFFTcharts()
 	pCustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 	//pCustomPlot->xAxis->setNumberPrecision(1);
 
+	plotTracer = new myTracer(pCustomPlot, pCustomPlot->graph(0), TracerType::DataTracer);
 	//重绘 每次改变完以后都要调用这个进行重新绘制
 	pCustomPlot->replot();
+}
+
+void viewpanel::showTracer(QMouseEvent* event)
+{
+	//std::cout << "!!enter showTracer  "  <<   std::endl;
+
+    double x = pCustomPlot->xAxis->pixelToCoord(event->pos().x());
+ 
+    //for(int i=0;i<1;i++)//ui->widget9->graph(0)->dataCount()
+    //{
+       double y = 0;
+       QSharedPointer<QCPGraphDataContainer> tmpContainer;
+       tmpContainer = pCustomPlot->graph(0)->data();
+       //使用二分法快速查找所在点数据！！！敲黑板，下边这段是重点
+       int low = 0, high = tmpContainer->size();
+       while(high > low)
+       {
+           int middle = (low + high) / 2;
+           if(x < tmpContainer->constBegin()->mainKey() ||
+                   x > (tmpContainer->constEnd()-1)->mainKey())
+               break;
+ 
+           if(x == (tmpContainer->constBegin() + middle)->mainKey())
+           {
+               y = (tmpContainer->constBegin() + middle)->mainValue();
+               break;
+           }
+           if(x > (tmpContainer->constBegin() + middle)->mainKey())
+           {
+               low = middle;
+           }
+           else if(x < (tmpContainer->constBegin() + middle)->mainKey())
+           {
+               high = middle;
+           }
+           if(high - low <= 1)
+           {   //差值计算所在位置数据
+               y = (tmpContainer->constBegin()+low)->mainValue() + ( (x - (tmpContainer->constBegin() + low)->mainKey()) *
+                   ((tmpContainer->constBegin()+high)->mainValue() - (tmpContainer->constBegin()+low)->mainValue()) ) /
+                   ((tmpContainer->constBegin()+high)->mainKey() - (tmpContainer->constBegin()+low)->mainKey());
+               break;
+           }
+ 
+       }
+       //qDebug()<<"y="<<y;
+       //显示x轴的鼠标动态坐标
+       //m_TraserX->updatePosition(x, 0);
+       //m_TraserX->setText(QString::number(x, 'f', 0));
+       //显示y轴的鼠标动态坐标，缺点无法定位xy所以无法附加单位，附加单位仍需继续修改setText传参
+       //m_TracerY->updatePosition(x, y);
+       //m_TracerY->setText(QString::number(y, 'f', 2));
+       //由原来的x，y分别显示改为x，y显示在一起，xy单位直接在setText中设置好
+       plotTracer->updatePosition(x, y);
+	   double real_X = x * 0.4;
+       plotTracer->setText(QString::number(real_X, 'f', 2), QString::number(y, 'f', 2));//x轴取整数，y轴保留两位小数
+ 
+    //}
+    pCustomPlot->replot();
 }
 
 void viewpanel::CreatFFTcharts1()
@@ -3506,7 +3565,9 @@ void viewpanel::CreatConnect()
 
 	connect(mFFTShowdBBtn, SIGNAL(clicked()), this, SLOT( showdBFFT( void )));
 
+	//connect(pCustomPlot, SIGNAL(mouseMove(QMouseEvent*)), this,SLOT(showTracer(QMouseEvent*)));
 
+	connect(pCustomPlot, &QCustomPlot::mouseMove, this, &viewpanel::showTracer);
     timer_  = new QTimer(this);
     //timer_->setInterval(50);
     connect(timer_, SIGNAL(timeout()), this, SLOT(updateFFTdata(void)));
