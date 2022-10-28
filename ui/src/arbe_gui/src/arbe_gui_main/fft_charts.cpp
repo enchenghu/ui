@@ -4,6 +4,7 @@ ChartFFT::ChartFFT(QWidget* parent): QWidget(parent)
 {
 	pCustomPlot = new QCustomPlot(parent);
 	QCPGraph* pgraph = pCustomPlot->addGraph();
+    this->hide();  
 	//添加一条曲线
 }
 
@@ -25,7 +26,7 @@ QCustomPlot* ChartFFT::setChart(int xmin, int xmax, int ymin, int ymax){
 	plotTracer = new myTracer(pCustomPlot, pCustomPlot->graph(0), TracerType::DataTracer);
 	//重绘 每次改变完以后都要调用这个进行重新绘制
 	connect(pCustomPlot, &QCustomPlot::mouseMove, this, &ChartFFT::showTracer);
-	pCustomPlot->replot();  
+	pCustomPlot->replot();
     return pCustomPlot;
     //if(chartLayout) chartLayout->addWidget(pCustomPlot, 0, 0); 
 }
