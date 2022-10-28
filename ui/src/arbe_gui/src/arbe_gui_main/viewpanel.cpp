@@ -68,7 +68,7 @@
 
 #define CTRL_SOCKET 0
 #define DEFAULT_AZIMUTH_BIN 0
-#define DEBUG_UI 1
+#define DEBUG_UI 0
 extern void Ntc_Mode_Set();
 extern void Cfar_Mode_Set();
 extern void radar_set_params();
