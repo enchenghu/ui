@@ -465,8 +465,7 @@ private:
 	vx_task_create_params_t bst_params;
 	std::shared_ptr<autox_msgs::fmcwPoints> fmcwPointsData_;
 	autox_msgs::fmcwPoint curPcPoint;
-	Chart* fftChart;
-	Chart* fftChart_1;
+	ChartFFT* pFFTchart[2];
 	QCustomPlot *pCustomPlot;
 	QCustomPlot *pCustomPlot_1;
 	QVector<double> x_FFT;

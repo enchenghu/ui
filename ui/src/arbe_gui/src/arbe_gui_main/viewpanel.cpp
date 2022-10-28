@@ -68,7 +68,7 @@
 
 #define CTRL_SOCKET 0
 #define DEFAULT_AZIMUTH_BIN 0
-#define DEBUG_UI 0
+#define DEBUG_UI 1
 extern void Ntc_Mode_Set();
 extern void Cfar_Mode_Set();
 extern void radar_set_params();
@@ -3384,25 +3384,6 @@ void viewpanel::CreatFFTcharts1()
 
 void viewpanel::CreatDebugWindow()
 {
-	/* Debug window*/ 
-
-#if 0
-	fftChart = new Chart();
-    fftChart->setAxis("X轴",0,8192,11, "Y轴",0,150,11);
-    //设置离散点数据
-    //QList<QPointF> pointlist = {QPointF(0,1), QPointF(10,2), QPointF(20,4), QPointF(30,8), QPointF(40,16), \
-                                QPointF(50,16), QPointF(60,8), QPointF(70,4), QPointF(80,2), QPointF(90,1),};
-    //绘制
-    fftChart->buildChart();
-	fftChart_1 = new Chart();
-    fftChart_1->setAxis("X轴",0,8192,11, "Y轴",0,150,11);
-    //设置离散点数据
-    //QList<QPointF> pointlist_1 = {QPointF(0,1), QPointF(10,2), QPointF(20,4), QPointF(30,8), QPointF(40,16), \
-                                QPointF(50,16), QPointF(60,8), QPointF(70,4), QPointF(80,2), QPointF(90,1),};
-    //绘制
-    fftChart_1->buildChart();
-#endif
-
 	QWidget* multiWidget_new = new QWidget();
 	QGroupBox *chartADCBox = new QGroupBox(tr("FFT  chart 0:"));
 	QGridLayout* chartADCLayout = new QGridLayout ;
@@ -3416,10 +3397,14 @@ void viewpanel::CreatDebugWindow()
     label_OSC_0->Add_Line_Data(0, 100);
     label_OSC_0->View_Chart(1000);
 #endif
-	CreatFFTcharts();
-	CreatFFTcharts1();
-	if(pCustomPlot)
-		chartADCLayout->addWidget(pCustomPlot,  0 , 0);
+	pFFTchart[0] = new ChartFFT(this);
+	pFFTchart[0]->setChart(0, 256 * 4096, 0, 8192, chartADCLayout);
+
+	pFFTchart[1] = new ChartFFT(this);
+	pFFTchart[1]->setChart(0, 256 * 4096, -8191, 0, chartFFTLayout);
+	//CreatFFTcharts();
+	//CreatFFTcharts1();
+	//if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0],  0 , 0);
 	chartADCBox->setLayout(chartADCLayout);
 #if 0
     OSC_chart *label_OSC_1 = new OSC_chart(this);
@@ -3427,8 +3412,7 @@ void viewpanel::CreatDebugWindow()
     label_OSC_1->Add_Line_Data(0, 100);
     //label_OSC_1->View_Chart(10000);
 #endif
-
-	chartFFTLayout->addWidget(pCustomPlot_1,  0, 0);
+	//if(pFFTchart[1]) chartFFTLayout->addWidget(pFFTchart[1],  0, 0);
 	chartFFTBox->setLayout(chartFFTLayout);
 
 	QGridLayout* main_show= new QGridLayout ;
@@ -3542,8 +3526,6 @@ void viewpanel::CreatDebugWindow()
 
 void viewpanel::CreatConnect()
 {
-	//connect( RangeCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( setRange( void )));
-	
 	connect(lidar_connect_button, SIGNAL(clicked()), this, SLOT( connectControl( void )));
 	connect(ctlWriteBtn_[0], SIGNAL(clicked()), this, SLOT( configPower( void )));
 	connect(ctlWriteBtn_[1], SIGNAL(clicked()), this, SLOT( configCFAR( void )));
@@ -3552,22 +3534,15 @@ void viewpanel::CreatConnect()
 	connect(regBtnWrite, SIGNAL(clicked()), this, SLOT( configReg( void )));
 	connect(saveBtn, SIGNAL(clicked()), this, SLOT( saveDataThead( void )));
 	connect(setSaveBtn, SIGNAL(clicked()), this, SLOT( setSaveFolder( void )));
-
 	connect(settingADCSavebutton, SIGNAL(clicked()), this, SLOT( udpConnect( void )));
 	connect(settingADCConfigbutton, SIGNAL(clicked()), this, SLOT( udpClose( void )));
-
-
 	connect(ctlReadBtn_[0], SIGNAL(clicked()), this, SLOT( readPower( void )));
 	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
 	connect(ctlReadBtn_[2], SIGNAL(clicked()), this, SLOT( read3DFT( void )));
 	connect(ctlReadBtn_[3], SIGNAL(clicked()), this, SLOT( readDiff( void )));
 	connect(regBtnRead, SIGNAL(clicked()), this, SLOT( readReg( void )));
-
 	connect(mFFTShowdBBtn, SIGNAL(clicked()), this, SLOT( showdBFFT( void )));
 
-	//connect(pCustomPlot, SIGNAL(mouseMove(QMouseEvent*)), this,SLOT(showTracer(QMouseEvent*)));
-
-	connect(pCustomPlot, &QCustomPlot::mouseMove, this, &viewpanel::showTracer);
     timer_  = new QTimer(this);
     //timer_->setInterval(50);
     connect(timer_, SIGNAL(timeout()), this, SLOT(updateFFTdata(void)));
@@ -4088,7 +4063,15 @@ void viewpanel::updateFFTdata() {
 		y_FFT_1_dB.append(tmp_log);
 	}
 
+
+
 	if(!ifShowdB_){
+		pFFTchart[0]->setData(x_FFT, y_FFT, rescalse_, ifShowdB_);
+		pFFTchart[1]->setData(x_FFT_1, y_FFT_1, rescalse_, ifShowdB_);
+		if(rescalse_) {
+			rescalse_ = false;
+		}
+#if 0
 		pCustomPlot->graph(0)->setData(x_FFT, y_FFT);
 		pCustomPlot->yAxis->setLabel("amplitude");
 		if(rescalse_) pCustomPlot->rescaleAxes(true);
@@ -4101,7 +4084,14 @@ void viewpanel::updateFFTdata() {
 			rescalse_ = false;
 		}
 		pCustomPlot_1->replot();
+#endif
 	} else {
+		pFFTchart[0]->setData(x_FFT, y_FFT_dB, rescalse_, ifShowdB_);
+		pFFTchart[1]->setData(x_FFT_1, y_FFT_1_dB, rescalse_, ifShowdB_);
+		if(rescalse_) {
+			rescalse_ = false;
+		}
+#if 0
 		pCustomPlot->graph(0)->setData(x_FFT, y_FFT_dB);
 		pCustomPlot->yAxis->setLabel("amplitude/dB");
 		if(rescalse_) pCustomPlot->rescaleAxes(true);
@@ -4114,6 +4104,8 @@ void viewpanel::updateFFTdata() {
 			rescalse_ = false;
 		}
 		pCustomPlot_1->replot();
+#endif
+
 	}
 #else 
 	if(!fftMsg_done_buf_queue.empty()){

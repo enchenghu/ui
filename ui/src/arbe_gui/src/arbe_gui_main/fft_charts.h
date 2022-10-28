@@ -7,13 +7,21 @@
 #include <QHBoxLayout>
 #include <QValueAxis>
 #include "fft_chartview.h"
+#include "qcustomplot.h"
 #include <QTimer>
 #include <unistd.h>
 #include <iostream>
+#include "plot_tracer.h"
+#include <QGridLayout>
+
 QT_CHARTS_USE_NAMESPACE
-class Chart : public QWidget
+class ChartFFT : public QWidget
 {
     Q_OBJECT
+
+    QCustomPlot *pCustomPlot;
+	myTracer* plotTracer;
+
     QChart *qchart;
     ChartView *chartview;
     QSplineSeries *series;
@@ -35,12 +43,22 @@ class Chart : public QWidget
     QTimer* timer_;
 
 public:
-    Chart(QWidget* parent = 0, QString _chartname = "曲线图");
-    ~Chart(){}
+    ChartFFT(QWidget* parent = nullptr);
+    ~ChartFFT(){}
+    void setData(const QVector<double> &x, const QVector<double> &y, bool rescalse_, int type);
+
     void setAxis(QString _xname, qreal _xmin, qreal _xmax, int _xtickc, \
                  QString _yname, qreal _ymin, qreal _ymax, int _ytickc);
     void buildChart();
     void updateChart();
+    void showTracer(QMouseEvent* event);
+    void setChart(int xmin, int xmax, int ymin, int ymax, QGridLayout* chartLayout);
+
+private:
+    QVector<double> x_FFT;
+	QVector<double> y_FFT;
+	QVector<double> x_FFT_1;
+	QVector<double> y_FFT_1;
 
 };
 #endif // CHART_H
