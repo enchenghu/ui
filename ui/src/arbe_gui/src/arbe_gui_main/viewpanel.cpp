@@ -332,27 +332,17 @@ void pub_radar_height_and_pitch(int index)
 
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
-	: QTabWidget( parent ), ifConnected(false), ifSave(false), save_folder_(QString(".")), pCustomPlot(nullptr), udpStop_(false), rescalse_(true)
+	: QTabWidget( parent ), ifConnected(false), ifSave(false), save_folder_(QString(".")), udpStop_(false), rescalse_(true)
 {
 
-#if ONLY_SHOW_UI
-	init_pubs();
-#endif
 	x_FFT.clear();
-	//y_FFT.clear();
 	x_FFT_1.clear();
-	//y_FFT_1.clear();
 	for(int i = 0; i< 8192;i++) 
 	{
 		x_FFT.append(i);
 		x_FFT_1.append(-8191 + i);
-		//y_FFT.append(qrand()%100);
-		//y_FFT_1.append(qrand()%100);
 	}
-	//std::cout << "x_FFT size is " << x_FFT.size() << endl;
-	//std::cout << "x_FFT_1 size is " << x_FFT_1.size() << endl;
-	fmcwPointsData_ = std::make_shared<autox_msgs::fmcwPoints>();
-
+	fmcwPointsData_ = std::make_shared<fmcw_types::fmcwPoints>();
     fftMsg_free_buf_queue.setParam("fftMsg_free_buf_queue", MAX_BUFF_LEN);
     fftMsg_done_buf_queue.setParam("fftMsg_done_buf_queue", MAX_BUFF_LEN);
  
@@ -408,15 +398,8 @@ viewpanel::viewpanel(QTabWidget* parent )
 	follower_view_ = false;
 	std::cout << " until here " <<  __LINE__ << std::endl;
 
-#if ONLY_SHOW_UI
-	setTopCarView();
-#endif
 	/* Create the radar pointcloud fixed frame. */
 	manager_->setFixedFrame("image_radar");
-
-//	SlamArray_[0] = manager_->createDisplay( "rviz/MarkerArray", "MarkerArray", true );
-//	ROS_ASSERT( SlamArray_[0] != NULL );
-//	SlamArray_[0]->subProp("Marker Topic")->setValue("/arbe/rviz/objects_0");
 
 	Car_ = manager_->createDisplay( "rviz/Marker", "Marker", true );
 	ROS_ASSERT( Car_ != NULL );
@@ -431,174 +414,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	Axes_->subProp("Reference Frame")->setValue("odom");
 	Axes_->subProp("Length")->setValue("3");
 
-	/* Set defaults */
-#if 0
-	thickness_slider->setValue( 40 );
-	asphalt_roughness_slider->setValue( 0 );
-	vis_text_phi_slider->setValue(180);
-
-	cell_size_slider->setValue( grid_cell_size );
-	radar_x_offset_slider->setValue( radar_x_offset * 100 );
-//	radar_y_offset_slider->setValue( radar_y_offset * 100 );
-	radar_z_offset_slider->setValue( radar_z_offset * 100 );
-	radar_yaw_angle_slider->setValue((int)(radar_yaw_angle / 3.1415 * 180));
-	radar_pitch_angle_slider->setValue((int)(radar_pitch_angle / 3.1415 * 180*10));
-	decay_time_slider->setValue( DetectionMemoryTime );
-	sensitivity_slider->setValue( threshold4d );
-	dynamic_azimuth_slider->setValue( DynamicAzimuth );
-	dynamic_elevation_slider->setValue( DynamicElevation );
-	min_height_slider->setValue( MinHeight * 100 );
-	max_height_slider->setValue( MaxHeight * 100 );
-	azimuth_bin_slider->setValue( DEFAULT_AZIMUTH_BIN ); // default to boresight
-	selectedAzimuthBin = DEFAULT_AZIMUTH_BIN;
-	azimuth_bin_label->setEnabled(false);
-	azimuth_bin_slider->setEnabled(false);
-	mm_doppler_slider->setValues(MinDoppler * 10, MaxDoppler * 10);
-
-	int index = ModeCombo->findText(mode.c_str());
-	ModeCombo->setCurrentIndex(index);
-	index = RangeCombo->findText(RangeType.c_str());
-	RangeCombo->setCurrentIndex(index);
-	index = ColoringCombo->findText(ColoringType.c_str());
-	ColoringCombo->setCurrentIndex(index);
-	std::cout << " until here " <<  __LINE__ << std::endl;
-#endif
-
-
-
-#if 0
-	float cc_min, cc_max;
-	Color_Coding_Min_Max::Instance()->get_converted_values(ColoringType, cc_min, cc_max);
-	setMinColorCoding((int)cc_min);
-	setMaxColorCoding((int)cc_max);
-	cc_slider->setMinimumValue((int)cc_min);
-	cc_slider->setMaximumValue((int)cc_max);
-	cc_label->setText("Color coding ["+QString::fromStdString(Color_Coding_Min_Max::Instance()->get_units(ColoringType))+"]");
-#endif
-
 	resize(QDesktopWidget().availableGeometry(this).size() * 0.85);
-
-#if 0
-	/* Make signal/slot connections. */
-	connect( thickness_slider, SIGNAL( valueChanged( int )), this, SLOT( setThickness( int )));
-	connect( cell_size_slider, SIGNAL( valueChanged( int )), this, SLOT( setCellSize( int )));
-	connect( radar_x_offset_slider, SIGNAL( valueChanged( int )), this, SLOT( setradarXOffset( int )));
-//	connect( radar_y_offset_slider, SIGNAL( valueChanged( int )), this, SLOT( setradarYOffset( int )));
-	connect( radar_z_offset_slider, SIGNAL( valueChanged( int )), this, SLOT( setradarZOffset( int )));
-
-	connect( radar_yaw_angle_slider, SIGNAL( valueChanged( int )), this, SLOT( setRadarYawAngle( int )));
-	connect( radar_pitch_angle_slider, SIGNAL( valueChanged( int )), this, SLOT( setRadarPitchAngle( int )));
-	connect( cam_rel_alpha, SIGNAL( valueChanged( int )), this, SLOT( setCamEulerAlpha( int )));
-	connect( cam_rel_beta, SIGNAL( valueChanged( int )), this, SLOT( setCamEulerBeta( int )));
-	connect( cam_rel_gamma, SIGNAL( valueChanged( int )), this, SLOT( setCamEulerGamma( int )));
-
-	connect( cam_calib_btn, SIGNAL( clicked()), this, SLOT( load_camera_calibration( void )));
-	connect( btn_calc_ant_height_tilt, SIGNAL( clicked()), this, SLOT( calc_ant_height_tilt( void )));
-	connect( radar_text_radio, SIGNAL( clicked()), this, SLOT( choose_which_radars_text( void )));
-
-	//connect( RadarIdCombo, SIGNAL( currentIndexChanged(int )), this, SLOT( setPreRadarSliders( void )));
-
-	//connect( decay_time_slider, SIGNAL( valueChanged( int )), this, SLOT( setPointDecayTime( int )));
-    connect( ModeCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( setMode( void )));
-	connect( RangeCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( setRange( void )));
-	connect( ColoringCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( setColoring( void )));
-	connect( sensitivity_slider, SIGNAL( valueChanged( int )), this, SLOT( setThreshold4D( int )));
-	connect( asphalt_roughness_slider, SIGNAL( valueChanged( int )), this, SLOT( setAsphaltRoughness( int )));
-	connect( vis_text_phi_slider, SIGNAL( valueChanged( int )), this, SLOT( setFloatingTextPhi( int )));
-	connect( dynamic_azimuth_slider, SIGNAL( valueChanged( int )), this, SLOT( setDynamicAzimuth( int )));
-	connect( dynamic_elevation_slider, SIGNAL( valueChanged( int )), this, SLOT( setDynamicElevation( int )));
-	connect( config_button, SIGNAL( clicked()), this, SLOT( show_configuration_dock( void )));
-	connect( radar_connect_button, SIGNAL( clicked()), this, SLOT( radar_connect_control( void )));
-	connect( record_button, SIGNAL( clicked()), this, SLOT( recording_control( void )));
-	connect( screen_record_button, SIGNAL( clicked()), this, SLOT( screen_record( void )));
-	connect( mm_doppler_slider, SIGNAL( maximumValueChanged( int )), this, SLOT( setMaxDoppler( int )));
-	connect( mm_doppler_slider, SIGNAL( minimumValueChanged( int )), this, SLOT( setMinDoppler( int )));
-	connect( min_height_slider, SIGNAL( valueChanged( int )), this, SLOT( setMinHeight( int )));
-	connect( max_height_slider, SIGNAL( valueChanged( int )), this, SLOT( setMaxHeight( int )));
-	connect( radar_start_stop_button, SIGNAL( clicked()), this, SLOT( radar_start_stop_control( void )));
-	connect( radar_pause_button, SIGNAL( clicked()), this, SLOT( radar_pause_control( void )));
-	connect( azimuth_bin_slider, SIGNAL( valueChanged( int )), this, SLOT( setAzimuthBin( int )));
-
-	connect( top_view_button, SIGNAL( clicked()), this, SLOT( setTopView( void )));
-	connect( top_car_view_button, SIGNAL( clicked()), this, SLOT( setTopCarView( void )));
-	connect( car_view_button, SIGNAL( clicked()), this, SLOT( setCarView( void )));
-	connect( side_view_button, SIGNAL( clicked()), this, SLOT( toggleFollowerView( void )));
-	connect( bookmark_button, SIGNAL( clicked()), this, SLOT( bookmark_control( void )));
-
-	connect( cc_slider, SIGNAL( maximumValueChanged( int )), this, SLOT( setMaxColorCoding( int )));
-	connect( cc_slider, SIGNAL( minimumValueChanged( int )), this, SLOT( setMinColorCoding( int )));
-#endif
-
-	QShortcut *IncreaeSensitivity = new QShortcut(QKeySequence( Qt::Key_Plus), this);
-	connect(IncreaeSensitivity, &QShortcut::activated, this, &viewpanel::IncreaseSensitivity);
-
-	QShortcut *DecreaseSensitivity = new QShortcut(QKeySequence( Qt::Key_Minus), this);
-	connect(DecreaseSensitivity, &QShortcut::activated, this, &viewpanel::DecreaseSensitivity);
-
-	QShortcut *IncreaeDynamicAzimuth = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Plus), this);
-	connect(IncreaeDynamicAzimuth, &QShortcut::activated, this, &viewpanel::IncreaeDynamicAzimuth);
-
-	QShortcut *DecreaseDynamicAzimuth = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Minus), this);
-	connect(DecreaseDynamicAzimuth, &QShortcut::activated, this, &viewpanel::DecreaseDynamicAzimuth);
-
-	QShortcut *IncreaeAsphaltRoughness = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Plus), this);
-	connect(IncreaeAsphaltRoughness, &QShortcut::activated, this, &viewpanel::IncreaeAsphaltRoughness);
-
-	QShortcut *DecreaseAsphaltRoughness = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Minus), this);
-	connect(DecreaseAsphaltRoughness, &QShortcut::activated, this, &viewpanel::DecreaseAsphaltRoughness);
-
-	QShortcut *IncreaeDynamicElevation = new QShortcut(QKeySequence(Qt::ALT + Qt::Key_Plus), this);
-	connect(IncreaeDynamicElevation, &QShortcut::activated, this, &viewpanel::IncreaeDynamicElevation);
-
-	QShortcut *DecreaseDynamicElevation = new QShortcut(QKeySequence(Qt::ALT + Qt::Key_Minus), this);
-	connect(DecreaseDynamicElevation, &QShortcut::activated, this, &viewpanel::DecreaseDynamicElevation);
-
-	QShortcut *SetShortRnage = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_S), this);
-	connect(SetShortRnage, &QShortcut::activated, this, &viewpanel::SetShortRnage);
-
-	QShortcut *SetMidRnage = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_M), this);
-	connect(SetMidRnage, &QShortcut::activated, this, &viewpanel::SetMidRnage);
-
-	QShortcut *SetLongRnage = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_L), this);
-	connect(SetLongRnage, &QShortcut::activated, this, &viewpanel::SetLongRnage);
-
-	QShortcut *SetUltraLongRnage = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_U), this);
-	connect(SetUltraLongRnage, &QShortcut::activated, this, &viewpanel::SetUltraLongRnage);
-
-	QShortcut *Set3d = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_3), this);
-	connect(Set3d, &QShortcut::activated, this, &viewpanel::Set3d);
-
-	QShortcut *Set4d = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_4), this);
-	connect(Set4d, &QShortcut::activated, this, &viewpanel::Set4d);
-
-	QShortcut *ColorByElevation = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_E), this);
-	connect(ColorByElevation, &QShortcut::activated, this, &viewpanel::ColorByElevation);
-
-	QShortcut *ColorByDoppler = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_D), this);
-	connect(ColorByDoppler, &QShortcut::activated, this, &viewpanel::ColorByDoppler);
-
-	QShortcut *ColorByAmplitude = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_A), this);
-	connect(ColorByAmplitude, &QShortcut::activated, this, &viewpanel::ColorByAmplitude);
-
-#if ONLY_SHOW_UI
-	init_subs();
-#endif
-
-	for(int nr = 0; nr < num_of_radars; nr++)
-	{
-		//RadarIdCombo->addItem(tr(std::to_string(nr).c_str()));//tr("0"));
-	}
-	radarIdCombo_ready = true;
-
-#if ONLY_SHOW_UI
-
-	render_3d_car(0,-2.5,0);
-
-	follower_view_ = false;
-	radar_text_radio->setChecked(true);
-
-	choose_which_radars_text();
-#endif
 }
 
 // Destructor.
@@ -3258,130 +3074,6 @@ viewpanel* viewpanel::Instance()
     return m_pInstance;
 }
 
-void viewpanel::CreatFFTcharts()
-{
-	pCustomPlot = new QCustomPlot(this);
-	//添加一条曲线
-	QCPGraph* pgraph = pCustomPlot->addGraph();
-	
-	//给曲线准备数据 设置数据
-
-	//for(int i = 0; i< 8191;i++) 
-	//{
-		//x_FFT.append(i);
-		//y_FFT.append(qrand()%100);
-	//}
-
-	//设置数据
-	pCustomPlot->graph(0)->setData(x_FFT,y_FFT);
-	//设置Y轴范围
-	pCustomPlot->yAxis->setRange(0, 256*4096);
-	pCustomPlot->xAxis->setRange(0,8192);
-	//x轴名字
-	//pCustomPlot->xAxis->setLabel("X");
-	//Y轴名字
-	pCustomPlot->yAxis->setLabel("Y");
-	//设置大小
-	//pCustomPlot->resize(ui->label->width(),ui->label->height());
-	//可以进行鼠标位置 放大缩小 拖拽  放大缩小坐标系！！！功能非常强大
-	pCustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
-	//pCustomPlot->xAxis->setNumberPrecision(1);
-
-	plotTracer = new myTracer(pCustomPlot, pCustomPlot->graph(0), TracerType::DataTracer);
-	//重绘 每次改变完以后都要调用这个进行重新绘制
-	pCustomPlot->replot();
-}
-
-void viewpanel::showTracer(QMouseEvent* event)
-{
-	//std::cout << "!!enter showTracer  "  <<   std::endl;
-
-    double x = pCustomPlot->xAxis->pixelToCoord(event->pos().x());
- 
-    //for(int i=0;i<1;i++)//ui->widget9->graph(0)->dataCount()
-    //{
-       double y = 0;
-       QSharedPointer<QCPGraphDataContainer> tmpContainer;
-       tmpContainer = pCustomPlot->graph(0)->data();
-       //使用二分法快速查找所在点数据！！！敲黑板，下边这段是重点
-       int low = 0, high = tmpContainer->size();
-       while(high > low)
-       {
-           int middle = (low + high) / 2;
-           if(x < tmpContainer->constBegin()->mainKey() ||
-                   x > (tmpContainer->constEnd()-1)->mainKey())
-               break;
- 
-           if(x == (tmpContainer->constBegin() + middle)->mainKey())
-           {
-               y = (tmpContainer->constBegin() + middle)->mainValue();
-               break;
-           }
-           if(x > (tmpContainer->constBegin() + middle)->mainKey())
-           {
-               low = middle;
-           }
-           else if(x < (tmpContainer->constBegin() + middle)->mainKey())
-           {
-               high = middle;
-           }
-           if(high - low <= 1)
-           {   //差值计算所在位置数据
-               y = (tmpContainer->constBegin()+low)->mainValue() + ( (x - (tmpContainer->constBegin() + low)->mainKey()) *
-                   ((tmpContainer->constBegin()+high)->mainValue() - (tmpContainer->constBegin()+low)->mainValue()) ) /
-                   ((tmpContainer->constBegin()+high)->mainKey() - (tmpContainer->constBegin()+low)->mainKey());
-               break;
-           }
- 
-       }
-       //qDebug()<<"y="<<y;
-       //显示x轴的鼠标动态坐标
-       //m_TraserX->updatePosition(x, 0);
-       //m_TraserX->setText(QString::number(x, 'f', 0));
-       //显示y轴的鼠标动态坐标，缺点无法定位xy所以无法附加单位，附加单位仍需继续修改setText传参
-       //m_TracerY->updatePosition(x, y);
-       //m_TracerY->setText(QString::number(y, 'f', 2));
-       //由原来的x，y分别显示改为x，y显示在一起，xy单位直接在setText中设置好
-       plotTracer->updatePosition(x, y);
-	   double real_X = x * 0.4;
-       plotTracer->setText(QString::number(real_X, 'f', 2), QString::number(y, 'f', 2));//x轴取整数，y轴保留两位小数
- 
-    //}
-    pCustomPlot->replot();
-}
-
-void viewpanel::CreatFFTcharts1()
-{
-	pCustomPlot_1 = new QCustomPlot(this);
-	//添加一条曲线
-	QCPGraph* pgraph = pCustomPlot_1->addGraph();
-	
-	//给曲线准备数据 设置数据
-
-	//for(int i = 0; i< 8191;i++) 
-	//{
-		//x_FFT_1.append(i);
-		//y_FFT_1.append(qrand()%100);
-	//}
-
-	//设置数据
-	pCustomPlot_1->graph(0)->setData(x_FFT_1, y_FFT_1);
-	//设置Y轴范围
-	pCustomPlot_1->yAxis->setRange(0,256*4096);
-	pCustomPlot_1->xAxis->setRange(-8192,0);
-	//x轴名字
-	//pCustomPlot_1->xAxis->setLabel("X");
-	//Y轴名字
-	pCustomPlot_1->yAxis->setLabel("Y");
-	//设置大小
-	//pCustomPlot->resize(ui->label->width(),ui->label->height());
-	//可以进行鼠标位置 放大缩小 拖拽  放大缩小坐标系！！！功能非常强大
-	pCustomPlot_1->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
-	//pCustomPlot_1->xAxis->setNumberPrecision(1);
-	//重绘 每次改变完以后都要调用这个进行重新绘制
-	pCustomPlot_1->replot();
-}
-
 void viewpanel::CreatDebugWindow()
 {
 	QWidget* multiWidget_new = new QWidget();
@@ -3398,13 +3090,8 @@ void viewpanel::CreatDebugWindow()
     label_OSC_0->View_Chart(1000);
 #endif
 	pFFTchart[0] = new ChartFFT(this);
-	pFFTchart[0]->setChart(0, 256 * 4096, 0, 8192, chartADCLayout);
-
 	pFFTchart[1] = new ChartFFT(this);
-	pFFTchart[1]->setChart(0, 256 * 4096, -8191, 0, chartFFTLayout);
-	//CreatFFTcharts();
-	//CreatFFTcharts1();
-	//if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0],  0 , 0);
+	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, 256 * 4096, 0, 8192), 0 , 0);
 	chartADCBox->setLayout(chartADCLayout);
 #if 0
     OSC_chart *label_OSC_1 = new OSC_chart(this);
@@ -3412,7 +3099,7 @@ void viewpanel::CreatDebugWindow()
     label_OSC_1->Add_Line_Data(0, 100);
     //label_OSC_1->View_Chart(10000);
 #endif
-	//if(pFFTchart[1]) chartFFTLayout->addWidget(pFFTchart[1],  0, 0);
+	if(pFFTchart[1]) chartFFTLayout->addWidget(pFFTchart[1]->setChart(0, 256 * 4096, -8191, 0), 0, 0);
 	chartFFTBox->setLayout(chartFFTLayout);
 
 	QGridLayout* main_show= new QGridLayout ;
@@ -4063,83 +3750,32 @@ void viewpanel::updateFFTdata() {
 		y_FFT_1_dB.append(tmp_log);
 	}
 
-
-
 	if(!ifShowdB_){
 		pFFTchart[0]->setData(x_FFT, y_FFT, rescalse_, ifShowdB_);
 		pFFTchart[1]->setData(x_FFT_1, y_FFT_1, rescalse_, ifShowdB_);
-		if(rescalse_) {
-			rescalse_ = false;
-		}
-#if 0
-		pCustomPlot->graph(0)->setData(x_FFT, y_FFT);
-		pCustomPlot->yAxis->setLabel("amplitude");
-		if(rescalse_) pCustomPlot->rescaleAxes(true);
-		pCustomPlot->replot();
 
-		pCustomPlot_1->graph(0)->setData(x_FFT_1, y_FFT_1);
-		pCustomPlot_1->yAxis->setLabel("amplitude");
-		if(rescalse_) {
-			pCustomPlot_1->rescaleAxes(true);
-			rescalse_ = false;
-		}
-		pCustomPlot_1->replot();
-#endif
 	} else {
 		pFFTchart[0]->setData(x_FFT, y_FFT_dB, rescalse_, ifShowdB_);
 		pFFTchart[1]->setData(x_FFT_1, y_FFT_1_dB, rescalse_, ifShowdB_);
-		if(rescalse_) {
-			rescalse_ = false;
-		}
-#if 0
-		pCustomPlot->graph(0)->setData(x_FFT, y_FFT_dB);
-		pCustomPlot->yAxis->setLabel("amplitude/dB");
-		if(rescalse_) pCustomPlot->rescaleAxes(true);
-		pCustomPlot->replot();
-
-		pCustomPlot_1->graph(0)->setData(x_FFT_1, y_FFT_1_dB);
-		pCustomPlot_1->yAxis->setLabel("amplitude/dB");
-		if(rescalse_) {
-			pCustomPlot_1->rescaleAxes(true);
-			rescalse_ = false;
-		}
-		pCustomPlot_1->replot();
-#endif
-
+	}
+	if(rescalse_) {
+		rescalse_ = false;
 	}
 #else 
 	if(!fftMsg_done_buf_queue.empty()){
 		fftMsg* pfft = NULL;
 		fftMsg_done_buf_queue.get(pfft);
-
 		if(!ifShowdB_){
-			pCustomPlot->graph(0)->setData(x_FFT, pfft->dataFFT_0);
-			pCustomPlot->yAxis->setLabel("amplitude");
-			if(rescalse_) pCustomPlot->rescaleAxes(true);
-			pCustomPlot->replot();
+			pFFTchart[0]->setData(x_FFT, pfft->dataFFT_0, rescalse_, ifShowdB_);
+			pFFTchart[1]->setData(x_FFT_1, pfft->dataFFT_1, rescalse_, ifShowdB_);
 
-			pCustomPlot_1->graph(0)->setData(x_FFT_1, pfft->dataFFT_1);
-			pCustomPlot_1->yAxis->setLabel("amplitude");
-			if(rescalse_) {
-				pCustomPlot_1->rescaleAxes(true);
-				rescalse_ = false;
-			}
-			pCustomPlot_1->replot();
 		} else {
-			pCustomPlot->graph(0)->setData(x_FFT, pfft->dataFFTdB_0);
-			pCustomPlot->yAxis->setLabel("amplitude/dB");
-			if(rescalse_) pCustomPlot->rescaleAxes(true);
-			pCustomPlot->replot();
-
-			pCustomPlot_1->graph(0)->setData(x_FFT_1, pfft->dataFFTdB_1);
-			pCustomPlot_1->yAxis->setLabel("amplitude/dB");
-			if(rescalse_) {
-				pCustomPlot_1->rescaleAxes(true);
-				rescalse_ = false;
-			}
-			pCustomPlot_1->replot();
+			pFFTchart[0]->setData(x_FFT, pfft->dataFFTdB_0, rescalse_, ifShowdB_);
+			pFFTchart[1]->setData(x_FFT_1, pfft->dataFFTdB_1, rescalse_, ifShowdB_);
 		}
-
+		if(rescalse_) {
+			rescalse_ = false;
+		}
 		fftMsg_free_buf_queue.put(pfft);
 	}
 #endif

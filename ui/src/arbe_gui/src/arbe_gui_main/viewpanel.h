@@ -96,17 +96,8 @@
 #include <pc_data.h>
 #include "bst_msg_queue.h"
 #include  <cmath>
-#define MAX_RADARS 10
-#define TCP_PC_SIZE_SINGLE 32000
-#define UDP_PC_SIZE_SINGLE 1024
-#define BUFF_LEN 1024
-#define MAX_BUFF_LEN 8
 
-#define TCP_TIMES_PER_FRAME 200
-#define UDP_TIMES_PER_FRAME 256
-#define BST_MAX_TASK_NUM		(16)
-
-
+using namespace fmcw_types;
 namespace rviz
 {
 	class Display;
@@ -128,69 +119,6 @@ typedef enum
     VT_BOUTIQUE_3
 }eViewType;
 
-typedef enum
-{
-    POWER_WRITE = 1, 
-    CFAR_WRITE,
-    DFT3_WRITE,
-    DIFF_WRITE,
-	REG_WRITE,
-    POWER_READ,
-    CFAR_READ,
-    DFT3_READ,
-    DIFF_READ,
-	REG_READ,
-	PC_READ,
-	FFT_ADC_READ_START,
-	FFT_ADC_READ_STOP
-}commandType;
-
-typedef struct API_Header
-{
-	uint16_t 	usPrefix; // 0xeeff
-	uint16_t 	usType; // 0x10 version 1.0
-	uint16_t 	usCommand; // command enum
-	uint16_t 	usPayloadCrc;
-	uint32_t 	unLength;
-}API_Header;
-
-typedef struct 
-{
-	uint16_t 	usPrefix; // 0xeeff
-	uint16_t 	usType; // 0x10 version 1.0
-	uint16_t 	usRollingCounter; 
-	uint16_t 	usPayloadCrc;
-	uint32_t 	usFrameCounter;
-	uint32_t 	unLength;
-}UDP_Header;
-
-typedef struct 
-{
-	API_Header 	mHead; 
-	uint32_t 	mCommandVal[2];
-} commandMsg;
-
-
-typedef struct 
-{
-	UDP_Header 	mHead; 
-	uint8_t 	pcUdpData[UDP_PC_SIZE_SINGLE];
-} udpMsg;
-
-typedef struct 
-{
-	QVector<double> dataFFT_0;
-	QVector<double> dataFFT_1;
-	QVector<double> dataFFTdB_0;
-	QVector<double> dataFFTdB_1;
-
-}fftMsg;
-
-typedef struct 
-{
-	commandMsg 	cmdmsg; 
-	uint8_t 	pcTcpData[TCP_PC_SIZE_SINGLE];
-} pcData_t;
 
 typedef struct view_vals_t {
         QVariant distance;
@@ -377,9 +305,6 @@ private:
 	void CreatCtlPanel();
 	int lidarConnect();
 	void CreatConnect();
-	void CreatFFTcharts();
-	void CreatFFTcharts1();
-	void showTracer(QMouseEvent*);
 	void Save2filecsv(std::vector<uint8_t> &, bool );
 	void parseFFTData(std::vector<uint8_t> &data);
 	std::string tohex(uint32_t a);
@@ -463,11 +388,9 @@ private:
 	std::vector<double> power_index;
 	vx_task bst_task[BST_MAX_TASK_NUM];
 	vx_task_create_params_t bst_params;
-	std::shared_ptr<autox_msgs::fmcwPoints> fmcwPointsData_;
-	autox_msgs::fmcwPoint curPcPoint;
+	std::shared_ptr<fmcw_types::fmcwPoints> fmcwPointsData_;
+	fmcw_types::fmcwPoint curPcPoint;
 	ChartFFT* pFFTchart[2];
-	QCustomPlot *pCustomPlot;
-	QCustomPlot *pCustomPlot_1;
 	QVector<double> x_FFT;
 	QVector<double> y_FFT;
 	QVector<double> x_FFT_1;
