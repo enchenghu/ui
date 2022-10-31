@@ -1,6 +1,7 @@
 #include "fft_charts.h"
 
-ChartFFT::ChartFFT(QWidget* parent): QWidget(parent)
+ChartFFT::ChartFFT(QWidget* parent): QWidget(parent), showType_(0), \
+rescale_(true), contineFlag_(true), singleShow_(false)
 {
 	pCustomPlot = new QCustomPlot(parent);
 	QCPGraph* pgraph = pCustomPlot->addGraph();
@@ -31,15 +32,39 @@ QCustomPlot* ChartFFT::setChart(int xmin, int xmax, int ymin, int ymax){
     //if(chartLayout) chartLayout->addWidget(pCustomPlot, 0, 0); 
 }
 
-void ChartFFT::setData(const QVector<double> &x, const QVector<double> &y, bool rescalse_, int type_)
+void ChartFFT::setShowType(int t)
 {
-    pCustomPlot->graph(0)->setData(x, y);
-    if(!type_) 
+    showType_ = t;
+}
+void ChartFFT::setIfScale(bool t)
+{
+    rescale_ = t;
+}
+void ChartFFT::setSingleShow(bool t)
+{
+    singleShow_ = t;
+}
+void ChartFFT::setContineFlag(bool t)
+{
+    contineFlag_ = t;
+}
+
+
+void ChartFFT::setData(const QVector<double> &x, const QVector<double> &y)
+{
+    if(singleShow_ || contineFlag_ ) pCustomPlot->graph(0)->setData(x, y);
+
+    if(singleShow_) singleShow_  = false;
+
+    if(!showType_) 
         pCustomPlot->yAxis->setLabel("amplitude");
     else
         pCustomPlot->yAxis->setLabel("amplitude/dB");
 
-    if(rescalse_) pCustomPlot->rescaleAxes(true);
+    if(rescale_) {
+        pCustomPlot->rescaleAxes(true);
+        rescale_ = false;
+    }
     pCustomPlot->replot();
 }
 

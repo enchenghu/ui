@@ -24,10 +24,19 @@ class ChartFFT : public QWidget
 public:
     ChartFFT(QWidget* parent = nullptr);
     ~ChartFFT(){}
-    void setData(const QVector<double> &x, const QVector<double> &y, bool rescalse_, int type);;
+    void setData(const QVector<double> &x, const QVector<double> &y);
     void showTracer(QMouseEvent* event);
     QCustomPlot* setChart(int xmin, int xmax, int ymin, int ymax);
+    void setShowType(int);
+    void setIfScale(bool);
+    void setSingleShow(bool);
+    void setContineFlag(bool);
 
+private:
+    bool rescale_;
+    int showType_;
+    bool singleShow_;
+    bool contineFlag_;
 };
 #endif // CHART_H
 

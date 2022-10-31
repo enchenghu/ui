@@ -293,6 +293,8 @@ private Q_SLOTS:
 	void udpClose();
 	void updateFFTdata();
 	void showdBFFT();
+	void singleFFT();
+	void resetFFT();
 
 protected:
     static void TaskFunc(void *arg);
@@ -374,13 +376,14 @@ private:
 	bool ifStarted;
 	bool ifShowdB_;
 	bool ifSave;
-	bool rescalse_;
 	QPushButton *lidar_connect_button;
 	QPushButton *setSaveBtn;
 	QPushButton *regBtnWrite;
 	QPushButton *regBtnRead;
 	QPushButton * settingADCSavebutton;
 	QPushButton * settingADCConfigbutton;
+	QPushButton * singelFFTBtn_;
+	QPushButton * resetFFTBtn_;
 	QPushButton * mFFTShowdBBtn;
 	std::vector<QPushButton* > ctlWriteBtn_;
 	std::vector<QPushButton* > ctlReadBtn_;

@@ -68,7 +68,7 @@
 
 #define CTRL_SOCKET 0
 #define DEFAULT_AZIMUTH_BIN 0
-#define DEBUG_UI 0
+#define DEBUG_UI 1
 extern void Ntc_Mode_Set();
 extern void Cfar_Mode_Set();
 extern void radar_set_params();
@@ -332,7 +332,8 @@ void pub_radar_height_and_pitch(int index)
 
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
-	: QTabWidget( parent ), ifConnected(false), ifSave(false), save_folder_(QString(".")), udpStop_(false), rescalse_(true)
+	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
+	save_folder_(QString(".")), udpStop_(false), ifShowdB_(false)
 {
 
 	x_FFT.clear();
@@ -1086,7 +1087,10 @@ void viewpanel::showdBFFT(void){
 		mFFTShowdBBtn->setText("&Show dB");
 		ifShowdB_ = false;
 	}
-	rescalse_ = true;
+	for(int i = 0 ; i < 2; i++){
+		pFFTchart[i]->setShowType(ifShowdB_);
+		pFFTchart[i]->setIfScale(true);
+	}
 }
 
 void viewpanel::configPower(void){
@@ -3141,10 +3145,15 @@ void viewpanel::CreatDebugWindow()
 	settingADCConfigbutton = new QPushButton("&Stop");
 	QPushButton * settingFFTSavebutton = new QPushButton("&Save");
 	QPushButton * settingFFTConfigbutton = new QPushButton("&Config");
+	singelFFTBtn_ = new QPushButton("&Single");
+	resetFFTBtn_ = new QPushButton("&Reset");
 
 	settingADCLayout->addWidget(settingADCSavebutton, 0, 0);
 	settingADCLayout->addWidget(settingADCConfigbutton, 0, 1);
 	settingADCLayout->addWidget(mFFTShowdBBtn, 1, 0);
+	settingADCLayout->addWidget(resetFFTBtn_, 1, 1);
+	settingADCLayout->addWidget(singelFFTBtn_, 2, 0);
+
 
 	settingADCBox->setLayout(settingADCLayout);
 	settingFFTLayout->addWidget(settingFFTSavebutton, 0, 0);
@@ -3154,7 +3163,6 @@ void viewpanel::CreatDebugWindow()
 	settingLayout->addWidget(settingADCBox);
 	settingLayout->addWidget(settingFFTBox);
 	settingBox->setLayout(settingLayout);
-
 
 	QLabel* addrLabel = new QLabel("Addr");
 	QLabel* regLabel = new QLabel("name");
@@ -3229,6 +3237,9 @@ void viewpanel::CreatConnect()
 	connect(ctlReadBtn_[3], SIGNAL(clicked()), this, SLOT( readDiff( void )));
 	connect(regBtnRead, SIGNAL(clicked()), this, SLOT( readReg( void )));
 	connect(mFFTShowdBBtn, SIGNAL(clicked()), this, SLOT( showdBFFT( void )));
+
+	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
+	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
 
     timer_  = new QTimer(this);
     //timer_->setInterval(50);
@@ -3733,6 +3744,21 @@ void viewpanel::udpClose(){
 	msgBox.exec();
 }
 
+void viewpanel::singleFFT() {
+	for(int i = 0 ; i < 2; i++){
+		pFFTchart[i]->setSingleShow(true);
+		pFFTchart[i]->setContineFlag(false);
+	}
+}
+
+void viewpanel::resetFFT() {
+	for(int i = 0 ; i < 2; i++){
+		pFFTchart[i]->setSingleShow(false);
+		pFFTchart[i]->setContineFlag(true);
+		pFFTchart[i]->setIfScale(true);
+	}
+}
+
 void viewpanel::updateFFTdata() {
 
 #if DEBUG_UI	
@@ -3751,30 +3777,24 @@ void viewpanel::updateFFTdata() {
 	}
 
 	if(!ifShowdB_){
-		pFFTchart[0]->setData(x_FFT, y_FFT, rescalse_, ifShowdB_);
-		pFFTchart[1]->setData(x_FFT_1, y_FFT_1, rescalse_, ifShowdB_);
+		pFFTchart[0]->setData(x_FFT, y_FFT);
+		pFFTchart[1]->setData(x_FFT_1, y_FFT_1);
 
 	} else {
-		pFFTchart[0]->setData(x_FFT, y_FFT_dB, rescalse_, ifShowdB_);
-		pFFTchart[1]->setData(x_FFT_1, y_FFT_1_dB, rescalse_, ifShowdB_);
-	}
-	if(rescalse_) {
-		rescalse_ = false;
+		pFFTchart[0]->setData(x_FFT, y_FFT_dB);
+		pFFTchart[1]->setData(x_FFT_1, y_FFT_1_dB);
 	}
 #else 
 	if(!fftMsg_done_buf_queue.empty()){
 		fftMsg* pfft = NULL;
 		fftMsg_done_buf_queue.get(pfft);
 		if(!ifShowdB_){
-			pFFTchart[0]->setData(x_FFT, pfft->dataFFT_0, rescalse_, ifShowdB_);
-			pFFTchart[1]->setData(x_FFT_1, pfft->dataFFT_1, rescalse_, ifShowdB_);
+			pFFTchart[0]->setData(x_FFT, pfft->dataFFT_0);
+			pFFTchart[1]->setData(x_FFT_1, pfft->dataFFT_1);
 
 		} else {
-			pFFTchart[0]->setData(x_FFT, pfft->dataFFTdB_0, rescalse_, ifShowdB_);
-			pFFTchart[1]->setData(x_FFT_1, pfft->dataFFTdB_1, rescalse_, ifShowdB_);
-		}
-		if(rescalse_) {
-			rescalse_ = false;
+			pFFTchart[0]->setData(x_FFT, pfft->dataFFTdB_0);
+			pFFTchart[1]->setData(x_FFT_1, pfft->dataFFTdB_1);
 		}
 		fftMsg_free_buf_queue.put(pfft);
 	}
