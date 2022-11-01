@@ -310,6 +310,7 @@ private:
 	void Save2filecsv(std::vector<uint8_t> &, bool );
 	void parseFFTData(std::vector<uint8_t> &data);
 	std::string tohex(uint32_t a);
+	double fft2dBm(double x);
     QTimer* timer_;
 	bool udpStop_;
 	void saveData();

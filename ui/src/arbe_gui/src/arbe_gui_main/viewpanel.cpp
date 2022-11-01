@@ -1315,6 +1315,11 @@ void viewpanel::configReg(void){
 	msgBox.setText("write register success!");
 	msgBox.exec();
 }
+double viewpanel::fft2dBm(double x){
+	double inputV = (x / pow(2, 4.5) + 22) / 7.048;
+	double res = 10 * log10(20 * pow((inputV / 4000 / sqrt(2)), 2));
+	return res; 
+}
 
 std::string viewpanel::tohex(uint32_t a){
 	std::string res;
@@ -3508,10 +3513,10 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 		if(index % 4 == 0 && index < 33){
 			if(i < data.size() / 2){
 				pfft->dataFFT_0.append(cur_data);
-				pfft->dataFFTdB_0.append(20 * log10((double)cur_data));
+				pfft->dataFFTdB_0.append(fft2dBm(cur_data));
 			} else{
 				pfft->dataFFT_1.append(cur_data);	
-				pfft->dataFFTdB_1.append(20 * log10((double)cur_data));
+				pfft->dataFFTdB_1.append(fft2dBm(cur_data));
 			}
 			cur_data = 0;
 		}
