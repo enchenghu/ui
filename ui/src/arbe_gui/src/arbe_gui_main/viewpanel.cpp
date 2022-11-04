@@ -397,7 +397,6 @@ viewpanel::viewpanel(QTabWidget* parent )
 	manager_->getViewManager()->setCurrentViewControllerType("rviz/XYOrbit");
 	manager_->getViewManager()->getCurrent()->subProp("Invert Z Axis")->setValue("false");
 	follower_view_ = false;
-	std::cout << " until here " <<  __LINE__ << std::endl;
 
 	/* Create the radar pointcloud fixed frame. */
 	manager_->setFixedFrame("image_radar");
@@ -1978,6 +1977,30 @@ void viewpanel::on_status_mesage(std_msgs::String msg)
 }
 
 static arbe_msgs::arbeNewPcMsg::ConstPtr PcFrame;
+
+
+void viewpanel::registerPointcloudRviz()
+{
+	std::string pointcloud_topic = "/fmcw/rviz/pointcloud";
+	//std::string stationary_pointcloud_topic = "/fmcw/rviz/stationary_pointcloud";
+	ROS_INFO("Registering new pointcloud topic: %s",pointcloud_topic.c_str());	
+	//ROS_INFO("Registering new pointcloud topic: %s",stationary_pointcloud_topic.c_str());
+
+	pointcloud_fmcw = manager_->createDisplay( "rviz/PointCloud2", "PointCloud2", true );
+	ROS_ASSERT(pointcloud_fmcw!=NULL);
+	pointcloud_fmcw->subProp("Topic")->setValue( pointcloud_topic.c_str() );
+	pointcloud_fmcw->subProp("Style")->setValue("Spheres");
+	pointcloud_fmcw->subProp("Size (Pixels)")->setValue("3");
+	pointcloud_fmcw->subProp("Size (m)")->setValue("0.3");
+
+	//pointcloud_fmcw->subProp("Decay Time")->setValue((float)DetectionMemoryTime / 1000);
+
+	pointcloud_fmcw->subProp("Color Transformer")->setValue("RGB8");
+	pointcloud_fmcw->subProp("Invert Rainbow")->setValue("false");
+	pointcloud_fmcw->subProp("Position Transformer")->setValue("XYZ");
+	pointcloud_fmcw->subProp("Use Fixed Frame")->setValue("true");
+	pointcloud_fmcw->subProp( "Axis" )->setValue( "Z" );
+}
 
 void viewpanel::register_pointcloud_displays(int radar_id)
 {

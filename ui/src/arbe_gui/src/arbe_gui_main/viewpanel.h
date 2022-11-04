@@ -182,6 +182,9 @@ public:
 	void on_radar_calibration_callback(const arbe_msgs::arbeGUIsettings::ConstPtr& controls_data);
 
 
+	void registerPointcloudRviz();
+
+
 public Q_SLOTS:
 	void radar_start_stop_control( void );
 	void startControl( void );
@@ -329,6 +332,8 @@ private:
 	rviz::Display* stationary_pointcloud_[MAX_RADARS];
 	rviz::Display* fs_polygon_display_[MAX_RADARS] = {};
 	rviz::Display* pointcloud_[MAX_RADARS] = {};
+	rviz::Display* pointcloud_fmcw;
+
 	rviz::Display* SlamArray_[MAX_RADARS] = {};
 	rviz::Display* Car_;
 	rviz::Display* FloatingText_;
