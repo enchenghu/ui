@@ -3518,6 +3518,7 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 	uint32_t cur_data  = 0;
 	int index = 0;
 	fftMsg* pfft = NULL;
+	double power_offset_ = power_offset;
 	fftMsg_free_buf_queue.get(pfft);
 	pfft->dataFFT_0.clear();
 	pfft->dataFFT_1.clear();
@@ -3545,10 +3546,10 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 		if(index % 4 == 0 && index < 33){
 			if(i < data.size() / 2){
 				pfft->dataFFT_0.append(cur_data);
-				pfft->dataFFTdB_0.append(fft2dBm(cur_data) + power_offset);
+				pfft->dataFFTdB_0.append(fft2dBm(cur_data) + power_offset_);
 			} else{
 				pfft->dataFFT_1.append(cur_data);	
-				pfft->dataFFTdB_1.append(fft2dBm(cur_data) + power_offset);
+				pfft->dataFFTdB_1.append(fft2dBm(cur_data) + power_offset_);
 			}
 			cur_data = 0;
 		}
