@@ -1080,7 +1080,8 @@ void viewpanel::showdBFFT(void){
 	if(!ifShowdB_){
 		mFFTShowdBBtn->setStyleSheet("color: green");
 		mFFTShowdBBtn->setText("&Show ori");
-		ifShowdB_ = true;		
+		ifShowdB_ = true;
+		power_offset = power_Offset_edit->text().toDouble();
 	}else {
 		mFFTShowdBBtn->setStyleSheet("color: black");
 		mFFTShowdBBtn->setText("&Show dB");
@@ -3176,11 +3177,18 @@ void viewpanel::CreatDebugWindow()
 	singelFFTBtn_ = new QPushButton("&Single");
 	resetFFTBtn_ = new QPushButton("&Reset");
 
+	QLabel* power_Offset_label = new QLabel("Power Offset/dB" );
+
+	power_Offset_edit = new QLineEdit();	
+
 	settingADCLayout->addWidget(settingADCSavebutton, 0, 0);
 	settingADCLayout->addWidget(settingADCConfigbutton, 0, 1);
-	settingADCLayout->addWidget(mFFTShowdBBtn, 1, 0);
-	settingADCLayout->addWidget(resetFFTBtn_, 1, 1);
-	settingADCLayout->addWidget(singelFFTBtn_, 2, 0);
+	settingADCLayout->addWidget(power_Offset_label, 1, 0);
+	settingADCLayout->addWidget(power_Offset_edit, 1, 1);
+
+	settingADCLayout->addWidget(mFFTShowdBBtn, 2, 0);
+	settingADCLayout->addWidget(resetFFTBtn_, 2, 1);
+	settingADCLayout->addWidget(singelFFTBtn_, 3, 0);
 
 
 	settingADCBox->setLayout(settingADCLayout);
@@ -3536,10 +3544,10 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 		if(index % 4 == 0 && index < 33){
 			if(i < data.size() / 2){
 				pfft->dataFFT_0.append(cur_data);
-				pfft->dataFFTdB_0.append(fft2dBm(cur_data));
+				pfft->dataFFTdB_0.append(fft2dBm(cur_data) + power_offset);
 			} else{
 				pfft->dataFFT_1.append(cur_data);	
-				pfft->dataFFTdB_1.append(fft2dBm(cur_data));
+				pfft->dataFFTdB_1.append(fft2dBm(cur_data) + power_offset);
 			}
 			cur_data = 0;
 		}

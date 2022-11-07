@@ -323,6 +323,8 @@ private:
 	int lidar_ctrl_port;
 	int lidar_UDP_port;
 	double distance_offset;
+	double power_offset;
+
 	rviz::VisualizationManager* manager_;
 	rviz::RenderPanel* render_panel_;
 	rviz::SelectionPanel* selection_panel_;
@@ -365,6 +367,8 @@ private:
 	QLineEdit *port_edit;
 	QLineEdit *udp_port_edit;
 	QLineEdit *distance_Offset_edit;
+	QLineEdit *power_Offset_edit;
+
 	QString save_folder_;
 
 	QLineEdit* regAddr_line ;
