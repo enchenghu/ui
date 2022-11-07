@@ -1432,15 +1432,11 @@ int _kbhit() {
 /* Main function */
 int main(int argc, char **argv)
 {
-	std::cout << "!!!!!!!!!!enter gui test" << std::endl;
 	pthread_t playback_thread_id;
 	int ret;
-	std::cout << "!!!!!!!!!!enter gui test" << std::endl;
-
 	ros::init(argc, argv, "lidar_gui");
 	ros::Time::init();
-
-	n = boost::make_shared<ros::NodeHandle>();
+	ros::NodeHandlePtr pLidarNodeHandle = boost::make_shared<ros::NodeHandle>();
 
 #if  ONLY_SHOW_UI
 	arbe_info_markers = n->advertise<visualization_msgs::Marker>("/arbe/rviz/car_marker", 1);
