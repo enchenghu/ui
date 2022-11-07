@@ -333,7 +333,8 @@ void pub_radar_height_and_pitch(int index)
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
-	save_folder_(QString(".")), udpStop_(false), ifShowdB_(false)
+	save_folder_(QString(".")), udpStop_(false), ifShowdB_(false),\
+	power_offset(0.0), distance_offset(0.0)
 {
 
 	x_FFT.clear();
