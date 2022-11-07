@@ -3789,6 +3789,7 @@ void viewpanel::singleFFT() {
 }
 
 void viewpanel::resetFFT() {
+	power_offset = power_Offset_edit->text().toDouble();
 	for(int i = 0 ; i < 2; i++){
 		pFFTchart[i]->setSingleShow(false);
 		pFFTchart[i]->setContineFlag(true);
