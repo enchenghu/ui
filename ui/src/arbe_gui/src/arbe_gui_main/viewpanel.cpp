@@ -362,6 +362,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	power_index = {0.2, 12, 20, 70, 290, 346, 347, 
 				   397, 415, 500, 510, 560, 625, 1000, 
 				   1130, 1450, 1580, 1600};
+	load_settings();
 	CreatUIWindow();
 	CreatDebugWindow();
 	CreatConnect();
@@ -1511,6 +1512,7 @@ void viewpanel::printView(  )
 			manager_->getViewManager()->getCurrent()->subProp("Yaw")->getValue().toFloat(),
 			manager_->getViewManager()->getCurrent()->subProp("Pitch")->getValue().toFloat(),
 			manager_->getViewManager()->getCurrent()->subProp("Focal Point")->getValue().toString().toStdString().c_str());
+	save_settings();
 }
 
 void viewpanel::setView( view_vals_t &view_vals )
@@ -1836,6 +1838,7 @@ void viewpanel::calc_display_offsets(float x , float y, float h)
 void viewpanel::closeEvent(QCloseEvent *event)
 {
 	//print_cam_widg_location();
+	save_settings();
 	QMessageBox::StandardButton answer = QMessageBox::question(
 		this,
 		tr("Close the Window"),
@@ -3181,6 +3184,8 @@ void viewpanel::CreatDebugWindow()
 	QLabel* power_Offset_label = new QLabel("Power Offset/dB" );
 
 	power_Offset_edit = new QLineEdit();	
+	power_Offset_edit->setText(power_offset_);
+
 
 	settingADCLayout->addWidget(settingADCSavebutton, 0, 0);
 	settingADCLayout->addWidget(settingADCConfigbutton, 0, 1);
@@ -3374,9 +3379,13 @@ void viewpanel::CreatUIWindow()
 	distance_Offset_edit = new QLineEdit();
 
 	ip_edit->setPlaceholderText("input ip addr");
+	ip_edit->setText(lidar_ip_);
 	port_edit->setPlaceholderText("input tcp port");
+	port_edit->setText(lidar_ctrl_port_);
 	udp_port_edit->setPlaceholderText("input udp port");
+	udp_port_edit->setText(lidar_UDP_port_);
 	distance_Offset_edit->setPlaceholderText("input distance offset ");
+	distance_Offset_edit->setText(distance_offset_);
 
 	controls_layout->addWidget( lidar_IP_label, 0, 0, Qt::AlignLeft);
 	controls_layout->addWidget( ip_edit, 0, 1, Qt::AlignLeft);
@@ -4088,4 +4097,46 @@ int viewpanel::lidarConnect()
 	}
 #endif
 	return 0;
+}
+
+
+void viewpanel::load_settings()
+{
+	QSettings settings(QCoreApplication::organizationName(),
+		QCoreApplication::applicationName());
+
+	lidar_ip_ = settings.value("IP Addr","127.0.0.1").toString();
+	lidar_ctrl_port_ = settings.value("TCP Port","5000").toString();
+	lidar_UDP_port_ = settings.value("UDP Port","8000").toString();
+	distance_offset_ = settings.value("Distance Offset","0.0").toString();
+	power_offset_ = settings.value("Power Offset","0.0").toString();
+	save_folder_ = settings.value("Save Folder",".").toString();
+}
+
+void viewpanel::save_settings(void )
+{
+	ROS_INFO("enter save_settings");
+	ROS_DEBUG("enter save_settings");
+	QSettings settings(QCoreApplication::organizationName(),
+		QCoreApplication::applicationName());
+
+	lidar_ip = ip_edit->text().toStdString();
+	lidar_ctrl_port = port_edit->text().toInt();
+	lidar_UDP_port = udp_port_edit->text().toInt();
+	distance_offset = distance_Offset_edit->text().toInt();
+	power_offset = power_Offset_edit->text().toInt();
+
+	lidar_ip_ = QString::fromStdString(lidar_ip);
+	lidar_ctrl_port_ = QString::number(lidar_ctrl_port);
+	lidar_UDP_port_ = QString::number(lidar_UDP_port);
+	distance_offset_ = QString::number(distance_offset);
+	power_offset_ = QString::number(power_offset);
+
+	settings.setValue("IP Addr", lidar_ip_);
+	settings.setValue("TCP Port", lidar_ctrl_port_);
+	settings.setValue("UDP Port", lidar_UDP_port_);
+	settings.setValue("Distance Offset", distance_offset_);
+	settings.setValue("Power Offset", power_offset_);
+	settings.setValue("Save Folder", save_folder_);
+
 }

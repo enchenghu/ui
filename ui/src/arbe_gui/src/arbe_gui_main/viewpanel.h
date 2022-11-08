@@ -314,6 +314,8 @@ private:
 	void parseFFTData(std::vector<uint8_t> &data);
 	std::string tohex(uint32_t a);
 	double fft2dBm(double x);
+	void load_settings();
+	void save_settings();
     QTimer* timer_;
 	bool udpStop_;
 	void saveData();
@@ -324,6 +326,12 @@ private:
 	int lidar_UDP_port;
 	double distance_offset;
 	double power_offset;
+
+	QString lidar_ctrl_port_;
+	QString lidar_UDP_port_;
+	QString lidar_ip_;
+	QString distance_offset_;
+	QString power_offset_;
 
 	rviz::VisualizationManager* manager_;
 	rviz::RenderPanel* render_panel_;
@@ -368,9 +376,7 @@ private:
 	QLineEdit *udp_port_edit;
 	QLineEdit *distance_Offset_edit;
 	QLineEdit *power_Offset_edit;
-
 	QString save_folder_;
-
 	QLineEdit* regAddr_line ;
 	QLineEdit* regVal_line ;
 	QLineEdit* regRead_line;
