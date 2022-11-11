@@ -1318,8 +1318,8 @@ void viewpanel::configReg(void){
 	msgBox.exec();
 }
 double viewpanel::fft2dBm(double x){
-	double inputV = x / pow(2, 12.5);
-	double res = 10 * log10(pow(inputV, 2) / 100) - 13.49;
+	double inputV = x / pow(2, 17);
+	double res = 10 * log10(pow(inputV, 2) / 100) + 1.1;
 	return res; 
 }
 
