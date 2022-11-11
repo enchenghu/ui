@@ -1319,7 +1319,7 @@ void viewpanel::configReg(void){
 }
 double viewpanel::fft2dBm(double x){
 	double inputV = x / pow(2, 13.5);
-	double res = 10 * log10(pow(inputV, 2) / 100) + 1.44;
+	double res = 10 * log10(pow(inputV, 2) / 100) - 1.44;
 	return res; 
 }
 
