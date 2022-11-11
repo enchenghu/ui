@@ -1318,8 +1318,8 @@ void viewpanel::configReg(void){
 	msgBox.exec();
 }
 double viewpanel::fft2dBm(double x){
-	double inputV = x / pow(2, 13.5);
-	double res = 10 * log10(pow(inputV, 2) / 100) - 1.44;
+	double inputV = x / pow(2, 12.5);
+	double res = 10 * log10(pow(inputV, 2) / 100) - 13.49;
 	return res; 
 }
 
@@ -2159,10 +2159,14 @@ void viewpanel::init_subs( void )
 
 }
 
-void init_pubs( void )
+void viewpanel::init_pubs( void )
 {
 	ros::NodeHandlePtr node_ptr = boost::make_shared<ros::NodeHandle>();
+
 	arbe_gui_commands_pub = node_ptr->advertise<std_msgs::String>("arbe/settings/gui_commands", 1);
+
+	fmcw_pcl_pub = node_ptr->advertise<sensor_msgs::PointCloud2>("/arbe/rviz/pointcloud_", 1);
+
 }
 
 void on_bookmark_receive_callback(arbe_msgs::arbeBookmarkMsg msg);

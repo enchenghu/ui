@@ -69,6 +69,7 @@
 #include <QGroupBox>
 #include "ctkrangeslider.h"
 #include <QShortcut>
+#include "types_fmcw.hpp"
 
 #include <std_msgs/UInt8.h>
 #include <std_msgs/Bool.h>
@@ -89,6 +90,14 @@
 
 #include "osc_chart.h"
 #include "fft_charts.h"
+
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/point_cloud.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/common/transforms.h>
+#include <sensor_msgs/PointCloud2.h>
 
 #include "plot_tracer.h"
 #include <fstream>
@@ -144,7 +153,6 @@ typedef struct gui_controls_t {
 void init_bookmark_SubPub(ros::NodeHandlePtr node_ptr);
 void initImageSubPub(ros::NodeHandlePtr node_ptr);
 void init_speed_pub(ros::NodeHandlePtr node_ptr);
-void init_pubs( void );
 void rotation_into_R_t(float alpha, float beta, float gamma, float fs_alpha_backoff);
 void calc_cam_projection(bool do_for_all_radars);
 void initCalcHeightTiltPub(ros::NodeHandlePtr node_ptr);
@@ -316,6 +324,7 @@ private:
 	double fft2dBm(double x);
 	void load_settings();
 	void save_settings();
+	void init_pubs( void );
     QTimer* timer_;
 	bool udpStop_;
 	void saveData();
@@ -415,6 +424,8 @@ private:
 	QVector<double> x_FFT_1;
 	QVector<double> y_FFT_1;
 	myTracer* plotTracer;
+
+	ros::Publisher  fmcw_pcl_pub;
 
 };
 
