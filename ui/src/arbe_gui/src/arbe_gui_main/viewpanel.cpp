@@ -333,7 +333,7 @@ void pub_radar_height_and_pitch(int index)
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
-	save_folder_(QString(".")), udpStop_(false), ifShowdB_(false),\
+	save_folder_(QString(".")), udpStop_(true), ifShowdB_(false),\
 	power_offset(0.0), distance_offset(0.0)
 {
 
@@ -1507,6 +1507,11 @@ bool viewpanel::get_3rd_prs( void )
 
 void viewpanel::printView(  )
 {
+	cmdMsg_.mHead.usCommand = commandType::FFT_ADC_READ_STOP;
+	::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg));
+	::close(udpRecvSocketFd_);
+	::close(ctrl_sock);
+	udpStop_ = true;
 	ROS_INFO("Like this view? [D,Y,P,F] = [%f,%f,%f,%s]",
 			manager_->getViewManager()->getCurrent()->subProp("Distance")->getValue().toFloat(),
 			manager_->getViewManager()->getCurrent()->subProp("Yaw")->getValue().toFloat(),
@@ -3787,9 +3792,9 @@ void viewpanel::udpClose(){
 		msgBox.exec();
 		return;
 	}
-	vx_task_delete(&bst_task[1]);
-	udpStop_ = true;
 	::close(udpRecvSocketFd_);
+	udpStop_ = true;
+	vx_task_delete(&bst_task[1]);
 	QMessageBox msgBox;
 	msgBox.setText("UDP close success!");
 	msgBox.exec();
@@ -3855,13 +3860,17 @@ void viewpanel::updateFFTdata() {
 }
 void viewpanel::udpConnect() {
 
-	udpStop_ = false;
-    vx_task_set_default_create_params(&bst_params);
-    bst_params.app_var = this;
-    bst_params.task_mode = 0;
-    bst_params.task_main = TaskFuncUdp;
-    vx_task_create(&bst_task[1], &bst_params);  
-
+	if(udpStop_){
+		vx_task_set_default_create_params(&bst_params);
+		bst_params.app_var = this;
+		bst_params.task_mode = 0;
+		bst_params.task_main = TaskFuncUdp;
+		vx_task_create(&bst_task[1], &bst_params);  
+	}else{
+		QMessageBox msgBox;
+		msgBox.setText("UDP Connection is already working, please stop it first !");
+		msgBox.exec();		
+	}
 }
 
 void viewpanel::udpRecvLoop(){
@@ -3905,7 +3914,7 @@ void viewpanel::udpRecvLoop(){
 		msgBox.exec();
 		return;
     }
-
+	udpStop_ = false;
 	socklen_t len;
 	struct sockaddr_in src;
 	//printf("ready recv udp msg!\n");
@@ -3919,7 +3928,7 @@ void viewpanel::udpRecvLoop(){
 		ifLost  = false;
 		for(int i = 0; i < UDP_TIMES_PER_FRAME; i++){
 			memset(&g_udpMsg, 0, sizeof(g_udpMsg));
-			printf("ready recv udp msg!\n");
+			//printf("ready recv udp msg!\n");
 			ret = recvfrom(udpRecvSocketFd_, &g_udpMsg, sizeof(g_udpMsg), 0, (struct sockaddr*)&src, &len);  //接收来自server的信息
 			printf("recv udp msg! receive byte is %d\n", ret);
 			if(ret <= 0){
