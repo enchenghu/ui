@@ -315,6 +315,7 @@ private:
 	void udpRecvLoop();
 	void CreatDebugWindow();
 	void CreatUIWindow();
+	void CreatADCWindow();
 	void CreatCtlPanel();
 	int lidarConnect();
 	void CreatConnect();
@@ -409,6 +410,8 @@ private:
 	QPushButton * settingADCConfigbutton;
 	QPushButton * singelFFTBtn_;
 	QPushButton * resetFFTBtn_;
+	QPushButton * singelADCBtn_;
+	QPushButton * resetADCBtn_;
 	QPushButton * mFFTShowdBBtn;
 	std::vector<QPushButton* > ctlWriteBtn_;
 	std::vector<QPushButton* > ctlReadBtn_;
@@ -419,6 +422,7 @@ private:
 	std::shared_ptr<fmcw_types::fmcwPoints> fmcwPointsData_;
 	fmcw_types::fmcwPoint curPcPoint;
 	ChartFFT* pFFTchart[2];
+	ChartFFT* pADCchart[2];
 	QVector<double> x_FFT;
 	QVector<double> y_FFT;
 	QVector<double> x_FFT_1;

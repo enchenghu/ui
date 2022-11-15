@@ -365,6 +365,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	load_settings();
 	CreatUIWindow();
 	CreatDebugWindow();
+	CreatADCWindow();
 	CreatConnect();
 
 	overlay_text_label = new QLabel;
@@ -3113,12 +3114,65 @@ viewpanel* viewpanel::m_pInstance = NULL;
 
 viewpanel* viewpanel::Instance()
 {
-	std::cout << " until here " <<  __LINE__ << std::endl;
     if (!m_pInstance)
         m_pInstance = new viewpanel();
 
     return m_pInstance;
 }
+
+
+void viewpanel::CreatADCWindow()
+{
+	QWidget* multiWidget_new = new QWidget();
+
+	QGroupBox *chartADCBox0 = new QGroupBox(tr("ADC chart 0-0:"));
+	QGridLayout* chartADCLayout0 = new QGridLayout ;
+	QGroupBox *chartADCBox1 = new QGroupBox(tr("ADC chart 0-1:"));
+	QGridLayout* chartADCLayout1 = new QGridLayout ;
+
+#if 0
+    OSC_chart *label_OSC_0 = new OSC_chart(this);
+    label_OSC_0->set_chart(10,20,this->width() /  2 -20,this->height()  / 2-20);
+    label_OSC_0->Add_Line_Data(0, 100);
+    label_OSC_0->View_Chart(1000);
+#endif
+	pADCchart[0] = new ChartFFT(this);
+	pADCchart[1] = new ChartFFT(this);
+	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, 256 * 4096, 0, 8192), 0 , 0);
+	chartADCBox0->setLayout(chartADCLayout0);
+#if 0
+    OSC_chart *label_OSC_1 = new OSC_chart(this);
+    label_OSC_1->set_chart(10,20,this->width() /  2 - 20,this->height() / 2 - 20);
+    label_OSC_1->Add_Line_Data(0, 100);
+    //label_OSC_1->View_Chart(10000);
+#endif
+	chartADCLayout1->addWidget(pADCchart[1]->setChart(0, 256 * 4096, -8191, 0), 0, 0);
+	chartADCBox1->setLayout(chartADCLayout1);
+
+	QVBoxLayout* adcCharts= new QVBoxLayout ;
+	adcCharts->addWidget(chartADCBox0);
+	adcCharts->addWidget(chartADCBox1);
+	
+	QGridLayout* adcSettingLayout = new QGridLayout ;
+	QGroupBox* adcSettingBox = new QGroupBox(tr("ADC control:"));
+	QGridLayout* adcSettingBoxLayout = new QGridLayout ;
+	singelADCBtn_ = new QPushButton("&Single");
+	resetADCBtn_ = new QPushButton("&Reset");
+	adcSettingBoxLayout->addWidget(singelADCBtn_, 0, 0);//, Qt::AlignTop);
+	adcSettingBoxLayout->addWidget(resetADCBtn_, 0, 1);//, Qt::AlignTop);
+	adcSettingBox->setLayout(adcSettingBoxLayout);
+	adcSettingLayout->addWidget(adcSettingBox);
+
+	QGridLayout* main_show= new QGridLayout ;
+	main_show->setColumnStretch(0, 9);
+	main_show->setColumnStretch(1, 1);
+	main_show->addLayout(adcCharts, 0, 0 );
+	main_show->addLayout(adcSettingLayout, 0, 1);
+
+	multiWidget_new->setLayout(main_show);
+	this->addTab(multiWidget_new,  "ADC Debug Mainwindow");
+}
+
 
 void viewpanel::CreatDebugWindow()
 {
@@ -3164,20 +3218,9 @@ void viewpanel::CreatDebugWindow()
 	QGroupBox *settingFFTBox = new QGroupBox(tr("FFT:"));
 
 	QVBoxLayout* addrConfigLayout = new QVBoxLayout;
-	QGridLayout* addrLayout = new QGridLayout;
-	addrLayout->setColumnStretch(0, 1);
-	for(int i = 1; i < 4; i++)
-		addrLayout->setColumnStretch(i, 2);
-
 	QVBoxLayout* settingLayout = new QVBoxLayout;
 	QGridLayout* settingADCLayout = new QGridLayout;
 	QGridLayout* settingFFTLayout = new QGridLayout;
-
-
-	std::vector<QLabel* > paraLabel;
-	std::vector<QLineEdit* > paraReadText;
-	std::vector<QLineEdit* > paraWriteText;
-	std::vector<QLineEdit* > paraAddrText;
 
 	QPushButton * writeAddrbutton = new QPushButton("&Write");
 	QPushButton * readAddrbutton = new QPushButton("&Read");
@@ -3214,59 +3257,16 @@ void viewpanel::CreatDebugWindow()
 	settingLayout->addWidget(settingADCBox);
 	settingLayout->addWidget(settingFFTBox);
 	settingBox->setLayout(settingLayout);
-
-	QLabel* addrLabel = new QLabel("Addr");
-	QLabel* regLabel = new QLabel("name");
-	QLabel* valueLabel = new QLabel("Value");
-	QLabel* valueLabel1 = new QLabel("Value");
-
 	addrConfigLayout->addWidget(settingBox);
-
-	addrLayout->addWidget(regLabel, 1, 0, Qt::AlignTop);
-	addrLayout->addWidget(addrLabel, 1, 1, Qt::AlignTop);
-	addrLayout->addWidget(valueLabel, 1, 2, Qt::AlignTop);
-	addrLayout->addWidget(valueLabel1, 1, 3, Qt::AlignTop);
-	//addrConfigLayout->addWidget(readAddrbutton, 0 ,  3);
-
-	for(int i = 0 ; i < 5 ; i++){
-		paraLabel.emplace_back(new QLabel("para "+QString::number( i )));
-		paraWriteText.emplace_back(new QLineEdit);
-		paraWriteText[i]->setText(QString::number( i ));
-		paraAddrText.emplace_back(new QLineEdit);
-		paraAddrText[i]->setText(QString::number( i ));
-		//paraWriteText[i]->setPlaceholderText("please input ...");
-		//paraWriteText[i]->setValidator( new QIntValidator(-50, 50, this) );
-		paraReadText.emplace_back(new QLineEdit);
-		paraReadText[i]->setReadOnly(true);
-		QPalette palette = paraReadText[i]->palette();
-		palette.setBrush(QPalette::Base,
-						palette.brush(QPalette::Disabled, QPalette::Base));
-		paraReadText[i]->setPalette(palette);
-		//paraWriteText[i]->setPlaceholderText("");
-	}
-
-	for(int j = 0;  j < 5; j++){
-		addrLayout->addWidget(paraLabel[j], j + 2, 0, Qt::AlignTop);
-		addrLayout->addWidget(paraAddrText[j], j + 2, 1, Qt::AlignTop);
-		addrLayout->addWidget(paraWriteText[j], j + 2, 2, Qt::AlignTop);
-		addrLayout->addWidget(paraReadText[j], j + 2, 3, Qt::AlignTop);
-	}
-
-	addrLayout->addWidget(writeAddrbutton, 7, 2, Qt::AlignTop);
-	addrLayout->addWidget(readAddrbutton, 7, 3, Qt::AlignTop);
-	addrBox->setLayout(addrLayout);
-	//addrConfigLayout->addWidget(addrBox);
 	addrConfigsBox->setLayout(addrConfigLayout);
 
-	//configs->addWidget(settingBox);
 	configs->addWidget(addrConfigsBox);
-
 	main_show->addLayout(charts, 0, 0 );
 	main_show->addLayout(configs, 0, 1);
 
 	multiWidget_new->setLayout(main_show);
 
-	this->addTab(multiWidget_new,  "Lidar Debug Mainwindow");
+	this->addTab(multiWidget_new,  "FFT Debug Mainwindow");
 
 }
 
@@ -3920,6 +3920,7 @@ void viewpanel::udpRecvLoop(){
 	//printf("ready recv udp msg!\n");
 	len = sizeof(sockaddr);
 	std::vector<uint8_t> fftDataV;
+	std::vector<uint8_t> adcDataV;
 	uint32_t last_frame_index = 0;
 	bool ifLost  = false;
 	while(!terminating && !udpStop_)
@@ -3929,8 +3930,9 @@ void viewpanel::udpRecvLoop(){
 		for(int i = 0; i < UDP_TIMES_PER_FRAME; i++){
 			memset(&g_udpMsg, 0, sizeof(g_udpMsg));
 			//printf("ready recv udp msg!\n");
-			ret = recvfrom(udpRecvSocketFd_, &g_udpMsg, sizeof(g_udpMsg), 0, (struct sockaddr*)&src, &len);  //接收来自server的信息
-			printf("recv udp msg! receive byte is %d\n", ret);
+			ret = recvfrom(udpRecvSocketFd_, &g_udpMsg, sizeof(g_udpMsg), MSG_WAITALL, (struct sockaddr*)&src, &len);  //接收来自server的信息
+			printf("recv udp msg! receive byte is %d, g_udpMsg: %c %c %c %c %c\n", ret, g_udpMsg.pcUdpData[11], \
+			g_udpMsg.pcUdpData[13], g_udpMsg.pcUdpData[15], g_udpMsg.pcUdpData[17], g_udpMsg.pcUdpData[19]);
 			if(ret <= 0){
 				if(udpStop_) {
 					printf("fftMsg udp  quit!\n"); 
@@ -3962,8 +3964,9 @@ void viewpanel::udpRecvLoop(){
 			std::cout << "!!recv udp pkg successfully! "  << std::endl;
 #if 1			
 			if(i < UDP_TIMES_PER_FRAME / 2) {
-				for(int j = 0; j < 16; j++)
+				for(int j = 0; j < 16; j++){
 					fftDataV.insert(fftDataV.end(), g_udpMsg.pcUdpData + 32 + 64 * j, g_udpMsg.pcUdpData + 64 * (j + 1));
+				}
 			}
 #endif
 		}
