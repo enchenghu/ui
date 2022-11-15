@@ -3226,28 +3226,21 @@ void viewpanel::CreatDebugWindow()
 	QPushButton * readAddrbutton = new QPushButton("&Read");
 	mFFTShowdBBtn = new QPushButton("&Show dB");
 
-	settingADCSavebutton = new QPushButton("&Start");
-	settingADCConfigbutton = new QPushButton("&Stop");
 	QPushButton * settingFFTSavebutton = new QPushButton("&Save");
 	QPushButton * settingFFTConfigbutton = new QPushButton("&Config");
 	singelFFTBtn_ = new QPushButton("&Single");
 	resetFFTBtn_ = new QPushButton("&Reset");
 
 	QLabel* power_Offset_label = new QLabel("Power Offset/dB" );
-
 	power_Offset_edit = new QLineEdit();	
 	power_Offset_edit->setText(power_offset_);
 
-
-	settingADCLayout->addWidget(settingADCSavebutton, 0, 0);
-	settingADCLayout->addWidget(settingADCConfigbutton, 0, 1);
 	settingADCLayout->addWidget(power_Offset_label, 1, 0);
 	settingADCLayout->addWidget(power_Offset_edit, 1, 1);
 
 	settingADCLayout->addWidget(mFFTShowdBBtn, 2, 0);
 	settingADCLayout->addWidget(resetFFTBtn_, 2, 1);
 	settingADCLayout->addWidget(singelFFTBtn_, 3, 0);
-
 
 	settingADCBox->setLayout(settingADCLayout);
 	settingFFTLayout->addWidget(settingFFTSavebutton, 0, 0);
@@ -3482,6 +3475,12 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( regRead_line, 0, 12, Qt::AlignLeft);	
 	controls_layout->addWidget( regBtnRead, 0, 13, Qt::AlignLeft);	
 #endif
+	settingADCSavebutton = new QPushButton("FFT-ADC &Start");
+	settingADCConfigbutton = new QPushButton("FFT-ADC &Stop");
+
+	controls_layout->addWidget( settingADCSavebutton, 2, 7, Qt::AlignLeft);
+	controls_layout->addWidget( settingADCConfigbutton, 2, 8, Qt::AlignLeft);
+
 	controlsBox->setLayout(controls_layout);
 	render_panel_ = new rviz::RenderPanel();
 	selection_panel_ = new rviz::SelectionPanel();
