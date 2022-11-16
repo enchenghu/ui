@@ -306,7 +306,9 @@ private Q_SLOTS:
 	void updateADCdata();
 	void showdBFFT();
 	void singleFFT();
+	void singleADC();
 	void resetFFT();
+	void resetADC();
 
 protected:
     static void TaskFunc(void *arg);
@@ -329,6 +331,7 @@ private:
 	void load_settings();
 	void save_settings();
 	void init_pubs( void );
+	void init_queue();
     QTimer* timer_;
 	QTimer* timer_adc;  
 	bool udpStop_;
@@ -398,7 +401,7 @@ private:
 
 	fftMsg fftBuff[MAX_BUFF_LEN];
 	adcMsg adcBuff[MAX_BUFF_LEN];
-	udp_ADC_FFT_Msg udpFAMsg[MAX_BUFF_LEN];
+	udp_ADC_FFT_Msg udpFABuff[MAX_BUFF_LEN];
 	bstMsgQueue<fftMsg*> fftMsg_free_buf_queue;
 	bstMsgQueue<fftMsg*> fftMsg_done_buf_queue;
 	bstMsgQueue<adcMsg*> adcMsg_free_buf_queue;

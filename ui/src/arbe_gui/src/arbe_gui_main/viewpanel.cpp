@@ -339,27 +339,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	save_folder_(QString(".")), udpStop_(true), ifShowdB_(false),\
 	power_offset(0.0), distance_offset(0.0)
 {
-
-	x_FFT.clear();
-	x_FFT_1.clear();
-	x_adc0.clear();
-	x_adc1.clear();
-	for(int i = 0; i< 8192;i++) 
-	{
-		x_FFT.append(i);
-		x_FFT_1.append(-8191 + i);
-		x_adc0.append(i);
-		x_adc1.append(i);
-	}
-	fmcwPointsData_ = std::make_shared<fmcw_types::fmcwPoints>();
-    fftMsg_free_buf_queue.setParam("fftMsg_free_buf_queue", MAX_BUFF_LEN);
-    fftMsg_done_buf_queue.setParam("fftMsg_done_buf_queue", MAX_BUFF_LEN);
- 
-    for (int loop = 0; loop < 4; loop++) {
-        fftMsg *fbuf = &fftBuff[loop];
-        fftMsg_free_buf_queue.put(fbuf);
-    }
-
+	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
 	cmdMsg_.mHead.usPrefix = 0xeeff;
 	cmdMsg_.mHead.usType = 0x10;
@@ -374,13 +354,6 @@ viewpanel::viewpanel(QTabWidget* parent )
 	CreatDebugWindow();
 	CreatADCWindow();
 	CreatConnect();
-
-	overlay_text_label = new QLabel;
-	overlay_text_label->setAutoFillBackground(true);
-	overlay_text_label->setIndent(10);
-	QPalette p( overlay_text_label->palette());
-	p.setColor( QPalette::Window, QColor(Qt::black));
-	overlay_text_label->setPalette(p);
 
 	/* Initialize the main RViz classes */
 	manager_ = new rviz::VisualizationManager( render_panel_ );
@@ -433,6 +406,36 @@ viewpanel::~viewpanel()
 	delete manager_;
 }
 
+void viewpanel::init_queue()
+{
+	x_FFT.clear();
+	x_FFT_1.clear();
+	x_adc0.clear();
+	x_adc1.clear();
+	for(int i = 0; i< 8192;i++) 
+	{
+		x_FFT.append(i);
+		x_FFT_1.append(-8191 + i);
+		x_adc0.append(i);
+		x_adc1.append(i);
+	}
+	fmcwPointsData_ = std::make_shared<fmcw_types::fmcwPoints>();
+    fftMsg_free_buf_queue.setParam("fftMsg_free_buf_queue", MAX_BUFF_LEN);
+    fftMsg_done_buf_queue.setParam("fftMsg_done_buf_queue", MAX_BUFF_LEN);
+    adcMsg_free_buf_queue.setParam("adcMsg_free_buf_queue", MAX_BUFF_LEN);
+    adcMsg_done_buf_queue.setParam("adcMsg_done_buf_queue", MAX_BUFF_LEN);
+	udpMsg_free_buf_queue.setParam("udpMsg_free_buf_queue", MAX_BUFF_LEN);
+    udpMsg_done_buf_queue.setParam("udpMsg_done_buf_queue", MAX_BUFF_LEN); 
+    for (int loop = 0; loop < 4; loop++) {
+        fftMsg *fbuf0 = &fftBuff[loop];
+        adcMsg *fbuf1 = &adcBuff[loop];
+        udp_ADC_FFT_Msg *fbuf2 = &udpFABuff[loop];
+        fftMsg_free_buf_queue.put(fbuf0);
+        adcMsg_free_buf_queue.put(fbuf1);
+        udpMsg_free_buf_queue.put(fbuf2);
+    }
+
+}
 void viewpanel::load_camera_calibration( void )
 {
 	load_camera_calib(false);
@@ -3145,7 +3148,7 @@ void viewpanel::CreatADCWindow()
 #endif
 	pADCchart[0] = new ChartFFT(this);
 	pADCchart[1] = new ChartFFT(this);
-	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, 256 * 4096, 0, 8192), 0 , 0);
+	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, 8192, -32768, 32768), 0 , 0);
 	chartADCBox0->setLayout(chartADCLayout0);
 #if 0
     OSC_chart *label_OSC_1 = new OSC_chart(this);
@@ -3153,7 +3156,7 @@ void viewpanel::CreatADCWindow()
     label_OSC_1->Add_Line_Data(0, 100);
     //label_OSC_1->View_Chart(10000);
 #endif
-	chartADCLayout1->addWidget(pADCchart[1]->setChart(0, 256 * 4096, -8191, 0), 0, 0);
+	chartADCLayout1->addWidget(pADCchart[1]->setChart(0, 8192, -32768, 32768), 0, 0);
 	chartADCBox1->setLayout(chartADCLayout1);
 
 	QVBoxLayout* adcCharts= new QVBoxLayout ;
@@ -3198,7 +3201,7 @@ void viewpanel::CreatDebugWindow()
 #endif
 	pFFTchart[0] = new ChartFFT(this);
 	pFFTchart[1] = new ChartFFT(this);
-	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, 256 * 4096, 0, 8192), 0 , 0);
+	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, 8192, 0, 256 * 4096), 0 , 0);
 	chartADCBox->setLayout(chartADCLayout);
 #if 0
     OSC_chart *label_OSC_1 = new OSC_chart(this);
@@ -3206,7 +3209,7 @@ void viewpanel::CreatDebugWindow()
     label_OSC_1->Add_Line_Data(0, 100);
     //label_OSC_1->View_Chart(10000);
 #endif
-	if(pFFTchart[1]) chartFFTLayout->addWidget(pFFTchart[1]->setChart(0, 256 * 4096, -8191, 0), 0, 0);
+	if(pFFTchart[1]) chartFFTLayout->addWidget(pFFTchart[1]->setChart(-8191, 0, 0, 256 * 4096), 0, 0);
 	chartFFTBox->setLayout(chartFFTLayout);
 
 	QGridLayout* main_show= new QGridLayout ;
@@ -3291,6 +3294,8 @@ void viewpanel::CreatConnect()
 
 	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
+	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
+	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
 
     timer_  = new QTimer(this);
     //timer_->setInterval(50);
@@ -3867,12 +3872,27 @@ void viewpanel::singleFFT() {
 	}
 }
 
+void viewpanel::singleADC() {
+	for(int i = 0 ; i < 2; i++){
+		pADCchart[i]->setSingleShow(true);
+		pADCchart[i]->setContineFlag(false);
+	}
+}
+
 void viewpanel::resetFFT() {
 	power_offset = power_Offset_edit->text().toDouble();
 	for(int i = 0 ; i < 2; i++){
 		pFFTchart[i]->setSingleShow(false);
 		pFFTchart[i]->setContineFlag(true);
 		pFFTchart[i]->setIfScale(true);
+	}
+}
+
+void viewpanel::resetADC() {
+	for(int i = 0 ; i < 2; i++){
+		pADCchart[i]->setSingleShow(false);
+		pADCchart[i]->setContineFlag(true);
+		pADCchart[i]->setIfScale(true);
 	}
 }
 
