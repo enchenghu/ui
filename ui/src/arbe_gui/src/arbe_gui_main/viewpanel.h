@@ -303,16 +303,18 @@ private Q_SLOTS:
 	void udpConnect();
 	void udpClose();
 	void updateFFTdata();
+	void updateADCdata();
 	void showdBFFT();
 	void singleFFT();
 	void resetFFT();
 
 protected:
     static void TaskFunc(void *arg);
-    static void TaskFuncUdp(void *arg);
-
+    static void TaskFuncUdpRecv(void *arg);
+    static void TaskFuncUdpParse(void *arg);
 private:
 	void udpRecvLoop();
+	void udpParseLoop();
 	void CreatDebugWindow();
 	void CreatUIWindow();
 	void CreatADCWindow();
@@ -321,12 +323,14 @@ private:
 	void CreatConnect();
 	void Save2filecsv(std::vector<uint8_t> &, bool );
 	void parseFFTData(std::vector<uint8_t> &data);
+	void parseADCData(std::vector<uint8_t> &data);
 	std::string tohex(uint32_t a);
 	double fft2dBm(double x);
 	void load_settings();
 	void save_settings();
 	void init_pubs( void );
     QTimer* timer_;
+	QTimer* timer_adc;  
 	bool udpStop_;
 	void saveData();
 	int ctrl_sock;
@@ -393,9 +397,16 @@ private:
 	QPushButton*  saveBtn;
 
 	fftMsg fftBuff[MAX_BUFF_LEN];
+	adcMsg adcBuff[MAX_BUFF_LEN];
+	udp_ADC_FFT_Msg udpFAMsg[MAX_BUFF_LEN];
 	bstMsgQueue<fftMsg*> fftMsg_free_buf_queue;
 	bstMsgQueue<fftMsg*> fftMsg_done_buf_queue;
+	bstMsgQueue<adcMsg*> adcMsg_free_buf_queue;
+	bstMsgQueue<adcMsg*> adcMsg_done_buf_queue;
 
+	bstMsgQueue<udp_ADC_FFT_Msg*> udpMsg_free_buf_queue;
+	bstMsgQueue<udp_ADC_FFT_Msg*> udpMsg_done_buf_queue;
+	
 	std::string loadFileType_;
 	QString  loadLidarFile_;
 	bool ifConnected;
@@ -424,6 +435,9 @@ private:
 	ChartFFT* pFFTchart[2];
 	ChartFFT* pADCchart[2];
 	QVector<double> x_FFT;
+	QVector<double> x_adc0;
+	QVector<double> x_adc1;
+
 	QVector<double> y_FFT;
 	QVector<double> x_FFT_1;
 	QVector<double> y_FFT_1;

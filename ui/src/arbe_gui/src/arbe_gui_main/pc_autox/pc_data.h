@@ -106,6 +106,19 @@ typedef struct
 
 typedef struct 
 {
+	QVector<double> dataADC0;
+	QVector<double> dataADC1;
+}adcMsg;
+
+typedef struct 
+{
+	std::vector<uint8_t> fftDataV;
+	std::vector<uint8_t> adcDataV;
+}udp_ADC_FFT_Msg;
+
+
+typedef struct 
+{
 	commandMsg 	cmdmsg; 
 	uint8_t 	pcTcpData[TCP_PC_SIZE_SINGLE];
 } pcData_t;

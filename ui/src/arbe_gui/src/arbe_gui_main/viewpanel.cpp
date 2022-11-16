@@ -69,6 +69,9 @@
 #define CTRL_SOCKET 0
 #define DEFAULT_AZIMUTH_BIN 0
 #define DEBUG_UI 0
+#define SIGN_LIMIT_NUM 32767
+#define SIGN_OFFSET_NUM 65536
+
 extern void Ntc_Mode_Set();
 extern void Cfar_Mode_Set();
 extern void radar_set_params();
@@ -339,10 +342,14 @@ viewpanel::viewpanel(QTabWidget* parent )
 
 	x_FFT.clear();
 	x_FFT_1.clear();
+	x_adc0.clear();
+	x_adc1.clear();
 	for(int i = 0; i< 8192;i++) 
 	{
 		x_FFT.append(i);
 		x_FFT_1.append(-8191 + i);
+		x_adc0.append(i);
+		x_adc1.append(i);
 	}
 	fmcwPointsData_ = std::make_shared<fmcw_types::fmcwPoints>();
     fftMsg_free_buf_queue.setParam("fftMsg_free_buf_queue", MAX_BUFF_LEN);
@@ -3290,6 +3297,11 @@ void viewpanel::CreatConnect()
     connect(timer_, SIGNAL(timeout()), this, SLOT(updateFFTdata(void)));
     timer_->start(100);
 
+    timer_adc  = new QTimer(this);
+    //timer_->setInterval(50);
+    connect(timer_adc, SIGNAL(timeout()), this, SLOT(updateADCdata(void)));
+    timer_adc->start(100);
+
 }
 
 void viewpanel::CreatUIWindow()
@@ -3519,6 +3531,47 @@ void viewpanel::setSaveFolder()
 }
 
 
+void viewpanel::parseADCData(std::vector<uint8_t> &data)
+{
+	std::cout << "!!enter parseADCData! input point num is  "  <<  data.size() / 2 << std::endl;
+#if 0
+	std::string datPath;
+	datPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".dat";
+	std::ofstream datfile; 
+	datfile.open(datPath, std::ios::out | std::ios::binary); 
+	for(int i = 0; i < data.size(); i++) {
+		datfile << data[i];
+	}
+	datfile.close();
+#endif
+	int32_t cur_data  = 0;
+	int index = 0;
+	adcMsg* padc = NULL;
+	adcMsg_free_buf_queue.get(padc);
+	padc->dataADC0.clear();
+	padc->dataADC1.clear();
+	for(int i = 0; i < data.size(); i++) {	
+		index += 1;
+		if(i >= data.size() / 2) break;
+		int flagNum = i % 2;
+		cur_data += data[i] << (8 * (flagNum));
+		if(flagNum){
+			if(cur_data > SIGN_LIMIT_NUM){
+				cur_data -= SIGN_OFFSET_NUM;
+			}
+			if(index % 4){
+				padc->dataADC0.append(cur_data);
+			}else{
+				padc->dataADC1.append(cur_data);
+			}
+			cur_data = 0;
+		}
+	}
+	adcMsg_done_buf_queue.put(padc);
+	printf("adcMsg send finished\n");  //打印自己发送的信息
+}
+
+
 void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 {
 	std::cout << "!!enter parseFFTData! input point num is  "  <<  data.size() / 4 << std::endl;
@@ -3736,11 +3789,19 @@ void viewpanel::TaskFunc(void *arg){
     }
 }
 
-void viewpanel::TaskFuncUdp(void *arg){
+void viewpanel::TaskFuncUdpRecv(void *arg){
     viewpanel *pSave = (viewpanel *)arg;
 
-    if (pSave && pSave->TaskFuncUdp) {
+    if (pSave && pSave->TaskFuncUdpRecv) {
         pSave->udpRecvLoop();
+    }
+}
+
+void viewpanel::TaskFuncUdpParse(void *arg){
+    viewpanel *pSave = (viewpanel *)arg;
+
+    if (pSave && pSave->TaskFuncUdpParse) {
+        pSave->udpParseLoop();
     }
 }
 
@@ -3857,14 +3918,59 @@ void viewpanel::updateFFTdata() {
 #endif
 
 }
+
+
+void viewpanel::updateADCdata() {
+
+#if DEBUG_UI	
+	y_FFT.clear();
+	y_FFT_1.clear();
+	QVector<double> y_FFT_dB;
+	QVector<double> y_FFT_1_dB;
+	for(int i = 0; i< 8192; i++) 
+	{
+		double tmp = qrand() % 100000;
+		double tmp_log = 10 * log10(tmp);
+		y_FFT.append(tmp);
+		y_FFT_dB.append(tmp_log);
+		y_FFT_1.append(tmp);
+		y_FFT_1_dB.append(tmp_log);
+	}
+
+	if(!ifShowdB_){
+		pFFTchart[0]->setData(x_FFT, y_FFT);
+		pFFTchart[1]->setData(x_FFT_1, y_FFT_1);
+
+	} else {
+		pFFTchart[0]->setData(x_FFT, y_FFT_dB);
+		pFFTchart[1]->setData(x_FFT_1, y_FFT_1_dB);
+	}
+#else 
+	if(!adcMsg_done_buf_queue.empty()){
+		adcMsg* padc = NULL;
+		adcMsg_done_buf_queue.get(padc);
+		pADCchart[0]->setData(x_adc0, padc->dataADC0);
+		pADCchart[1]->setData(x_adc1, padc->dataADC1);
+		adcMsg_free_buf_queue.put(padc);
+	}
+#endif
+
+}
+
 void viewpanel::udpConnect() {
 
 	if(udpStop_){
 		vx_task_set_default_create_params(&bst_params);
 		bst_params.app_var = this;
 		bst_params.task_mode = 0;
-		bst_params.task_main = TaskFuncUdp;
+		bst_params.task_main = TaskFuncUdpRecv;
 		vx_task_create(&bst_task[1], &bst_params);  
+
+		vx_task_set_default_create_params(&bst_params);
+		bst_params.app_var = this;
+		bst_params.task_mode = 0;
+		bst_params.task_main = TaskFuncUdpParse;
+		vx_task_create(&bst_task[2], &bst_params);  
 	}else{
 		QMessageBox msgBox;
 		msgBox.setText("UDP Connection is already working, please stop it first !");
@@ -3872,6 +3978,19 @@ void viewpanel::udpConnect() {
 	}
 }
 
+void viewpanel::udpParseLoop()
+{
+	while(!terminating && !udpStop_)
+	{
+		udp_ADC_FFT_Msg* pmsg = nullptr;
+		udpMsg_done_buf_queue.get(pmsg);
+		if(pmsg){
+			parseFFTData(pmsg->fftDataV);
+			parseADCData(pmsg->adcDataV);
+		}
+		udpMsg_free_buf_queue.put(pmsg);
+	}
+}
 void viewpanel::udpRecvLoop(){
 
 	//int client_fd;
@@ -3925,13 +4044,14 @@ void viewpanel::udpRecvLoop(){
 	while(!terminating && !udpStop_)
 	{
 		fftDataV.clear();
+		adcDataV.clear();
 		ifLost  = false;
 		for(int i = 0; i < UDP_TIMES_PER_FRAME; i++){
 			memset(&g_udpMsg, 0, sizeof(g_udpMsg));
 			//printf("ready recv udp msg!\n");
 			ret = recvfrom(udpRecvSocketFd_, &g_udpMsg, sizeof(g_udpMsg), MSG_WAITALL, (struct sockaddr*)&src, &len);  //接收来自server的信息
-			printf("recv udp msg! receive byte is %d, g_udpMsg: %c %c %c %c %c\n", ret, g_udpMsg.pcUdpData[11], \
-			g_udpMsg.pcUdpData[13], g_udpMsg.pcUdpData[15], g_udpMsg.pcUdpData[17], g_udpMsg.pcUdpData[19]);
+			//printf("recv udp msg! receive byte is %d, g_udpMsg: %c %c %c %c %c\n", ret, g_udpMsg.pcUdpData[11], \
+			//g_udpMsg.pcUdpData[13], g_udpMsg.pcUdpData[15], g_udpMsg.pcUdpData[17], g_udpMsg.pcUdpData[19]);
 			if(ret <= 0){
 				if(udpStop_) {
 					printf("fftMsg udp  quit!\n"); 
@@ -3943,8 +4063,6 @@ void viewpanel::udpRecvLoop(){
 				i--;
 				continue;
 			}
-			//std::cout << "receive byte is " << ret << std::endl;
-				//std::cout << "current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
 			if(g_udpMsg.mHead.usRollingCounter != i) {
 				ifLost = true;
 				std::cout << "!!!warnning!!! current index is " << i << ", udp msg usRollingCounter is " << g_udpMsg.mHead.usRollingCounter << std::endl;
@@ -3961,17 +4079,20 @@ void viewpanel::udpRecvLoop(){
 			}
 
 			std::cout << "!!recv udp pkg successfully! "  << std::endl;
-#if 1			
 			if(i < UDP_TIMES_PER_FRAME / 2) {
 				for(int j = 0; j < 16; j++){
 					fftDataV.insert(fftDataV.end(), g_udpMsg.pcUdpData + 32 + 64 * j, g_udpMsg.pcUdpData + 64 * (j + 1));
+					adcDataV.insert(adcDataV.end(), g_udpMsg.pcUdpData + 64 * j, g_udpMsg.pcUdpData + 64 * j + 32);
 				}
 			}
-#endif
 		}
-	
 		if(ifLost) continue;
-#if 1
+		udp_ADC_FFT_Msg* pUdp = NULL;
+		udpMsg_free_buf_queue.get(pUdp);	
+		pUdp->fftDataV = fftDataV;
+		pUdp->adcDataV = adcDataV;
+		udpMsg_done_buf_queue.put(pUdp);		
+#if 0
 		parseFFTData(fftDataV);
 #endif
 	}
