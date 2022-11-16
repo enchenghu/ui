@@ -68,7 +68,7 @@
 
 #define CTRL_SOCKET 0
 #define DEFAULT_AZIMUTH_BIN 0
-#define DEBUG_UI 1
+#define DEBUG_UI 0
 #define SIGN_LIMIT_NUM 32767
 #define SIGN_OFFSET_NUM 65536
 
