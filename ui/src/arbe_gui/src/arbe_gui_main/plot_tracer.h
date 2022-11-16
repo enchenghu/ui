@@ -20,7 +20,7 @@ public:
  
  
 public:
-    explicit myTracer(QCustomPlot *_plot,QCPGraph *_graph, TracerType _type, showModel type);//这里与原贴不同，按照原贴构造总是过不去
+    explicit myTracer(QCustomPlot *_plot,QCPGraph *_graph, TracerType _type, showModel type);
     ~myTracer();
  
     void setPen(const QPen &pen);

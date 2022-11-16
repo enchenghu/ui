@@ -21,15 +21,12 @@ QCustomPlot* ChartFFT::setChart(int xmin, int xmax, int ymin, int ymax){
 	pCustomPlot->yAxis->setLabel("Y");
 	//设置大小
 	//pCustomPlot->resize(ui->label->width(),ui->label->height());
-	//可以进行鼠标位置 放大缩小 拖拽  放大缩小坐标系！！！功能非常强大
 	pCustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 	//pCustomPlot->xAxis->setNumberPrecision(1);
 	plotTracer = new myTracer(pCustomPlot, pCustomPlot->graph(0), TracerType::DataTracer, showType_);
-	//重绘 每次改变完以后都要调用这个进行重新绘制
 	connect(pCustomPlot, &QCustomPlot::mouseMove, this, &ChartFFT::showTracer);
 	pCustomPlot->replot();
     return pCustomPlot;
-    //if(chartLayout) chartLayout->addWidget(pCustomPlot, 0, 0); 
 }
 
 void ChartFFT::setShowType(showModel t)
@@ -75,7 +72,6 @@ void ChartFFT::showTracer(QMouseEvent* event)
     double y = 0;
     QSharedPointer<QCPGraphDataContainer> tmpContainer;
     tmpContainer = pCustomPlot->graph(0)->data();
-    //使用二分法快速查找所在点数据！！！敲黑板，下边这段是重点
     int low = 0, high = tmpContainer->size();
     while(high > low)
     {
