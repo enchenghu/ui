@@ -3970,8 +3970,8 @@ void viewpanel::updateADCdata() {
 		adcMsg_free_buf_queue.put(padc);
 	}
 #endif
-	pADCchart[0]->setXChart(8192 * frame_index, 8192 * frame_index + 8191);
-	pADCchart[1]->setXChart(8192 * frame_index, 8192 * frame_index + 8191);
+	//pADCchart[0]->setXChart(8192 * frame_index, 8192 * frame_index + 8191);
+	//pADCchart[1]->setXChart(8192 * frame_index, 8192 * frame_index + 8191);
 	frame_index++;
 }
 

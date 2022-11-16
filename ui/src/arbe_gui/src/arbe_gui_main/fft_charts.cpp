@@ -59,6 +59,7 @@ void ChartFFT::setData(const QVector<double> &x, const QVector<double> &y)
             pCustomPlot->graph(0)->setData(x, y);
         } else if (showType_ == ADC_ORI) {
             pCustomPlot->graph(0)->addData(x, y);
+            pCustomPlot->xAxis->setRange(x[0], x[x.size() - 1]);
         }    
     }
 
