@@ -3943,28 +3943,16 @@ void viewpanel::updateFFTdata() {
 void viewpanel::updateADCdata() {
 
 #if DEBUG_UI	
-	y_FFT.clear();
-	y_FFT_1.clear();
-	QVector<double> y_FFT_dB;
-	QVector<double> y_FFT_1_dB;
+	y_adc0.clear();
+	y_adc1.clear();
 	for(int i = 0; i< 8192; i++) 
 	{
-		double tmp = qrand() % 100000;
-		double tmp_log = 10 * log10(tmp);
-		y_FFT.append(tmp);
-		y_FFT_dB.append(tmp_log);
-		y_FFT_1.append(tmp);
-		y_FFT_1_dB.append(tmp_log);
+		double tmp = qrand() % 10000;
+		y_adc0.append(tmp);
+		y_adc1.append(tmp);
 	}
-
-	if(!ifShowdB_){
-		pFFTchart[0]->setData(x_FFT, y_FFT);
-		pFFTchart[1]->setData(x_FFT_1, y_FFT_1);
-
-	} else {
-		pFFTchart[0]->setData(x_FFT, y_FFT_dB);
-		pFFTchart[1]->setData(x_FFT_1, y_FFT_1_dB);
-	}
+	pADCchart[0]->setData(x_adc0, y_adc0);
+	pADCchart[1]->setData(x_adc1, y_adc1);
 #else 
 	if(!adcMsg_done_buf_queue.empty()){
 		adcMsg* padc = NULL;

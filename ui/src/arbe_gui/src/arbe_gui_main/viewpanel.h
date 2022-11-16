@@ -440,7 +440,8 @@ private:
 	QVector<double> x_FFT;
 	QVector<double> x_adc0;
 	QVector<double> x_adc1;
-
+	QVector<double> y_adc0;
+	QVector<double> y_adc1;
 	QVector<double> y_FFT;
 	QVector<double> x_FFT_1;
 	QVector<double> y_FFT_1;
