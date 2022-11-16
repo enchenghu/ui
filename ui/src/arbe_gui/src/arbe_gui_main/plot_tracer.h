@@ -3,6 +3,8 @@
  
 #include <QObject>
 #include "qcustomplot.h"
+#include "pc_data.h"
+using namespace fmcw_types;
 enum TracerType
 {
     XAxisTracer,
@@ -18,7 +20,7 @@ public:
  
  
 public:
-    explicit myTracer(QCustomPlot *_plot,QCPGraph *_graph, TracerType _type);//这里与原贴不同，按照原贴构造总是过不去
+    explicit myTracer(QCustomPlot *_plot,QCPGraph *_graph, TracerType _type, showModel type);//这里与原贴不同，按照原贴构造总是过不去
     ~myTracer();
  
     void setPen(const QPen &pen);
@@ -39,6 +41,7 @@ protected:
  
     TracerType type;
     bool visible;
+    showModel showType_;
  
 signals:
  

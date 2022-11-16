@@ -15,6 +15,7 @@
 #include <QGridLayout>
 #include "pc_data.h"
 QT_CHARTS_USE_NAMESPACE
+
 class ChartFFT : public QWidget
 {
     Q_OBJECT
@@ -27,14 +28,14 @@ public:
     void setData(const QVector<double> &x, const QVector<double> &y);
     void showTracer(QMouseEvent* event);
     QCustomPlot* setChart(int xmin, int xmax, int ymin, int ymax);
-    void setShowType(int);
+    void setShowType(showModel);
     void setIfScale(bool);
     void setSingleShow(bool);
     void setContineFlag(bool);
 
 private:
     bool rescale_;
-    int showType_;
+    showModel showType_;
     bool singleShow_;
     bool contineFlag_;
 };

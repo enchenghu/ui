@@ -414,7 +414,7 @@ private:
 	QString  loadLidarFile_;
 	bool ifConnected;
 	bool ifStarted;
-	bool ifShowdB_;
+	showModel ifShowdB_;
 	bool ifSave;
 	QPushButton *lidar_connect_button;
 	QPushButton *setSaveBtn;

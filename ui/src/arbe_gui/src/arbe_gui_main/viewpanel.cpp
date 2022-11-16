@@ -336,7 +336,7 @@ void pub_radar_height_and_pitch(int index)
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
-	save_folder_(QString(".")), udpStop_(true), ifShowdB_(false),\
+	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_ORI),\
 	power_offset(0.0), distance_offset(0.0)
 {
 	init_queue();
@@ -1090,15 +1090,15 @@ void viewpanel::connectControl(void){
 }
 
 void viewpanel::showdBFFT(void){
-	if(!ifShowdB_){
+	if(ifShowdB_ == FFT_ORI){
 		mFFTShowdBBtn->setStyleSheet("color: green");
 		mFFTShowdBBtn->setText("&Show ori");
-		ifShowdB_ = true;
+		ifShowdB_ = FFT_DB;
 		power_offset = power_Offset_edit->text().toDouble();
-	}else {
+	}else if(ifShowdB_ == FFT_DB){
 		mFFTShowdBBtn->setStyleSheet("color: black");
 		mFFTShowdBBtn->setText("&Show dB");
-		ifShowdB_ = false;
+		ifShowdB_ = FFT_ORI;
 	}
 	for(int i = 0 ; i < 2; i++){
 		pFFTchart[i]->setShowType(ifShowdB_);
@@ -3148,6 +3148,8 @@ void viewpanel::CreatADCWindow()
 #endif
 	pADCchart[0] = new ChartFFT(this);
 	pADCchart[1] = new ChartFFT(this);
+	pADCchart[0]->setShowType(ADC_ORI);
+	pADCchart[1]->setShowType(ADC_ORI);
 	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, 8192, -32768, 32768), 0 , 0);
 	chartADCBox0->setLayout(chartADCLayout0);
 #if 0
@@ -3925,11 +3927,11 @@ void viewpanel::updateFFTdata() {
 	if(!fftMsg_done_buf_queue.empty()){
 		fftMsg* pfft = NULL;
 		fftMsg_done_buf_queue.get(pfft);
-		if(!ifShowdB_){
+		if(ifShowdB_ == FFT_ORI){
 			pFFTchart[0]->setData(x_FFT, pfft->dataFFT_0);
 			pFFTchart[1]->setData(x_FFT_1, pfft->dataFFT_1);
 
-		} else {
+		} else if(ifShowdB_ == FFT_DB){
 			pFFTchart[0]->setData(x_FFT, pfft->dataFFTdB_0);
 			pFFTchart[1]->setData(x_FFT_1, pfft->dataFFTdB_1);
 		}

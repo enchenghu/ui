@@ -1,9 +1,10 @@
 #include "plot_tracer.h"
  
-myTracer::myTracer(QCustomPlot *_plot, QCPGraph *_graph, TracerType _type) : plot(_plot),
+myTracer::myTracer(QCustomPlot *_plot, QCPGraph *_graph, TracerType _type, showModel showtype) : plot(_plot),
     graph(_graph),
     type(_type),
-    visible(false)
+    visible(false),
+    showType_(showtype)
  
 {
     if (plot)
@@ -109,7 +110,10 @@ void myTracer::setLabelPen(const QPen &pen)
  
 void myTracer::setText(const QString &text,const QString &text1)
 {
-    label->setText(tr("X:%1 MHz\nY:%2").arg(text).arg(text1));
+    if(showType_ == FFT_ORI || showType_ == FFT_DB)
+        label->setText(tr("X:%1 MHz\nY:%2").arg(text).arg(text1));
+    else
+        label->setText(tr("X:%1\nY:%2").arg(text).arg(text1));
 }
 /*void myTracer::setText(const QString &text)
 {

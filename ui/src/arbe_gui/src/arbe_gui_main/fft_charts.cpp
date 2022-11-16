@@ -1,6 +1,6 @@
 #include "fft_charts.h"
 
-ChartFFT::ChartFFT(QWidget* parent): QWidget(parent), showType_(0), \
+ChartFFT::ChartFFT(QWidget* parent): QWidget(parent), showType_(FFT_ORI), \
 rescale_(true), contineFlag_(true), singleShow_(false)
 {
 	pCustomPlot = new QCustomPlot(parent);
@@ -24,7 +24,7 @@ QCustomPlot* ChartFFT::setChart(int xmin, int xmax, int ymin, int ymax){
 	//可以进行鼠标位置 放大缩小 拖拽  放大缩小坐标系！！！功能非常强大
 	pCustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 	//pCustomPlot->xAxis->setNumberPrecision(1);
-	plotTracer = new myTracer(pCustomPlot, pCustomPlot->graph(0), TracerType::DataTracer);
+	plotTracer = new myTracer(pCustomPlot, pCustomPlot->graph(0), TracerType::DataTracer, showType_);
 	//重绘 每次改变完以后都要调用这个进行重新绘制
 	connect(pCustomPlot, &QCustomPlot::mouseMove, this, &ChartFFT::showTracer);
 	pCustomPlot->replot();
@@ -32,7 +32,7 @@ QCustomPlot* ChartFFT::setChart(int xmin, int xmax, int ymin, int ymax){
     //if(chartLayout) chartLayout->addWidget(pCustomPlot, 0, 0); 
 }
 
-void ChartFFT::setShowType(int t)
+void ChartFFT::setShowType(showModel t)
 {
     showType_ = t;
 }
@@ -56,10 +56,10 @@ void ChartFFT::setData(const QVector<double> &x, const QVector<double> &y)
 
     if(singleShow_) singleShow_  = false;
 
-    if(!showType_) 
+    if(showType_ == FFT_ORI) 
         pCustomPlot->yAxis->setLabel("amplitude");
-    else
-        pCustomPlot->yAxis->setLabel("amplitude/dB");
+    else if(showType_ == FFT_DB)
+        pCustomPlot->yAxis->setLabel("amplitude/dB");        
 
     if(rescale_) {
         pCustomPlot->rescaleAxes(true);
@@ -114,7 +114,11 @@ void ChartFFT::showTracer(QMouseEvent* event)
     //m_TracerY->setText(QString::number(y, 'f', 2));
     //由原来的x，y分别显示改为x，y显示在一起，xy单位直接在setText中设置好
     plotTracer->updatePosition(x, y);
-    double real_X = x * 0.4;
+    double real_X;
+    if(showType_ == ADC_ORI)
+        real_X = x;
+    else
+        real_X = x * 0.4;
     plotTracer->setText(QString::number(real_X, 'f', 2), QString::number(y, 'f', 2));//x轴取整数，y轴保留两位小数
     pCustomPlot->replot();
 }

@@ -63,6 +63,12 @@ typedef enum
 	FFT_ADC_READ_STOP
 }commandType;
 
+typedef enum{
+    FFT_ORI = 0,
+    FFT_DB,
+    ADC_ORI
+} showModel;
+
 typedef struct API_Header
 {
 	uint16_t 	usPrefix; // 0xeeff
