@@ -68,7 +68,7 @@
 
 #define CTRL_SOCKET 0
 #define DEFAULT_AZIMUTH_BIN 0
-#define DEBUG_UI 0
+#define DEBUG_UI 1
 #define SIGN_LIMIT_NUM 32767
 #define SIGN_OFFSET_NUM 65536
 
@@ -3943,12 +3943,18 @@ void viewpanel::updateFFTdata() {
 
 
 void viewpanel::updateADCdata() {
+	static long long frame_index = 0;
+	x_adc0.clear();
+	x_adc1.clear();
+	for(int i = 0; i< 8192; i++) {
+		x_adc0.append(i + 8192 * frame_index);
+	}
+	x_adc1 = x_adc0;
 
 #if DEBUG_UI	
 	y_adc0.clear();
 	y_adc1.clear();
-	for(int i = 0; i< 8192; i++) 
-	{
+	for(int i = 0; i< 8192; i++) {
 		double tmp = qrand() % 10000;
 		y_adc0.append(tmp);
 		y_adc1.append(tmp);
@@ -3964,7 +3970,9 @@ void viewpanel::updateADCdata() {
 		adcMsg_free_buf_queue.put(padc);
 	}
 #endif
-
+	pADCchart[0]->setXChart(8192 * frame_index, 8192 * frame_index + 8191);
+	pADCchart[1]->setXChart(8192 * frame_index, 8192 * frame_index + 8191);
+	frame_index++;
 }
 
 void viewpanel::udpConnect() {

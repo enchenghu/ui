@@ -9,6 +9,11 @@ rescale_(true), contineFlag_(true), singleShow_(false)
 	//添加一条曲线
 }
 
+void ChartFFT::setXChart(int xmin, int xmax)
+{
+    pCustomPlot->xAxis->setRange(xmin, xmax);
+}
+
 QCustomPlot* ChartFFT::setChart(int xmin, int xmax, int ymin, int ymax){
 	//设置数据
 	//this->graph(0)->setData(x_FFT,y_FFT);
@@ -49,7 +54,13 @@ void ChartFFT::setContineFlag(bool t)
 
 void ChartFFT::setData(const QVector<double> &x, const QVector<double> &y)
 {
-    if(singleShow_ || contineFlag_ ) pCustomPlot->graph(0)->setData(x, y);
+    if(singleShow_ || contineFlag_ ) {
+        if(showType_ == FFT_ORI || showType_ == FFT_DB){
+            pCustomPlot->graph(0)->setData(x, y);
+        } else if (showType_ == ADC_ORI) {
+            pCustomPlot->graph(0)->addData(x, y);
+        }    
+    }
 
     if(singleShow_) singleShow_  = false;
 

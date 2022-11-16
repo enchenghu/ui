@@ -32,6 +32,7 @@ public:
     void setIfScale(bool);
     void setSingleShow(bool);
     void setContineFlag(bool);
+    void setXChart(int xmin, int xmax);
 
 private:
     bool rescale_;
