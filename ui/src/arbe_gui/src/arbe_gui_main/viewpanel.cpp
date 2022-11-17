@@ -3342,6 +3342,9 @@ void viewpanel::CreatUIWindow()
 	QGroupBox *fileBox  = new QGroupBox(tr("File Operations:"));
 	QVBoxLayout* fileLayout = new QVBoxLayout;
 
+	QGroupBox *stateShowBox  = new QGroupBox(tr("State Conditon:"));
+	QGridLayout* stateShowBoxLayout = new QGridLayout;
+
 	QGroupBox *savefileBox  = new QGroupBox(tr("Save:"));
 	QGridLayout* saveLayout = new QGridLayout;
 	QLabel* saveDatalabel = new QLabel( "Select" );
@@ -3425,19 +3428,22 @@ void viewpanel::CreatUIWindow()
 	QLabel* diff_label = new QLabel( "Diff" );
 	QLabel* regAddr_label = new QLabel( "Register Addr" );
 	QLabel* regVal_label = new QLabel( "Register value" );
+	QLabel* adc_label0 = new QLabel( "ADC overvoltage" );
+	QLabel* adc_label1 = new QLabel( "ADC attenuation" );
 
 	regAddr_line = new QLineEdit;
 	regVal_line = new QLineEdit;
 	regRead_line = new QLineEdit;
-	regRead_line->setReadOnly(true);
-	QPalette palette_0 = regRead_line->palette();
-	palette_0.setBrush(QPalette::Base,
-					palette_0.brush(QPalette::Disabled, QPalette::Base));
-	regRead_line->setPalette(palette_0);
+	adcRead0_line = new QLineEdit;
+	adcRead1_line = new QLineEdit;
+	setReadOnlyLineEdit(regRead_line);
+	setReadOnlyLineEdit(adcRead0_line);
+	setReadOnlyLineEdit(adcRead1_line);
 
 	regBtnWrite = new QPushButton("&Write", this);
 	regBtnRead = new QPushButton("&Read", this);
-
+	settingADCSavebutton = new QPushButton("FFT-ADC &Start");
+	settingADCConfigbutton = new QPushButton("FFT-ADC &Stop");
 	CFARCombo = new QComboBox;
 	m3DFTCombo = new QComboBox;
 	PowerCombo = new QComboBox;
@@ -3471,43 +3477,39 @@ void viewpanel::CreatUIWindow()
 		ctlWriteBtn_.emplace_back(new QPushButton("&Cfg", this));
 		ctlReadBtn_.emplace_back(new QPushButton("&Read", this));
 		ctlReadLine_.emplace_back(new QLineEdit);
-		ctlReadLine_[i]->setReadOnly(true);
-		QPalette palette = ctlReadLine_[i]->palette();
-		palette.setBrush(QPalette::Base,
-						palette.brush(QPalette::Disabled, QPalette::Base));
-		ctlReadLine_[i]->setPalette(palette);
+		setReadOnlyLineEdit(ctlReadLine_[i]);
 		controls_layout->addWidget( ctlWriteBtn_[i], i, 4, Qt::AlignLeft);	
 		controls_layout->addWidget( ctlReadLine_[i], i, 5, Qt::AlignLeft);			
 		controls_layout->addWidget( ctlReadBtn_[i], i, 6, Qt::AlignLeft);			
 	}
-
 	controls_layout->addWidget( regAddr_label, 0, 7, Qt::AlignLeft);
 	controls_layout->addWidget( distanceOffset_label, 1, 7, Qt::AlignLeft);
-
 	controls_layout->addWidget( regAddr_line, 0, 8, Qt::AlignLeft);	
 	controls_layout->addWidget( distance_Offset_edit, 1, 8, Qt::AlignLeft);	
-
 	controls_layout->addWidget( regVal_label, 0, 9, Qt::AlignLeft);	
 	controls_layout->addWidget( regVal_line, 0, 10, Qt::AlignLeft);	
 	controls_layout->addWidget( regBtnWrite, 0, 11, Qt::AlignLeft);	
-#if 1
 	controls_layout->addWidget( regRead_line, 0, 12, Qt::AlignLeft);	
 	controls_layout->addWidget( regBtnRead, 0, 13, Qt::AlignLeft);	
-#endif
-	settingADCSavebutton = new QPushButton("FFT-ADC &Start");
-	settingADCConfigbutton = new QPushButton("FFT-ADC &Stop");
-
 	controls_layout->addWidget( settingADCSavebutton, 2, 7, Qt::AlignLeft);
 	controls_layout->addWidget( settingADCConfigbutton, 2, 8, Qt::AlignLeft);
 
 	controlsBox->setLayout(controls_layout);
+	
+	stateShowBoxLayout->addWidget(adc_label0, 0, 0, Qt::AlignLeft);
+	stateShowBoxLayout->addWidget(adcRead0_line, 0, 1, Qt::AlignLeft);
+	stateShowBoxLayout->addWidget(adc_label1, 1, 0, Qt::AlignLeft);
+	stateShowBoxLayout->addWidget(adcRead1_line, 1, 1, Qt::AlignLeft);
+	stateShowBox->setLayout(stateShowBoxLayout);
+
 	render_panel_ = new rviz::RenderPanel();
 	selection_panel_ = new rviz::SelectionPanel();
-	controls->addWidget ( controlsBox, 0, 0, Qt::AlignLeft);
-	controls->addWidget ( fileBox, 0, 1, Qt::AlignLeft);
+	controls->addWidget(controlsBox, 0, 0, Qt::AlignLeft);
+	controls->addWidget(stateShowBox, 0, 1, Qt::AlignLeft);
+	controls->addWidget(fileBox, 0, 2, Qt::AlignLeft);
 
 	controls->setColumnStretch(0,4);
-	for(int i = 1; i < 2;i++)
+	for(int i = 1; i < 3;i++)
 		controls->setColumnStretch(i,1);
 
 	ctrlDockWidget->setLayout(controls);
@@ -4265,6 +4267,15 @@ void viewpanel::load_settings()
 	distance_offset_ = settings.value("Distance Offset","0.0").toString();
 	power_offset_ = settings.value("Power Offset","0.0").toString();
 	save_folder_ = settings.value("Save Folder",".").toString();
+}
+
+
+void viewpanel::setReadOnlyLineEdit(QLineEdit* line)
+{
+	line->setReadOnly(true);
+	QPalette palette = line->palette();
+	palette.setBrush(QPalette::Base,palette.brush(QPalette::Disabled, QPalette::Base));
+	line->setPalette(palette);
 }
 
 void viewpanel::save_settings(void )

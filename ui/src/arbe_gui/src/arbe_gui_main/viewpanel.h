@@ -332,6 +332,7 @@ private:
 	void save_settings();
 	void init_pubs( void );
 	void init_queue();
+	void setReadOnlyLineEdit(QLineEdit* line);
     QTimer* timer_;
 	QTimer* timer_adc;  
 	bool udpStop_;
@@ -397,6 +398,8 @@ private:
 	QLineEdit* regAddr_line ;
 	QLineEdit* regVal_line ;
 	QLineEdit* regRead_line;
+	QLineEdit* adcRead0_line;
+	QLineEdit* adcRead1_line;
 	QPushButton*  saveBtn;
 
 	fftMsg fftBuff[MAX_BUFF_LEN];
