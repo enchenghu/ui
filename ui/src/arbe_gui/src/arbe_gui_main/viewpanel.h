@@ -150,51 +150,22 @@ typedef struct gui_controls_t {
 	bool isPhaseEnabled;
 } gui_controls_t;
 
-void init_bookmark_SubPub(ros::NodeHandlePtr node_ptr);
-void initImageSubPub(ros::NodeHandlePtr node_ptr);
-void init_speed_pub(ros::NodeHandlePtr node_ptr);
-void rotation_into_R_t(float alpha, float beta, float gamma, float fs_alpha_backoff);
-void calc_cam_projection(bool do_for_all_radars);
-void initCalcHeightTiltPub(ros::NodeHandlePtr node_ptr);
-
-void imu_egoYaw_cb(float yaw);
-void gps_egoVel_cb(float gps_speed);
-void pub_egoVel_cb(float egoVel, float w_z);
-
 class viewpanel: public QTabWidget
 {
 Q_OBJECT
 public:
 	viewpanel( QTabWidget* parent = 0 );
 	virtual ~viewpanel();
-	void on_cmnd_line_view_callback(std_msgs::UInt8 msg );
-	void on_cmnd_line_colorcoding_callback(std_msgs::UInt8 msg );
-	void on_cmnd_line_screen_record(std_msgs::Bool msg);
-    void on_cmnd_line_record(std_msgs::Bool msg);
-    void on_cmnd_line_euler_alpha(std_msgs::Float32 msg);
-    void on_cmnd_line_euler_beta(std_msgs::Float32 msg);
-    void on_cmnd_line_euler_gamma(std_msgs::Float32 msg);
-    void on_omega_calibration(std_msgs::Float32 msg);
-    void init_subs( void );
-	void print_cam_widg_location( void );
 	void setView( view_vals_t &view_vals );
 	void printView();
     bool get_3rd_prs( void );
     static viewpanel* Instance();
     //static viewpanel* Instance();
-	void on_status_mesage(std_msgs::String msg);
 	void register_pointcloud_displays(int radar_num);
-	void register_slam_displays(int radar_num);
-	void register_FS_displays(int radar_num);
-    void register_settings(int radar_num);
-	void on_radar_calibration_callback(const arbe_msgs::arbeGUIsettings::ConstPtr& controls_data);
-
-
 	void registerPointcloudRviz();
 
 
 public Q_SLOTS:
-	void radar_start_stop_control( void );
 	void startControl( void );
 	void connectControl(void);
 	void configPower(void);
@@ -208,46 +179,9 @@ public Q_SLOTS:
 	void read3DFT(void);
 	void readDiff(void);
 	void readReg(void);
-	
-    void setCamera_sub_topic(bool flag );
-	void enableCamera(bool isUSB );
-	void enableFreeSpaceView( void );
-	void showSpeedometer(QGridLayout * layout);
-	void showTurnRate( QGridLayout * layout);
-	static void update_text_metrics( QString * labelText );
-	static void update_controls( gui_controls_t * gui_controls_data );
-	static void get_controls_values( gui_controls_t * gui_controls_data );
-	void rotate_view( void );
-	void setFocalPointAndHeading(float x, float y , float h);
-    void setPointDecayTime( int decay_time_ms_slider_value );
-	void calc_display_offsets( float x, float y, float h );
-	void choose_asphalt_or_text(bool asphalt);
-	void enableFollowerView( void );
-
 
 private Q_SLOTS:
-    void setThickness( int thickness_percent );
-    void setCellSize( int cell_size_percent );
-	void setradarXOffset( int radar_x_offset_slider_value );
-//	void setradarYOffset( int radar_y_offset_slider_value );
-    void setradarZOffset(int radar_z_offset_slider_value);
-	void setRadarYawAngle( int radar_yaw_angle_slider_value );
-	void setRadarPitchAngle( int radar_pitch_angle_slider_value );
-    //void setEuler_labelAndVal( int ten_times_val, uint8_t abg );
-	void setCamEulerAlpha( int cam_euler_alpha_slider_value );
-	void setCamEulerBeta( int cam_euler_beta_slider_value );
-	void setCamEulerGamma( int cam_euler_gamma_slider_value );
-	void setColoring( void );
-	void setRange( void );
-	void setMode( void );
 	void setLoadFileType( void );
-	void setPreRadarSliders( void );
-	void setThreshold4D( int sensitivity_slider_value );
-	void setAsphaltRoughness( int AsphaltRoughness_slider_value );
-	void setFloatingTextPhi( int floatingTextPhi_slider_value );
-	void setDynamicAzimuth( int DynamicAzimuth_slider_value );
-	void setDynamicElevation( int DynamicElevation_slider_value );
-	void show_configuration_dock( void );
 	void screen_record( void );
 	void setMinDoppler( int min_doppler_slider_value );
 	void setMaxDoppler( int max_doppler_slider_value );
@@ -255,49 +189,12 @@ private Q_SLOTS:
 	void setMaxColorCoding( int max_slider_value );
 	void setMinHeight( int min_height_slider_value );
 	void setMaxHeight( int max_height_slider_value );
-	void radar_connect_control( void );
 	void recording_control( void );
 	void closeEvent(QCloseEvent *event);
-	void radar_pause_control( void );
-	void setAzimuthBin( int azimuth_bin_slider_value );
-	void setTopView( void );
-	void setStandoffView( void );
-	void set120mView( void );
-	void setDiagView( void );
-	void setBoutique1View( void );
-	void setBoutique2View( void );
-	void setBoutique3View( void );
-    void setTopCarView( void );
-	void setCarView( void );
-	void setSideView( void );
-    bool getFollowerView( void );
-    void toggleFollowerView( void );
-	void bookmark_control( void );
-	void IncreaseSensitivity();
-	void DecreaseSensitivity();
-	void IncreaeDynamicAzimuth();
-	void DecreaseDynamicAzimuth();
-	void IncreaeAsphaltRoughness();
-	void DecreaseAsphaltRoughness();
-	void IncreaeFloatingTextPhi();
-	void DecreaseFloatingTextPhi();
-	void IncreaeDynamicElevation();
-	void DecreaseDynamicElevation();
-	void SetShortRnage();
-	void SetMidRnage();
-	void SetLongRnage();
-	void SetUltraLongRnage();
-	void Set3d();
-	void Set4d();
-	void ColorByElevation();
-	void ColorByDoppler();
-	void ColorByAmplitude();
-	void load_camera_calibration();
-	void choose_which_radars_text();
-    void calc_ant_height_tilt();
 	void start_save_task();
 	void saveDataThead();
-
+	void showSpeedometer( QGridLayout * layout);
+	void showTurnRate( QGridLayout * layout);
 	void loadLidarFile();
 	void setSaveFolder();
 	void udpConnect();
@@ -454,7 +351,5 @@ private:
 
 };
 
-int read_camera_calibration_from_file(const char * file_name, bool do_for_all_radars);
-void rotation_into_R_t_and_calc_cam_projection(float alpha, float beta, float gamma);
 
 #endif // viewpanel_H

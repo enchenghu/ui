@@ -105,7 +105,6 @@ ros::Subscriber master_slam_sub;
 ros::Publisher arbe_controls_pub ;
 arbe_msgs::arbeGUIsettings controls_data;
 
-void render_3d_car(float x, float y, float yaw);
 
 void pubGUIcontrols()
 {
@@ -114,65 +113,6 @@ void pubGUIcontrols()
 		return;
 
 	gui_controls_t gui_controls_data;
-	
-	viewpanel::get_controls_values( &gui_controls_data );
-	
-	controls_data.mode = gui_controls_data.mode_index;
-	controls_data.range = gui_controls_data.range_index;
-	controls_data.threshold4d = threshold4d;
-	controls_data.threshold3d = threshold4d - bias_4d.toInt();
-	controls_data.DynamicAzimuth = gui_controls_data.DynamicAzimuth;
-	controls_data.DynamicElevation = gui_controls_data.DynamicElevation;
-
-	controls_data.isNtc3dOn = ntc_3d_enabled>0;
-	controls_data.isNtc4dOn = ntc_4d_enabled>0;
-	controls_data.isCfar3dOn = cfar_3d_enabled>0;
-	controls_data.isCfar4dOn = cfar_4d_enabled>0;
-	controls_data.isPhaseEnabled = phase_enabled>0;
-	controls_data.isMetaDataEnabled = algo_thr_metadata_enabled>0;
-
-	controls_data.ColoringType = ColoringType;
-	controls_data.MinDoppler = MinDoppler;
-	controls_data.MaxDoppler = MaxDoppler;
-	controls_data.discardOutOfElContext = get_discard_out_of_el_context();
-	controls_data.disp_processed_pc = get_disp_processed_pc();
-	controls_data.disp_slam = get_disp_objects();
-	controls_data.noise_level_db = noise_level.toInt();
-	controls_data.selectedAzimuthBin = selectedAzimuthBin;
-	controls_data.tx_started = tx_started;
-	controls_data.radar_id = radar_id;
-	controls_data.radar_x_offset = radar_x_offset;
-//	controls_data.radar_y_offset = radar_y_offset;
-	controls_data.radar_z_offset = radar_z_offset;
-	controls_data.radar_yaw_angle = radar_yaw_angle;
-	controls_data.radar_pitch_angle = radar_pitch_angle;
-
-	controls_data.localization_active = get_localization_enable();
-	controls_data.aggregation_active = get_aggregation();
-
-	controls_data.color_obj_by_class = get_colorObjByClass();
-
-
-	//controls_data.cam_euler_alpha = cam_euler_alpha;
-	//controls_data.cam_euler_beta = cam_euler_beta;
-	//controls_data.cam_euler_gamma = cam_euler_gamma;
-	//controls_data.header.stamp = rosTime.now();
-
-	Color_Coding_Min_Max::Instance()->get_converted_values(ColoringType, controls_data.coloring_cc_min, controls_data.coloring_cc_max);
-	controls_data.coloring_cc_min /= 10.0;
-	controls_data.coloring_cc_max /= 10.0;
-	if(Per_radar_settings::Instance()->ant_height.size() > 0)
-		controls_data.per_radar = Per_radar_settings::Instance()->to_msg();
-
-	controls_data.slam_display.color_by_class = get_colorObjByClass();
-	controls_data.slam_display.disp_dist_on_cam = get_distOnCam();
-	controls_data.slam_display.disp_FS_on_cam = get_FreeSpace_enabled();
-	controls_data.slam_display.disp_funnel = get_funnel_enabled();
-	controls_data.slam_display.disp_slam_eco_mode = get_slamOnCam_ecoMode();
-	controls_data.slam_display.show_classification = true;
-	controls_data.slam_display.slam_on_camera = get_slamOnCam();
-	controls_data.header.stamp = ros::Time::now();
-	controls_data.marker_text_size = marker_text_size;
 
 	arbe_controls_pub.publish(controls_data);
 }
@@ -554,34 +494,6 @@ void *playback_thread(void* args)
 	}
 }
 
-void rosbag_controls_read_callback(const arbe_msgs::arbeGUIsettings::ConstPtr& controls_data)
-{
-	gui_controls_t gui_controls_data;
-
-	if (rosbag_playing == 0)
-		return;
-
-//        cam_euler_alpha = controls_data->cam_euler_alpha;
-//        cam_euler_beta = controls_data->cam_euler_beta;
-//        cam_euler_gamma = controls_data->cam_euler_gamma;
-//        cam_alpha_label->setText( "a ("+QString::number( cam_euler_alpha,'f',1 )+")" );
-//        cam_beta_label->setText( "b ("+QString::number( cam_euler_beta,'f',1 )+")" );
-//        cam_gamma_label->setText( "g ("+QString::number( cam_euler_gamma,'f',1 )+")" );
-//        cam_rel_alpha->setValue(cam_euler_alpha*10);
-//        cam_rel_beta->setValue(cam_euler_beta*10);
-//        cam_rel_gamma->setValue(cam_euler_gamma*10);
-//        rotation_into_R_t_and_calc_cam_projection(cam_euler_alpha,cam_euler_beta,cam_euler_gamma);
-
-	gui_controls_data.mode_index = controls_data->mode;
-	gui_controls_data.range_index = controls_data->range;
-	gui_controls_data.threshold3d = controls_data->threshold3d;
-	gui_controls_data.threshold4d = controls_data->threshold4d;
-	gui_controls_data.DynamicAzimuth = controls_data->DynamicAzimuth;
-	gui_controls_data.DynamicElevation = controls_data->DynamicElevation;
-	viewpanel::update_controls( &gui_controls_data );
-
-	return;
-}
 
 void debug_data_read_callback(const std_msgs::UInt32MultiArray::ConstPtr &msg)
 {
@@ -1097,213 +1009,11 @@ void update_3d_car(float x, float y, float yaw)
 
 }
 
-void render_3d_car(float x, float y, float yaw)
-{
-	tf2::Quaternion q_rot;
-
-	/* Prepare the Car marker */
-	uint32_t shape = visualization_msgs::Marker::MESH_RESOURCE;
-	zero_point_marker.mesh_resource = "package://arbe_phoenix_radar_driver/src/arbe_gui_main/Car.dae";
-	zero_point_marker.header.frame_id = "image_radar";
-	zero_point_marker.header.stamp = ros::Time::now();
-	zero_point_marker.ns = "radar_zero_point_marker";
-	zero_point_marker.id = 10000;
-	zero_point_marker.type = shape;
-	zero_point_marker.action = visualization_msgs::Marker::ADD;
-
-	zero_point_marker.scale.x = 1.0f;
-	zero_point_marker.scale.y = 1.0f;
-	zero_point_marker.scale.z = 1.0f;
-	zero_point_marker.color.r = 1.0f;
-	zero_point_marker.color.g = 1.0f;
-	zero_point_marker.color.b = 1.0f;
-	zero_point_marker.color.a = 1.0;
-	zero_point_marker.lifetime = ros::Duration(0);
-
-	update_3d_car(x, y, yaw);
-}
-
-
-/* Prepare the static markerts that are shown on the display grid */
-void prepare_basic_markers( void )
-{
-
-	/* Prepare the markers that show the number of detections per frame */
-	dtections_per_frame_marker.header.frame_id = "image_radar";
-	dtections_per_frame_marker.ns = "radar_dtections_per_frame_marker";
-	dtections_per_frame_marker.id = 10006;
-	dtections_per_frame_marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;;
-	dtections_per_frame_marker.action = visualization_msgs::Marker::ADD;
-	dtections_per_frame_marker.pose.position.x = 0;
-	dtections_per_frame_marker.pose.position.y = -10;
-	dtections_per_frame_marker.pose.position.z = 1;
-	dtections_per_frame_marker.pose.orientation.x = 0.0;
-	dtections_per_frame_marker.pose.orientation.y = 0.0;
-	dtections_per_frame_marker.pose.orientation.z = 0.0;
-	dtections_per_frame_marker.pose.orientation.w = 1.0;
-	dtections_per_frame_marker.scale.x = marker_text_size;
-	dtections_per_frame_marker.scale.y = marker_text_size;
-	dtections_per_frame_marker.scale.z = marker_text_size;
-	dtections_per_frame_marker.color.r = 1.0f;
-	dtections_per_frame_marker.color.g = 1.0f;
-	dtections_per_frame_marker.color.b = 1.0f;
-	dtections_per_frame_marker.color.a = 1.0;
-
-	/* prepare the markers that show the current grid cell size */
-	grid_size_marker_pos.header.frame_id = "image_radar";
-	grid_size_marker_pos.ns = "radar_zero_point_marker";
-	grid_size_marker_pos.id = 10007;
-	grid_size_marker_pos.type = visualization_msgs::Marker::TEXT_VIEW_FACING;;
-	grid_size_marker_pos.action = visualization_msgs::Marker::ADD;
-	grid_size_marker_pos.pose.position.x = grid_cell_size;
-	grid_size_marker_pos.pose.position.y = -0.5;
-	grid_size_marker_pos.pose.position.z = 0;
-	grid_size_marker_pos.pose.orientation.x = 0.0;
-	grid_size_marker_pos.pose.orientation.y = 0.0;
-	grid_size_marker_pos.pose.orientation.z = 0.0;
-	grid_size_marker_pos.pose.orientation.w = 1.0;
-	grid_size_marker_pos.scale.x = marker_text_size;
-	grid_size_marker_pos.scale.y = marker_text_size;
-	grid_size_marker_pos.scale.z = marker_text_size;
-	grid_size_marker_pos.color.r = 1.0f;
-	grid_size_marker_pos.color.g = 1.0f;
-	grid_size_marker_pos.color.b = 1.0f;
-	grid_size_marker_pos.color.a = 1.0;
-	grid_size_marker_pos.lifetime = ros::Duration(1);
-
-	grid_size_marker_neg.header.frame_id = "image_radar";
-	grid_size_marker_neg.ns = "radar_zero_point_marker";
-	grid_size_marker_neg.id = 10008;
-	grid_size_marker_neg.type = visualization_msgs::Marker::TEXT_VIEW_FACING;;
-	grid_size_marker_neg.action = visualization_msgs::Marker::ADD;
-	grid_size_marker_neg.pose.position.x = -grid_cell_size;
-	grid_size_marker_neg.pose.position.y = -0.5;
-	grid_size_marker_neg.pose.position.z = 0;
-	grid_size_marker_neg.pose.orientation.x = 0.0;
-	grid_size_marker_neg.pose.orientation.y = 0.0;
-	grid_size_marker_neg.pose.orientation.z = 0.0;
-	grid_size_marker_neg.pose.orientation.w = 1.0;
-	grid_size_marker_neg.scale.x = marker_text_size;
-	grid_size_marker_neg.scale.y = marker_text_size;
-	grid_size_marker_neg.scale.z = marker_text_size;
-	grid_size_marker_neg.color.r = 1.0f;
-	grid_size_marker_neg.color.g = 1.0f;
-	grid_size_marker_neg.color.b = 1.0f;
-	grid_size_marker_neg.color.a = 1.0;
-	grid_size_marker_neg.lifetime = ros::Duration(1);
-}
-
-void update_basic_markers( void )
-{
-	/* Update basic markers */
-	grid_size_marker_pos.scale.x = marker_text_size;
-	grid_size_marker_pos.scale.y = marker_text_size;
-	grid_size_marker_pos.scale.z = marker_text_size;
-	grid_size_marker_neg.scale.x = marker_text_size;
-	grid_size_marker_neg.scale.y = marker_text_size;
-	grid_size_marker_neg.scale.z = marker_text_size;
-
-	std::stringstream grid_size_text_pos;
-	grid_size_text_pos << (uint16_t)grid_cell_size << "m";
-	grid_size_marker_pos.text = grid_size_text_pos.str();
-	grid_size_marker_pos.pose.position.x = grid_cell_size;
-	arbe_info_markers.publish(grid_size_marker_pos);
-	std::stringstream grid_size_text_neg;
-	grid_size_text_neg << (int16_t)-grid_cell_size << "m";
-	grid_size_marker_neg.text = grid_size_text_neg.str();
-	grid_size_marker_neg.pose.position.x = -grid_cell_size;
-	arbe_info_markers.publish(grid_size_marker_neg);
-}
-
 static float heading = 0;
 static bool prev_localization = false;
 static bool side_slams_on = true;
 #define VELOCITY_TH 0.25 // m/s
 
-void trigger_side_slam(float egovel)
-{
-	if(egovel < VELOCITY_TH && !side_slams_on)
-	{
-		side_slams_on = true;
-		std_msgs::Bool trigger;
-		trigger.data = true;
-		trigger_side_slam_pub.publish(trigger);
-	}
-	else if(egovel >= VELOCITY_TH*1.1 && side_slams_on)
-	{
-		side_slams_on = false;
-		std_msgs::Bool trigger;
-		trigger.data = false;
-		trigger_side_slam_pub.publish(trigger);
-	}
-}
-
-void master_slam_read_callback(const arbe_msgs::arbeSlamMsg::ConstPtr& msg)
-{
-	trigger_side_slam(msg->meta_data.HostVelocity);
-	if (enable_gui == true)
-	{
-		if(get_localization_enable())
-		{
-			prev_localization = true;
-			float local_cart_x = msg->meta_data.local_catr_x;
-			float local_cart_y = msg->meta_data.local_catr_y;
-			float headingUnc = msg->meta_data.HostHeadingUnc;
-			set_local_cart(msg);
-			if(headingUnc > 0)
-			{
-				heading = msg->meta_data.HostHeading;
-			}
-			if(viewpanel::Instance()->get_3rd_prs())
-				viewpanel::Instance()->setFocalPointAndHeading(local_cart_x, local_cart_y, heading);
-
-			Eigen::Affine3f transform = Eigen::Affine3f::Identity();
-
-			transform.rotate(Eigen::AngleAxisf(heading, Eigen::Vector3f::UnitZ()));
-
-			Eigen::Vector3f car_center(0, -2.5, 0);
-
-			car_center = transform * car_center;
-
-			update_3d_car(car_center[0] + local_cart_x, car_center[1] + local_cart_y, heading);
-		}
-		else
-		{
-			if(prev_localization)
-				update_3d_car(0, -2.5, 0);
-			prev_localization = false;
-			if(viewpanel::Instance()->get_3rd_prs())
-			{
-				viewpanel::Instance()->rotate_view();
-			}
-		}
-		if (enable_gui == true)
-			pub_egoVel_cb(msg->meta_data.HostVelocity,msg->meta_data.HostOmega);
-	}
-}
-
-
-void slam_read_callback(const arbe_msgs::arbeSlamMsg::ConstPtr& array, int n_radar)
-{
-	int recv_size = 0;
-	TSlamObj* SlamObject;
-	TSlamHeader_V1_1 SlamHeader;
-
-	g_objects_mutex.lock();
-	slamMsg = arbe_msgs::arbeSlamMsg::ConstPtr(array);
-	g_objects_mutex.unlock();
-
-	set_host_vel(slamMsg->meta_data.HostVelocity);
-	host_w_z = slamMsg->meta_data.HostOmega;
-	if (enable_gui == true)
-		pub_egoVel_cb(get_host_vel(),host_w_z);
-
-	truesify_slamLastPacket();
-
-	flag_notused4display();
-
-	slam_display_handler(n_radar);
-	}
 
 /* Callback for debug messages recieved from the radar over the serial port */
 void serial_read_callback(const std_msgs::String::ConstPtr& msg)
@@ -1397,37 +1107,8 @@ void radar_stop_transmit()
 	pubGUIcontrols();
 }
 
-int getkey(void)
-{
-	int readKey = 0;
-	static struct termios oldTermios, newTermios;
-	tcgetattr(STDIN_FILENO, &oldTermios);
-	newTermios = oldTermios;
-	cfmakeraw(&newTermios);
-	tcsetattr(STDIN_FILENO, TCSANOW, &newTermios);
-	readKey = getchar();
-	tcsetattr(STDIN_FILENO, TCSANOW, &oldTermios);
-	return readKey;
-}
 
-int _kbhit() {
-    static const int STDIN = 0;
-    static bool initialized = false;
 
-    if (! initialized) {
-        // Use termios to turn off line buffering
-        termios term;
-        tcgetattr(STDIN, &term);
-        term.c_lflag &= ~ICANON;
-        tcsetattr(STDIN, TCSANOW, &term);
-        setbuf(stdin, NULL);
-        initialized = true;
-    }
-
-    int bytesWaiting;
-    ioctl(STDIN, FIONREAD, &bytesWaiting);
-    return bytesWaiting;
-}
 
 /* Main function */
 int main(int argc, char **argv)
@@ -1437,55 +1118,20 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "lidar_gui");
 	ros::Time::init();
 	ros::NodeHandlePtr pLidarNodeHandle = boost::make_shared<ros::NodeHandle>();
-
-#if  ONLY_SHOW_UI
-	arbe_info_markers = n->advertise<visualization_msgs::Marker>("/arbe/rviz/car_marker", 1);
-	n->getParam("/arbe_gui/console_level", console_level);
-	ros::console::levels::Level CL = ros::console::levels::Warn;
-	if(console_level<ros::console::levels::Count && console_level>=ros::console::levels::Debug)
-		CL = (ros::console::levels::Level)console_level;
-	if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, CL))//Debug))
-	{
-		ros::console::notifyLoggerLevelsChanged();
-	}
-
-	arbe_BuildNum_pub = n->advertise<arbe_msgs::arbeBuildNumber>("/arbe/settings/build_num",1,true);
-
-	getBuildNum();
-
-	arbe_ctrl_pub = n->advertise<std_msgs::UInt8MultiArray>("/arbe/raw/ctrl_status",10);
-	arbe_gui_commands_pub = n->advertise<std_msgs::String>("/arbe/settings/gui_commands", 1);
-	trigger_side_slam_pub = n->advertise<std_msgs::Bool>("/arbe/settings/trigger_side_looking_slam", 1);
-
-	pcl_pub = n->advertise<sensor_msgs::PointCloud2>("/arbe/rviz/pointcloud_0",1);
-	stationary_pcl_pub = n->advertise<sensor_msgs::PointCloud2>("/arbe/rviz/stationary_pointcloud_0",1);
-	marker_pub = n->advertise<visualization_msgs::MarkerArray>("/arbe/rviz/objects", 1);
-
-#endif
-
-/*   gui  */
-
 #if 1
 	QApplication app(argc, argv);
-
 	QCoreApplication::setOrganizationName("FMCW Lidar");
 	QCoreApplication::setApplicationName("FMCW Lidar ROS GUI");
 	QCoreApplication::setApplicationVersion(QT_VERSION_STR);
-
-
 	QCommandLineParser parser;
 	parser.setApplicationDescription(QCoreApplication::applicationName());
 	parser.addHelpOption();
 	parser.addVersionOption();
 	parser.addPositionalArgument("file", "The file to open.");
 	parser.process(app);
-
-	QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
-
 #endif
 #if 1
 	MainWindow mainWin;
-
 	const QRect availableGeometry = QApplication::desktop()->availableGeometry(&mainWin);
 	mainWin.resize(availableGeometry.width() / 2, availableGeometry.height() * 2 / 3);
 	mainWin.move((availableGeometry.width() - mainWin.width()) / 2, (availableGeometry.height() - mainWin.height()) / 2);
@@ -1493,207 +1139,4 @@ int main(int argc, char **argv)
 	return app.exec();
 #endif
 
-
-#if 0
-	ctrl_ip[0] = settings.value("radar ip").toString();
-	ctrl_port[0] = settings.value("radar port").toString();
-	data_port[0] = settings.value("data port").toString();
-	logs_port[0] = settings.value("logs port").toString();
-
-	ctrl_ip[1] = "10.20.30.41";
-	ctrl_port[1] = "6002";
-	data_port[1] = "6004";
-	logs_port[1] = "6011";
-#endif
-
-
-#if ONLY_SHOW_UI   //gui test
-	/* Radar parameters */
-	n->getParam("/arbe_gui/Mode", mode);
-	n->getParam("/arbe_gui/RangeType", RangeType);
-	n->getParam("/arbe_gui/ColoringType", ColoringType);
-	n->getParam("/arbe_gui/Threshold4d", threshold4d);
-	n->getParam("/arbe_gui/DynamicAzimuth", DynamicAzimuth);
-	n->getParam("/arbe_gui/DynamicElevation", DynamicElevation);
-	n->getParam("/arbe_gui/MinDoppler", MinDoppler);
-	n->getParam("/arbe_gui/MaxDoppler", MaxDoppler);
-	n->getParam("/arbe_gui/RecordFileName", RecordFileName);
-
-	n_radars = 1;
-	n->getParam("/arbe_gui/n_radars", n_radars);
-	Per_radar_settings::Instance(n_radars);
-	Per_radar_settings::Instance()->resize(n_radars);
-	for(int i =0 ; i<n_radars; i++)
-	{
-		Per_radar_settings::Instance()->threshold_4d.at(i) = threshold4d;
-	}
-
-//	float ang;
-	std::vector<int> camera_id;
-
-	bool resu= n->getParam("/arbe_gui/yaw_in_degrees", yaw_in_degrees);
-	resu= n->getParam("/arbe_gui/pitch_in_degrees", pitch_in_degrees);
-	resu= n->getParam("/arbe_gui/Radar_base_freq", radar_base_freq);
-	resu= n->getParam("/arbe_gui/Radar_X_Offset", Radar_X_Offset);
-	resu= n->getParam("/arbe_gui/Radar_Y_Offset", Radar_Y_Offset);
-	resu= n->getParam("/arbe_gui/Radar_Z_Offset", Radar_Z_Offset);
-	resu= n->getParam("/arbe_gui/Radar_Name", Radar_Name);
-	resu= n->getParam("/arbe_gui/Radar_IP", radar_ip);
-	resu= n->getParam("/arbe_gui/Ctrl_Port", Ctrl_Port);
-	resu= n->getParam("/arbe_gui/Data_Port", Data_Port);
-	resu= n->getParam("/arbe_gui/Logs_Port", Logs_Port);
-	resu= n->getParam("/arbe_gui/moment_length_in_m", moment_length_in_m);
-	resu= n->getParam("/arbe_gui/camera_id", camera_id);
-	resu= n->getParam("/arbe_gui/camera_calib_file", camera_calib_file);
-	if(n_radars!=yaw_in_degrees.size() || n_radars!=pitch_in_degrees.size() ||
-			n_radars!=Radar_X_Offset.size() || n_radars!=Radar_Y_Offset.size() ||n_radars!=Radar_Z_Offset.size()
-			|| n_radars!=Radar_Name.size() || n_radars!=radar_ip.size() || n_radars!=Ctrl_Port.size() || n_radars!=Data_Port.size()
-			|| n_radars!=Logs_Port.size() || n_radars!=moment_length_in_m.size() ||
-			n_radars!=camera_id.size() || n_radars!=camera_calib_file.size()|| n_radars!=radar_base_freq.size())
-	{
-		ROS_WARN("ERROR! Please Fix launch file params!");
-		ret = 	system("rosnode kill --all");
-		return -1;
-	}
-	int err = read_camera_calibration_from_file(camera_calib_file[0].c_str(), true);
-	if(err <0)
-		ROS_WARN("Warning! Please Fix camera calibration file!");
-	else
-		ROS_INFO("camera calibrated!");
-
-	Per_radar_settings::Instance()->ant_height = Radar_Z_Offset;
-//	Per_radar_settings::Instance()->ant_pitch = pitch_in_degrees;
-	for(int ant =0; ant<pitch_in_degrees.size();ant++)
-	{
-		Per_radar_settings::Instance()->ant_pitch.at(ant) = pitch_in_degrees[ant] * M_PI/180.0 ;
-	}
-
-
-	for(int n_rdr = 0; n_rdr < n_radars; n_rdr++)
-	{
-		//		ang = 0;
-		//		bool res = n->getParam("/arbe_gui/yaw_in_degrees_"+std::to_string(n_rdr), ang);
-		radar_yaw_angles.push_back(yaw_in_degrees[n_rdr]*3.1415/180);
-
-		//Launch SLAM+FS
-		char buffer [512];
-			sprintf(buffer,"roslaunch arbe_phoenix_radar_driver arbe_SLAM.launch \
-					n_radars:=%d yaw_in_degrees:=%d this_radar:=%d moment_length_in_m:=%f pitch_in_degrees:=%f Radar_Z_Offset:=%f Radar_Y_Offset:=%f &",
-					n_radars,yaw_in_degrees[n_rdr],n_rdr, moment_length_in_m[n_rdr], pitch_in_degrees[n_rdr], Radar_Z_Offset[n_rdr], Radar_Y_Offset[n_rdr]-Radar_Y_Offset[0]);
-					ret = system(buffer);
-		}
-
-	radar_launch_pointcloud_nodes();
-	char class_buffer [512];
-	sprintf(class_buffer,"roslaunch arbe_phoenix_radar_driver arbe_classification.launch n_radars:=%d &",n_radars);
-	ret = system(class_buffer);
-#endif
-
-#if 0
-	ROS_INFO("Ctrl IP = %s", ctrl_ip[0].toStdString().c_str());
-	ROS_INFO("Ctrl Port = %d", ctrl_port[0].toInt());
-	ROS_INFO("Data Port = %d", data_port[0].toInt());
-	ROS_INFO("Logs Port = %d", logs_port[0].toInt());
-#endif
-
-
-#if ONLY_SHOW_UI   //gui test
-
-	/* Initialize API mailbox */
-	tArbeApiMailBox.sendCmd = TransmitBuffer;
-	tArbeApiMailBox.sysCfg_GetSystemTimeMs = GetSystemTime;
-
-	/* spawn the unity playback thread */
-	//ret=pthread_create(&playback_thread_id,NULL,&playback_thread,NULL);
-
-	/* start the GUI controls subscriber */
-	old_gui_controls_sub = n->subscribe("/arbe_gui_controls", 1, rosbag_controls_read_callback);
-	gui_controls_sub = n->subscribe("/arbe/settings/gui_controls", 1, rosbag_controls_read_callback);
-
-	/* start the serial readback subscriber */
-	old_arbe_serial_sub = n->subscribe("/arbe_serial_console", 1, serial_read_callback);
-	arbe_serial_sub = n->subscribe("/arbe/raw/serial_console", 1, serial_read_callback);
-
-	/* Create a ROS subscriber for the input point cloud */
-	selected_points_sub = n->subscribe ("/arbe/rviz/selected_points", 1, process_selected_points_callback);
-	arbe_debug_data_count_sub = n->subscribe ("/arbe/raw/debug_progress", 1, debug_data_read_callback);
-
-	/* Create a ROS publisher for GUI settings send to the radar nodes */
-	arbe_controls_pub = n->advertise<arbe_msgs::arbeGUIsettings>("/arbe/settings/gui_controls",1,true);
-
-	initImageSubPub(n);	 // initialize image sub pub for bounding boxes in display
-	init_bookmark_SubPub(n); // initialize bookmarking sub pub
-    init_speed_pub(n);	 // Initialize speed and trunrate publishers
-
-	master_slam_sub = n->subscribe<arbe_msgs::arbeSlamMsg>("/arbe/processed/objects/0", 1, master_slam_read_callback);
-	for(int nr = 0; nr < n_radars; nr++)
-	{
-//		targets_subscribers.push_back(n->subscribe<arbe_msgs::arbeNewPcMsg>(
-//										  "/arbe/processed/pointcloud/"+std::to_string(nr), 1, boost::bind(targets_read_callback, _1, nr)));
-//		objects_subscribers.push_back(n->subscribe<arbe_msgs::arbeSlamMsg>(
-//										  "/arbe/processed/objects/"+std::to_string(nr), 1, boost::bind(slam_read_callback, _1, nr)));
-	}
-
-	/* Initialize Rviz markers (car, grid size etc.) */
-	prepare_basic_markers();
-
-	/* Create a houskeeping timer function. runs every 500msec */
-	ros::Timer timer = n->createTimer(ros::Duration(0.5), timerCallback);
-	n->getParam("/arbe_gui/enable_gui", enable_gui);
-	if (enable_gui == true)
-	{
-		/* Prepare and launch the GUI main application */
-		MainWindow mainWin;
-
-		const QRect availableGeometry = QApplication::desktop()->availableGeometry(&mainWin);
-		mainWin.resize(availableGeometry.width() / 2, availableGeometry.height() * 2 / 3);
-		mainWin.move((availableGeometry.width() - mainWin.width()) / 2, (availableGeometry.height() - mainWin.height()) / 2);
-
-		mainWin.show();
-		return app.exec();
-	} else
-	{
-		char readKey;
-		char secondKey;
-		sleep(5);
-
-		/* Enable NTC and CFAR using defaults (off, on, on, off) */
-		radar_set_params();
-		radar_change_seq();
-
-		Ntc_Mode_Set();
-		Cfar_Mode_Set();
-		sleep(1);
-
-		/* Enable phase data in pointcloud */
-		phase_enabled = true;
-
-		radar_start_transmit();
-
-		ros::Rate loop_rate(30);
-		while (ros::ok() && (!terminating))
-		{
-			if (_kbhit())
-			{
-				readKey = getkey();
-				switch(readKey)
-				{
-					case '/': 
-						ROS_WARN("here is /");
-						secondKey = getkey();
-						switch(secondKey)
-						{
-							case 'q':
-								radar_quit();
-								break;
-						}
-					break;
-				}
-			}
-			fflush(stdout);
-			ros::spinOnce();
-			loop_rate.sleep();
-		}
-	}
-#endif
 }

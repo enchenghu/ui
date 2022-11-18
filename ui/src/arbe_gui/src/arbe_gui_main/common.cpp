@@ -180,36 +180,7 @@ bool get_discard_out_of_el_context()
 }
 
 
-void imu_read_callback(const sensor_msgs::Imu::ConstPtr& msg)
-{
-//	g_objects_mutex.lock();
-	float yaw = -msg->angular_velocity.z;
 
-	imu_egoYaw_cb(yaw);
-
-//	g_objects_mutex.unlock();
-
-}
-
-void gps_read_callback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr& msg)
-{
-//	g_objects_mutex.lock();
-	float vel = sqrt(msg->twist.twist.linear.x*msg->twist.twist.linear.x +
-			msg->twist.twist.linear.y*msg->twist.twist.linear.y );
-
-	gps_egoVel_cb(vel);
-
-//	g_objects_mutex.unlock();
-}
-
-void slam_ctrl_callback(const std_msgs::Bool::ConstPtr &msg)
-{
-    if (msg->data == true)
-    {
-        // reset the aggregation
-        set_reset_mapping(true);
-    }
-}
 
 static bool aggregate_pc = false;
 void set_aggregation(bool agg)
@@ -647,26 +618,6 @@ void set_disp_objects(bool flag)
 }
 
 
-int load_camera_calib( bool do_for_all_radars )
-{
-	QString camera_file =  QFileDialog::getOpenFileName(
-	  viewpanel::Instance(),
-	  "Choose camera calibration file",
-	  QDir::currentPath(),
-	  "Camera calibration files (*.cam)",0,QFileDialog::DontUseNativeDialog);
-
-	if( !camera_file.isNull() )
-	{
-		qDebug() << "selected file path : " << camera_file.toUtf8();
-	}
-	int err = read_camera_calibration_from_file(camera_file.toStdString().c_str(), do_for_all_radars);
-	if (err == -1)
-		ROS_ERROR("Could not load camera calibration file, sticking to default calibration");
-	else if (err==0)
-		ROS_DEBUG("Successfully read camera calibration file %s",camera_file.toStdString().c_str());
-
-	return err;
-}
 
 float local_cart_x = 0, local_cart_y = 0;
 void set_local_cart(const arbe_msgs::arbeSlamMsg::ConstPtr& msg)

@@ -431,22 +431,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
 	close();
 	radar_quit();
 	ret = 	system("rosnode kill --all");
-
-/*	QMessageBox::StandardButton answer = QMessageBox::question(
-		this,
-		tr("Close the Window"),
-		tr("Do you want to close the window?"),
-		QMessageBox::Yes | QMessageBox::No);
-
-	if(answer == QMessageBox::Yes){
-		event->accept();
-		writeSettings();
-		int ret = system("pkill -f rqt_bag");
-		close();
-		radar_quit();
-}
-	else
-		event->ignore();*/
 }
 
 void MainWindow::init_cmnd_line_subs( void )
@@ -476,11 +460,6 @@ void MainWindow::on_cmnd_dview_y_callback(std_msgs::Float32 msg)
 
 void MainWindow::on_cmnd_camera_file_callback(std_msgs::String msg)
 {
-	int err = read_camera_calibration_from_file(msg.data.c_str(),true);
-	if (err == -1)
-		ROS_ERROR("Could not load camera calibration file, keeping current calibration");
-	else if (err==0)
-		ROS_DEBUG("Successfully read camera calibration file %s",msg.data.c_str());
 }
 
 
@@ -593,7 +572,6 @@ void MainWindow::toggle_discard_out_of_el_context( void )
 
 void MainWindow::toggle_asphalt_text( void )
 {
-	viewpanel::Instance()->choose_asphalt_or_text(toggleAsphaltTextSlidersAct->isChecked());
 }
 
 
@@ -623,8 +601,6 @@ void MainWindow::toggle_slam_color_by_class( void )
 
 void MainWindow::load_camera_calibration( void )
 {
-	load_camera_calib(true);
-	return;
 	}
 
 void MainWindow::stopPlayback( void )
@@ -692,12 +668,10 @@ void MainWindow::launchUSBCam( void )
 
 void MainWindow::enableCamera( void )
 {
-	viewPanel->enableCamera(USBcameraAct->isChecked());
 }
 
 void MainWindow::enableFreeSpaceTopView( void )
 {
-	viewPanel->enableFreeSpaceView();
 }
 
 void MainWindow::radarReset( void )
@@ -730,31 +704,6 @@ void MainWindow::selectDetectionsType( void )
 
 void MainWindow::selectSlam( void )
 {
-	slamDispOnCam=ShowSlamAct->isChecked();
-	toggleSlamOnImageAct->setChecked(slamDispOnCam);
-	set_slamOnCam(slamDispOnCam);
-
-	toggleDispDistOnImageAct->setChecked(slamDispDistOnCam);
-	set_distOnCam(slamDispDistOnCam);
-
-	if(ShowSlamAct->isChecked())
-	{
-		ROS_INFO("Tracked objects display option was selected");
-		gps_sub = n->subscribe("/ublox1/fix_velocity", 1, gps_read_callback);
-		imu_sub = n->subscribe("/imu/data", 1, imu_read_callback);
-        ctl_reset_PC_aggregation = n->subscribe("/arbe/processed/ctrl_msg_reset_aggreg",1, slam_ctrl_callback);
-		slam_displayed = true;
-	}
-	else
-	{
-		ROS_INFO("NO tracked objects display option was selected");
-		objects_sub.shutdown();
-		set_host_vel(0.0);
-		pub_egoVel_cb(0,0);
-		slam_displayed = false;
-	}
-	set_disp_objects(slam_displayed);
-	pubGUIcontrols();
 
 }
 
@@ -767,7 +716,6 @@ void MainWindow::resetOmegaCalib( void )
 	resetOmegaCalib_pub.publish(msg);
     std_msgs::Float32 tmp_msg;
 	tmp_msg.data = -10000.0;
-    viewPanel->on_omega_calibration(tmp_msg);
 	ROS_INFO("Installation error calibration has been reset");
 }
 
@@ -780,7 +728,6 @@ void MainWindow::imposeOmegaZero( void )
 	imposeOmegaZero_pub.publish(msg);
 	std_msgs::Float32 tmp_msg;
 	tmp_msg.data = -10000.0;
-	viewPanel->on_omega_calibration(tmp_msg);
 	ROS_INFO("Installation error calibration has been imposed");
 }
 
@@ -800,21 +747,12 @@ void MainWindow::dispFSOnPc( void )
 
 void MainWindow::EnableAggregation( void )
 {
-    if(EnableGeogAct->isChecked())
-    {
-        set_aggregation(EnableAggregationAct->isChecked());
-        if(get_aggregation())
-            viewpanel::Instance()->setPointDecayTime(0);
-        else
-            viewpanel::Instance()->setPointDecayTime(15000);
-    }
-	pubGUIcontrols();
+
 }
 
 void MainWindow::setDLTrainingPlayback( void )
 {
 	set_dl_training_playback(DLTrainingPlaybackAct->isChecked());
-	viewPanel->setCamera_sub_topic(DLTrainingViewAct->isChecked());
 }
 
 void MainWindow::setDLTrainingView( void )
@@ -843,7 +781,6 @@ void MainWindow::setDLTrainingView( void )
 
 		//objects_sub = n->subscribe("/arbe/dl_training/objects", 1, slam_read_callback);
 		cmnd_line_load_camera_file_sub = n->subscribe("/arbe/dl_training/cmnd_line_camera_file", 1, &MainWindow::on_cmnd_camera_file_callback,this);
-        viewPanel->setCamera_sub_topic(true);
         DetectionsTypeAct->setDisabled(true);
         ShowSlamAct->setChecked(true);
         ShowSlamAct->setDisabled(true);
@@ -871,7 +808,6 @@ void MainWindow::setDLTrainingView( void )
 
         DetectionsTypeAct->setEnabled(true);
         ShowSlamAct->setEnabled(true);
-        viewPanel->setCamera_sub_topic(false);
         selectDetectionsType();
         selectSlam();
         DLTrainingChooseAllClassesAct->setChecked(true);
@@ -971,22 +907,6 @@ void MainWindow::setClassesToShow( void)
 
 void MainWindow::EnableGeoLocalization( void )
 {
-	set_localization_enable_disable(EnableGeogAct->isChecked());
-	if(EnableGeogAct->isChecked())
-	{
-		set_aggregation(EnableAggregationAct->isChecked());
-        if(get_aggregation())
-            viewpanel::Instance()->setPointDecayTime(0);
-        else
-            viewpanel::Instance()->setPointDecayTime(15000);
-		viewpanel::Instance()->enableFollowerView();
-	}
-	else
-	{
-		set_aggregation(false);
-        viewpanel::Instance()->setPointDecayTime(0);
-	}
-	pubGUIcontrols();
 }
 
 void MainWindow::ResetLocalCartesian( void )
@@ -1492,90 +1412,10 @@ void MainWindow::updateSettingsStrings( void )
 
 void MainWindow::load_settings()
 {
-	QSettings settings(QCoreApplication::organizationName(),
-		QCoreApplication::applicationName());
-	radar_region = settings.value("radar region","World").toString();
-	chamber_mode_state = settings.value("chamber mode state",false);
-	bias_4d = settings.value("4d bias","4").toString();
-	noise_level = settings.value("noise level","40").toString();
-	logging_state = settings.value("logging state",true);
-	ntc_3d_state = settings.value("ntc 3d state",false);
-	ntc_4d_state = settings.value("ntc 4d state",true);
-	cfar_3d_state = settings.value("cfar 3d state",true);
-	cfar_4d_state = settings.value("cfar 4d state",false);
-	ntc_3d_enabled = ntc_3d_state.toBool();
-	ntc_4d_enabled = ntc_4d_state.toBool();
-	cfar_3d_enabled = cfar_3d_state.toBool();
-	cfar_4d_enabled = cfar_4d_state.toBool();
-
-	phase_state = settings.value("phase state",false);
-	phase_enabled = phase_state.toBool();
-
-	output_thr_metadata_state = settings.value("output threshold metadata state",false);
-	algo_thr_metadata_enabled = output_thr_metadata_state.toBool();
-
-	radar_debug_port = settings.value("uart debug port","/dev/ttyUSB1").toString();
-	video_device = settings.value("camera video device","/dev/video0").toString();
-	sscanf( video_device.toStdString().c_str(), "%*[^0123456789]%d", &video_dev_num );
-
-	EnableSlam_state = settings.value("EnableSlamAct state",DEFAULT_SLAM_ENABLED);
-	cam_euler_alpha = settings.value("cam_euler_alpha value",0).toFloat();
-	cam_euler_beta = settings.value("cam_euler_beta value",0).toFloat();
-	cam_euler_gamma = settings.value("cam_euler_gamma value",0).toFloat();
-	rotation_into_R_t_and_calc_cam_projection(cam_euler_alpha,cam_euler_beta,cam_euler_gamma);
-
-//    radar_z_offset = settings.value("Antenna Height",radar_z_offset).toFloat();
-//    radar_pitch_angle = settings.value("Antenna Pitch",radar_pitch_angle).toFloat();
-//    viewPanel->setradar_z_offset( radar_z_offset * 100);
-//    viewPanel->setAntEulerAlpha(radar_pitch_angle);
-
-	camera_geometry = settings.value("camera_geomentry").toRect();
-	if (camera_geometry.isNull())
-	{
-		camera_geometry.setCoords(79,284,400,560);
-	}
-
-	ROS_DEBUG("load_settings->radar region = %s\n",radar_region.toStdString().c_str());
-	camera_type = settings.value("gige_cam_enabled",DEFAULT_CAM_GIGE);
 }
 
 void MainWindow::save_settings(void )
 {
-	QSettings settings(QCoreApplication::organizationName(),
-		QCoreApplication::applicationName());
-
-	settings.setValue("radar region", radar_region);
-	settings.setValue("4d bias", bias_4d);
-	settings.setValue("noise level", noise_level);
-	settings.setValue("chamber mode state", chamber_mode_state);
-	settings.setValue("logging state", logging_state);
-	settings.setValue("ntc 3d state", ntc_3d_state);
-	settings.setValue("ntc 4d state", ntc_4d_state);
-	settings.setValue("cfar 3d state", cfar_3d_state);
-	settings.setValue("cfar 4d state", cfar_4d_state);
-	settings.setValue("phase state", phase_state);
-	settings.setValue("output threshold metadata state", output_thr_metadata_state);
-
-	settings.setValue("uart debug port", radar_debug_port);
-	settings.setValue("camera video device", video_device);
-
-	settings.setValue("EnableSlamAct state", EnableSlamAct->isChecked());
-	settings.setValue("cam_euler_alpha value", cam_euler_alpha);
-	settings.setValue("cam_euler_beta value", cam_euler_beta);
-	settings.setValue("cam_euler_gamma value", cam_euler_gamma);
-
-	QRect geometry = CameraWidget[0]->geometry();
-	settings.setValue("camera_geomentry", geometry);
-
-	settings.setValue("Antenna Height",radar_z_offset);
-	settings.setValue("Antenna Pitch",radar_pitch_angle);
-	settings.setValue("gige_cam_enabled", GigEcameraAct->isChecked());
-
-	radar_configure_pc();
-	Ntc_Mode_Set();
-	Cfar_Mode_Set();
-
-	pubGUIcontrols();
 }
 
 void MainWindow::about()
