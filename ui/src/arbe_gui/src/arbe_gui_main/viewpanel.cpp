@@ -68,212 +68,52 @@
 
 #define CTRL_SOCKET 0
 #define DEFAULT_AZIMUTH_BIN 0
-#define DEBUG_UI 0
+#define DEBUG_UI 1
 #define SIGN_LIMIT_NUM 32767
 #define SIGN_OFFSET_NUM 65536
 
-extern void Ntc_Mode_Set();
-extern void Cfar_Mode_Set();
-extern void radar_set_params();
-extern void radar_change_seq();
-extern void radar_start_transmit();
-extern void radar_stop_transmit();
 static pcData_t g_msg;
 static udpMsg g_udpMsg;
-
-
-extern void radar_launch_pointcloud_nodes();
 extern void radar_quit();
 extern void rosbag_start_recording();
 extern void rosbag_stop_recording();
-extern void pubGUIcontrols();
-extern void render_3d_car(float x, float y, float yaw);
 
 extern int terminating;
 extern std::string ColoringType;
 extern std::string RangeType;
 extern std::string mode;
-extern int radar_id;
-extern float radar_x_offset;
-extern float radar_y_offset;
-extern float radar_z_offset;
-extern float radar_yaw_angle;
-extern float radar_pitch_angle;
-
-//extern float ant_euler_beta;
-//extern float ant_euler_gamma;
-
-float cam_euler_fs_alpha_backoff = -2.2;
-extern float cam_euler_alpha;
-extern float cam_euler_beta;
-extern float cam_euler_gamma;
-
-extern int threshold4d;
-extern int AsphaltRoughness;
-extern int DynamicAzimuth;
-extern int DynamicElevation;
-extern bool ntc_3d_enabled;
-extern bool ntc_4d_enabled;
-extern bool cfar_3d_enabled;
-extern bool cfar_4d_enabled;
-extern bool phase_enabled;
 
 extern float MinDoppler;
 extern float MaxDoppler;
-extern int radar_connected;
 extern int rosbag_recording;
 extern int grid_cell_size;
-extern float frames_per_second;
-extern int selectedAzimuthBin;
-extern QString radar_region;
 extern float MinHeight;
 extern float MaxHeight;
 int DetectionMemoryTime = 0;
 extern int marker_text_size;
-extern QRect camera_geometry;
-
-QSlider* thickness_slider;
-QSlider* cell_size_slider;
-QComboBox* ColoringCombo;
-QComboBox* RangeCombo;
-QComboBox* ModeCombo;
-QComboBox* RadarIdCombo;
-QComboBox* 	lidarIdCombo;
-QSlider* sensitivity_slider;
-QSlider* asphalt_roughness_slider;
-QSlider* dynamic_azimuth_slider;
-QSlider* dynamic_elevation_slider;
-QSlider* azimuth_bin_slider;
-QSlider* min_height_slider;
-QSlider* max_height_slider;
-ctkRangeSlider* cc_slider;
-ctkRangeSlider* mm_doppler_slider;
-
-QSlider* radar_x_offset_slider;
-//QSlider* radar_y_offset_slider;
-QSlider* radar_z_offset_slider;
-QSlider* radar_yaw_angle_slider;
-QSlider* radar_pitch_angle_slider;
-
-QSlider* cam_rel_alpha;
-QSlider* cam_rel_beta;
-QSlider* cam_rel_gamma;
-
-QSlider* vis_text_phi_slider;
 
 QDockWidget *dock;
 QDockWidget *dock_param;
 
-QLabel* sensitivity_label;
-QLabel* dynamic_azimuth_label;
-QLabel* dynamic_elevation_label;
-QLabel* azimuth_bin_label;
-QLabel* thickness_label;
-QLabel* cell_size_label;
-QLabel* radar_x_offset_label;
-//QLabel* radar_y_offset_label;
-QLabel* radar_z_offset_label;
-QLabel* radar_yaw_angle_label;
-QLabel* radar_pitch_angle_label;
-QLabel* decay_time_label;
-QLabel* view_label;
 QLabel* min_height_label;
 QLabel* max_height_label;
-QLabel* sensitivity_hint_label_l;
-QLabel* sensitivity_hint_label_h;
 QLabel* cc_min_label;
 QLabel* cc_max_label;
 QLabel* cc_label;
 QLabel* mm_doppler_min_label;
 QLabel* mm_doppler_max_label;
 QLabel* mm_doppler_label;
-QLabel* asphalt_roughness_label;
-QLabel* vis_text_phi_label;
 
-
-QLabel* cam_alpha_label;
-QLabel* cam_beta_label;
-QLabel* cam_gamma_label;
-QLabel* overlay_text_label;
-QLabel* camera_calibration_file;
-
-QLabel* lidar_connect_label;
-QLabel* lidar_disconnect_label;
-QLabel* lidar_start_label;
-QLabel* lidar_stop_label;
-
-QPushButton *radar_connect_button;
 QPushButton *record_button;
 QPushButton *screen_record_button;
-QPushButton *radar_start_stop_button;
 QPushButton *radar_pause_button;
-QPushButton *car_view_button;
-QPushButton *top_car_view_button;
-QPushButton *top_view_button;
-QPushButton *side_view_button;
-
-
-QWidget* CameraWidget[MAX_RADARS];
-QWidget* FreeSpaceWidget;
 QcGaugeWidget* SpeedometerWidget;
-QPushButton *cam_calib_btn;
-QPushButton *btn_calc_ant_height_tilt;
-QRadioButton *radar_text_radio;
-QPushButton *bookmark_button;
-QTextEdit*  para_show_1;
-QTextEdit*  para_show_2;
-QTextEdit*  para_show_3;
-QTextEdit*  para_show_4;
-QLabel* para_show_1_label;
-QLabel* para_show_2_label;
-QLabel* para_show_3_label;
-QLabel* para_show_4_label;
-
-static ros::Subscriber rd_inclination_sub;
-static ros::Subscriber raw_cam_sub;
-static ros::Subscriber gige_cam_sub;
-static ros::Subscriber capture_for_training_sub;
-static ros::Subscriber fs_display_sub;
-static ros::Subscriber slam_objs_sub;
-static ros::Subscriber bookmark_sub;
-static ros::Subscriber cmnd_line_view_sub;
-static ros::Subscriber cmnd_line_color_code_sub;
-static ros::Subscriber cmnd_line_screen_record_sub;
-static ros::Subscriber cmnd_line_record_sub;
-static ros::Subscriber cmnd_line_euler_alpha_sub;
-static ros::Subscriber cmnd_line_euler_beta_sub;
-static ros::Subscriber cmnd_line_euler_gamma_sub;
-static ros::Subscriber isOmegaCalibrated_sub;
-static ros::Subscriber arbe_status_sub;
-static ros::Subscriber arbe_targets_sub;
-static ros::Subscriber arbe_radar_calibration_sub;
-static ros::Subscriber arbe_ant_height_tilt_sub_arr[MAX_RADARS];
-static std::vector<ros::Subscriber> arbe_targets_subs;
 static bool radarIdCombo_ready = false;
 static int connected_radars = 0;
 
-//static ros::Subscriber disp_perspective_sub;
-//static ros::Subscriber disp_colorcode_sub;
-static  geometry_msgs::PolygonStamped FS_display_polygon;
-static ros::Publisher  arbe_capture_pub;
-static ros::Publisher  img_for_dltrain_pub;
-static ros::Publisher  bookmark_pub;
-static ros::Publisher  radarHnP_pub;
-static ros::Publisher AsphaltRoughness_pub;
-static ros::Publisher FloatingTextPhi_pub;
-
-static bool dl_training_view_active = false;
-static ros::Publisher  egoVel_pub;
-static ros::Publisher  turnRate_pub;
-static ros::Publisher  arbe_gui_commands_pub;
-static ros::Publisher  pub_calc_ant_height_tilt[MAX_RADARS];
-
 bool screen_recording = 0;
 bool radar_playing = 0;
-
 bool pointcloud_topic_initialized[MAX_RADARS] = {};
-int num_of_radars = 1; // first radar pointcloud topic always set
-std::vector<int> camera_id;
 
 QcGaugeWidget * mSpeedGauge;
 QcNeedleItem *mSpeedNeedle;
@@ -282,55 +122,10 @@ QcNeedleItem *mGpsSpeedNeedle;
 QcGaugeWidget * mTurnRateGauge;
 QcNeedleItem *mTurnRateNeedle;
 QcNeedleItem *mImuTurnRateNeedle;
-
-char cv_camera_launch_command[100];
-bool isUSBcamera = false;
-
 static float intrinsic_mat[3][3] = {{1526.97,0,934.05},
 									{0,1533.03,537.37},
 									{0,0,1}};
 
-
-void imu_egoYaw_cb(float yaw)
-{
-	mImuTurnRateNeedle->setCurrentValue(yaw * 180 / 3.1415);
-}
-
-void gps_egoVel_cb(float gps_speed)
-{
-	float speed_kph = gps_speed * 3.6;
-	mGpsSpeedNeedle->setCurrentValue(speed_kph);
-}
-
-
-void pub_egoVel_cb(float egoVel,float w_z)
-{
-//	std_msgs::Float64 msg;
-//	msg.data = (float)((uint16_t)(egoVel * 3.6)); // convert to km/h
-//	egoVel_pub.publish(msg);
-	float speed_kph = egoVel * 3.6;
-	mSpeedNeedle->setCurrentValue(speed_kph);
-	QcLabelItem *label = mSpeedNeedle->label();
-	label->setText(QString::number( (uint16_t)speed_kph ));
-
-	float turnRate = w_z * 180.0 / 3.1415;
-	mTurnRateNeedle->setCurrentValue(turnRate);
-	QcLabelItem *label_w = mTurnRateNeedle->label();
-	label_w->setText(QString::number( (int16_t)turnRate ));
-}
-void pub_radar_height_and_pitch(int index)
-{
-	if(index > -1)
-	{
-		ros::NodeHandlePtr node_ptr = boost::make_shared<ros::NodeHandle>();
-		arbe_msgs::arbeRdInclination msg;
-		radarHnP_pub = node_ptr->advertise<arbe_msgs::arbeRdInclination>("/arbe/settings/radar_height_and_pitch/"+std::to_string(index),1,true);
-		msg.header.stamp = ros::Time::now();
-		msg.ant_tilt = radar_pitch_angle;
-		msg.ant_height = radar_z_offset;
-		radarHnP_pub.publish(msg);
-	}
-}
 
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
@@ -1061,7 +856,7 @@ void viewpanel::init_pubs( void )
 {
 	ros::NodeHandlePtr node_ptr = boost::make_shared<ros::NodeHandle>();
 
-	arbe_gui_commands_pub = node_ptr->advertise<std_msgs::String>("arbe/settings/gui_commands", 1);
+	//arbe_gui_commands_pub = node_ptr->advertise<std_msgs::String>("arbe/settings/gui_commands", 1);
 
 	fmcw_pcl_pub = node_ptr->advertise<sensor_msgs::PointCloud2>("/arbe/rviz/pointcloud_", 1);
 

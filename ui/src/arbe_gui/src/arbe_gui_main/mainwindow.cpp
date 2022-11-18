@@ -76,7 +76,6 @@ extern void radar_quit();
 extern int rosbag_playing;
 extern int unity_playing;
 extern FILE * unity_bin_file;
-extern void radar_software_reset();
 extern void pubGUIcontrols();
 extern ros::NodeHandlePtr n;
 
@@ -676,15 +675,7 @@ void MainWindow::enableFreeSpaceTopView( void )
 
 void MainWindow::radarReset( void )
 {
-	QMessageBox::StandardButton answer = QMessageBox::question(
-		this,
-		tr("System Reset"),
-		tr("Are you sure you want to perform radar reset?"),
-		QMessageBox::Yes | QMessageBox::No);
 
-	if(answer == QMessageBox::Yes){
-		radar_software_reset();
-	}
 }
 
 void MainWindow::selectDetectionsType( void )
@@ -1240,7 +1231,7 @@ void MainWindow::ChamberModeControl( void )
 void MainWindow::read_radar_debug_data( void )
 {
 	/* use RAF_API to read debug data */
-	radar_read_debug_data();
+	//radar_read_debug_data();
 }
 
 void MainWindow::ConfigDialog()
@@ -1362,52 +1353,6 @@ void MainWindow::ConfigDialog()
 void MainWindow::updateSettingsStrings( void )
 {
 
-	if ( strcmp ( radar_debug_port.toStdString().c_str(), debug_port_combo->currentText().toStdString().c_str() ) )
-	{
-		radar_debug_port = debug_port_combo->currentText();
-		loggingAct->setChecked(false);
-		LoggingControl();
-		loggingAct->setChecked(true);
-		LoggingControl();
-	}
-	if ( strcmp ( video_device.toStdString().c_str(), video_device_combo->currentText().toStdString().c_str() ) )
-	{
-		video_device = video_device_combo->currentText();
-		sscanf( video_device.toStdString().c_str(), "%*[^0123456789]%d", &video_dev_num );
-		ROS_DEBUG("video device number is:%d\n",video_dev_num);
-		/* Restart Camera Display */
-		MainWindow::enableCamera();
-	}
-	radar_region = radar_region_combo->currentText();
-	if ( (radar_region == "Japan") && ( RangeCombo->count() > 2 ) )
-	{
-		int index = RangeCombo->findText("Short");
-		RangeCombo->removeItem(0);
-		index = RangeCombo->findText("Ultra-Long");
-		RangeCombo->removeItem(index);
-	}
-	if ( (radar_region == "World") && ( RangeCombo->count() < 3 ) )
-	{
-		RangeCombo->insertItem(0,tr("Short"));
-		RangeCombo->insertItem(3,tr("Ultra-Long"));
-	}
-	bias_4d = bias_4d_edit->text();
-	threshold3d = threshold4d - bias_4d.toInt();
-
-	noise_level = noise_level_edit->text();
-
-	ntc_3d_enabled = ntc_3d_checkbox->isChecked();
-	ntc_4d_enabled = ntc_4d_checkbox->isChecked();
-	cfar_3d_enabled = cfar_3d_checkbox->isChecked();
-	cfar_4d_enabled = cfar_4d_checkbox->isChecked();
-	phase_enabled = enable_phase_checkbox->isChecked();
-	algo_thr_metadata_enabled = enable_thr_metadata_checkbox->isChecked();
-	ntc_3d_state = ntc_3d_enabled;
-	ntc_4d_state = ntc_4d_enabled;
-	cfar_3d_state = cfar_3d_enabled;
-	cfar_4d_state = cfar_4d_enabled;
-	phase_state = phase_enabled;
-	output_thr_metadata_state = algo_thr_metadata_enabled;
 }
 
 void MainWindow::load_settings()
