@@ -158,9 +158,7 @@ public:
 	virtual ~viewpanel();
 	void setView( view_vals_t &view_vals );
 	void printView();
-    bool get_3rd_prs( void );
     static viewpanel* Instance();
-    //static viewpanel* Instance();
 	void register_pointcloud_displays(int radar_num);
 	void registerPointcloudRviz();
 

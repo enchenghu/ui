@@ -129,5 +129,44 @@ typedef struct
 	uint8_t 	pcTcpData[TCP_PC_SIZE_SINGLE];
 } pcData_t;
 
+
+typedef struct 
+{	// 某个点的维度信息的系数
+	uint16_t power1;		// 功率1
+	uint16_t power2;		// 功率2
+	uint16_t range;		// 距离
+	uint16_t doppler;		// 速度
+	uint16_t azimuth;		// 方位角
+	uint16_t elevation;	// 俯仰角
+}PcDataFactor;
+
+typedef struct 
+{
+	uint16_t usPrefix; 		// 0xeeff
+	uint16_t usType; 			// Version：0x10:1.0
+	uint32_t unPayloadLength;	// 点云数据长度
+	uint32_t unTimeLsb;		// 时间戳低位（ns为单位，还是UTC时间戳）
+	uint32_t unTimeMsb;		// 时间戳高位
+	uint16_t usFrameCounter; 	// 点云图的帧计数
+	uint16_t usMessageNumber;	// rolling counter
+	uint16_t ucState;			// 报文标志（比如：是否是最后一帧）
+	PcDataFactor DataFactor; 	// 点云数据单位系数
+	uint16_t usHeaderCrc;		// UDP头Crc校验值（整个Header）
+	uint16_t usPayloadCrc;		// UDP点云数据校验值（Payload）
+}PointCloud_V1_0_Header;
+
+typedef struct  
+{	
+	uint16_t power1;		// 功率1
+	uint16_t power2;		// 功率2
+	uint16_t range;		// 距离
+	uint16_t doppler;		// 速度
+	uint16_t azimuth;		// 方位角
+	uint16_t elevation;	// 俯仰角
+	//    Unit16_t type;		// 保留（说明点的特殊情况）
+}PcMetadata;
+
+//PcMetadata PcMetadata_Arr[100];	// 每个UDP报文，包含2列激光数据
+//PointCloud_V1_0_Header + PcMetadata_Arr
 }
 
