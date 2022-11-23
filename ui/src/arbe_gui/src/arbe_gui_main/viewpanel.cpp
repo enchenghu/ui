@@ -1215,7 +1215,7 @@ void viewpanel::CreatConnect()
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
 	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
-
+	connect(errorLogText,SIGNAL(textChanged()),SLOT(slotTextTcpChanged()));
     timer_  = new QTimer(this);
     //timer_->setInterval(50);
     connect(timer_, SIGNAL(timeout()), this, SLOT(updateFFTdata(void)));
@@ -1225,6 +1225,12 @@ void viewpanel::CreatConnect()
     //timer_->setInterval(50);
     connect(timer_adc, SIGNAL(timeout()), this, SLOT(updateADCdata(void)));
     timer_adc->start(100);
+
+    QTimer* timer_state  = new QTimer(this);
+    //timer_->setInterval(50);
+    connect(timer_state, SIGNAL(timeout()), this, SLOT(updateState(void)));
+    connect(timer_state, SIGNAL(timeout()), this, SLOT(printErrorLog(void)));
+    timer_state->start(500);
 
 }
 
@@ -1266,7 +1272,7 @@ void viewpanel::CreatUIWindow()
 	QGridLayout* saveLayout = new QGridLayout;
 	QLabel* saveDatalabel = new QLabel( "Select" );
 	QComboBox*saveDataCombo = new QComboBox;
-	saveBtn = new QPushButton("Save", this);
+	saveBtn = new QPushButton("Save PC", this);
 	saveDataCombo->addItem(tr("point cloud "));
 	saveDataCombo->addItem(tr("data stream 1"));
 	saveDataCombo->addItem(tr("data stream 2"));
@@ -1410,39 +1416,44 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( regBtnRead, 0, 13, Qt::AlignLeft);	
 	controls_layout->addWidget( settingADCSavebutton, 2, 7, Qt::AlignLeft);
 	controls_layout->addWidget( settingADCConfigbutton, 2, 8, Qt::AlignLeft);
+	controls_layout->addWidget( saveBtn, 3, 7, Qt::AlignLeft);
 
 	controlsBox->setLayout(controls_layout);
 
 	QLabel* devLabel0 = new QLabel("dev0 state");
-	QLabel* devLabel0_state = new QLabel("dev0");
+	devLabel0_state = new QLabel("dev0");
 	QLabel* devLabel1 = new QLabel("dev1 state");
-	QLabel* devLabel1_state = new QLabel("dev1");
-	QLabel* devLabel2 = new QLabel("dev1 state");
-	QLabel* devLabel2_state = new QLabel("dev1");
+	devLabel1_state = new QLabel("dev1");
+	QLabel* devLabel2 = new QLabel("dev2 state");
+	devLabel2_state = new QLabel("dev2");
+	errorLogText = new QTextEdit(this);
+	errorLogText->setReadOnly(true);
 	setLED(devLabel0_state, 1);
 	setLED(devLabel1_state, 2);	
 	setLED(devLabel2_state, 3);	
-	stateShowBoxLayout->addWidget(adc_label0, 0, 0, Qt::AlignLeft);
-	stateShowBoxLayout->addWidget(adcRead0_line, 0, 1, Qt::AlignLeft);
-	stateShowBoxLayout->addWidget(adc_label1, 1, 0, Qt::AlignLeft);
-	stateShowBoxLayout->addWidget(adcRead1_line, 1, 1, Qt::AlignLeft);
-	stateShowBoxLayout->addWidget(devLabel0, 0, 2, Qt::AlignLeft);
-	stateShowBoxLayout->addWidget(devLabel0_state, 0, 3, Qt::AlignLeft);
-	stateShowBoxLayout->addWidget(devLabel1, 1, 2, Qt::AlignLeft);
-	stateShowBoxLayout->addWidget(devLabel1_state, 1, 3, Qt::AlignLeft);
-	stateShowBoxLayout->addWidget(devLabel2, 2, 2, Qt::AlignLeft);
-	stateShowBoxLayout->addWidget(devLabel2_state, 2, 3, Qt::AlignLeft);
+	stateShowBoxLayout->addWidget(adc_label0, 0, 0, Qt::AlignLeft | Qt::AlignTop);
+	stateShowBoxLayout->addWidget(adcRead0_line, 0, 1, Qt::AlignLeft | Qt::AlignTop);
+	stateShowBoxLayout->addWidget(adc_label1, 1, 0, Qt::AlignLeft| Qt::AlignTop);
+	stateShowBoxLayout->addWidget(adcRead1_line, 1, 1, Qt::AlignLeft| Qt::AlignTop);
+	stateShowBoxLayout->addWidget(devLabel0, 0, 2, Qt::AlignLeft | Qt::AlignTop);
+	stateShowBoxLayout->addWidget(devLabel0_state, 0, 3, Qt::AlignLeft | Qt::AlignTop);
+	stateShowBoxLayout->addWidget(devLabel1, 1, 2, Qt::AlignLeft| Qt::AlignTop);
+	stateShowBoxLayout->addWidget(devLabel1_state, 1, 3, Qt::AlignLeft| Qt::AlignTop);
+	stateShowBoxLayout->addWidget(devLabel2, 2, 2, Qt::AlignLeft| Qt::AlignTop);
+	stateShowBoxLayout->addWidget(devLabel2_state, 2, 3, Qt::AlignLeft| Qt::AlignTop);
+	stateShowBoxLayout->addWidget(errorLogText, 0, 4, Qt::AlignLeft | Qt::AlignTop);
+	
 	stateShowBox->setLayout(stateShowBoxLayout);
 
 	render_panel_ = new rviz::RenderPanel();
 	selection_panel_ = new rviz::SelectionPanel();
 	controls->addWidget(controlsBox, 0, 0, Qt::AlignLeft);
 	controls->addWidget(stateShowBox, 0, 1, Qt::AlignLeft);
-	controls->addWidget(fileBox, 0, 2, Qt::AlignLeft);
+	//controls->addWidget(fileBox, 0, 2, Qt::AlignLeft);
 
 	controls->setColumnStretch(0,4);
-	for(int i = 1; i < 3;i++)
-		controls->setColumnStretch(i,1);
+	for(int i = 1; i < 2;i++)
+		controls->setColumnStretch(i,2);
 
 	ctrlDockWidget->setLayout(controls);
 	ctrlDock->setWidget(ctrlDockWidget);
@@ -1732,7 +1743,7 @@ void viewpanel::saveData(){
 	Save2filecsv(mv, ifsave);
 	//}
 	saveBtn->setStyleSheet("color: black");
-	saveBtn->setText("Save");
+	saveBtn->setText("Save PC");
 	if(ifsave){
 		QMessageBox msgBox;
 		msgBox.setText("save pc data successfully!");
@@ -1745,6 +1756,33 @@ void viewpanel::saveData(){
 // 该函数将label控件变成一个圆形指示灯，需要指定颜色color以及直径size
 // color 0:grey 1:red 2:green 3:yellow
 // size  单位是像素
+void viewpanel::setLEDColor(QLabel* label, int color)
+{
+    QString background = "background-color:";
+    switch (color) {
+    case 0:
+        // 灰色
+        background += "rgb(190,190,190)";
+        break;
+    case 1:
+        // 红色
+        background += "rgb(255,0,0)";
+        break;
+    case 2:
+        // 绿色
+        background += "rgb(0,255,0)";
+        break;
+    case 3:
+        // 黄色
+        background += "rgb(255,255,0)";
+        break;
+    default:
+        break;
+    }
+    const QString SheetStyle = background;
+    label->setStyleSheet(SheetStyle);
+}
+
 void viewpanel::setLED(QLabel* label, int color)
 {
     // 将label中的文字清空
@@ -1824,7 +1862,7 @@ void viewpanel::saveDataThead()
 		ifSave = true;
 	}else {
 		saveBtn->setStyleSheet("color: black");
-		saveBtn->setText("Save");
+		saveBtn->setText("Save PC");
 		ifSave = false;
 		return;		
 	}
@@ -1941,6 +1979,34 @@ void viewpanel::updateFFTdata() {
 
 }
 
+void viewpanel::updateState()
+{
+	static bool update = true;
+	if(update){
+		setLED(devLabel0_state, 1);
+		setLED(devLabel1_state, 2);	
+		setLED(devLabel2_state, 3);
+		update = false;
+	} else {
+		setLED(devLabel0_state, 0);
+		setLED(devLabel1_state, 0);	
+		setLED(devLabel2_state, 0);		
+		update = true;
+	}	
+}
+
+
+void viewpanel::printErrorLog()
+{
+	std::string log = "FMCW Lidar host:\n";
+	QString mlog = QString::fromStdString(log);
+	errorLogText->insertPlainText(mlog);
+}
+
+void viewpanel::slotTextTcpChanged()
+{
+   errorLogText->moveCursor(QTextCursor::End);
+}
 
 void viewpanel::updateADCdata() {
 	static long long frame_index = 0;

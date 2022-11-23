@@ -204,6 +204,10 @@ private Q_SLOTS:
 	void singleADC();
 	void resetFFT();
 	void resetADC();
+	void updateState();
+	void printErrorLog();
+	void slotTextTcpChanged();
+
 
 protected:
     static void TaskFunc(void *arg);
@@ -222,6 +226,7 @@ private:
 	void parseFFTData(std::vector<uint8_t> &data);
 	void parseADCData(std::vector<uint8_t> &data);
 	void setLED(QLabel* label, int color);
+	void setLEDColor(QLabel* label, int color);
 	std::string tohex(uint32_t a);
 	double fft2dBm(double x);
 	void load_settings();
@@ -297,6 +302,10 @@ private:
 	QLineEdit* adcRead0_line;
 	QLineEdit* adcRead1_line;
 	QPushButton*  saveBtn;
+	QLabel* devLabel0_state;
+	QLabel* devLabel1_state;
+	QLabel* devLabel2_state;
+	QTextEdit* errorLogText;
 
 	fftMsg fftBuff[MAX_BUFF_LEN];
 	adcMsg adcBuff[MAX_BUFF_LEN];
