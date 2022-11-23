@@ -1419,9 +1419,9 @@ void viewpanel::CreatUIWindow()
 	QLabel* devLabel1_state = new QLabel("dev1");
 	QLabel* devLabel2 = new QLabel("dev1 state");
 	QLabel* devLabel2_state = new QLabel("dev1");
-	setLED(devLabel0_state, 1, 16);
-	setLED(devLabel1_state, 2, 16);	
-	setLED(devLabel2_state, 3, 16);	
+	setLED(devLabel0_state, 1);
+	setLED(devLabel1_state, 2);	
+	setLED(devLabel2_state, 3);	
 	stateShowBoxLayout->addWidget(adc_label0, 0, 0, Qt::AlignLeft);
 	stateShowBoxLayout->addWidget(adcRead0_line, 0, 1, Qt::AlignLeft);
 	stateShowBoxLayout->addWidget(adc_label1, 1, 0, Qt::AlignLeft);
@@ -1745,9 +1745,10 @@ void viewpanel::saveData(){
 // 该函数将label控件变成一个圆形指示灯，需要指定颜色color以及直径size
 // color 0:grey 1:red 2:green 3:yellow
 // size  单位是像素
-void viewpanel::setLED(QLabel* label, int color, int size)
+void viewpanel::setLED(QLabel* label, int color)
 {
     // 将label中的文字清空
+	int size = 20;
     label->setText("");
     // 先设置矩形大小
     // 如果ui界面设置的label大小比最小宽度和高度小，矩形将被设置为最小宽度和最小高度；

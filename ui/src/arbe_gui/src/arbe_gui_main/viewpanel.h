@@ -221,7 +221,7 @@ private:
 	void Save2filecsv(std::vector<uint8_t> &, bool );
 	void parseFFTData(std::vector<uint8_t> &data);
 	void parseADCData(std::vector<uint8_t> &data);
-	void setLED(QLabel* label, int color, int size);
+	void setLED(QLabel* label, int color);
 	std::string tohex(uint32_t a);
 	double fft2dBm(double x);
 	void load_settings();
