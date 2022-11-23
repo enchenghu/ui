@@ -1412,11 +1412,26 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( settingADCConfigbutton, 2, 8, Qt::AlignLeft);
 
 	controlsBox->setLayout(controls_layout);
-	
+
+	QLabel* devLabel0 = new QLabel("dev0 state");
+	QLabel* devLabel0_state = new QLabel("dev0");
+	QLabel* devLabel1 = new QLabel("dev1 state");
+	QLabel* devLabel1_state = new QLabel("dev1");
+	QLabel* devLabel2 = new QLabel("dev1 state");
+	QLabel* devLabel2_state = new QLabel("dev1");
+	setLED(devLabel0_state, 1, 16);
+	setLED(devLabel1_state, 2, 16);	
+	setLED(devLabel2_state, 3, 16);	
 	stateShowBoxLayout->addWidget(adc_label0, 0, 0, Qt::AlignLeft);
 	stateShowBoxLayout->addWidget(adcRead0_line, 0, 1, Qt::AlignLeft);
 	stateShowBoxLayout->addWidget(adc_label1, 1, 0, Qt::AlignLeft);
 	stateShowBoxLayout->addWidget(adcRead1_line, 1, 1, Qt::AlignLeft);
+	stateShowBoxLayout->addWidget(devLabel0, 0, 2, Qt::AlignLeft);
+	stateShowBoxLayout->addWidget(devLabel0_state, 0, 3, Qt::AlignLeft);
+	stateShowBoxLayout->addWidget(devLabel1, 1, 2, Qt::AlignLeft);
+	stateShowBoxLayout->addWidget(devLabel1_state, 1, 3, Qt::AlignLeft);
+	stateShowBoxLayout->addWidget(devLabel2, 2, 2, Qt::AlignLeft);
+	stateShowBoxLayout->addWidget(devLabel2_state, 2, 3, Qt::AlignLeft);
 	stateShowBox->setLayout(stateShowBoxLayout);
 
 	render_panel_ = new rviz::RenderPanel();
@@ -1432,9 +1447,29 @@ void viewpanel::CreatUIWindow()
 	ctrlDockWidget->setLayout(controls);
 	ctrlDock->setWidget(ctrlDockWidget);
 
-	mainLayout->addWidget ( ctrlDock, 0,  0);
-	mainLayout->addWidget ( render_panel_, 1,  0,  5,  5);
-	mainLayout->addWidget ( selection_panel_, 1,  0, 5, 1, Qt::AlignLeft);
+#if 0
+	QWidget* stateWidget = new QWidget();
+	QGridLayout* stateLayout = new QGridLayout ;
+	QLabel* devLabel0 = new QLabel("dev0 state");
+	QLabel* devLabel0_state = new QLabel("dev0");
+	QLabel* devLabel1 = new QLabel("dev1 state");
+	QLabel* devLabel1_state = new QLabel("dev1");
+	setLED(devLabel0_state, 1, 16);
+	setLED(devLabel1_state, 2, 16);
+	stateLayout->addWidget(devLabel0, 0, 0, Qt::AlignLeft);
+	stateLayout->addWidget(devLabel0_state, 0, 1, Qt::AlignLeft);
+	stateLayout->addWidget(devLabel1, 1, 0, Qt::AlignLeft);
+	stateLayout->addWidget(devLabel1_state, 1, 1, Qt::AlignLeft);
+	stateWidget->setLayout(stateLayout);
+	QPalette pal(stateWidget->palette());
+	pal.setColor(QPalette::Background, Qt::white);
+	stateWidget->setAutoFillBackground(true);
+	stateWidget->setPalette(pal);
+	mainLayout->addWidget ( stateWidget, 1, 1, 5, 4, Qt::AlignLeft);
+#endif
+	mainLayout->addWidget ( ctrlDock, 0, 0);
+	mainLayout->addWidget ( render_panel_, 1, 0, 5, 5);
+	mainLayout->addWidget ( selection_panel_, 1, 0, 5, 1, Qt::AlignLeft);
 
 	multiWidget->setLayout(mainLayout);
 	this->addTab(multiWidget,  "Lidar Ui Mainwindow");
@@ -1706,6 +1741,51 @@ void viewpanel::saveData(){
 	ifSave = false;
 	//vx_task_delete(&bst_task[0]);
 }
+
+// 该函数将label控件变成一个圆形指示灯，需要指定颜色color以及直径size
+// color 0:grey 1:red 2:green 3:yellow
+// size  单位是像素
+void viewpanel::setLED(QLabel* label, int color, int size)
+{
+    // 将label中的文字清空
+    label->setText("");
+    // 先设置矩形大小
+    // 如果ui界面设置的label大小比最小宽度和高度小，矩形将被设置为最小宽度和最小高度；
+    // 如果ui界面设置的label大小比最小宽度和高度大，矩形将被设置为最大宽度和最大高度；
+    QString min_width = QString("min-width: %1px;").arg(size);              // 最小宽度：size
+    QString min_height = QString("min-height: %1px;").arg(size);            // 最小高度：size
+    QString max_width = QString("max-width: %1px;").arg(size);              // 最小宽度：size
+    QString max_height = QString("max-height: %1px;").arg(size);            // 最小高度：size
+    // 再设置边界形状及边框
+    QString border_radius = QString("border-radius: %1px;").arg(size/2);    // 边框是圆角，半径为size/2
+    QString border = QString("border:1px solid black;");                    // 边框为1px黑色
+    // 最后设置背景颜色
+    QString background = "background-color:";
+    switch (color) {
+    case 0:
+        // 灰色
+        background += "rgb(190,190,190)";
+        break;
+    case 1:
+        // 红色
+        background += "rgb(255,0,0)";
+        break;
+    case 2:
+        // 绿色
+        background += "rgb(0,255,0)";
+        break;
+    case 3:
+        // 黄色
+        background += "rgb(255,255,0)";
+        break;
+    default:
+        break;
+    }
+
+    const QString SheetStyle = min_width + min_height + max_width + max_height + border_radius + border + background;
+    label->setStyleSheet(SheetStyle);
+}
+
 
 void viewpanel::TaskFunc(void *arg){
     viewpanel *pSave = (viewpanel *)arg;
