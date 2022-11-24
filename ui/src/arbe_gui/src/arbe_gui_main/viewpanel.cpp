@@ -1261,13 +1261,8 @@ void viewpanel::CreatUIWindow()
 
 	QGroupBox *controlsBox = new QGroupBox(tr("Basic Controls:"));
 	QGridLayout* controls_layout = new QGridLayout;
-
 	QGroupBox *fileBox  = new QGroupBox(tr("File Operations:"));
 	QVBoxLayout* fileLayout = new QVBoxLayout;
-
-	QGroupBox *stateShowBox  = new QGroupBox(tr("State Conditon:"));
-	QGridLayout* stateShowBoxLayout = new QGridLayout;
-
 	QGroupBox *savefileBox  = new QGroupBox(tr("Save:"));
 	QGridLayout* saveLayout = new QGridLayout;
 	QLabel* saveDatalabel = new QLabel( "Select" );
@@ -1417,9 +1412,15 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( settingADCSavebutton, 2, 7, Qt::AlignLeft);
 	controls_layout->addWidget( settingADCConfigbutton, 2, 8, Qt::AlignLeft);
 	controls_layout->addWidget( saveBtn, 3, 7, Qt::AlignLeft);
-
 	controlsBox->setLayout(controls_layout);
 
+
+	QGroupBox *stateShowBox  = new QGroupBox(tr("State Conditon:"));
+	QGridLayout* stateShowBoxLayout = new QGridLayout;
+	QGroupBox *errorLogBox = new QGroupBox(tr("Error Log:"));
+	QGridLayout* errorLogBoxLayout = new QGridLayout;
+	QGroupBox *stateDisplayBox = new QGroupBox(tr("State Show:"));
+	QGridLayout* stateDisplayBoxLayout = new QGridLayout;
 	QLabel* devLabel0 = new QLabel("dev0 state");
 	devLabel0_state = new QLabel("dev0");
 	QLabel* devLabel1 = new QLabel("dev1 state");
@@ -1431,18 +1432,21 @@ void viewpanel::CreatUIWindow()
 	setLED(devLabel0_state, 1);
 	setLED(devLabel1_state, 2);	
 	setLED(devLabel2_state, 3);	
-	stateShowBoxLayout->addWidget(adc_label0, 0, 0, Qt::AlignLeft | Qt::AlignTop);
-	stateShowBoxLayout->addWidget(adcRead0_line, 0, 1, Qt::AlignLeft | Qt::AlignTop);
-	stateShowBoxLayout->addWidget(adc_label1, 1, 0, Qt::AlignLeft| Qt::AlignTop);
-	stateShowBoxLayout->addWidget(adcRead1_line, 1, 1, Qt::AlignLeft| Qt::AlignTop);
-	stateShowBoxLayout->addWidget(devLabel0, 0, 2, Qt::AlignLeft | Qt::AlignTop);
-	stateShowBoxLayout->addWidget(devLabel0_state, 0, 3, Qt::AlignLeft | Qt::AlignTop);
-	stateShowBoxLayout->addWidget(devLabel1, 1, 2, Qt::AlignLeft| Qt::AlignTop);
-	stateShowBoxLayout->addWidget(devLabel1_state, 1, 3, Qt::AlignLeft| Qt::AlignTop);
-	stateShowBoxLayout->addWidget(devLabel2, 2, 2, Qt::AlignLeft| Qt::AlignTop);
-	stateShowBoxLayout->addWidget(devLabel2_state, 2, 3, Qt::AlignLeft| Qt::AlignTop);
-	stateShowBoxLayout->addWidget(errorLogText, 0, 4, Qt::AlignLeft | Qt::AlignTop);
-	
+	stateDisplayBoxLayout->addWidget(adc_label0, 0, 0, Qt::AlignLeft | Qt::AlignTop);
+	stateDisplayBoxLayout->addWidget(adcRead0_line, 0, 1, Qt::AlignLeft | Qt::AlignTop);
+	stateDisplayBoxLayout->addWidget(adc_label1, 1, 0, Qt::AlignLeft| Qt::AlignTop);
+	stateDisplayBoxLayout->addWidget(adcRead1_line, 1, 1, Qt::AlignLeft| Qt::AlignTop);
+	stateDisplayBoxLayout->addWidget(devLabel0, 0, 2, Qt::AlignLeft | Qt::AlignTop);
+	stateDisplayBoxLayout->addWidget(devLabel0_state, 0, 3, Qt::AlignLeft | Qt::AlignTop);
+	stateDisplayBoxLayout->addWidget(devLabel1, 1, 2, Qt::AlignLeft| Qt::AlignTop);
+	stateDisplayBoxLayout->addWidget(devLabel1_state, 1, 3, Qt::AlignLeft| Qt::AlignTop);
+	stateDisplayBoxLayout->addWidget(devLabel2, 2, 2, Qt::AlignLeft| Qt::AlignTop);
+	stateDisplayBoxLayout->addWidget(devLabel2_state, 2, 3, Qt::AlignLeft| Qt::AlignTop);
+	stateDisplayBox->setLayout(stateDisplayBoxLayout);
+	errorLogBoxLayout->addWidget(errorLogText, 0, 0, Qt::AlignLeft | Qt::AlignTop);
+	errorLogBox->setLayout(errorLogBoxLayout);
+	stateShowBoxLayout->addWidget(stateDisplayBox, 0, 0, Qt::AlignLeft | Qt::AlignTop);
+	stateShowBoxLayout->addWidget(errorLogBox, 0, 1, Qt::AlignLeft | Qt::AlignTop);
 	stateShowBox->setLayout(stateShowBoxLayout);
 
 	render_panel_ = new rviz::RenderPanel();
