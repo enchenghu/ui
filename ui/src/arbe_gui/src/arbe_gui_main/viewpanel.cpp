@@ -1848,7 +1848,7 @@ void viewpanel::TaskFuncUdpRecv(void *arg){
 
 void viewpanel::TaskFuncUdpParse(void *arg){
     viewpanel *pSave = (viewpanel *)arg;
-
+	std::cout << "enter TaskFuncUdpParse" << std::endl;
     if (pSave && pSave->TaskFuncUdpParse) {
         pSave->udpParseLoop();
     }
@@ -2068,16 +2068,21 @@ void viewpanel::udpConnect() {
 
 void viewpanel::udpParseLoop()
 {
-	while(!terminating && !udpStop_)
+	std::cout << "enter udpParseLoop main" << std::endl;
+	while(!terminating)
 	{
+		ROS_INFO("============enter udpParseLoop");
 		udp_ADC_FFT_Msg* pmsg = nullptr;
-		udpMsg_done_buf_queue.get(pmsg);
-		if(pmsg){
+		if(udpMsg_done_buf_queue.get(pmsg) == 0){
 			parseFFTData(pmsg->fftDataV);
 			parseADCData(pmsg->adcDataV);
+			udpMsg_free_buf_queue.put(pmsg);
+		}else{
+			std::cout << "warning!!udpMsg_done_buf_queue get timeout!!!" << std::endl;
 		}
-		udpMsg_free_buf_queue.put(pmsg);
+		if(udpStop_) break;
 	}
+	std::cout << "quit udpParseLoop" << std::endl;
 }
 void viewpanel::udpRecvLoop(){
 
@@ -2166,7 +2171,6 @@ void viewpanel::udpRecvLoop(){
 				break;
 			}
 
-			std::cout << "!!recv udp pkg successfully! "  << std::endl;
 			if(i < UDP_TIMES_PER_FRAME / 2) {
 				for(int j = 0; j < 16; j++){
 					fftDataV.insert(fftDataV.end(), g_udpMsg.pcUdpData + 32 + 64 * j, g_udpMsg.pcUdpData + 64 * (j + 1));
@@ -2178,11 +2182,17 @@ void viewpanel::udpRecvLoop(){
 			std::cout << "warning!!! lost data continue! "  << std::endl;
 			continue;
 		}
+		std::cout << "!!recv udp pkg successfully! "  << std::endl;
 		udp_ADC_FFT_Msg* pUdp = NULL;
-		udpMsg_free_buf_queue.get(pUdp);	
-		pUdp->fftDataV = fftDataV;
-		pUdp->adcDataV = adcDataV;
-		udpMsg_done_buf_queue.put(pUdp);		
+		if(udpMsg_free_buf_queue.get(pUdp) == 0){
+			pUdp->fftDataV = fftDataV;
+			pUdp->adcDataV = adcDataV;
+			udpMsg_done_buf_queue.put(pUdp);	
+		}else{
+			std::cout << "error!!! udpMsg_free_buf_queue timeout!! "  << std::endl;
+			return;
+		}
+	
 #if 0
 		parseFFTData(fftDataV);
 #endif
