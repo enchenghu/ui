@@ -2174,7 +2174,10 @@ void viewpanel::udpRecvLoop(){
 				}
 			}
 		}
-		if(ifLost) continue;
+		if(ifLost) {
+			std::cout << "warning!!! lost data continue! "  << std::endl;
+			continue;
+		}
 		udp_ADC_FFT_Msg* pUdp = NULL;
 		udpMsg_free_buf_queue.get(pUdp);	
 		pUdp->fftDataV = fftDataV;

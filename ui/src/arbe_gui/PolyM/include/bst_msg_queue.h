@@ -33,7 +33,7 @@ class bstMsgQueue {
 
     queue_get_type_t get(dataType& data, int timeoutMillis = 0)
     {
-        int64_t wait_us = 500000;
+        int64_t wait_us = 3000;
         auto Message = m_queue.get(wait_us);
         if(Message.get()->getMsgId() < 0) 
         {
