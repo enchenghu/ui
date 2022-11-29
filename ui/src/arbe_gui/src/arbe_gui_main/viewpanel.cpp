@@ -1219,12 +1219,12 @@ void viewpanel::CreatConnect()
     timer_  = new QTimer(this);
     //timer_->setInterval(50);
     connect(timer_, SIGNAL(timeout()), this, SLOT(updateFFTdata(void)));
-    timer_->start(100);
+    timer_->start(10);
 
     timer_adc  = new QTimer(this);
     //timer_->setInterval(50);
     connect(timer_adc, SIGNAL(timeout()), this, SLOT(updateADCdata(void)));
-    timer_adc->start(100);
+    timer_adc->start(10);
 
     QTimer* timer_state  = new QTimer(this);
     //timer_->setInterval(50);
@@ -1523,28 +1523,33 @@ void viewpanel::parseADCData(std::vector<uint8_t> &data)
 	int32_t cur_data  = 0;
 	int index = 0;
 	adcMsg* padc = NULL;
-	adcMsg_free_buf_queue.get(padc);
-	padc->dataADC0.clear();
-	padc->dataADC1.clear();
-	for(int i = 0; i < data.size(); i++) {	
-		index += 1;
-		if(i >= data.size() / 2) break;
-		int flagNum = i % 2;
-		cur_data += data[i] << (8 * (flagNum));
-		if(flagNum){
-			if(cur_data > SIGN_LIMIT_NUM){
-				cur_data -= SIGN_OFFSET_NUM;
+	if(!adcMsg_free_buf_queue.empty()){
+		adcMsg_free_buf_queue.get(padc);
+		padc->dataADC0.clear();
+		padc->dataADC1.clear();
+		for(int i = 0; i < data.size(); i++) {	
+			index += 1;
+			if(i >= data.size() / 2) break;
+			int flagNum = i % 2;
+			cur_data += data[i] << (8 * (flagNum));
+			if(flagNum){
+				if(cur_data > SIGN_LIMIT_NUM){
+					cur_data -= SIGN_OFFSET_NUM;
+				}
+				if(index % 4){
+					padc->dataADC0.append(cur_data);
+				}else{
+					padc->dataADC1.append(cur_data);
+				}
+				cur_data = 0;
 			}
-			if(index % 4){
-				padc->dataADC0.append(cur_data);
-			}else{
-				padc->dataADC1.append(cur_data);
-			}
-			cur_data = 0;
 		}
+		adcMsg_done_buf_queue.put(padc);
+		printf("adcMsg send finished\n");  
+	}else{
+		ROS_INFO("warning!!adcMsg_free_buf_queue is empty, will discard adc data");
 	}
-	adcMsg_done_buf_queue.put(padc);
-	printf("adcMsg send finished\n");  //打印自己发送的信息
+
 }
 
 
@@ -1565,6 +1570,10 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 	int index = 0;
 	fftMsg* pfft = NULL;
 	double power_offset_ = power_offset;
+	if(fftMsg_free_buf_queue.empty()) {
+		ROS_INFO("warning!!fftMsg_free_buf_queue is empty, will discard fft data");
+		return;
+	}
 	fftMsg_free_buf_queue.get(pfft);
 	pfft->dataFFT_0.clear();
 	pfft->dataFFT_1.clear();
@@ -2185,6 +2194,10 @@ void viewpanel::udpRecvLoop(){
 		}
 		std::cout << "!!recv udp pkg successfully! "  << std::endl;
 		udp_ADC_FFT_Msg* pUdp = NULL;
+		if(udpMsg_free_buf_queue.empty()){
+			std::cout << "warning!!! udpMsg_free_buf_queue is empty, will discard udp msg "  << std::endl;
+			continue;			
+		}
 		if(udpMsg_free_buf_queue.get(pUdp) == 0){
 			pUdp->fftDataV = fftDataV;
 			pUdp->adcDataV = adcDataV;
