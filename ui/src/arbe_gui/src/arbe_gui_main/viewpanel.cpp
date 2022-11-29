@@ -2048,6 +2048,15 @@ void viewpanel::updateADCdata() {
 void viewpanel::udpConnect() {
 
 	if(udpStop_){
+		commandMsg cmdMsg;
+		memset(&cmdMsg, 0, sizeof(commandMsg));
+		cmdMsg.mHead.usCommand = commandType::FFT_ADC_READ_START;
+		if(::write(ctrl_sock, &cmdMsg, sizeof(commandMsg)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("UDP Connect failed!");
+			msgBox.exec();
+			return;
+		}		
 		vx_task_set_default_create_params(&bst_params);
 		bst_params.app_var = this;
 		bst_params.task_mode = 0;
@@ -2087,14 +2096,6 @@ void viewpanel::udpParseLoop()
 void viewpanel::udpRecvLoop(){
 
 	//int client_fd;
-	cmdMsg_.mHead.usCommand = commandType::FFT_ADC_READ_START;
-	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
-		QMessageBox msgBox;
-		msgBox.setText("UDP Connect failed!");
-		msgBox.exec();
-		return;
-	}
-
 	lidar_UDP_port = udp_port_edit->text().toInt();
 	struct sockaddr_in ser_addr;
 
