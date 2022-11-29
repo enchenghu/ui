@@ -1509,7 +1509,7 @@ void viewpanel::setSaveFolder()
 
 void viewpanel::parseADCData(std::vector<uint8_t> &data)
 {
-	std::cout << "!!enter parseADCData! input point num is  "  <<  data.size() / 2 << std::endl;
+	//std::cout << "!!enter parseADCData! input point num is  "  <<  data.size() / 2 << std::endl;
 #if 0
 	std::string datPath;
 	datPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".dat";
@@ -1545,7 +1545,7 @@ void viewpanel::parseADCData(std::vector<uint8_t> &data)
 			}
 		}
 		adcMsg_done_buf_queue.put(padc);
-		printf("adcMsg send finished\n");  
+		//ROS_INFO("adcMsg send finished");  
 	}else{
 		ROS_INFO("warning!!adcMsg_free_buf_queue is empty, will discard adc data");
 	}
@@ -1555,7 +1555,7 @@ void viewpanel::parseADCData(std::vector<uint8_t> &data)
 
 void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 {
-	std::cout << "!!enter parseFFTData! input point num is  "  <<  data.size() / 4 << std::endl;
+	//std::cout << "!!enter parseFFTData! input point num is  "  <<  data.size() / 4 << std::endl;
 #if 0
 	std::string datPath;
 	datPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".dat";
@@ -1612,7 +1612,7 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 
 	}
 	fftMsg_done_buf_queue.put(pfft);
-	printf("fftMsg send finished\n");  //打印自己发送的信息
+	//ROS_INFO("fftMsg send finished");  //打印自己发送的信息
 }
 
 void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
@@ -1987,6 +1987,7 @@ void viewpanel::updateFFTdata() {
 			pFFTchart[1]->setData(x_FFT_1, pfft->dataFFTdB_1);
 		}
 		fftMsg_free_buf_queue.put(pfft);
+		ROS_INFO("fftMsg update");  
 	}
 #endif
 
@@ -2047,6 +2048,7 @@ void viewpanel::updateADCdata() {
 		pADCchart[0]->setData(x_adc0, padc->dataADC0);
 		pADCchart[1]->setData(x_adc1, padc->dataADC1);
 		adcMsg_free_buf_queue.put(padc);
+		ROS_INFO("adcMsg update");  
 	}
 #endif
 	//pADCchart[0]->setXChart(8192 * frame_index, 8192 * frame_index + 8191);
@@ -2089,7 +2091,7 @@ void viewpanel::udpParseLoop()
 	std::cout << "enter udpParseLoop main" << std::endl;
 	while(!terminating)
 	{
-		ROS_INFO("============enter udpParseLoop");
+		//ROS_INFO("============enter udpParseLoop");
 		udp_ADC_FFT_Msg* pmsg = nullptr;
 		if(udpMsg_done_buf_queue.get(pmsg) == 0){
 			parseFFTData(pmsg->fftDataV);
@@ -2192,10 +2194,16 @@ void viewpanel::udpRecvLoop(){
 			std::cout << "warning!!! lost data continue! "  << std::endl;
 			continue;
 		}
-		std::cout << "!!recv udp pkg successfully! "  << std::endl;
+		//std::cout << "!!recv udp pkg successfully! "  << std::endl;
 		udp_ADC_FFT_Msg* pUdp = NULL;
 		if(udpMsg_free_buf_queue.empty()){
-			std::cout << "warning!!! udpMsg_free_buf_queue is empty, will discard udp msg "  << std::endl;
+			std::cout << "warning!!! udpMsg_free_buf_queue is empty, will discard old udp msg "  << std::endl;
+			udpMsg_done_buf_queue.get(pUdp);
+			udpMsg_free_buf_queue.put(pUdp);
+			udpMsg_free_buf_queue.get(pUdp);
+			pUdp->fftDataV = fftDataV;
+			pUdp->adcDataV = adcDataV;
+			udpMsg_done_buf_queue.put(pUdp);	
 			continue;			
 		}
 		if(udpMsg_free_buf_queue.get(pUdp) == 0){
