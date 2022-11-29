@@ -2089,10 +2089,12 @@ void viewpanel::udpConnect() {
 void viewpanel::udpParseLoop()
 {
 	std::cout << "enter udpParseLoop main" << std::endl;
+    std::chrono::duration<double> elapsed;
 	while(!terminating)
 	{
 		//ROS_INFO("============enter udpParseLoop");
 		udp_ADC_FFT_Msg* pmsg = nullptr;
+		auto start = std::chrono::steady_clock::now();
 		if(udpMsg_done_buf_queue.get(pmsg) == 0){
 			parseFFTData(pmsg->fftDataV);
 			parseADCData(pmsg->adcDataV);
@@ -2100,6 +2102,9 @@ void viewpanel::udpParseLoop()
 		}else{
 			std::cout << "warning!!udpMsg_done_buf_queue get timeout!!!" << std::endl;
 		}
+		auto end = std::chrono::steady_clock::now();
+		elapsed = end - start;
+		std::cout << "time for udpParseloop: " <<  elapsed.count() * 1000 << " ms" << std::endl;    
 		if(udpStop_) break;
 	}
 	std::cout << "quit udpParseLoop" << std::endl;
@@ -2146,8 +2151,10 @@ void viewpanel::udpRecvLoop(){
 	std::vector<uint8_t> adcDataV;
 	uint32_t last_frame_index = 0;
 	bool ifLost  = false;
+    std::chrono::duration<double> elapsed;
 	while(!terminating && !udpStop_)
 	{
+		auto start = std::chrono::steady_clock::now();
 		fftDataV.clear();
 		adcDataV.clear();
 		ifLost  = false;
@@ -2182,14 +2189,17 @@ void viewpanel::udpRecvLoop(){
 				 << ", last_frame_index is " << last_frame_index << std::endl;	
 				break;
 			}
-
 			if(i < UDP_TIMES_PER_FRAME / 2) {
 				for(int j = 0; j < 16; j++){
 					fftDataV.insert(fftDataV.end(), g_udpMsg.pcUdpData + 32 + 64 * j, g_udpMsg.pcUdpData + 64 * (j + 1));
 					adcDataV.insert(adcDataV.end(), g_udpMsg.pcUdpData + 64 * j, g_udpMsg.pcUdpData + 64 * j + 32);
 				}
-			}
+			}  
 		}
+		auto end = std::chrono::steady_clock::now();
+		elapsed = end - start;
+		std::cout << "time for one frame udp: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
+
 		if(ifLost) {
 			std::cout << "warning!!! lost data continue! "  << std::endl;
 			continue;

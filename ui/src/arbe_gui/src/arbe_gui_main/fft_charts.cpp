@@ -58,7 +58,8 @@ void ChartFFT::setData(const QVector<double> &x, const QVector<double> &y)
         if(showType_ == FFT_ORI || showType_ == FFT_DB){
             pCustomPlot->graph(0)->setData(x, y);
         } else if (showType_ == ADC_ORI) {
-            pCustomPlot->graph(0)->addData(x, y);
+            pCustomPlot->graph(0)->setData(x, y);
+            //pCustomPlot->graph(0)->addData(x, y);
             pCustomPlot->xAxis->setRange(x[0], x[x.size() - 1]);
         }    
     }
