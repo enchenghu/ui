@@ -147,6 +147,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	CreatUIWindow();
 	CreatDebugWindow();
 	CreatADCWindow();
+	CreatMotorWindow();
 	CreatConnect();
 
 	/* Initialize the main RViz classes */
@@ -1046,6 +1047,196 @@ viewpanel* viewpanel::Instance()
 
     return m_pInstance;
 }
+
+
+void viewpanel::CreatMotorWindow()
+{
+	QWidget* multiWidget_new = new QWidget();
+
+	QGroupBox *chartADCBox0 = new QGroupBox(tr("Motor chart"));
+	QGridLayout* chartADCLayout0 = new QGridLayout ;
+	pADCchart[0] = new ChartFFT(this);
+	pADCchart[0]->setShowType(ADC_ORI);
+	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, 8192, -32768, 32768), 0 , 0);
+	chartADCBox0->setLayout(chartADCLayout0);
+
+	QGridLayout* motorCharts= new QGridLayout ;
+	motorCharts->addWidget(chartADCBox0, 0, 0);
+	//adcCharts->addWidget(chartADCBox1);
+	
+	QGridLayout* motorDebugLayout = new QGridLayout ;
+	QGroupBox* motorDebugBox = new QGroupBox(tr("Motor Debug:"));
+	QGridLayout* motorDebugBoxLayout = new QGridLayout ;
+
+	QGroupBox* motorControlBox = new QGroupBox(tr("Motor Control:"));
+	QGridLayout* motorControlBoxLayout = new QGridLayout ;
+
+	QGroupBox* motorStateBox = new QGroupBox(tr("Motor State:"));
+	QGridLayout* motorStateBoxLayout = new QGridLayout ;
+	
+
+	motorConnectBtn = new QPushButton("&Connect");
+	motorSwitchBtn = new QPushButton("&Open");
+	motorWorkModeSetBtn = new QPushButton("&Set");
+	motorPidSetBtn = new QPushButton("&Set");
+	motorShowCycleSetBtn = new QPushButton("&Set");
+	motorWorkModeCombo  = new QComboBox(this);
+
+	motorConnectPortLine = new QLineEdit(this);
+	motorWorkModeAngleSetLine = new QLineEdit(this);
+	motorWorkModeSpeedSetLine = new QLineEdit(this);
+	motorWorkModeLocSetLine = new QLineEdit(this);
+
+	motorPidCycleSetLine = new QLineEdit(this);
+	motorPidPSetLine = new QLineEdit(this);
+	motorPidISetLine = new QLineEdit(this);
+	motorPidDSetLine = new QLineEdit(this);
+
+	motorShowCycleSetLine = new QLineEdit(this);
+
+	QLabel* tcpPortLabel = new QLabel("TCP Port:" );
+	QLabel* workModeLabel = new QLabel("Work Mode:" );
+	QLabel* speedLabel = new QLabel("Rotating Speed:" );
+	QLabel* angleLabel = new QLabel("Motor Angle:" );
+	QLabel* locLabel = new QLabel("Motor Location:" );
+	QLabel* pidCLabel = new QLabel("Pid Cycle:" );
+	QLabel* pidPLabel = new QLabel("Pid P:" );
+	QLabel* pidILabel = new QLabel("Pid I:" );
+	QLabel* pidDLabel = new QLabel("Pid D:" );
+	QLabel* showCycleLabel = new QLabel("DisPlay Cycle:" );
+
+#if 0
+	tcpPortLabel ->setAlignment(Qt::AlignHCenter);
+	workModeLabel ->setAlignment(Qt::AlignHCenter);
+	speedLabel ->setAlignment(Qt::AlignHCenter);
+	angleLabel ->setAlignment(Qt::AlignHCenter);
+	locLabel ->setAlignment(Qt::AlignHCenter);
+	pidCLabel ->setAlignment(Qt::AlignHCenter);
+	pidPLabel ->setAlignment(Qt::AlignHCenter);
+	pidILabel ->setAlignment(Qt::AlignHCenter);
+	pidDLabel ->setAlignment(Qt::AlignHCenter);
+	showCycleLabel ->setAlignment(Qt::AlignHCenter);
+#endif
+
+	motorControlBoxLayout->addWidget(tcpPortLabel, 0, 0, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motorConnectPortLine, 0, 1, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motorConnectBtn, 1, 0, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motorSwitchBtn, 1, 1, Qt::AlignLeft);
+
+	QGroupBox* workModeBox = new QGroupBox(tr("Work Mode:"));
+	QGridLayout* workModeBoxLayout = new QGridLayout ;
+	workModeBoxLayout->addWidget(workModeLabel, 0, 0, Qt::AlignLeft | Qt::AlignTop);
+	workModeBoxLayout->addWidget(motorWorkModeCombo, 0, 1, Qt::AlignLeft | Qt::AlignTop);
+	workModeBoxLayout->addWidget(speedLabel, 0, 2, Qt::AlignLeft | Qt::AlignTop);
+	workModeBoxLayout->addWidget(motorWorkModeSpeedSetLine, 0, 3, Qt::AlignLeft | Qt::AlignTop);
+	workModeBoxLayout->addWidget(angleLabel, 0, 4, Qt::AlignLeft | Qt::AlignTop);
+	workModeBoxLayout->addWidget(motorWorkModeAngleSetLine, 0, 5, Qt::AlignLeft | Qt::AlignTop);
+	workModeBoxLayout->addWidget(locLabel, 0, 6, Qt::AlignLeft | Qt::AlignTop);
+	workModeBoxLayout->addWidget(motorWorkModeLocSetLine, 0, 7, Qt::AlignLeft | Qt::AlignTop);
+	workModeBoxLayout->addWidget(motorWorkModeSetBtn, 0, 8, Qt::AlignLeft | Qt::AlignTop);
+	workModeBox->setLayout(workModeBoxLayout);
+	motorControlBoxLayout->addWidget(workModeBox, 0, 2, Qt::AlignLeft | Qt::AlignTop);
+
+
+	QGroupBox* pidBox = new QGroupBox(tr("PID:"));
+	QGridLayout* pidBoxLayout = new QGridLayout ;
+	pidBoxLayout->addWidget(pidCLabel, 0, 0, Qt::AlignLeft | Qt::AlignTop);
+	pidBoxLayout->addWidget(motorPidCycleSetLine, 0, 1, Qt::AlignLeft | Qt::AlignTop);
+	pidBoxLayout->addWidget(pidPLabel, 0, 2, Qt::AlignLeft | Qt::AlignTop);
+	pidBoxLayout->addWidget(motorPidPSetLine, 0, 3, Qt::AlignLeft | Qt::AlignTop);
+	pidBoxLayout->addWidget(pidILabel, 0, 4, Qt::AlignLeft | Qt::AlignTop);
+	pidBoxLayout->addWidget(motorPidISetLine, 0, 5, Qt::AlignLeft | Qt::AlignTop);
+	pidBoxLayout->addWidget(pidDLabel, 0, 6, Qt::AlignLeft | Qt::AlignTop);
+	pidBoxLayout->addWidget(motorPidDSetLine, 0, 7, Qt::AlignLeft | Qt::AlignTop);
+	pidBoxLayout->addWidget(motorPidSetBtn, 0, 8, Qt::AlignLeft | Qt::AlignTop);
+	pidBox->setLayout(pidBoxLayout);
+	motorControlBoxLayout->addWidget(pidBox, 1, 2, Qt::AlignLeft | Qt::AlignTop);
+
+	QGroupBox* showSetBox = new QGroupBox;
+	QGridLayout*showSetBoxLayout = new QGridLayout ;
+	showSetBoxLayout->addWidget(showCycleLabel, 0, 0, Qt::AlignLeft | Qt::AlignTop);
+	showSetBoxLayout->addWidget(motorShowCycleSetLine, 0, 1, Qt::AlignLeft | Qt::AlignTop);
+	showSetBoxLayout->addWidget(motorShowCycleSetBtn, 0, 2, Qt::AlignLeft | Qt::AlignTop);
+	showSetBox->setLayout(showSetBoxLayout);
+	motorControlBoxLayout->addWidget(showSetBox, 2, 2, Qt::AlignLeft | Qt::AlignTop);
+	motorControlBoxLayout->setColumnStretch(0, 1);
+	motorControlBoxLayout->setColumnStretch(1, 1);
+	motorControlBoxLayout->setColumnStretch(2, 9);
+
+	motorControlBox->setLayout(motorControlBoxLayout);
+
+	motorCharts->addWidget(motorControlBox, 1, 0);
+	motorCharts->setRowStretch(0, 7);
+	motorCharts->setRowStretch(1, 3);
+
+	QLabel* pidReadLabel = new QLabel("Pid Parameter:" );
+	QLabel* workModeReadLabel = new QLabel("Motor Work Mode:" );
+	QLabel* displayReadLabel = new QLabel("Valid Display Items:" );
+	QLabel* softReadLabel = new QLabel("Software Version:" );
+	QLabel* hardReadLabel = new QLabel("Hardware Version:" );
+	QLabel* devLabel = new QLabel("Device Type:" );
+
+	motorPidReadLine =  new QLineEdit(this);
+	motorWorkModeReadLine =  new QLineEdit(this);
+	motorShowItemsLine =  new QLineEdit(this);
+	motorDevReadLine = new QLineEdit(this);
+	motorSoftVersionLine = new QLineEdit(this);
+	motorHardVersionLine = new QLineEdit(this);
+
+	motorPidReadBtn = new QPushButton("&Read");
+	motorWorkModeReadBtn = new QPushButton("&Read");
+	motorSoftVersionReadBtn = new QPushButton("&Read");
+	motorHardVersionReadBtn = new QPushButton("&Read");
+	motorDevReadBtn = new QPushButton("&Read");
+	motorShowItemsReadBtn = new QPushButton("&Read");
+	setReadOnlyLineEdit(motorPidReadLine);
+	setReadOnlyLineEdit(motorWorkModeReadLine);
+	setReadOnlyLineEdit(motorShowItemsLine);
+	setReadOnlyLineEdit(motorDevReadLine);
+	setReadOnlyLineEdit(motorSoftVersionLine);
+	setReadOnlyLineEdit(motorHardVersionLine);
+	motorStateBoxLayout->addWidget(workModeReadLabel, 1, 0, Qt::AlignLeft | Qt::AlignTop);
+	motorStateBoxLayout->addWidget(motorWorkModeReadLine, 1, 1, Qt::AlignLeft | Qt::AlignTop);
+	motorStateBoxLayout->addWidget(motorWorkModeReadBtn, 1, 2, Qt::AlignLeft | Qt::AlignTop);
+
+	motorStateBoxLayout->addWidget(pidReadLabel, 2, 0, Qt::AlignLeft | Qt::AlignTop);
+	motorStateBoxLayout->addWidget(motorPidReadLine, 2, 1, Qt::AlignLeft | Qt::AlignTop);
+	motorStateBoxLayout->addWidget(motorPidReadBtn, 2, 2, Qt::AlignLeft | Qt::AlignTop);
+
+	motorStateBoxLayout->addWidget(devLabel, 0, 0, Qt::AlignLeft | Qt::AlignTop);
+	motorStateBoxLayout->addWidget(motorDevReadLine, 0, 1, Qt::AlignLeft | Qt::AlignTop);
+	motorStateBoxLayout->addWidget(motorDevReadBtn, 0, 2, Qt::AlignLeft | Qt::AlignTop);
+
+	motorStateBoxLayout->addWidget(softReadLabel, 3, 0, Qt::AlignLeft | Qt::AlignTop);
+	motorStateBoxLayout->addWidget(motorSoftVersionLine, 3, 1, Qt::AlignLeft | Qt::AlignTop);
+	motorStateBoxLayout->addWidget(motorSoftVersionReadBtn, 3, 2, Qt::AlignLeft | Qt::AlignTop);
+
+	motorStateBoxLayout->addWidget(hardReadLabel, 4, 0, Qt::AlignLeft | Qt::AlignTop);
+	motorStateBoxLayout->addWidget(motorHardVersionLine, 4, 1, Qt::AlignLeft | Qt::AlignTop);
+	motorStateBoxLayout->addWidget(motorHardVersionReadBtn, 4, 2, Qt::AlignLeft | Qt::AlignTop);
+
+	motorStateBoxLayout->addWidget(displayReadLabel, 5, 0, Qt::AlignLeft | Qt::AlignTop);
+	motorStateBoxLayout->addWidget(motorShowItemsLine, 5, 1, Qt::AlignLeft | Qt::AlignTop);
+	motorStateBoxLayout->addWidget(motorShowItemsReadBtn, 5, 2, Qt::AlignLeft | Qt::AlignTop);
+	motorStateBox->setLayout(motorStateBoxLayout);
+
+
+	//adcSettingBoxLayout->addWidget(singelADCBtn_, 0, 0);//, Qt::AlignTop);
+	//adcSettingBoxLayout->addWidget(resetADCBtn_, 0, 1);//, Qt::AlignTop);
+	//adcSettingBox->setLayout(adcSettingBoxLayout);
+
+	motorDebugLayout->addWidget(motorStateBox);
+
+	QGridLayout* main_show= new QGridLayout ;
+	main_show->setColumnStretch(0, 8);
+	main_show->setColumnStretch(1, 2);
+	main_show->addLayout(motorCharts, 0, 0 );
+	main_show->addLayout(motorDebugLayout, 0, 1);
+
+	multiWidget_new->setLayout(main_show);
+	this->addTab(multiWidget_new,  "Motor Debug Mainwindow");
+}
+
 
 
 void viewpanel::CreatADCWindow()

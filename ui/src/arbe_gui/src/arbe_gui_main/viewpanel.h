@@ -219,6 +219,7 @@ private:
 	void CreatDebugWindow();
 	void CreatUIWindow();
 	void CreatADCWindow();
+	void CreatMotorWindow();
 	void CreatCtlPanel();
 	int lidarConnect();
 	void CreatConnect();
@@ -301,6 +302,41 @@ private:
 	QLineEdit* regRead_line;
 	QLineEdit* adcRead0_line;
 	QLineEdit* adcRead1_line;
+
+	QLineEdit* motorPidReadLine;
+	QLineEdit* motorPidSetLine;
+	QLineEdit* motorPidCycleSetLine;
+	QLineEdit* motorPidPSetLine;
+	QLineEdit* motorPidISetLine;
+	QLineEdit* motorPidDSetLine;
+
+	QLineEdit* motorWorkModeReadLine;
+	QLineEdit* motorWorkModeAngleSetLine;
+	QLineEdit* motorWorkModeSpeedSetLine;
+	QLineEdit* motorWorkModeLocSetLine;
+
+	QLineEdit* motorShowCycleSetLine;
+	QLineEdit* motorDevReadLine;
+	QLineEdit* motorShowItemsLine;
+	QLineEdit* motorSoftVersionLine;
+	QLineEdit* motorHardVersionLine;
+	QLineEdit* motorConnectPortLine;
+
+	QComboBox* motorWorkModeCombo;
+
+	QPushButton*  motorConnectBtn;
+	QPushButton*  motorSwitchBtn;
+	QPushButton*  motorWorkModeSetBtn;
+	QPushButton*  motorWorkModeReadBtn;
+	QPushButton*  motorPidSetBtn;
+	QPushButton*  motorPidReadBtn;
+	QPushButton*  motorShowCycleSetBtn;
+	QPushButton*  motorShowItemsReadBtn;
+	QPushButton*  motorSoftVersionReadBtn;
+	QPushButton*  motorHardVersionReadBtn;
+	QPushButton*  motorDevReadBtn;
+
+	
 	QPushButton*  saveBtn;
 	QLabel* devLabel0_state;
 	QLabel* devLabel1_state;
@@ -314,7 +350,6 @@ private:
 	bstMsgQueue<fftMsg*> fftMsg_done_buf_queue;
 	bstMsgQueue<adcMsg*> adcMsg_free_buf_queue;
 	bstMsgQueue<adcMsg*> adcMsg_done_buf_queue;
-
 	bstMsgQueue<udp_ADC_FFT_Msg*> udpMsg_free_buf_queue;
 	bstMsgQueue<udp_ADC_FFT_Msg*> udpMsg_done_buf_queue;
 	
@@ -335,6 +370,7 @@ private:
 	QPushButton * singelADCBtn_;
 	QPushButton * resetADCBtn_;
 	QPushButton * mFFTShowdBBtn;
+
 	std::vector<QPushButton* > ctlWriteBtn_;
 	std::vector<QPushButton* > ctlReadBtn_;
 	std::vector<QLineEdit* > ctlReadLine_;
@@ -354,7 +390,6 @@ private:
 	QVector<double> x_FFT_1;
 	QVector<double> y_FFT_1;
 	myTracer* plotTracer;
-
 	ros::Publisher  fmcw_pcl_pub;
 
 };
