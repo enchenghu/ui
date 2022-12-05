@@ -1218,6 +1218,17 @@ void viewpanel::CreatMotorWindow()
 	motorStateBoxLayout->addWidget(displayReadLabel, 5, 0, Qt::AlignLeft | Qt::AlignTop);
 	motorStateBoxLayout->addWidget(motorShowItemsLine, 5, 1, Qt::AlignLeft | Qt::AlignTop);
 	motorStateBoxLayout->addWidget(motorShowItemsReadBtn, 5, 2, Qt::AlignLeft | Qt::AlignTop);
+
+	QCheckBox * speedShowCheck = new QCheckBox("speed", this);
+	//speedShowCheck->setCheckable(true);
+	const QSize checkBoxSize = QSize(200, 200);
+	//speedShowCheck->setFixedSize(checkBoxSize);
+	QPalette palette = speedShowCheck->palette();
+	palette.setBrush(QPalette::Base,palette.brush(QPalette::Disabled, QPalette::Base));
+	speedShowCheck->setPalette(palette);
+	speedShowCheck->setStyleSheet("QCheckBox::indicator {width: 20px; height: 20px;}");
+	
+	motorStateBoxLayout->addWidget(speedShowCheck, 6, 0, Qt::AlignLeft | Qt::AlignTop);
 	motorStateBox->setLayout(motorStateBoxLayout);
 
 
