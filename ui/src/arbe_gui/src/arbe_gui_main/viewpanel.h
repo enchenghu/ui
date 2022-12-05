@@ -150,6 +150,7 @@ typedef struct gui_controls_t {
 	bool isPhaseEnabled;
 } gui_controls_t;
 
+
 class viewpanel: public QTabWidget
 {
 Q_OBJECT
@@ -235,6 +236,7 @@ private:
 	void init_pubs( void );
 	void init_queue();
 	void setReadOnlyLineEdit(QLineEdit* line);
+	void setCheckBoxUnvaild(QCheckBox* line);
     QTimer* timer_;
 	QTimer* timer_adc;  
 	bool udpStop_;
@@ -381,6 +383,9 @@ private:
 	fmcw_types::fmcwPoint curPcPoint;
 	ChartFFT* pFFTchart[2];
 	ChartFFT* pADCchart[2];
+	ChartFFT* pMotorchart;
+	QVector<QCheckBox*> checkShowV;
+
 	QVector<double> x_FFT;
 	QVector<double> x_adc0;
 	QVector<double> x_adc1;

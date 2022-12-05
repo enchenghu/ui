@@ -126,6 +126,18 @@ static float intrinsic_mat[3][3] = {{1526.97,0,934.05},
 									{0,1533.03,537.37},
 									{0,0,1}};
 
+static QStringList motorDataString = {
+	"speed",
+	"angle",
+	"speed P",
+	"speed I",
+	"IQ",
+	"ID",
+	"IQ tar",
+	"ID tar",
+	"time",
+	"error time"
+};
 
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
@@ -1052,16 +1064,31 @@ viewpanel* viewpanel::Instance()
 void viewpanel::CreatMotorWindow()
 {
 	QWidget* multiWidget_new = new QWidget();
+	QGridLayout* motorCharts= new QGridLayout;
 
-	QGroupBox *chartADCBox0 = new QGroupBox(tr("Motor chart"));
-	QGridLayout* chartADCLayout0 = new QGridLayout ;
-	pADCchart[0] = new ChartFFT(this);
-	pADCchart[0]->setShowType(ADC_ORI);
-	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, 8192, -32768, 32768), 0 , 0);
-	chartADCBox0->setLayout(chartADCLayout0);
+	QGroupBox *chartMotorBox = new QGroupBox(tr("Motor chart"));
+	QGroupBox *chartChooseBox = new QGroupBox(tr("choose"));
 
-	QGridLayout* motorCharts= new QGridLayout ;
-	motorCharts->addWidget(chartADCBox0, 0, 0);
+	QGridLayout* chartMotorBoxLayout = new QGridLayout ;
+	QGridLayout* chartChooseBoxLayout = new QGridLayout ;
+	for(int i = 0; i < motorDataString.size(); i++){
+		QCheckBox* newBox = new QCheckBox(motorDataString[i], this);
+		checkShowV.push_back(newBox);
+		chartChooseBoxLayout->addWidget(checkShowV[i], 0, i, Qt::AlignLeft);
+		//checkShowV.push_back(tmp);
+	}
+	chartChooseBox->setLayout(chartChooseBoxLayout);
+
+	pMotorchart = new ChartFFT(this);
+	pMotorchart->setShowType(ADC_ORI);
+	chartMotorBoxLayout->addWidget(pMotorchart->setChart(0, 8192, -32768, 32768), 0 , 0);
+	chartMotorBoxLayout->addWidget(chartChooseBox, 1 , 0);
+	chartMotorBoxLayout->setRowStretch(0, 9);
+	chartMotorBoxLayout->setRowStretch(1, 1);
+
+	chartMotorBox->setLayout(chartMotorBoxLayout);
+
+	motorCharts->addWidget(chartMotorBox, 0, 0);
 	//adcCharts->addWidget(chartADCBox1);
 	
 	QGridLayout* motorDebugLayout = new QGridLayout ;
@@ -1166,8 +1193,8 @@ void viewpanel::CreatMotorWindow()
 	motorControlBox->setLayout(motorControlBoxLayout);
 
 	motorCharts->addWidget(motorControlBox, 1, 0);
-	motorCharts->setRowStretch(0, 7);
-	motorCharts->setRowStretch(1, 3);
+	motorCharts->setRowStretch(0, 8);
+	motorCharts->setRowStretch(1, 2);
 
 	QLabel* pidReadLabel = new QLabel("Pid Parameter:" );
 	QLabel* workModeReadLabel = new QLabel("Motor Work Mode:" );
@@ -1219,16 +1246,6 @@ void viewpanel::CreatMotorWindow()
 	motorStateBoxLayout->addWidget(motorShowItemsLine, 5, 1, Qt::AlignLeft | Qt::AlignTop);
 	motorStateBoxLayout->addWidget(motorShowItemsReadBtn, 5, 2, Qt::AlignLeft | Qt::AlignTop);
 
-	QCheckBox * speedShowCheck = new QCheckBox("speed", this);
-	//speedShowCheck->setCheckable(true);
-	const QSize checkBoxSize = QSize(200, 200);
-	//speedShowCheck->setFixedSize(checkBoxSize);
-	QPalette palette = speedShowCheck->palette();
-	palette.setBrush(QPalette::Base,palette.brush(QPalette::Disabled, QPalette::Base));
-	speedShowCheck->setPalette(palette);
-	speedShowCheck->setStyleSheet("QCheckBox::indicator {width: 20px; height: 20px;}");
-	
-	motorStateBoxLayout->addWidget(speedShowCheck, 6, 0, Qt::AlignLeft | Qt::AlignTop);
 	motorStateBox->setLayout(motorStateBoxLayout);
 
 
@@ -2508,6 +2525,15 @@ void viewpanel::setReadOnlyLineEdit(QLineEdit* line)
 	QPalette palette = line->palette();
 	palette.setBrush(QPalette::Base,palette.brush(QPalette::Disabled, QPalette::Base));
 	line->setPalette(palette);
+}
+
+void viewpanel::setCheckBoxUnvaild(QCheckBox* checkBox)
+{
+	checkBox->setCheckable(true);
+	QPalette palette = checkBox->palette();
+	palette.setBrush(QPalette::Base,palette.brush(QPalette::Disabled, QPalette::Base));
+	checkBox->setPalette(palette);
+	checkBox->setStyleSheet("QCheckBox::indicator {width: 20px; height: 20px;}");	
 }
 
 void viewpanel::save_settings(void )
