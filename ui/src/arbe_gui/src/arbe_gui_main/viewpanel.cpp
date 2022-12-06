@@ -2460,6 +2460,50 @@ void viewpanel::udpRecvLoop(){
     ::close(udpRecvSocketFd_);
 }
 
+
+int viewpanel::motorConnect()
+{
+	int one = 1;
+	lidar_ip = ip_edit->text().toStdString();
+	motor_port = motorConnectPortLine->text().toInt();
+	ROS_INFO("lidar_ip is %s, motor_port is %d", lidar_ip.c_str(), motor_port);
+	struct sockaddr_in ctrl_serv_addr;
+	if ((motor_ctrl_sock=socket(AF_INET, SOCK_STREAM, 0))==-1){
+		ROS_DEBUG("ERROR: Could not create socket!");
+		return -1;
+	}
+	int nRecvBuf=320 * 1024;//设置为32K
+	setsockopt(motor_ctrl_sock, SOL_SOCKET,SO_RCVBUF,(const char*)&nRecvBuf,sizeof(int));
+
+	int nSendBuf=320 * 1024;//设置为32K
+	setsockopt(motor_ctrl_sock, SOL_SOCKET, SO_SNDBUF,(const char*)&nSendBuf,sizeof(int));
+	setsockopt(motor_ctrl_sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+
+
+#if 1
+	struct timeval timeout_send = {2, 0};
+	setsockopt(motor_ctrl_sock, SOL_SOCKET, SO_SNDTIMEO, &timeout_send, sizeof(timeout_send)); //send timeout
+
+	struct timeval timeout_recv = {2, 0};
+	setsockopt(motor_ctrl_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout_recv, sizeof(timeout_recv)); //recv timeout
+
+#endif
+	memset(&ctrl_serv_addr, 0, sizeof(ctrl_serv_addr));
+	ctrl_serv_addr.sin_family = AF_INET;
+	ctrl_serv_addr.sin_addr.s_addr = inet_addr(lidar_ip.c_str());
+	ctrl_serv_addr.sin_port = htons(motor_port);
+
+	if(::connect(motor_ctrl_sock, (struct sockaddr*)&ctrl_serv_addr, sizeof(ctrl_serv_addr))<0)
+	{
+		ROS_INFO("Failed to connect to lidar_ip %s port: %d", lidar_ip.c_str(), motor_port);
+		return -2; /* Completely fail only if first radar didn't connect */
+	}
+	//fcntl(ctrl_sock, F_SETFL, O_NONBLOCK); /* Set the socket to non blocking mode */
+	return 0;
+}
+
+
+
 int viewpanel::lidarConnect()
 {
 	int err;

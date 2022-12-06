@@ -94,6 +94,12 @@ typedef struct
 	uint32_t 	mCommandVal[2];
 } commandMsg;
 
+typedef struct 
+{
+	uint16_t 	mHead; 
+	uint8_t     cmd;
+	uint8_t     dataLen;
+} motorCmdMsg;
 
 typedef struct 
 {
@@ -166,6 +172,55 @@ typedef struct
 	//    Unit16_t type;		// 保留（说明点的特殊情况）
 }PcMetadata;
 
+typedef enum
+{
+    MOTOR_CONNECT = 0x01,
+    MOTOR_CONNECT_RET = 0x01,
+
+    MOTOR_DISCONNECT = 0xA1,
+    MOTOR_DISCONNECT_RET = 0xA1,
+	
+    MOTOR_PID_READ,
+    MOTOR_PID_READ_RET,
+
+    MOTOR_PID_SET,
+    MOTOR_PID_SET_RET,
+
+    MOTOR_WORKMODE_READ,
+    MOTOR_WORKMODE_READ_RET,
+
+    MOTOR_WORKMODE_SET,
+    MOTOR_WORKMODE_SET_RET,
+
+    MOTOR_SHOW_ITEMS_READ,
+    MOTOR_SHOW_ITEMS_READ_RET,
+
+    MOTOR_SHOW_ITEMS_SET,
+    MOTOR_SHOW_ITEMS_SET_RET,
+
+    MOTOR_SOFT_VERSION_READ,
+    MOTOR_SOFT_VERSION_READ_RET,
+
+    MOTOR_HARD_VERSION_READ,
+    MOTOR_HARD_VERSION_READ_RET,
+
+    MOTOR_DEV_TYPE_READ,
+    MOTOR_DEV_TYPE_READ_RET,
+
+    MOTOR_SHOW_CYCLE_SET,
+    MOTOR_SHOW_CYCLE_SET_RET,
+
+	MOTOR_OPEN,
+	MOTOR_OPEN_RET,
+
+	MOTOR_CLOSE,
+	MOTOR_CLOSE_RET,
+
+	MOTOR_SHOW_ITEMS_CTRL,
+	MOTOR_SHOW_ITEMS_CTRL_RET,
+
+	MOTOR_SHOW_ITEMS_DISPLAY
+}motorCmdType;
 //PcMetadata PcMetadata_Arr[100];	// 每个UDP报文，包含2列激光数据
 //PointCloud_V1_0_Header + PcMetadata_Arr
 }

@@ -128,7 +128,6 @@ typedef enum
     VT_BOUTIQUE_3
 }eViewType;
 
-
 typedef struct view_vals_t {
         QVariant distance;
         QVariant yaw;
@@ -223,6 +222,7 @@ private:
 	void CreatMotorWindow();
 	void CreatCtlPanel();
 	int lidarConnect();
+	int motorConnect();
 	void CreatConnect();
 	void Save2filecsv(std::vector<uint8_t> &, bool );
 	void parseFFTData(std::vector<uint8_t> &data);
@@ -242,10 +242,13 @@ private:
 	bool udpStop_;
 	void saveData();
 	int ctrl_sock;
+	int motor_ctrl_sock;
 	int udpRecvSocketFd_;
 	std::string lidar_ip;
 	int lidar_ctrl_port;
 	int lidar_UDP_port;
+	int motor_port;
+
 	double distance_offset;
 	double power_offset;
 
