@@ -337,7 +337,8 @@ private:
 	QPushButton*  motorSoftVersionReadBtn;
 	QPushButton*  motorHardVersionReadBtn;
 	QPushButton*  motorDevReadBtn;
-
+	QPushButton*  motorChartResetBtn;
+	QPushButton*  motorChartSingleBtn;
 	
 	QPushButton*  saveBtn;
 	QLabel* devLabel0_state;

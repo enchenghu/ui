@@ -1067,24 +1067,31 @@ void viewpanel::CreatMotorWindow()
 	QGridLayout* motorCharts= new QGridLayout;
 
 	QGroupBox *chartMotorBox = new QGroupBox(tr("Motor chart"));
-	QGroupBox *chartChooseBox = new QGroupBox(tr("choose"));
+	QGroupBox *chartChooseBox = new QGroupBox(tr("choose to show"));
 
 	QGridLayout* chartMotorBoxLayout = new QGridLayout ;
 	QGridLayout* chartChooseBoxLayout = new QGridLayout ;
+	motorChartResetBtn = new QPushButton("&Reset Chart");
+	motorChartSingleBtn = new QPushButton("&Single");
 	for(int i = 0; i < motorDataString.size(); i++){
 		QCheckBox* newBox = new QCheckBox(motorDataString[i], this);
 		checkShowV.push_back(newBox);
-		chartChooseBoxLayout->addWidget(checkShowV[i], 0, i, Qt::AlignLeft);
+		chartChooseBoxLayout->addWidget(checkShowV[i], i, 0, Qt::AlignLeft);
 		//checkShowV.push_back(tmp);
 	}
+	chartChooseBoxLayout->addWidget(motorChartResetBtn, 0, 1, Qt::AlignLeft);
+	chartChooseBoxLayout->addWidget(motorChartSingleBtn, 1, 1, Qt::AlignLeft);
+
 	chartChooseBox->setLayout(chartChooseBoxLayout);
 
 	pMotorchart = new ChartFFT(this);
 	pMotorchart->setShowType(ADC_ORI);
+
 	chartMotorBoxLayout->addWidget(pMotorchart->setChart(0, 8192, -32768, 32768), 0 , 0);
-	chartMotorBoxLayout->addWidget(chartChooseBox, 1 , 0);
-	chartMotorBoxLayout->setRowStretch(0, 9);
-	chartMotorBoxLayout->setRowStretch(1, 1);
+	chartMotorBoxLayout->addWidget(chartChooseBox, 0 , 1);
+	
+	chartMotorBoxLayout->setColumnStretch(0, 9);
+	chartMotorBoxLayout->setColumnStretch(1, 1);
 
 	chartMotorBox->setLayout(chartMotorBoxLayout);
 
