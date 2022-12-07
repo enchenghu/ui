@@ -30,6 +30,8 @@ set(CMAKE_AUTOMOC ON)
 
 find_package(Qt5 5.12 COMPONENTS Core Widgets Gui Charts REQUIRED)
 find_package(Qt5PrintSupport REQUIRED)
+find_package(Qt5SerialPort REQUIRED)
+
 
 ## This plugin includes Qt widgets, so we must include Qt.
 ## We'll use the version that rviz used so they are compatible.
@@ -244,6 +246,7 @@ target_link_libraries(arbe_gui
    polym
    Qt5::Charts
    Qt5PrintSupport
+   Qt5SerialPort
    ${catkin_LIBRARIES}
    ${PCL_LIBRARIES}
    ${QT_LIBRARIES}

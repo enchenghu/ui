@@ -143,14 +143,16 @@ static QStringList motorDataString = {
 viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
 	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_ORI),\
-	power_offset(0.0), distance_offset(0.0)
+	power_offset(0.0), distance_offset(0.0),ifConnectedMotor(false)
 {
 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
+	memset(&motorMsgSend_, 0, sizeof(motorMsgSend_));
 	cmdMsg_.mHead.usPrefix = 0xeeff;
 	cmdMsg_.mHead.usType = 0x10;
 	cmdMsg_.mHead.usPayloadCrc = 0x00;
 	cmdMsg_.mHead.unLength = 12;
+	motorMsgSend_.mHead = 0x55aa;
 
 	power_index = {0.2, 12, 20, 70, 290, 346, 347, 
 				   397, 415, 500, 510, 560, 625, 1000, 
@@ -241,7 +243,7 @@ void viewpanel::init_queue()
         adcMsg_free_buf_queue.put(fbuf1);
         udpMsg_free_buf_queue.put(fbuf2);
     }
-
+	motorSerialConnectTest();
 }
 
 void viewpanel::loadLidarFile(void){
@@ -769,6 +771,8 @@ void viewpanel::printView(  )
 			manager_->getViewManager()->getCurrent()->subProp("Pitch")->getValue().toFloat(),
 			manager_->getViewManager()->getCurrent()->subProp("Focal Point")->getValue().toString().toStdString().c_str());
 	save_settings();
+	serialClose(m_serialPort);	
+	serialClose(m_serialPort_test);	
 }
 
 void viewpanel::setView( view_vals_t &view_vals )
@@ -1115,7 +1119,15 @@ void viewpanel::CreatMotorWindow()
 	motorPidSetBtn = new QPushButton("&Set");
 	motorShowCycleSetBtn = new QPushButton("&Set");
 	motorWorkModeCombo  = new QComboBox(this);
-
+	motorSerialCombo = new QComboBox(this);
+	motorSerialCombo->setEditable(true);
+	foreach(const QSerialPortInfo &info,QSerialPortInfo::availablePorts())
+	{
+		m_serialPortName << info.portName();
+		qDebug()<<"serialPortName:"<<info.portName();
+		motorSerialCombo->addItem(info.systemLocation());
+	}
+	motorSerialCombo->addItem(QString("/dev/pts/3"));
 	motorConnectPortLine = new QLineEdit(this);
 	motorWorkModeAngleSetLine = new QLineEdit(this);
 	motorWorkModeSpeedSetLine = new QLineEdit(this);
@@ -1129,6 +1141,8 @@ void viewpanel::CreatMotorWindow()
 	motorShowCycleSetLine = new QLineEdit(this);
 
 	QLabel* tcpPortLabel = new QLabel("TCP Port:" );
+	QLabel* serialLabel = new QLabel("Serial Device:" );
+
 	QLabel* workModeLabel = new QLabel("Work Mode:" );
 	QLabel* speedLabel = new QLabel("Rotating Speed:" );
 	QLabel* angleLabel = new QLabel("Motor Angle:" );
@@ -1154,8 +1168,10 @@ void viewpanel::CreatMotorWindow()
 
 	motorControlBoxLayout->addWidget(tcpPortLabel, 0, 0, Qt::AlignLeft);
 	motorControlBoxLayout->addWidget(motorConnectPortLine, 0, 1, Qt::AlignLeft);
-	motorControlBoxLayout->addWidget(motorConnectBtn, 1, 0, Qt::AlignLeft);
-	motorControlBoxLayout->addWidget(motorSwitchBtn, 1, 1, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(serialLabel, 1, 0, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motorSerialCombo, 1, 1, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motorConnectBtn, 2, 0, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motorSwitchBtn, 2, 1, Qt::AlignLeft);
 
 	QGroupBox* workModeBox = new QGroupBox(tr("Work Mode:"));
 	QGridLayout* workModeBoxLayout = new QGridLayout ;
@@ -1441,6 +1457,10 @@ void viewpanel::CreatConnect()
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
 	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
+	connect(motorConnectBtn, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
+
+
+
 	connect(errorLogText,SIGNAL(textChanged()),SLOT(slotTextTcpChanged()));
     timer_  = new QTimer(this);
     //timer_->setInterval(50);
@@ -1453,10 +1473,11 @@ void viewpanel::CreatConnect()
     timer_adc->start(10);
 
     QTimer* timer_state  = new QTimer(this);
-    //timer_->setInterval(50);
     connect(timer_state, SIGNAL(timeout()), this, SLOT(updateState(void)));
     connect(timer_state, SIGNAL(timeout()), this, SLOT(printErrorLog(void)));
-    timer_state->start(500);
+    //connect(timer_state, SIGNAL(timeout()), this, SLOT(recvSerialInfo(void)));
+
+    timer_state->start(300);
 
 }
 
@@ -2248,6 +2269,80 @@ void viewpanel::slotTextTcpChanged()
    errorLogText->moveCursor(QTextCursor::End);
 }
 
+void viewpanel::recvSerialInfo()
+{
+	//m_serialPort->waitForReadyRead(10);
+	QByteArray info = m_serialPort->readAll();
+	if(info.isEmpty()){
+		qDebug() << "info recvSerialInfo  is empty";
+		return;
+	}
+	QByteArray hexData = info.toHex();
+	qDebug() << "info recvSerialInfo is " << hexData;
+	uint8_t* ptr = (uint8_t*)info.data();
+	if(ptr[2] == motorCmdType::MOTOR_CONNECT_RET){
+		motorConnectBtn->setStyleSheet("color: green");
+		motorConnectBtn->setText("&Disconnect");
+		ifConnectedMotor = true;
+	}
+}
+
+void viewpanel::recvSerialInfoTest()
+{
+	//m_serialPort_test->waitForReadyRead(10);
+	QByteArray info = m_serialPort_test->readAll();
+	if(info.isEmpty()){
+		qDebug() << "info recvSerialInfoTest  is empty";
+		return;
+	}
+	QByteArray hexData = info.toHex();
+	qDebug() << "info recvSerialInfoTest is " << hexData;
+	uint8_t* ptr = (uint8_t*)info.data();
+	if(ptr[2] == motorCmdType::MOTOR_CONNECT){
+		motorMsgSend_.cmd = motorCmdType::MOTOR_CONNECT_RET;
+		motorMsgSend_.dataLen = 0x00;
+		int ret = m_serialPort_test->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
+		ROS_INFO("connect motor ok, ret is %d", ret);
+	} else {
+		ROS_INFO("not connect msg");
+	}
+}
+
+void viewpanel::sendMotorConnectCmd()
+{
+	if(!ifConnectedMotor){
+		if(motorSerialConnect()){
+			QMessageBox msgBox;
+			msgBox.setText("connect to the serial device failed!");
+			msgBox.exec();
+			return;
+		} 
+		motorMsgSend_.cmd = motorCmdType::MOTOR_CONNECT;
+		motorMsgSend_.dataLen = 0x00;
+		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
+		ROS_INFO("m_serialPort->write is %d", ret);
+
+#if 0
+		//m_serialPort->waitForReadyRead();
+		usleep(100 * 1000);
+		QByteArray info = m_serialPort->readAll();
+		std::cout << "info return size is " << info.size() << std::endl;
+		if(info.at(2) == motorCmdType::MOTOR_CONNECT_RET){
+			motorConnectBtn->setStyleSheet("color: green");
+			motorConnectBtn->setText("&Disconnect");
+			ifConnectedMotor = true;
+		}
+#endif		
+	}else{
+		motorConnectBtn->setStyleSheet("color: black");
+		motorConnectBtn->setText("&Connect");
+		ifConnectedMotor = false;	
+		serialClose(m_serialPort);	
+		serialClose(m_serialPort_test);	
+	}
+}
+
+
 void viewpanel::updateADCdata() {
 	static long long frame_index = 0;
 	x_adc0.clear();
@@ -2460,6 +2555,80 @@ void viewpanel::udpRecvLoop(){
     ::close(udpRecvSocketFd_);
 }
 
+int viewpanel::motorSerialConnectTest()
+{
+	m_serialPort_test = new QSerialPort();//实例化串口类一个对象
+
+	if(m_serialPort_test->isOpen())//如果串口已经打开了 先给他关闭了
+	{
+		m_serialPort_test->clear();
+		m_serialPort_test->close();
+	}
+
+	//设置串口名字 假设我们上面已经成功获取到了 并且使用第一个
+	//QString serialDevName = motorSerialCombo->currentText();
+	m_serialPort_test->setPortName(QString("/dev/pts/2"));
+
+	if(!m_serialPort_test->open(QIODevice::ReadWrite))//用ReadWrite 的模式尝试打开串口
+	{
+		qDebug()<< QString("/dev/pts/2") <<"open failed!";
+		return -1;
+	}
+	//打开成功
+	qDebug()<< QString("/dev/pts/4") <<"open successfully!";
+    m_serialPort_test->setBaudRate(QSerialPort::Baud115200,QSerialPort::AllDirections);//设置波特率和读写方向
+    m_serialPort_test->setDataBits(QSerialPort::Data8);		//数据位为8位
+    m_serialPort_test->setFlowControl(QSerialPort::NoFlowControl);//无流控制
+    m_serialPort_test->setParity(QSerialPort::NoParity);	//无校验位
+    m_serialPort_test->setStopBits(QSerialPort::OneStop); //一位停止位
+
+	//连接信号槽 当下位机发送数据QSerialPortInfo 会发送个 readyRead 信号,我们定义个槽void receiveInfo()解析数据
+	connect(m_serialPort_test,SIGNAL(readyRead()),this,SLOT(recvSerialInfoTest()));
+	return 0;
+}
+
+int viewpanel::serialClose(QSerialPort* serialPort)
+{
+	if(serialPort == nullptr) return -1;
+	if(serialPort->isOpen())//如果串口已经打开了 先给他关闭了
+	{
+		serialPort->clear();
+		serialPort->close();
+		std::cout << "close serialPort" << std::endl;
+	}
+	return 0;
+}
+
+int viewpanel::motorSerialConnect()
+{
+	m_serialPort = new QSerialPort();//实例化串口类一个对象
+
+	if(m_serialPort->isOpen())//如果串口已经打开了 先给他关闭了
+	{
+		m_serialPort->clear();
+		m_serialPort->close();
+	}
+
+	//设置串口名字 假设我们上面已经成功获取到了 并且使用第一个
+	QString serialDevName = motorSerialCombo->currentText();
+	m_serialPort->setPortName(serialDevName);
+
+	if(!m_serialPort->open(QIODevice::ReadWrite))//用ReadWrite 的模式尝试打开串口
+	{
+		qDebug()<< serialDevName <<"open failed!";
+		return -1;
+	}
+	//打开成功
+    m_serialPort->setBaudRate(QSerialPort::Baud115200,QSerialPort::AllDirections);//设置波特率和读写方向
+    m_serialPort->setDataBits(QSerialPort::Data8);		//数据位为8位
+    m_serialPort->setFlowControl(QSerialPort::NoFlowControl);//无流控制
+    m_serialPort->setParity(QSerialPort::NoParity);	//无校验位
+    m_serialPort->setStopBits(QSerialPort::OneStop); //一位停止位
+
+	//连接信号槽 当下位机发送数据QSerialPortInfo 会发送个 readyRead 信号,我们定义个槽void receiveInfo()解析数据
+	connect(m_serialPort,SIGNAL(readyRead()),this,SLOT(recvSerialInfo()));
+	return 0;
+}
 
 int viewpanel::motorConnect()
 {

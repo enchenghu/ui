@@ -70,6 +70,8 @@
 #include "ctkrangeslider.h"
 #include <QShortcut>
 #include "types_fmcw.hpp"
+#include <QtSerialPort/QSerialPort>
+#include <QtSerialPort/QSerialPortInfo>
 
 #include <std_msgs/UInt8.h>
 #include <std_msgs/Bool.h>
@@ -207,6 +209,9 @@ private Q_SLOTS:
 	void updateState();
 	void printErrorLog();
 	void slotTextTcpChanged();
+	void recvSerialInfo();
+	void recvSerialInfoTest();
+	void sendMotorConnectCmd();
 
 
 protected:
@@ -223,6 +228,10 @@ private:
 	void CreatCtlPanel();
 	int lidarConnect();
 	int motorConnect();
+	int motorSerialConnect();
+	int motorSerialConnectTest();
+	int serialClose(QSerialPort* );
+
 	void CreatConnect();
 	void Save2filecsv(std::vector<uint8_t> &, bool );
 	void parseFFTData(std::vector<uint8_t> &data);
@@ -248,6 +257,9 @@ private:
 	int lidar_ctrl_port;
 	int lidar_UDP_port;
 	int motor_port;
+	QSerialPort *m_serialPort;
+	QSerialPort *m_serialPort_test;
+
 
 	double distance_offset;
 	double power_offset;
@@ -328,6 +340,8 @@ private:
 	QLineEdit* motorConnectPortLine;
 
 	QComboBox* motorWorkModeCombo;
+	QComboBox* motorSerialCombo;
+
 
 	QPushButton*  motorConnectBtn;
 	QPushButton*  motorSwitchBtn;
@@ -342,6 +356,7 @@ private:
 	QPushButton*  motorDevReadBtn;
 	QPushButton*  motorChartResetBtn;
 	QPushButton*  motorChartSingleBtn;
+	QStringList   m_serialPortName;
 	
 	QPushButton*  saveBtn;
 	QLabel* devLabel0_state;
@@ -363,6 +378,7 @@ private:
 	QString  loadLidarFile_;
 	bool ifConnected;
 	bool ifStarted;
+	bool ifConnectedMotor;
 	showModel ifShowdB_;
 	bool ifSave;
 	QPushButton *lidar_connect_button;
@@ -400,6 +416,7 @@ private:
 	QVector<double> y_FFT_1;
 	myTracer* plotTracer;
 	ros::Publisher  fmcw_pcl_pub;
+	motorCmdMsg motorMsgSend_;
 
 };
 

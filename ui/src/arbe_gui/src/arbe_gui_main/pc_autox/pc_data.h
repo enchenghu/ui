@@ -175,7 +175,7 @@ typedef struct
 typedef enum
 {
     MOTOR_CONNECT = 0x01,
-    MOTOR_CONNECT_RET = 0x01,
+    MOTOR_CONNECT_RET = 0xA1,
 
     MOTOR_DISCONNECT = 0xA1,
     MOTOR_DISCONNECT_RET = 0xA1,
