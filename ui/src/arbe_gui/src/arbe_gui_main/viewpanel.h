@@ -212,6 +212,8 @@ private Q_SLOTS:
 	void recvSerialInfo();
 	void recvSerialInfoTest();
 	void sendMotorConnectCmd();
+	void sendMotorOpenCmd();
+
 
 
 protected:
@@ -231,6 +233,7 @@ private:
 	int motorSerialConnect();
 	int motorSerialConnectTest();
 	int serialClose(QSerialPort* );
+	void releaseSerial();
 
 	void CreatConnect();
 	void Save2filecsv(std::vector<uint8_t> &, bool );
@@ -379,6 +382,8 @@ private:
 	bool ifConnected;
 	bool ifStarted;
 	bool ifConnectedMotor;
+	bool ifOpenMotor;
+
 	showModel ifShowdB_;
 	bool ifSave;
 	QPushButton *lidar_connect_button;
@@ -417,6 +422,8 @@ private:
 	myTracer* plotTracer;
 	ros::Publisher  fmcw_pcl_pub;
 	motorCmdMsg motorMsgSend_;
+	motorCmdMsg1 motorMsgSend1_;
+
 
 };
 

@@ -143,7 +143,8 @@ static QStringList motorDataString = {
 viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
 	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_ORI),\
-	power_offset(0.0), distance_offset(0.0),ifConnectedMotor(false)
+	power_offset(0.0), distance_offset(0.0),ifConnectedMotor(false),\
+	ifOpenMotor(false)
 {
 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
@@ -153,6 +154,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	cmdMsg_.mHead.usPayloadCrc = 0x00;
 	cmdMsg_.mHead.unLength = 12;
 	motorMsgSend_.mHead = 0x55aa;
+	motorMsgSend1_.mHead = 0x55aa;
 
 	power_index = {0.2, 12, 20, 70, 290, 346, 347, 
 				   397, 415, 500, 510, 560, 625, 1000, 
@@ -1458,8 +1460,7 @@ void viewpanel::CreatConnect()
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
 	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
 	connect(motorConnectBtn, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
-
-
+	connect(motorSwitchBtn, SIGNAL(clicked()), this, SLOT( sendMotorOpenCmd( void )));
 
 	connect(errorLogText,SIGNAL(textChanged()),SLOT(slotTextTcpChanged()));
     timer_  = new QTimer(this);
@@ -2280,10 +2281,51 @@ void viewpanel::recvSerialInfo()
 	QByteArray hexData = info.toHex();
 	qDebug() << "info recvSerialInfo is " << hexData;
 	uint8_t* ptr = (uint8_t*)info.data();
-	if(ptr[2] == motorCmdType::MOTOR_CONNECT_RET){
-		motorConnectBtn->setStyleSheet("color: green");
-		motorConnectBtn->setText("&Disconnect");
-		ifConnectedMotor = true;
+
+	switch (ptr[2])
+	{
+	case MOTOR_CONNECT_RET:
+		if(ptr[4] == 0xFF){
+			motorConnectBtn->setStyleSheet("color: green");
+			motorConnectBtn->setText("&Disconnect");
+			ifConnectedMotor = true;
+		} else {
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR CONNECT failed!");
+			msgBox.exec();			
+		}	
+		break;
+	case MOTOR_DISCONNECT_RET:
+		if(ptr[4] == 0xFF){
+			motorConnectBtn->setStyleSheet("color: black");
+			motorConnectBtn->setText("&Connect");
+			ifConnectedMotor = false;
+			releaseSerial();
+		} else {
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR DISCONNECT failed!");
+			msgBox.exec();			
+		}
+		break;
+	case MOTOR_OPEN_RET:
+		if(ptr[4] == 0xFF){
+			if(ifOpenMotor){
+				motorSwitchBtn->setStyleSheet("color: black");
+				motorSwitchBtn->setText("&Open");
+				ifOpenMotor = false;
+			}else {
+				motorSwitchBtn->setStyleSheet("color: green");
+				motorSwitchBtn->setText("&Close");
+				ifOpenMotor = true;				
+			}
+		} else {
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR SWITCH failed!");
+			msgBox.exec();			
+		}	
+		break;	
+	default:
+		break;
 	}
 }
 
@@ -2298,13 +2340,62 @@ void viewpanel::recvSerialInfoTest()
 	QByteArray hexData = info.toHex();
 	qDebug() << "info recvSerialInfoTest is " << hexData;
 	uint8_t* ptr = (uint8_t*)info.data();
-	if(ptr[2] == motorCmdType::MOTOR_CONNECT){
-		motorMsgSend_.cmd = motorCmdType::MOTOR_CONNECT_RET;
-		motorMsgSend_.dataLen = 0x00;
-		int ret = m_serialPort_test->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
+	int ret;
+
+	switch (ptr[2])
+	{
+	case MOTOR_CONNECT:
+		motorMsgSend1_.cmd = motorCmdType::MOTOR_CONNECT_RET;
+		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.data = 0xff;
+		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
 		ROS_INFO("connect motor ok, ret is %d", ret);
-	} else {
-		ROS_INFO("not connect msg");
+		break;
+	case MOTOR_DISCONNECT:
+		ROS_INFO("disconnect motor ready");
+		motorMsgSend1_.cmd = motorCmdType::MOTOR_DISCONNECT_RET;
+		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.data = 0xff;
+		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
+		ROS_INFO("disconnect motor ok, ret is %d", ret);
+		break;
+	case MOTOR_OPEN:
+		motorMsgSend1_.cmd = motorCmdType::MOTOR_OPEN_RET;
+		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.data = 0xff;
+		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
+		ROS_INFO("switch motor ok, ret is %d", ret);
+		break;	
+	default:
+		break;
+	}
+}
+
+void viewpanel::sendMotorOpenCmd()
+{
+	if(!ifOpenMotor){
+		if(!ifConnectedMotor){
+			QMessageBox msgBox;
+			msgBox.setText("please connect to the motor serial device firstly!");
+			msgBox.exec();
+			return;
+		} 
+		motorMsgSend1_.cmd = motorCmdType::MOTOR_OPEN;
+		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.data = 0x01;
+		motorMsgSend1_.count = 0x01;
+		motorMsgSend1_.crc = motorMsgSend1_.cmd + motorMsgSend1_.dataLen +  motorMsgSend1_.data + motorMsgSend1_.count;
+		int ret = m_serialPort->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
+		ROS_INFO("m_serialPort->write is %d", ret);	
+	}else{
+		motorMsgSend1_.cmd = motorCmdType::MOTOR_OPEN;
+		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.data = 0x00;
+		motorMsgSend1_.count = 0x01;
+		motorMsgSend1_.crc = motorMsgSend1_.cmd + motorMsgSend1_.dataLen +  motorMsgSend1_.data + motorMsgSend1_.count;
+		int ret = m_serialPort->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
+		ROS_INFO("m_serialPort->write is %d", ret);	
+		//releaseSerial();
 	}
 }
 
@@ -2319,26 +2410,18 @@ void viewpanel::sendMotorConnectCmd()
 		} 
 		motorMsgSend_.cmd = motorCmdType::MOTOR_CONNECT;
 		motorMsgSend_.dataLen = 0x00;
-		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
-		ROS_INFO("m_serialPort->write is %d", ret);
+		motorMsgSend_.count = 0x01;
+		motorMsgSend_.crc = motorMsgSend_.cmd + motorMsgSend_.dataLen + motorMsgSend_.count;
 
-#if 0
-		//m_serialPort->waitForReadyRead();
-		usleep(100 * 1000);
-		QByteArray info = m_serialPort->readAll();
-		std::cout << "info return size is " << info.size() << std::endl;
-		if(info.at(2) == motorCmdType::MOTOR_CONNECT_RET){
-			motorConnectBtn->setStyleSheet("color: green");
-			motorConnectBtn->setText("&Disconnect");
-			ifConnectedMotor = true;
-		}
-#endif		
+		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
+		ROS_INFO("MOTOR_CONNECT write is %d", ret);	
 	}else{
-		motorConnectBtn->setStyleSheet("color: black");
-		motorConnectBtn->setText("&Connect");
-		ifConnectedMotor = false;	
-		serialClose(m_serialPort);	
-		serialClose(m_serialPort_test);	
+		motorMsgSend_.cmd = motorCmdType::MOTOR_DISCONNECT;
+		motorMsgSend_.dataLen = 0x00;
+		motorMsgSend_.count = 0x01;
+		motorMsgSend_.crc = motorMsgSend_.cmd + motorMsgSend_.dataLen + motorMsgSend_.count;
+		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
+		ROS_INFO("MOTOR_DISCONNECT write is %d", ret);
 	}
 }
 
@@ -2597,6 +2680,16 @@ int viewpanel::serialClose(QSerialPort* serialPort)
 		std::cout << "close serialPort" << std::endl;
 	}
 	return 0;
+}
+
+void viewpanel::releaseSerial()
+{
+	serialClose(m_serialPort);	
+	delete m_serialPort;
+	m_serialPort = nullptr;
+	serialClose(m_serialPort_test);	
+	delete m_serialPort_test;
+	m_serialPort_test = nullptr;	
 }
 
 int viewpanel::motorSerialConnect()
