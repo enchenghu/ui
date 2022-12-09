@@ -115,6 +115,16 @@ typedef struct
 
 typedef struct 
 {
+	uint16_t 	mHead; 
+	uint8_t     cmd;
+	uint8_t     dataLen;
+	uint8_t     data[16];
+	uint8_t		count;
+	uint16_t 	crc; 
+} motorPidMsg;
+
+typedef struct 
+{
 	UDP_Header 	mHead; 
 	uint8_t 	pcUdpData[UDP_PC_SIZE_SINGLE];
 } udpMsg;

@@ -213,7 +213,7 @@ private Q_SLOTS:
 	void recvSerialInfoTest();
 	void sendMotorConnectCmd();
 	void sendMotorOpenCmd();
-
+	void readMotorPid();
 
 
 protected:
@@ -234,6 +234,8 @@ private:
 	int motorSerialConnectTest();
 	int serialClose(QSerialPort* );
 	void releaseSerial();
+	void checkMotorConnected();
+
 
 	void CreatConnect();
 	void Save2filecsv(std::vector<uint8_t> &, bool );
@@ -323,7 +325,8 @@ private:
 	QLineEdit* adcRead0_line;
 	QLineEdit* adcRead1_line;
 
-	QLineEdit* motorPidReadLine;
+	QLineEdit* motorPidReadLine[4];
+
 	QLineEdit* motorPidSetLine;
 	QLineEdit* motorPidCycleSetLine;
 	QLineEdit* motorPidPSetLine;
@@ -423,6 +426,8 @@ private:
 	ros::Publisher  fmcw_pcl_pub;
 	motorCmdMsg motorMsgSend_;
 	motorCmdMsg1 motorMsgSend1_;
+	motorPidMsg motorMsgPid_;
+
 
 
 };

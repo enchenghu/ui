@@ -138,7 +138,27 @@ static QStringList motorDataString = {
 	"time",
 	"error time"
 };
+float UnsignedChar4ToFloat(unsigned char *strBuf) 
+{
+	float fNum;
+	char *p = (char *)&fNum;
+	for (int i = 0; i < 4; i++) {
+		*p = strBuf[i];
+		p++;
+	}
+	return fNum;
+}
 
+void FloatToChar(float fNum, unsigned char *strBuf) 
+{
+	int i = 0;
+	unsigned char nTmp;
+	char *p = (char *)&fNum;
+	for (i = 0; i < 4; i++) {
+		strBuf[i] = *p;
+		p++;
+	}
+}
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
@@ -1192,6 +1212,10 @@ void viewpanel::CreatMotorWindow()
 
 	QGroupBox* pidBox = new QGroupBox(tr("PID:"));
 	QGridLayout* pidBoxLayout = new QGridLayout ;
+
+	QGroupBox* pidReadBox = new QGroupBox(tr("PID:"));
+	QGridLayout* pidReadBoxLayout = new QGridLayout ;
+
 	pidBoxLayout->addWidget(pidCLabel, 0, 0, Qt::AlignLeft | Qt::AlignTop);
 	pidBoxLayout->addWidget(motorPidCycleSetLine, 0, 1, Qt::AlignLeft | Qt::AlignTop);
 	pidBoxLayout->addWidget(pidPLabel, 0, 2, Qt::AlignLeft | Qt::AlignTop);
@@ -1221,27 +1245,43 @@ void viewpanel::CreatMotorWindow()
 	motorCharts->setRowStretch(0, 8);
 	motorCharts->setRowStretch(1, 2);
 
-	QLabel* pidReadLabel = new QLabel("Pid Parameter:" );
 	QLabel* workModeReadLabel = new QLabel("Motor Work Mode:" );
 	QLabel* displayReadLabel = new QLabel("Valid Display Items:" );
 	QLabel* softReadLabel = new QLabel("Software Version:" );
 	QLabel* hardReadLabel = new QLabel("Hardware Version:" );
 	QLabel* devLabel = new QLabel("Device Type:" );
 
-	motorPidReadLine =  new QLineEdit(this);
+	for(int i = 0; i < 4;i++){
+		motorPidReadLine[i] =  new QLineEdit(this);
+		setReadOnlyLineEdit(motorPidReadLine[i]);
+	}
+	QLabel* pidCLabelR = new QLabel("Cycle:" );
+	QLabel* pidPLabelR = new QLabel("P:" );
+	QLabel* pidILabelR = new QLabel("I:" );
+	QLabel* pidDLabelR = new QLabel("D:" );
+	pidReadBoxLayout->addWidget(pidCLabelR, 0, 0, Qt::AlignLeft | Qt::AlignTop);
+	pidReadBoxLayout->addWidget(pidPLabelR, 1, 0, Qt::AlignLeft | Qt::AlignTop);
+	pidReadBoxLayout->addWidget(pidILabelR, 2, 0, Qt::AlignLeft | Qt::AlignTop);
+	pidReadBoxLayout->addWidget(pidDLabelR, 3, 0, Qt::AlignLeft | Qt::AlignTop);
+
+	for(int i = 0; i < 4;i++){
+		pidReadBoxLayout->addWidget(motorPidReadLine[i], i, 1, Qt::AlignLeft | Qt::AlignTop);
+	}
+	motorPidReadBtn = new QPushButton("&Read");
+	pidReadBoxLayout->addWidget(motorPidReadBtn, 4, 1, Qt::AlignLeft | Qt::AlignTop);
+	pidReadBox->setLayout(pidReadBoxLayout);
+
 	motorWorkModeReadLine =  new QLineEdit(this);
 	motorShowItemsLine =  new QLineEdit(this);
 	motorDevReadLine = new QLineEdit(this);
 	motorSoftVersionLine = new QLineEdit(this);
 	motorHardVersionLine = new QLineEdit(this);
 
-	motorPidReadBtn = new QPushButton("&Read");
 	motorWorkModeReadBtn = new QPushButton("&Read");
 	motorSoftVersionReadBtn = new QPushButton("&Read");
 	motorHardVersionReadBtn = new QPushButton("&Read");
 	motorDevReadBtn = new QPushButton("&Read");
 	motorShowItemsReadBtn = new QPushButton("&Read");
-	setReadOnlyLineEdit(motorPidReadLine);
 	setReadOnlyLineEdit(motorWorkModeReadLine);
 	setReadOnlyLineEdit(motorShowItemsLine);
 	setReadOnlyLineEdit(motorDevReadLine);
@@ -1251,9 +1291,7 @@ void viewpanel::CreatMotorWindow()
 	motorStateBoxLayout->addWidget(motorWorkModeReadLine, 1, 1, Qt::AlignLeft | Qt::AlignTop);
 	motorStateBoxLayout->addWidget(motorWorkModeReadBtn, 1, 2, Qt::AlignLeft | Qt::AlignTop);
 
-	motorStateBoxLayout->addWidget(pidReadLabel, 2, 0, Qt::AlignLeft | Qt::AlignTop);
-	motorStateBoxLayout->addWidget(motorPidReadLine, 2, 1, Qt::AlignLeft | Qt::AlignTop);
-	motorStateBoxLayout->addWidget(motorPidReadBtn, 2, 2, Qt::AlignLeft | Qt::AlignTop);
+	motorStateBoxLayout->addWidget(pidReadBox, 2, 0, Qt::AlignLeft | Qt::AlignTop);
 
 	motorStateBoxLayout->addWidget(devLabel, 0, 0, Qt::AlignLeft | Qt::AlignTop);
 	motorStateBoxLayout->addWidget(motorDevReadLine, 0, 1, Qt::AlignLeft | Qt::AlignTop);
@@ -1461,6 +1499,8 @@ void viewpanel::CreatConnect()
 	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
 	connect(motorConnectBtn, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
 	connect(motorSwitchBtn, SIGNAL(clicked()), this, SLOT( sendMotorOpenCmd( void )));
+	connect(motorPidReadBtn, SIGNAL(clicked()), this, SLOT( readMotorPid( void )));
+
 
 	connect(errorLogText,SIGNAL(textChanged()),SLOT(slotTextTcpChanged()));
     timer_  = new QTimer(this);
@@ -2324,6 +2364,21 @@ void viewpanel::recvSerialInfo()
 			msgBox.exec();			
 		}	
 		break;	
+	case MOTOR_PID_READ_RET:
+		if(ptr[3] == 16){
+			for(int i = 0; i < 4; i++){
+				int index = 4 * (i+1);
+				motorPidReadLine[i]->setText(QString::number( UnsignedChar4ToFloat(&(ptr[index])) ,'f',3));
+			}	
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_PID_READ successfully!");
+			msgBox.exec();	
+		}else {
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_PID_READ failed!");
+			msgBox.exec();					
+		}
+		break;
 	default:
 		break;
 	}
@@ -2341,6 +2396,7 @@ void viewpanel::recvSerialInfoTest()
 	qDebug() << "info recvSerialInfoTest is " << hexData;
 	uint8_t* ptr = (uint8_t*)info.data();
 	int ret;
+	float dataPid[4] = {6.666, 7.777, 8.888, 9.999};
 
 	switch (ptr[2])
 	{
@@ -2366,20 +2422,48 @@ void viewpanel::recvSerialInfoTest()
 		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
 		ROS_INFO("switch motor ok, ret is %d", ret);
 		break;	
+	case MOTOR_PID_READ:
+		motorMsgPid_.cmd = motorCmdType::MOTOR_PID_READ_RET;
+		motorMsgPid_.dataLen = 0x10;
+		for(int i = 0; i < 4; i++){
+			int index = 4 * ( i );
+			FloatToChar(dataPid[i], &(motorMsgPid_.data[index]));
+		}
+		motorMsgPid_.count = 0x01;
+		motorMsgPid_.crc = 0;
+		ret = m_serialPort_test->write((const char *)&motorMsgPid_,sizeof(motorMsgPid_));
+		ROS_INFO("MOTOR_PID para send ok, ret is %d", ret);
+		break;	
 	default:
 		break;
 	}
 }
 
+void viewpanel::checkMotorConnected()
+{
+	if(!ifConnectedMotor){
+		QMessageBox msgBox;
+		msgBox.setText("please connect to the motor serial device firstly!");
+		msgBox.exec();
+		return;
+	} 
+}
+
+void viewpanel::readMotorPid()
+{
+	checkMotorConnected();
+	motorMsgSend_.cmd = motorCmdType::MOTOR_PID_READ;
+	motorMsgSend_.dataLen = 0x00;
+	motorMsgSend_.count = 0x01;
+	motorMsgSend_.crc = motorMsgSend_.cmd + motorMsgSend_.dataLen + motorMsgSend_.count;
+	int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
+	ROS_INFO("m_serialPort->write is %d", ret);
+}
+
 void viewpanel::sendMotorOpenCmd()
 {
 	if(!ifOpenMotor){
-		if(!ifConnectedMotor){
-			QMessageBox msgBox;
-			msgBox.setText("please connect to the motor serial device firstly!");
-			msgBox.exec();
-			return;
-		} 
+		checkMotorConnected();
 		motorMsgSend1_.cmd = motorCmdType::MOTOR_OPEN;
 		motorMsgSend1_.dataLen = 0x01;
 		motorMsgSend1_.data = 0x01;
