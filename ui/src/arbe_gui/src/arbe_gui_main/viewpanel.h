@@ -234,7 +234,7 @@ private:
 	int motorSerialConnectTest();
 	int serialClose(QSerialPort* );
 	void releaseSerial();
-	void checkMotorConnected();
+	int checkMotorConnected();
 
 
 	void CreatConnect();
