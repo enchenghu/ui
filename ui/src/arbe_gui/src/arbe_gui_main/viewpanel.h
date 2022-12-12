@@ -214,6 +214,8 @@ private Q_SLOTS:
 	void sendMotorConnectCmd();
 	void sendMotorOpenCmd();
 	void readMotorPid();
+	void readMotorWorkMode();
+	void readMotorShowItems();
 
 
 protected:
@@ -427,6 +429,7 @@ private:
 	motorCmdMsg motorMsgSend_;
 	motorCmdMsg1 motorMsgSend1_;
 	motorPidMsg motorMsgPid_;
+	motorShowMsg motorMsgShow_;
 
 
 

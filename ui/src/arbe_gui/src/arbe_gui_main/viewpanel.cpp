@@ -1509,6 +1509,9 @@ void viewpanel::CreatConnect()
 	connect(motorConnectBtn, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
 	connect(motorSwitchBtn, SIGNAL(clicked()), this, SLOT( sendMotorOpenCmd( void )));
 	connect(motorPidReadBtn, SIGNAL(clicked()), this, SLOT( readMotorPid( void )));
+	connect(motorWorkModeReadBtn, SIGNAL(clicked()), this, SLOT( readMotorWorkMode( void )));
+	connect(motorShowItemsReadBtn, SIGNAL(clicked()), this, SLOT( readMotorShowItems( void )));
+
 
 
 	connect(errorLogText,SIGNAL(textChanged()),SLOT(slotTextTcpChanged()));
@@ -2388,6 +2391,38 @@ void viewpanel::recvSerialInfo()
 			msgBox.exec();					
 		}
 		break;
+
+	case MOTOR_SHOW_ITEMS_READ_RET:
+		{
+			QString showName;
+			for(int i = 0; i < ptr[3]; i++){
+				showName = showName + QString::number(ptr[4 + i]) +  QString(" ");
+			}
+			motorShowItemsLine->setText(showName);
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_PID_READ successfully!");
+			msgBox.exec();
+		}
+		break;
+	case MOTOR_WORKMODE_READ_RET:
+		if(ptr[4] == 0x00){
+			motorWorkModeReadLine->setText(QString("speed mode"));
+		}else if(ptr[4] == 0x01){
+			motorWorkModeReadLine->setText(QString("location mode"));
+		}else if(ptr[4] == 0x02){
+			motorWorkModeReadLine->setText(QString("Phase-lock mode"));
+		}else {
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_PID_READ failed!");
+			msgBox.exec();	
+			return;				
+		}
+		{
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_PID_READ successfully!");
+			msgBox.exec();	
+		}
+		break;
 	default:
 		break;
 	}
@@ -2431,6 +2466,24 @@ void viewpanel::recvSerialInfoTest()
 		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
 		ROS_INFO("switch motor ok, ret is %d", ret);
 		break;	
+	case MOTOR_WORKMODE_READ:
+		motorMsgSend1_.cmd = motorCmdType::MOTOR_WORKMODE_READ_RET;
+		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.data = 0x02;
+		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
+		ROS_INFO("MOTOR_WORKMODE_READ ok, ret is %d", ret);
+		break;	
+	case MOTOR_SHOW_ITEMS_READ:
+		motorMsgShow_.cmd = motorCmdType::MOTOR_SHOW_ITEMS_READ_RET;
+		motorMsgShow_.dataLen = 0x05;
+		motorMsgShow_.data[0] = 0x01;
+		motorMsgShow_.data[1] = 0x02;
+		motorMsgShow_.data[2] = 0x04;
+		motorMsgShow_.data[3] = 0x05;
+		motorMsgShow_.data[4] = 0x06;
+		ret = m_serialPort_test->write((const char *)&motorMsgShow_,sizeof(motorMsgShow_));
+		ROS_INFO("MOTOR_SHOW_ITEMS_READ_RET ok, ret is %d", ret);
+		break;	
 	case MOTOR_PID_READ:
 		motorMsgPid_.cmd = motorCmdType::MOTOR_PID_READ_RET;
 		motorMsgPid_.dataLen = 0x10;
@@ -2458,6 +2511,28 @@ int viewpanel::checkMotorConnected()
 	} 
 
 	return 0;
+}
+
+void viewpanel::readMotorShowItems()
+{
+	if(checkMotorConnected()) return;
+	motorMsgSend_.cmd = motorCmdType::MOTOR_SHOW_ITEMS_READ;
+	motorMsgSend_.dataLen = 0x00;
+	motorMsgSend_.count = 0x01;
+	motorMsgSend_.crc = motorMsgSend_.cmd + motorMsgSend_.dataLen + motorMsgSend_.count;
+	int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
+	ROS_INFO("MOTOR_SHOW_ITEMS_READ m_serialPort->write is %d", ret);
+}
+
+void viewpanel::readMotorWorkMode()
+{
+	if(checkMotorConnected()) return;
+	motorMsgSend_.cmd = motorCmdType::MOTOR_WORKMODE_READ;
+	motorMsgSend_.dataLen = 0x00;
+	motorMsgSend_.count = 0x01;
+	motorMsgSend_.crc = motorMsgSend_.cmd + motorMsgSend_.dataLen + motorMsgSend_.count;
+	int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
+	ROS_INFO("MOTOR_WORKMODE_READ m_serialPort->write is %d", ret);
 }
 
 void viewpanel::readMotorPid()
