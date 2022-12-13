@@ -128,6 +128,29 @@ typedef struct
 	uint16_t 	mHead; 
 	uint8_t     cmd;
 	uint8_t     dataLen;
+	uint16_t     data;
+	uint8_t		count;
+	uint16_t 	crc; 
+} motorShowCycleMsg;
+
+typedef struct 
+{
+	uint16_t 	mHead; 
+	uint8_t     cmd;
+	uint8_t     dataLen;
+	uint16_t     speed;
+	uint16_t     angle;
+	uint16_t     location;
+	uint8_t		mode;
+	uint8_t		count;
+	uint16_t 	crc; 
+} motorWorkModeMsg;
+
+typedef struct 
+{
+	uint16_t 	mHead; 
+	uint8_t     cmd;
+	uint8_t     dataLen;
 	uint8_t     data[5];
 	uint8_t		count;
 	uint16_t 	crc; 

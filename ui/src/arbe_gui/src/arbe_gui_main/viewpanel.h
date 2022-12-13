@@ -212,6 +212,9 @@ private Q_SLOTS:
 	void recvSerialInfo();
 	void recvSerialInfoTest();
 	void sendMotorConnectCmd();
+	void sendMotorWorkModeCmd();
+	void sendMotorDisplayCycleCmd();
+
 	void sendMotorOpenCmd();
 	void readMotorPid();
 	void readMotorWorkMode();
@@ -430,9 +433,8 @@ private:
 	motorCmdMsg1 motorMsgSend1_;
 	motorPidMsg motorMsgPid_;
 	motorShowMsg motorMsgShow_;
-
-
-
+	motorWorkModeMsg motorMsgWorkMode_;
+	motorShowCycleMsg motorMsgShowCycle_;
 };
 
 
