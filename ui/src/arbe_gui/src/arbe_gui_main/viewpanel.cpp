@@ -1522,7 +1522,7 @@ void viewpanel::CreatConnect()
 	connect(motorShowItemsReadBtn, SIGNAL(clicked()), this, SLOT( readMotorShowItems( void )));
 	connect(motorWorkModeSetBtn, SIGNAL(clicked()), this, SLOT( sendMotorWorkModeCmd( void )));
 	connect(motorShowCycleSetBtn, SIGNAL(clicked()), this, SLOT( sendMotorDisplayCycleCmd( void )));
-
+	connect(motorPidSetBtn, SIGNAL(clicked()), this, SLOT( sendMotorPidCmd( void )));
 
 	connect(errorLogText,SIGNAL(textChanged()),SLOT(slotTextTcpChanged()));
     timer_  = new QTimer(this);
@@ -2428,6 +2428,17 @@ void viewpanel::recvSerialInfo()
 			msgBox.exec();
 		}
 		break;
+	case MOTOR_PID_SET_RET:
+		if(ptr[4] == 0xFF){
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_PID_SET_RET successfully!");
+			msgBox.exec();
+		} else if(ptr[4] == 0x7F) {
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_PID_SET_RET failed!");
+			msgBox.exec();
+		}
+		break;
 	case MOTOR_WORKMODE_READ_RET:
 		if(ptr[4] == 0x00){
 			motorWorkModeReadLine->setText(QString("speed"));
@@ -2504,6 +2515,17 @@ void viewpanel::recvSerialInfoTest()
 		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
 		ROS_INFO("MOTOR_WORKMODE_SET ok, ret is %d", ret);
 		break;	
+	case MOTOR_PID_SET:
+		for(int i = 0; i < 4; i++){
+			int index = 4 * (i+1);
+			motorPidReadLine[i]->setText(QString::number( UnsignedChar4ToFloat(&(ptr[index])) ,'f',3));
+		}	
+		motorMsgSend1_.cmd = motorCmdType::MOTOR_PID_SET_RET;
+		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.data = 0xff;
+		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
+		ROS_INFO("MOTOR_PID_SET ok, ret is %d", ret);
+		break;	
 	case MOTOR_SHOW_CYCLE_SET:
 		motorMsgSend1_.cmd = motorCmdType::MOTOR_SHOW_CYCLE_SET_RET;
 		motorMsgSend1_.dataLen = 0x01;
@@ -2551,6 +2573,29 @@ int viewpanel::checkMotorConnected()
 	return 0;
 }
 
+
+void viewpanel::sendMotorPidCmd()
+{
+	if(checkMotorConnected()) return;
+	motorMsgPidSet_.cmd = motorCmdType::MOTOR_PID_SET;
+	motorMsgPidSet_.dataLen = 0x10;
+	motorMsgPidSet_.count = 0x01;
+	motorMsgPidSet_.cycle = motorPidCycleSetLine->text().toDouble();
+	motorMsgPidSet_.p = motorPidPSetLine->text().toDouble();
+	motorMsgPidSet_.i = motorPidISetLine->text().toDouble();
+	motorMsgPidSet_.d = motorPidDSetLine->text().toDouble();
+	motorMsgPidSet_.crc = 0;
+
+#if 0
+	motorMsgPidSet_.crc = motorMsgPidSet_.cmd + motorMsgPidSet_.dataLen + \
+	(motorMsgWorkMode_.speed & 0xff) + (motorMsgWorkMode_.speed >> 8) + \
+	(motorMsgWorkMode_.angle & 0xff) + (motorMsgWorkMode_.angle >> 8) + \
+	(motorMsgWorkMode_.location & 0xff) + (motorMsgWorkMode_.location >> 8) + \
+	motorMsgWorkMode_.mode + motorMsgWorkMode_.count;
+#endif
+	int ret = m_serialPort->write((const char *)&motorMsgPidSet_,sizeof(motorMsgPidSet_));
+	ROS_INFO("MOTOR_WORKMODE_SET m_serialPort->write is %d", ret);
+}
 
 void viewpanel::sendMotorWorkModeCmd()
 {

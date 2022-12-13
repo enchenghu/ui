@@ -216,6 +216,7 @@ private Q_SLOTS:
 	void sendMotorDisplayCycleCmd();
 
 	void sendMotorOpenCmd();
+	void sendMotorPidCmd();
 	void readMotorPid();
 	void readMotorWorkMode();
 	void readMotorShowItems();
@@ -435,6 +436,7 @@ private:
 	motorShowMsg motorMsgShow_;
 	motorWorkModeMsg motorMsgWorkMode_;
 	motorShowCycleMsg motorMsgShowCycle_;
+	motorPidSetMsg  motorMsgPidSet_;
 };
 
 

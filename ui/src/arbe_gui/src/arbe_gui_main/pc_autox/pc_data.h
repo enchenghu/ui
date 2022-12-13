@@ -128,6 +128,19 @@ typedef struct
 	uint16_t 	mHead; 
 	uint8_t     cmd;
 	uint8_t     dataLen;
+	float       cycle;
+	float       p;
+	float       i;
+	float       d;
+	uint8_t		count;
+	uint16_t 	crc; 
+} motorPidSetMsg;
+
+typedef struct 
+{
+	uint16_t 	mHead; 
+	uint8_t     cmd;
+	uint8_t     dataLen;
 	uint16_t     data;
 	uint8_t		count;
 	uint16_t 	crc; 
