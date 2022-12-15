@@ -798,7 +798,7 @@ void viewpanel::registerPointcloudRviz()
 	/* Initialize the main RViz classes */
 	manager_ = new rviz::VisualizationManager( render_panel_ );
 
-	render_panel_->setBackgroundColor( Ogre::ColourValue(0,0,0,0.3));
+	render_panel_->setBackgroundColor( Ogre::ColourValue(238,238,236,0.3));
 	render_panel_->initialize( manager_->getSceneManager(), manager_ );
 	selection_panel_->initialize( manager_ );
 	manager_->initialize();
