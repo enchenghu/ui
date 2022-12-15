@@ -855,7 +855,7 @@ void viewpanel::registerPointcloudRviz()
 
 	//pointcloud_fmcw->subProp("Decay Time")->setValue((float)DetectionMemoryTime / 1000);
 
-#if 0
+#if 1
 	pointcloud_fmcw->subProp("Color Transformer")->setValue("RGB8");
 	pointcloud_fmcw->subProp("Invert Rainbow")->setValue("false");
 	pointcloud_fmcw->subProp("Position Transformer")->setValue("XYZ");
@@ -2841,16 +2841,16 @@ void viewpanel::pcDataProc()
 		break;
 	}
 
-	for(int j = 0; j < 8000; j++)
+	for(int j = 0; j < 1000; j++)
 	{
 
 		cloud.points[j].elevation = j;
 		cloud.points[j].azimuth = j;
 		cloud.points[j].power = j;
 
-		cloud.points[j].x = j ;//qrand() % 100;
-		cloud.points[j].y = j ;
-		cloud.points[j].z = j ;
+		cloud.points[j].x = (qrand() % 100) * loc[0];
+		cloud.points[j].y = (qrand() % 100) * loc[1] ;
+		cloud.points[j].z = (qrand() % 100) * loc[2] ;
 		cloud.points[j].r = 255;
 		cloud.points[j].g = 0;
 		cloud.points[j].b = 0;
