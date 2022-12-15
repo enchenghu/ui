@@ -975,6 +975,7 @@ void pointcloud_display_handler (bool also_stationary_cloud)
 	arbe_pcl_pub.publish(output);
 	cloud.clear();
 }
+
 uint32_t stationary_n_detections = 0;
 
 void stationary_display_handler (bool also_stationary_cloud)

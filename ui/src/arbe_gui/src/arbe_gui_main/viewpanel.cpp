@@ -191,48 +191,8 @@ viewpanel::viewpanel(QTabWidget* parent )
 	CreatMotorWindow();
 	CreatConnect();
 
-	/* Initialize the main RViz classes */
-	manager_ = new rviz::VisualizationManager( render_panel_ );
-
-	render_panel_->setBackgroundColor( Ogre::ColourValue(0,0,0,0.3));
-	render_panel_->initialize( manager_->getSceneManager(), manager_ );
-	selection_panel_->initialize( manager_ );
-	manager_->initialize();
-	manager_->startUpdate();
-	manager_->getToolManager()->addTool("rviz_plugin_arbe_points_publisher/ArbePointsPublisher");
-
-	/* Create a Grid display. */
-	grid_ = manager_->createDisplay( "rviz/Grid", "adjustable grid", true );
-	ROS_ASSERT( grid_ != NULL );
-
-	//grid_->cc( "Alpha" )->setValue( "0.5" );
-	grid_->subProp( "Line Style" )->setValue( "Lines" );
-	grid_->subProp( "Plane" )->setValue( "XY" );
-	grid_->subProp( "Cell Size" )->setValue( grid_cell_size ); 
-	grid_->subProp( "Plane Cell Count" )->setValue( "1000" );
-	grid_->subProp( "Offset" )->setValue( "X: -100 Y: 0 Z: 0" );
-	grid_->subProp( "Reference Frame" )->setValue( "<Fixed Frame>" );
-
-	manager_->getViewManager()->setCurrentViewControllerType("rviz/XYOrbit");
-	manager_->getViewManager()->getCurrent()->subProp("Invert Z Axis")->setValue("false");
-	follower_view_ = false;
-
-	/* Create the radar pointcloud fixed frame. */
-	manager_->setFixedFrame("image_radar");
-
-	Car_ = manager_->createDisplay( "rviz/Marker", "Marker", true );
-	ROS_ASSERT( Car_ != NULL );
-	Car_->subProp("Marker Topic")->setValue("/arbe/rviz/car_marker");
-
-	FloatingText_ = manager_->createDisplay( "rviz/Marker", "Marker", true );
-	ROS_ASSERT( FloatingText_ != NULL );
-	FloatingText_->subProp("Marker Topic")->setValue("/arbe/rviz/floatingText_marker");
-
-	Axes_ = manager_->createDisplay( "rviz/Axes", "Axes", true );
-	ROS_ASSERT( Axes_ != NULL );
-	Axes_->subProp("Reference Frame")->setValue("odom");
-	Axes_->subProp("Length")->setValue("3");
-
+	registerPointcloudRviz();
+	startPcTask();
 	resize(QDesktopWidget().availableGeometry(this).size() * 0.85);
 }
 
@@ -835,7 +795,53 @@ void viewpanel::closeEvent(QCloseEvent *event)
 
 void viewpanel::registerPointcloudRviz()
 {
+	/* Initialize the main RViz classes */
+	manager_ = new rviz::VisualizationManager( render_panel_ );
+
+	render_panel_->setBackgroundColor( Ogre::ColourValue(0,0,0,0.3));
+	render_panel_->initialize( manager_->getSceneManager(), manager_ );
+	selection_panel_->initialize( manager_ );
+	manager_->initialize();
+	manager_->startUpdate();
+	manager_->getToolManager()->addTool("rviz_plugin_arbe_points_publisher/ArbePointsPublisher");
+
+	/* Create a Grid display. */
+	grid_ = manager_->createDisplay( "rviz/Grid", "adjustable grid", true );
+	ROS_ASSERT( grid_ != NULL );
+
+	//grid_->cc( "Alpha" )->setValue( "0.5" );
+	grid_->subProp( "Line Style" )->setValue( "Lines" );
+	grid_->subProp( "Plane" )->setValue( "XY" );
+	grid_->subProp( "Cell Size" )->setValue( grid_cell_size ); 
+	grid_->subProp( "Plane Cell Count" )->setValue( "1000" );
+	grid_->subProp( "Offset" )->setValue( "X: -100 Y: 0 Z: 0" );
+	grid_->subProp( "Reference Frame" )->setValue( "<Fixed Frame>" );
+
+	manager_->getViewManager()->setCurrentViewControllerType("rviz/XYOrbit");
+	manager_->getViewManager()->getCurrent()->subProp("Invert Z Axis")->setValue("false");
+	follower_view_ = false;
+
+	/* Create the radar pointcloud fixed frame. */
+	manager_->setFixedFrame("image_lidar");
+
+	Car_ = manager_->createDisplay( "rviz/Marker", "Marker", true );
+	ROS_ASSERT( Car_ != NULL );
+	Car_->subProp("Marker Topic")->setValue("/arbe/rviz/car_marker");
+
+	FloatingText_ = manager_->createDisplay( "rviz/Marker", "Marker", true );
+	ROS_ASSERT( FloatingText_ != NULL );
+	FloatingText_->subProp("Marker Topic")->setValue("/arbe/rviz/floatingText_marker");
+
+	Axes_ = manager_->createDisplay( "rviz/Axes", "Axes", true );
+	ROS_ASSERT( Axes_ != NULL );
+	Axes_->subProp("Reference Frame")->setValue("odom");
+	Axes_->subProp("Length")->setValue("3");
+
 	std::string pointcloud_topic = "/fmcw/rviz/pointcloud";
+	ros::NodeHandle fmcw_pcl("~");// = boost::make_shared<ros::NodeHandle>();
+
+	fmcw_pcl_pub = fmcw_pcl.advertise<sensor_msgs::PointCloud2>(pointcloud_topic, 1);
+
 	//std::string stationary_pointcloud_topic = "/fmcw/rviz/stationary_pointcloud";
 	ROS_INFO("Registering new pointcloud topic: %s",pointcloud_topic.c_str());	
 	//ROS_INFO("Registering new pointcloud topic: %s",stationary_pointcloud_topic.c_str());
@@ -849,11 +855,13 @@ void viewpanel::registerPointcloudRviz()
 
 	//pointcloud_fmcw->subProp("Decay Time")->setValue((float)DetectionMemoryTime / 1000);
 
+#if 0
 	pointcloud_fmcw->subProp("Color Transformer")->setValue("RGB8");
 	pointcloud_fmcw->subProp("Invert Rainbow")->setValue("false");
 	pointcloud_fmcw->subProp("Position Transformer")->setValue("XYZ");
 	pointcloud_fmcw->subProp("Use Fixed Frame")->setValue("true");
 	pointcloud_fmcw->subProp( "Axis" )->setValue( "Z" );
+#endif
 }
 
 void viewpanel::register_pointcloud_displays(int radar_id)
@@ -2173,6 +2181,14 @@ void viewpanel::TaskFuncUdpParse(void *arg){
     }
 }
 
+void viewpanel::TaskFuncPCParse(void *arg){
+    viewpanel *pSave = (viewpanel *)arg;
+	std::cout << "enter TaskFuncPCParse" << std::endl;
+    if (pSave && pSave->TaskFuncPCParse) {
+        pSave->pcParseLoop();
+    }
+}
+
 void viewpanel::start_save_task()
 {
 
@@ -2788,6 +2804,92 @@ void viewpanel::udpConnect() {
 	}
 }
 
+void viewpanel::startPcTask() {
+	vx_task_set_default_create_params(&bst_params);
+	bst_params.app_var = this;
+	bst_params.task_mode = 0;
+	bst_params.task_main = TaskFuncPCParse;
+	vx_task_create(&bst_task[3], &bst_params);  
+}
+
+
+void viewpanel::pcDataProc()
+{
+	cloud.points.resize(8000);
+	static long index = 0;
+	int loc[3] = {1 ,1, 1};
+	switch (index % 4)
+	{
+	case 0:
+		loc[0] = 1;
+		loc[1] = 1;
+		break;
+	case 1:
+		loc[0] = 1;
+		loc[1] = -1;
+		break;	
+	case 2:
+		loc[0] = -1;
+		loc[1] = 1;
+		break;	
+	case 3:
+		loc[0] = -1;
+		loc[1] = -1;
+		break;		
+	
+	default:
+		break;
+	}
+
+	for(int j = 0; j < 8000; j++)
+	{
+
+		cloud.points[j].elevation = j;
+		cloud.points[j].azimuth = j;
+		cloud.points[j].power = j;
+
+		cloud.points[j].x = j ;//qrand() % 100;
+		cloud.points[j].y = j ;
+		cloud.points[j].z = j ;
+		cloud.points[j].r = 255;
+		cloud.points[j].g = 0;
+		cloud.points[j].b = 0;
+
+		cloud.points[j].range_bin 	 = j;
+		cloud.points[j].elevation_bin = j;
+		cloud.points[j].azimuth_bin   = j;
+		cloud.points[j].doppler_bin   = j;
+		cloud.points[j].power_value   = j;
+		cloud.points[j].timestamp_sec   = j;
+		cloud.points[j].timestamp_nsec   = j;
+		cloud.points[j].snr = j;//- noise_level_db;
+	}
+	index++;
+	//std::cout << "cloud.points[103].range_bin is " << cloud.points[103].range_bin << std::endl;
+
+
+	output.header.stamp = ros::Time::now();
+	pcl::toROSMsg(cloud,output);
+	output.header.frame_id = "image_lidar";
+	fmcw_pcl_pub.publish(output);
+	cloud.clear();
+}
+
+void viewpanel::pcParseLoop()
+{
+	std::cout << "enter pcParseLoop main" << std::endl;
+    std::chrono::duration<double> elapsed;
+	while(!terminating)
+	{
+		//ROS_INFO("============enter udpParseLoop");
+		auto start = std::chrono::steady_clock::now();
+		pcDataProc();
+		auto end = std::chrono::steady_clock::now();
+		elapsed = end - start;
+		//std::cout << "time for pub 100 pc data: " <<  elapsed.count() * 1000 << " ms" << std::endl;    
+	}
+	std::cout << "quit pcParseLoop" << std::endl;
+}
 void viewpanel::udpParseLoop()
 {
 	std::cout << "enter udpParseLoop main" << std::endl;

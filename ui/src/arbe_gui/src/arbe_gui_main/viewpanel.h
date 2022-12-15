@@ -105,6 +105,7 @@
 #include <fstream>
 #include <sstream>
 #include <pc_data.h>
+#include "types_fmcw.hpp"
 #include "bst_msg_queue.h"
 #include  <cmath>
 
@@ -162,7 +163,6 @@ public:
 	void printView();
     static viewpanel* Instance();
 	void register_pointcloud_displays(int radar_num);
-	void registerPointcloudRviz();
 
 
 public Q_SLOTS:
@@ -226,6 +226,8 @@ protected:
     static void TaskFunc(void *arg);
     static void TaskFuncUdpRecv(void *arg);
     static void TaskFuncUdpParse(void *arg);
+    static void TaskFuncPCParse(void *arg);
+
 private:
 	void udpRecvLoop();
 	void udpParseLoop();
@@ -242,6 +244,10 @@ private:
 	void releaseSerial();
 	int checkMotorConnected();
 
+	void pcParseLoop();
+	void pcDataProc();
+	void registerPointcloudRviz();
+	void startPcTask();
 
 	void CreatConnect();
 	void Save2filecsv(std::vector<uint8_t> &, bool );
@@ -304,6 +310,9 @@ private:
 	QCloseEvent *event;
 
 	rviz::Display* Speedometer_;
+	pcl::PointCloud<FmcwPointXYZRGBGeneric> cloud;
+
+	sensor_msgs::PointCloud2 output;
 
 	QGridLayout * mainRadarLayout;
     static viewpanel* m_pInstance;
