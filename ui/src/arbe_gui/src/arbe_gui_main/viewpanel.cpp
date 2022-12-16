@@ -164,7 +164,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
 	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_ORI),\
 	power_offset(0.0), distance_offset(0.0),ifConnectedMotor(false),\
-	ifOpenMotor(false)
+	ifOpenMotor(false), udpPCStop_(true)
 {
 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
@@ -192,7 +192,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	CreatConnect();
 
 	registerPointcloudRviz();
-	startPcTask();
+	//startPcTask();
 	resize(QDesktopWidget().availableGeometry(this).size() * 0.85);
 }
 
@@ -2830,64 +2830,47 @@ void viewpanel::startPcTask() {
 
 void viewpanel::pcDataProc()
 {
-	cloud.points.resize(8000);
-	static long index = 0;
-	int loc[3] = {1 ,1, 1};
-	switch (index % 4)
-	{
-	case 0:
-		loc[0] = 1;
-		loc[1] = 1;
-		break;
-	case 1:
-		loc[0] = 1;
-		loc[1] = -1;
-		break;	
-	case 2:
-		loc[0] = -1;
-		loc[1] = 1;
-		break;	
-	case 3:
-		loc[0] = -1;
-		loc[1] = -1;
-		break;		
-	
-	default:
-		break;
+
+	udpPcMsgOneFrame* pmsg = nullptr;
+	auto start = std::chrono::steady_clock::now();
+	if(udpPcMsg_done_buf_queue.get(pmsg)){
+		std::cout << "warning!!udpMsg_done_buf_queue get timeout!!!" << std::endl;
+		return;
 	}
+	int pcFrameSize = pmsg->pcDataOneFrame.size();
+	int pcDataSize = pmsg->pcDataOneFrame.size() * 100;
+	ROS_INFO("pcDataSize is %d", pcDataSize);
+	cloud.points.resize(pcDataSize);
 
-	for(int j = 0; j < 1000; j++)
+	static long index = 0;
+
+	for(int j = 0; j < pcFrameSize; j++)
 	{
+		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].elevation = pmsg->pcDataOneFrame[j].pcUdpData[index].elevation;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].azimuth = pmsg->pcDataOneFrame[j].pcUdpData[index].azimuth;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].power1 = pmsg->pcDataOneFrame[j].pcUdpData[index].power1;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].power2 = pmsg->pcDataOneFrame[j].pcUdpData[index].power2;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].doppler = pmsg->pcDataOneFrame[j].pcUdpData[index].doppler;
 
-		cloud.points[j].elevation = j;
-		cloud.points[j].azimuth = j;
-		cloud.points[j].power = j;
-
-		cloud.points[j].x = (qrand() % 100) * loc[0];
-		cloud.points[j].y = (qrand() % 100) * loc[1] ;
-		cloud.points[j].z = (qrand() % 100) * loc[2] ;
-		cloud.points[j].r = 255;
-		cloud.points[j].g = 0;
-		cloud.points[j].b = 0;
-
-		cloud.points[j].range_bin 	 = j;
-		cloud.points[j].elevation_bin = j;
-		cloud.points[j].azimuth_bin   = j;
-		cloud.points[j].doppler_bin   = j;
-		cloud.points[j].power_value   = j;
-		cloud.points[j].timestamp_sec   = j;
-		cloud.points[j].timestamp_nsec   = j;
-		cloud.points[j].snr = j;//- noise_level_db;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].x = pmsg->pcDataOneFrame[j].pcUdpData[index].range;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].y = pmsg->pcDataOneFrame[j].pcUdpData[index].range ;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].z = pmsg->pcDataOneFrame[j].pcUdpData[index].range ;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].r = 255;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].g = 0;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].b = 0;
+		}
 	}
 	index++;
 	//std::cout << "cloud.points[103].range_bin is " << cloud.points[103].range_bin << std::endl;
-
-
 	output.header.stamp = ros::Time::now();
 	pcl::toROSMsg(cloud,output);
 	output.header.frame_id = "image_lidar";
 	fmcw_pcl_pub.publish(output);
 	cloud.clear();
+	udpPcMsg_free_buf_queue.put(pmsg);
+	auto end = std::chrono::steady_clock::now();
+
 }
 
 void viewpanel::pcParseLoop()

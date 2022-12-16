@@ -54,7 +54,8 @@ struct  EIGEN_ALIGN16 FmcwPointXYZRGBGeneric
         float azimuth;
         float elevation;
         float doppler;
-        float power;
+        float power1;
+        float power2;
         float range_bin;
         float azimuth_bin;
         float elevation_bin;
@@ -78,7 +79,8 @@ POINT_CLOUD_REGISTER_POINT_STRUCT (FmcwPointXYZRGBGeneric,           // here we 
                                 (float, azimuth, azimuth)
                                 (float, elevation, elevation)
                                 (float, doppler, doppler)
-                                (float, power, power)
+                                (float, power1, power1)
+                                (float, power2, power2)
                                 (float, range_bin, range_bin)
                                 (float, azimuth_bin, azimuth_bin)
                                 (float, elevation_bin, elevation_bin)
