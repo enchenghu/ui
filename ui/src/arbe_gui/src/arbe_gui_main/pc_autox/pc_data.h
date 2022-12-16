@@ -25,11 +25,15 @@
 #define MAX_RADARS 10
 #define TCP_PC_SIZE_SINGLE 32000
 #define UDP_PC_SIZE_SINGLE 1024
+
+#define UDP_PC_SIZE_SINGLE_V01 100
+
 #define BUFF_LEN 1024
 #define MAX_BUFF_LEN 8
 
 #define TCP_TIMES_PER_FRAME 200
 #define UDP_TIMES_PER_FRAME 256
+#define UDP_PC_TIMES_PER_FRAME 200
 #define BST_MAX_TASK_NUM		(16)
 
 namespace fmcw_types
@@ -204,41 +208,51 @@ typedef struct
 } pcData_t;
 
 
-typedef struct 
-{	// 某个点的维度信息的系数
+typedef struct {	// 某个点的维度信息的系数
+	uint16_t dfPower1;		// 功率1
+	uint16_t dfPower2;		// 功率2
+	uint16_t dfRange;			// 距离
+	uint16_t dfDoppler;		// 速度
+	uint16_t dfAzimuth;		// 方位角
+	uint16_t dfElevation;		// 俯仰角
+}DataFactor_st;	// 12Bytes
+
+typedef struct {
+	uint16_t pcPrefix; 		// 0xeeff
+	uint16_t pcVersion;		// Version：0x0102 = V1.2
+	uint32_t pcTimeLsb;		// 时间戳低位（ns为单位，还是UTC时间戳）
+	uint32_t pcTimeMsb;		// 时间戳高位
+	uint32_t pcPayloadLength;	// 点云数据长度  // 目前固定：1200
+	uint16_t pcFrameCounter; 	// 点云图的帧计数
+	uint16_t pcMessageNumber;	// rolling counter
+	uint16_t pcState;			// 报文标志（比如：是否是最后一帧）
+	DataFactor_st DataFactor; 	// 点云数据单位系数
+	uint16_t pcHeaderCrc;		// UDP头Crc校验值（整个Header）
+	uint16_t pcPayloadCrc;		// UDP点云数据校验值（Payload）
+}PointCloud_st;	// 38Bytes
+
+
+typedef struct {	
 	uint16_t power1;		// 功率1
 	uint16_t power2;		// 功率2
 	uint16_t range;		// 距离
 	uint16_t doppler;		// 速度
 	uint16_t azimuth;		// 方位角
 	uint16_t elevation;	// 俯仰角
-}PcDataFactor;
+			//unit16_t type;		// 保留（表示点的特殊情况，比如：当前点是光学无效点）
+}PointMeta_st;	// 12Bytes
+
 
 typedef struct 
 {
-	uint16_t usPrefix; 		// 0xeeff
-	uint16_t usType; 			// Version：0x10:1.0
-	uint32_t unPayloadLength;	// 点云数据长度
-	uint32_t unTimeLsb;		// 时间戳低位（ns为单位，还是UTC时间戳）
-	uint32_t unTimeMsb;		// 时间戳高位
-	uint16_t usFrameCounter; 	// 点云图的帧计数
-	uint16_t usMessageNumber;	// rolling counter
-	uint16_t ucState;			// 报文标志（比如：是否是最后一帧）
-	PcDataFactor DataFactor; 	// 点云数据单位系数
-	uint16_t usHeaderCrc;		// UDP头Crc校验值（整个Header）
-	uint16_t usPayloadCrc;		// UDP点云数据校验值（Payload）
-}PointCloud_V1_0_Header;
+	PointCloud_st 	pcHeader; 
+	PointMeta_st 	pcUdpData[UDP_PC_SIZE_SINGLE_V01];
+} pcData_v01;
 
-typedef struct  
-{	
-	uint16_t power1;		// 功率1
-	uint16_t power2;		// 功率2
-	uint16_t range;		// 距离
-	uint16_t doppler;		// 速度
-	uint16_t azimuth;		// 方位角
-	uint16_t elevation;	// 俯仰角
-	//    Unit16_t type;		// 保留（说明点的特殊情况）
-}PcMetadata;
+typedef struct 
+{
+	std::vector<pcData_v01> pcDataOneFrame;
+}udpPcMsgOneFrame;
 
 typedef enum
 {

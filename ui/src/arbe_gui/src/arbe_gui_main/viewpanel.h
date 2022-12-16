@@ -230,6 +230,9 @@ protected:
 
 private:
 	void udpRecvLoop();
+	void udpRecvPCLoop();
+	int udpRecvPCConnect();
+
 	void udpParseLoop();
 	void CreatDebugWindow();
 	void CreatUIWindow();
@@ -266,13 +269,18 @@ private:
     QTimer* timer_;
 	QTimer* timer_adc;  
 	bool udpStop_;
+	bool udpPCStop_;
 	void saveData();
 	int ctrl_sock;
 	int motor_ctrl_sock;
 	int udpRecvSocketFd_;
+	int udpRecvPCSocketFd_;
+
 	std::string lidar_ip;
 	int lidar_ctrl_port;
 	int lidar_UDP_port;
+	int lidar_UDP_pc_port;
+
 	int motor_port;
 	QSerialPort *m_serialPort;
 	QSerialPort *m_serialPort_test;
@@ -286,6 +294,8 @@ private:
 	QString lidar_ip_;
 	QString distance_offset_;
 	QString power_offset_;
+	pcData_v01 pcDataRaw_;
+	std::vector< pcData_v01 > pcDataOneFrame_;
 
 	rviz::VisualizationManager* manager_;
 	rviz::RenderPanel* render_panel_;
@@ -331,6 +341,9 @@ private:
 	QLineEdit *ip_edit;
 	QLineEdit *port_edit;
 	QLineEdit *udp_port_edit;
+
+	QLineEdit *udp_pc_port_edit;
+
 	QLineEdit *distance_Offset_edit;
 	QLineEdit *power_Offset_edit;
 	QString save_folder_;
@@ -388,12 +401,15 @@ private:
 	fftMsg fftBuff[MAX_BUFF_LEN];
 	adcMsg adcBuff[MAX_BUFF_LEN];
 	udp_ADC_FFT_Msg udpFABuff[MAX_BUFF_LEN];
+	udpPcMsgOneFrame udpPCBuff[MAX_BUFF_LEN];
 	bstMsgQueue<fftMsg*> fftMsg_free_buf_queue;
 	bstMsgQueue<fftMsg*> fftMsg_done_buf_queue;
 	bstMsgQueue<adcMsg*> adcMsg_free_buf_queue;
 	bstMsgQueue<adcMsg*> adcMsg_done_buf_queue;
 	bstMsgQueue<udp_ADC_FFT_Msg*> udpMsg_free_buf_queue;
 	bstMsgQueue<udp_ADC_FFT_Msg*> udpMsg_done_buf_queue;
+	bstMsgQueue<udpPcMsgOneFrame*> udpPcMsg_free_buf_queue;
+	bstMsgQueue<udpPcMsgOneFrame*> udpPcMsg_done_buf_queue;
 	
 	std::string loadFileType_;
 	QString  loadLidarFile_;
@@ -406,6 +422,7 @@ private:
 	bool ifSave;
 	QPushButton *lidar_connect_button;
 	QPushButton *setSaveBtn;
+	QPushButton *pcSwitchBtn;
 	QPushButton *regBtnWrite;
 	QPushButton *regBtnRead;
 	QPushButton * settingADCSavebutton;

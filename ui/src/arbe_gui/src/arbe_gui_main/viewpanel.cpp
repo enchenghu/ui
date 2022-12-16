@@ -222,13 +222,18 @@ void viewpanel::init_queue()
     adcMsg_done_buf_queue.setParam("adcMsg_done_buf_queue", MAX_BUFF_LEN);
 	udpMsg_free_buf_queue.setParam("udpMsg_free_buf_queue", MAX_BUFF_LEN);
     udpMsg_done_buf_queue.setParam("udpMsg_done_buf_queue", MAX_BUFF_LEN); 
+	udpPcMsg_free_buf_queue.setParam("udpPcMsg_free_buf_queue", MAX_BUFF_LEN);
+    udpPcMsg_done_buf_queue.setParam("udpPcMsg_done_buf_queue", MAX_BUFF_LEN); 
     for (int loop = 0; loop < 4; loop++) {
         fftMsg *fbuf0 = &fftBuff[loop];
         adcMsg *fbuf1 = &adcBuff[loop];
         udp_ADC_FFT_Msg *fbuf2 = &udpFABuff[loop];
+        udpPcMsgOneFrame *fbuf3 = &udpPCBuff[loop];
         fftMsg_free_buf_queue.put(fbuf0);
         adcMsg_free_buf_queue.put(fbuf1);
         udpMsg_free_buf_queue.put(fbuf2);
+        udpPcMsg_free_buf_queue.put(fbuf3);
+
     }
 	motorSerialConnectTest();
 }
@@ -1625,6 +1630,7 @@ void viewpanel::CreatUIWindow()
 	lidar_connect_button = new QPushButton("&Connect", this);
 	//lidar_disconnect_button = new QPushButton("Disconnect", this);
 	setSaveBtn = new QPushButton("&Set save folder", this);
+	pcSwitchBtn = new QPushButton("&Start PointCloud", this);
 	//lidar_stop_button = new QPushButton("Stop", this);
 	//lidarIdCombo =  new QComboBox;
 
@@ -1635,7 +1641,9 @@ void viewpanel::CreatUIWindow()
 
 	ip_edit =  new QLineEdit();
 	port_edit =  new QLineEdit();
+	udp_pc_port_edit =  new QLineEdit();
 	udp_port_edit =  new QLineEdit();
+
 	distance_Offset_edit = new QLineEdit();
 
 	ip_edit->setPlaceholderText("input ip addr");
@@ -1664,6 +1672,8 @@ void viewpanel::CreatUIWindow()
 	QLabel* diff_label = new QLabel( "Diff" );
 	QLabel* regAddr_label = new QLabel( "Register Addr" );
 	QLabel* regVal_label = new QLabel( "Register value" );
+	QLabel* pcPort_label = new QLabel( "PointCloud port" );
+
 	QLabel* adc_label0 = new QLabel( "ADC overvoltage" );
 	QLabel* adc_label1 = new QLabel( "ADC attenuation" );
 
@@ -1730,6 +1740,11 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( settingADCSavebutton, 2, 7, Qt::AlignLeft);
 	controls_layout->addWidget( settingADCConfigbutton, 2, 8, Qt::AlignLeft);
 	controls_layout->addWidget( saveBtn, 3, 7, Qt::AlignLeft);
+
+	controls_layout->addWidget( pcPort_label, 3, 9, Qt::AlignLeft);	
+	controls_layout->addWidget( udp_pc_port_edit, 3, 10, Qt::AlignLeft);	
+	controls_layout->addWidget( pcSwitchBtn, 3, 11, Qt::AlignLeft);	
+
 	controlsBox->setLayout(controls_layout);
 
 
@@ -2913,6 +2928,110 @@ void viewpanel::udpParseLoop()
 	}
 	std::cout << "quit udpParseLoop" << std::endl;
 }
+
+int viewpanel::udpRecvPCConnect()
+{
+	lidar_UDP_pc_port = udp_pc_port_edit->text().toInt();
+
+	udpRecvPCSocketFd_ = socket(AF_INET, SOCK_DGRAM, 0);
+	if(udpRecvPCSocketFd_ < 0)
+	{
+		QMessageBox msgBox;
+		msgBox.setText("udp pc socket create fail!");
+		msgBox.exec();
+		return -1;
+	}
+
+	struct timeval timeout_recv = {3, 0};
+	setsockopt(udpRecvPCSocketFd_, SOL_SOCKET, SO_RCVTIMEO, &timeout_recv, sizeof(timeout_recv)); //recv timeout
+
+	struct sockaddr_in ser_addr;
+	struct sockaddr_in src_addr;
+	socklen_t len;
+	len = sizeof(sockaddr);
+	memset(&ser_addr, 0, sizeof(ser_addr));
+	memset(&src_addr, 0, sizeof(src_addr));
+	ser_addr.sin_family = AF_INET;
+	//ser_addr.sin_addr.s_addr = inet_addr(lidar_ip.c_str());
+	ser_addr.sin_addr.s_addr = htonl(INADDR_ANY);  //注意网络序转换
+	ser_addr.sin_port = htons(lidar_UDP_pc_port);  //注意网络序转换
+	std::cout << "lidar_UDP_pc_port is " << lidar_UDP_pc_port << std::endl;
+
+    int ret = ::bind(udpRecvPCSocketFd_, (struct sockaddr*)&ser_addr, sizeof(ser_addr));
+    if(ret < 0)
+    {
+		QMessageBox msgBox;
+		msgBox.setText("udp socket bind fail!");
+		msgBox.exec();
+		return -1;
+    }
+	udpPCStop_ = false;
+	return 0;
+
+}
+
+
+void viewpanel::udpRecvPCLoop()
+{
+	uint32_t head_frame_index = 0;
+	bool ifLost  = false;
+    std::chrono::duration<double> elapsed;	
+	int ret = 0;
+	struct sockaddr_in src_addr;
+	socklen_t len;
+	len = sizeof(sockaddr);
+	while(!terminating && !udpPCStop_)
+	{
+		auto start = std::chrono::steady_clock::now();
+		pcDataOneFrame_.clear();
+		ifLost  = false;
+		for(int i = 0; i < UDP_PC_TIMES_PER_FRAME; i++){
+			memset(&pcDataRaw_, 0, sizeof(pcData_v01));
+			//printf("ready recv udp msg!\n");
+			ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcData_v01), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
+			//printf("recv udp msg! receive byte is %d, g_udpMsg: %c %c %c %c %c\n", ret, g_udpMsg.pcUdpData[11], \
+			//g_udpMsg.pcUdpData[13], g_udpMsg.pcUdpData[15], g_udpMsg.pcUdpData[17], g_udpMsg.pcUdpData[19]);
+			if(ret <= 0){
+				if(udpPCStop_) {
+					printf("pc raw udp  quit!\n"); 
+    				::close(udpRecvPCSocketFd_);
+					return;
+				}
+				ROS_INFO("pc raw data recv failed, continue\n");
+				usleep(100*1000);
+				i--;
+				continue;
+			}
+
+			if(i == 0) head_frame_index = pcDataRaw_.pcHeader.pcFrameCounter;
+			pcDataOneFrame_.emplace_back(pcDataRaw_);
+			if(pcDataRaw_.pcHeader.pcFrameCounter!= head_frame_index) {
+				if(pcDataOneFrame_.size() > 2)pcDataOneFrame_.pop_back();
+				ifLost = true;
+				std::cout << "!!!warnning!!! current usFrameCounter is " << pcDataRaw_.pcHeader.pcFrameCounter
+				 << ", head_frame_index is " << head_frame_index << std::endl;	
+				break;
+			} 
+		}
+		auto end = std::chrono::steady_clock::now();
+		elapsed = end - start;
+		std::cout << "time for one frame udp: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
+		//std::cout << "!!recv udp pkg successfully! "  << std::endl;
+		if(pcDataOneFrame_.size() > 2){
+			udpPcMsgOneFrame* pUdp = NULL;
+			if(udpPcMsg_free_buf_queue.get(pUdp) == 0){
+				pUdp->pcDataOneFrame = pcDataOneFrame_;
+				udpPcMsg_done_buf_queue.put(pUdp);	
+			}else{
+				std::cout << "error!!! udpPcMsg_free_buf_queue timeout!! "  << std::endl;
+				return;
+			}
+		}
+	}
+	printf("pc udp  quit!\n");	
+
+}
+
 void viewpanel::udpRecvLoop(){
 
 	//int client_fd;
