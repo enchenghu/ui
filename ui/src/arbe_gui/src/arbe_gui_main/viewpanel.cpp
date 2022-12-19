@@ -1524,6 +1524,9 @@ void viewpanel::CreatConnect()
 	connect(regBtnRead, SIGNAL(clicked()), this, SLOT( readReg( void )));
 	connect(mFFTShowdBBtn, SIGNAL(clicked()), this, SLOT( showdBFFT( void )));
 
+	connect(pcSwitchBtn, SIGNAL(clicked()), this, SLOT( udpPcConnect( void )));
+
+
 	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
@@ -2196,6 +2199,14 @@ void viewpanel::TaskFuncUdpParse(void *arg){
     }
 }
 
+void viewpanel::TaskFuncPCRecv(void *arg){
+    viewpanel *pSave = (viewpanel *)arg;
+	std::cout << "enter TaskFuncPCRecv" << std::endl;
+    if (pSave && pSave->TaskFuncPCRecv) {
+        pSave->udpRecvPCLoop();
+    }
+}
+
 void viewpanel::TaskFuncPCParse(void *arg){
     viewpanel *pSave = (viewpanel *)arg;
 	std::cout << "enter TaskFuncPCParse" << std::endl;
@@ -2789,6 +2800,27 @@ void viewpanel::updateADCdata() {
 	frame_index++;
 }
 
+void viewpanel::udpPcConnect() {
+
+	if(udpPCStop_){
+		commandMsg cmdMsg;
+		memset(&cmdMsg, 0, sizeof(commandMsg));
+		cmdMsg.mHead.usCommand = commandType::POINTCLOUD_DISPLAY_START;
+		if(::write(ctrl_sock, &cmdMsg, sizeof(commandMsg)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("UDP Connect failed!");
+			msgBox.exec();
+			return;
+		}	
+		udpRecvPCConnect();	
+		startPcTask();
+	}else{
+		QMessageBox msgBox;
+		msgBox.setText("UDP Connection is already working, please stop it first !");
+		msgBox.exec();		
+	}
+}
+
 void viewpanel::udpConnect() {
 
 	if(udpStop_){
@@ -2823,8 +2855,14 @@ void viewpanel::startPcTask() {
 	vx_task_set_default_create_params(&bst_params);
 	bst_params.app_var = this;
 	bst_params.task_mode = 0;
-	bst_params.task_main = TaskFuncPCParse;
+	bst_params.task_main = TaskFuncPCRecv;
 	vx_task_create(&bst_task[3], &bst_params);  
+
+	vx_task_set_default_create_params(&bst_params);
+	bst_params.app_var = this;
+	bst_params.task_mode = 0;
+	bst_params.task_main = TaskFuncPCParse;
+	vx_task_create(&bst_task[4], &bst_params); 
 }
 
 

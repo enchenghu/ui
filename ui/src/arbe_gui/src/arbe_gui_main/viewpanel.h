@@ -198,6 +198,9 @@ private Q_SLOTS:
 	void loadLidarFile();
 	void setSaveFolder();
 	void udpConnect();
+
+	void udpPcConnect();
+	
 	void udpClose();
 	void updateFFTdata();
 	void updateADCdata();
@@ -226,6 +229,7 @@ protected:
     static void TaskFunc(void *arg);
     static void TaskFuncUdpRecv(void *arg);
     static void TaskFuncUdpParse(void *arg);
+    static void TaskFuncPCRecv(void *arg);
     static void TaskFuncPCParse(void *arg);
 
 private:

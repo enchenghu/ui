@@ -64,7 +64,9 @@ typedef enum
 	REG_READ,
 	PC_READ,
 	FFT_ADC_READ_START,
-	FFT_ADC_READ_STOP
+	FFT_ADC_READ_STOP,
+	POINTCLOUD_DISPLAY_START,
+	POINTCLOUD_DISPLAY_STOP
 }commandType;
 
 typedef enum{
@@ -226,6 +228,7 @@ typedef struct {
 	uint16_t pcFrameCounter; 	// 点云图的帧计数
 	uint16_t pcMessageNumber;	// rolling counter
 	uint16_t pcState;			// 报文标志（比如：是否是最后一帧）
+	uint16_t reserve;			// 保留字节
 	DataFactor_st DataFactor; 	// 点云数据单位系数
 	uint16_t pcHeaderCrc;		// UDP头Crc校验值（整个Header）
 	uint16_t pcPayloadCrc;		// UDP点云数据校验值（Payload）
