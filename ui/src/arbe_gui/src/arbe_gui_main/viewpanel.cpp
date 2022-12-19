@@ -1525,7 +1525,7 @@ void viewpanel::CreatConnect()
 	connect(mFFTShowdBBtn, SIGNAL(clicked()), this, SLOT( showdBFFT( void )));
 
 	connect(pcSwitchBtn, SIGNAL(clicked()), this, SLOT( udpPcConnect( void )));
-
+	connect(pcOnceBtn, SIGNAL(clicked()), this, SLOT( startPcUdpOnce( void )));
 
 	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
@@ -1634,6 +1634,8 @@ void viewpanel::CreatUIWindow()
 	//lidar_disconnect_button = new QPushButton("Disconnect", this);
 	setSaveBtn = new QPushButton("&Set save folder", this);
 	pcSwitchBtn = new QPushButton("&Start PointCloud", this);
+	pcOnceBtn = new QPushButton("&PointCloud Once", this);
+
 	//lidar_stop_button = new QPushButton("Stop", this);
 	//lidarIdCombo =  new QComboBox;
 
@@ -1747,6 +1749,7 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( pcPort_label, 3, 9, Qt::AlignLeft);	
 	controls_layout->addWidget( udp_pc_port_edit, 3, 10, Qt::AlignLeft);	
 	controls_layout->addWidget( pcSwitchBtn, 3, 11, Qt::AlignLeft);	
+	controls_layout->addWidget( pcOnceBtn, 3, 12, Qt::AlignLeft);	
 
 	controlsBox->setLayout(controls_layout);
 
@@ -2800,9 +2803,25 @@ void viewpanel::updateADCdata() {
 	frame_index++;
 }
 
+void viewpanel::startPcUdpOnce() {
+
+	commandMsg cmdMsg;
+	memset(&cmdMsg, 0, sizeof(commandMsg));
+	cmdMsg.mHead.usCommand = commandType::POINTCLOUD_DISPLAY_START;
+	if(::write(ctrl_sock, &cmdMsg, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("startPcUdpOnce failed! Disconnect the target");
+		msgBox.exec();
+		return;
+	}	
+	udpRecvPCOnce();	
+	pcDataProc();
+}
+
 void viewpanel::udpPcConnect() {
 
 	if(udpPCStop_){
+#if 0
 		commandMsg cmdMsg;
 		memset(&cmdMsg, 0, sizeof(commandMsg));
 		cmdMsg.mHead.usCommand = commandType::POINTCLOUD_DISPLAY_START;
@@ -2812,12 +2831,21 @@ void viewpanel::udpPcConnect() {
 			msgBox.exec();
 			return;
 		}	
-		udpRecvPCConnect();	
+#endif
+		udpRecvPCConnect();
+#if 0	
 		startPcTask();
+#endif
+		pcSwitchBtn->setStyleSheet("color: green");
+		pcSwitchBtn->setText("&Close PointCloud");
 	}else{
-		QMessageBox msgBox;
-		msgBox.setText("UDP Connection is already working, please stop it first !");
-		msgBox.exec();		
+		::close(udpRecvPCSocketFd_);
+		udpPCStop_ = true;
+		pcSwitchBtn->setStyleSheet("color: black");
+		pcSwitchBtn->setText("&Start PointCloud");
+		//QMessageBox msgBox;
+		//msgBox.setText("UDP Connection is already working, please stop it first !");
+		//msgBox.exec();		
 	}
 }
 
@@ -2987,10 +3015,68 @@ int viewpanel::udpRecvPCConnect()
 		return -1;
     }
 	udpPCStop_ = false;
+	QMessageBox msgBox;
+	msgBox.setText("UDP Connect successfully!");
+	msgBox.exec();
 	return 0;
 
 }
 
+void viewpanel::udpRecvPCOnce()
+{
+	uint32_t head_frame_index = 0;
+	bool ifLost  = false;
+    std::chrono::duration<double> elapsed;	
+	int ret = 0;
+	struct sockaddr_in src_addr;
+	socklen_t len;
+	len = sizeof(sockaddr);
+	auto start = std::chrono::steady_clock::now();
+	pcDataOneFrame_.clear();
+	ifLost  = false;
+	for(int i = 0; i < UDP_PC_TIMES_PER_FRAME; i++){
+		memset(&pcDataRaw_, 0, sizeof(pcData_v01));
+		//printf("ready recv udp msg!\n");
+		ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcData_v01), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
+		//printf("recv udp msg! receive byte is %d, g_udpMsg: %c %c %c %c %c\n", ret, g_udpMsg.pcUdpData[11], \
+		//g_udpMsg.pcUdpData[13], g_udpMsg.pcUdpData[15], g_udpMsg.pcUdpData[17], g_udpMsg.pcUdpData[19]);
+		if(ret <= 0){
+			if(udpPCStop_) {
+				printf("pc raw udp  quit!\n"); 
+				::close(udpRecvPCSocketFd_);
+				return;
+			}
+			ROS_INFO("pc raw data recv failed, continue\n");
+			usleep(100*1000);
+			i--;
+			continue;
+		}
+
+		if(i == 0) head_frame_index = pcDataRaw_.pcHeader.pcFrameCounter;
+		pcDataOneFrame_.emplace_back(pcDataRaw_);
+		if(pcDataRaw_.pcHeader.pcFrameCounter!= head_frame_index) {
+			if(pcDataOneFrame_.size() > 2)pcDataOneFrame_.pop_back();
+			ifLost = true;
+			std::cout << "!!!warnning!!! current usFrameCounter is " << pcDataRaw_.pcHeader.pcFrameCounter
+				<< ", head_frame_index is " << head_frame_index << std::endl;	
+			break;
+		} 
+	}
+	auto end = std::chrono::steady_clock::now();
+	elapsed = end - start;
+	std::cout << "time for one frame udp: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
+	//std::cout << "!!recv udp pkg successfully! "  << std::endl;
+	if(pcDataOneFrame_.size() > 2){
+		udpPcMsgOneFrame* pUdp = NULL;
+		if(udpPcMsg_free_buf_queue.get(pUdp) == 0){
+			pUdp->pcDataOneFrame = pcDataOneFrame_;
+			udpPcMsg_done_buf_queue.put(pUdp);	
+		}else{
+			std::cout << "error!!! udpPcMsg_free_buf_queue timeout!! "  << std::endl;
+			return;
+		}
+	}	
+}
 
 void viewpanel::udpRecvPCLoop()
 {

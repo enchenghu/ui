@@ -200,7 +200,8 @@ private Q_SLOTS:
 	void udpConnect();
 
 	void udpPcConnect();
-	
+	void startPcUdpOnce();
+
 	void udpClose();
 	void updateFFTdata();
 	void updateADCdata();
@@ -235,6 +236,7 @@ protected:
 private:
 	void udpRecvLoop();
 	void udpRecvPCLoop();
+	void udpRecvPCOnce();
 	int udpRecvPCConnect();
 
 	void udpParseLoop();
@@ -427,6 +429,9 @@ private:
 	QPushButton *lidar_connect_button;
 	QPushButton *setSaveBtn;
 	QPushButton *pcSwitchBtn;
+
+	QPushButton *pcOnceBtn;
+
 	QPushButton *regBtnWrite;
 	QPushButton *regBtnRead;
 	QPushButton * settingADCSavebutton;
