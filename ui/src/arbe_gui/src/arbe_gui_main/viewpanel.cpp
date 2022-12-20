@@ -2913,15 +2913,14 @@ void viewpanel::pcDataProc()
 	for(int j = 0; j < pcFrameSize; j++)
 	{
 		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].elevation = pmsg->pcDataOneFrame[j].pcUdpData[index].elevation;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].azimuth = pmsg->pcDataOneFrame[j].pcUdpData[index].azimuth;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].power1 = pmsg->pcDataOneFrame[j].pcUdpData[index].power1;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].power2 = pmsg->pcDataOneFrame[j].pcUdpData[index].power2;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].doppler = pmsg->pcDataOneFrame[j].pcUdpData[index].doppler;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].vertical = pmsg->pcDataOneFrame[j].pcUdpData[index].vertical;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].horizontal = pmsg->pcDataOneFrame[j].pcUdpData[index].horizontal;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].indensity = pmsg->pcDataOneFrame[j].pcUdpData[index].indensity;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].speed = pmsg->pcDataOneFrame[j].pcUdpData[index].speed;
 
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].x = pmsg->pcDataOneFrame[j].pcUdpData[index].range;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].y = pmsg->pcDataOneFrame[j].pcUdpData[index].range ;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].z = pmsg->pcDataOneFrame[j].pcUdpData[index].range ;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].x = pmsg->pcDataOneFrame[j].pcUdpData[index].distance;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].y = pmsg->pcDataOneFrame[j].pcUdpData[index].distance ;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].z = pmsg->pcDataOneFrame[j].pcUdpData[index].distance ;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].r = 255;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].g = 0;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].b = 0;

@@ -50,22 +50,13 @@ struct  EIGEN_ALIGN16 FmcwPointXYZRGBGeneric
 {
         PCL_ADD_POINT4D;
         PCL_ADD_RGB;
-        float range;
-        float azimuth;
-        float elevation;
-        float doppler;
-        float power1;
-        float power2;
-        float range_bin;
-        float azimuth_bin;
-        float elevation_bin;
-        float doppler_bin;
-        float power_value;
-        float phase_value;
+        float distance;
+        float horizontal;
+        float vertical;
+        float speed;
+        float indensity;
         uint32_t timestamp_sec;
         uint32_t timestamp_nsec;
-        float snr;
-        uint32_t radar_id;
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW     // make sure our new allocators are aligned
 };
 
@@ -75,22 +66,13 @@ POINT_CLOUD_REGISTER_POINT_STRUCT (FmcwPointXYZRGBGeneric,           // here we 
                                 (float, y, y)
                                 (float, z, z)
                                 (float, rgb, rgb)
-                                (float, range, range)
-                                (float, azimuth, azimuth)
-                                (float, elevation, elevation)
-                                (float, doppler, doppler)
-                                (float, power1, power1)
-                                (float, power2, power2)
-                                (float, range_bin, range_bin)
-                                (float, azimuth_bin, azimuth_bin)
-                                (float, elevation_bin, elevation_bin)
-                                (float, doppler_bin, doppler_bin)
-                                (float, power_value, power_value)
-                                (float, phase_value, phase_value)
+                                (float, distance, distance)
+                                (float, horizontal, horizontal)
+                                (float, vertical, vertical)
+                                (float, speed, speed)
+                                (float, indensity, indensity)
                                 (uint32_t, timestamp_sec, timestamp_sec)
                                 (uint32_t, timestamp_nsec, timestamp_nsec)
-                                (float, snr, snr)
-                                (uint32_t, radar_id, radar_id)
 )
 
 

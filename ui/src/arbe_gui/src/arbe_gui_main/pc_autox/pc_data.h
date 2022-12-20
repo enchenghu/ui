@@ -228,7 +228,6 @@ typedef struct {
 	uint16_t pcFrameCounter; 	// 点云图的帧计数
 	uint16_t pcMessageNumber;	// rolling counter
 	uint16_t pcState;			// 报文标志（比如：是否是最后一帧）
-	uint16_t reserve;			// 保留字节
 	DataFactor_st DataFactor; 	// 点云数据单位系数
 	uint16_t pcHeaderCrc;		// UDP头Crc校验值（整个Header）
 	uint16_t pcPayloadCrc;		// UDP点云数据校验值（Payload）
@@ -236,20 +235,19 @@ typedef struct {
 
 
 typedef struct {	
-	uint16_t power1;		// 功率1
-	uint16_t power2;		// 功率2
-	uint16_t range;		// 距离
-	uint16_t doppler;		// 速度
-	uint16_t azimuth;		// 方位角
-	uint16_t elevation;	// 俯仰角
-			//unit16_t type;		// 保留（表示点的特殊情况，比如：当前点是光学无效点）
-}PointMeta_st;	// 12Bytes
+    uint32_t indensity;  // 功率    // (indensity_0 + indensity_1)/2
+    uint32_t distance;   // 距离    // 单位：
+    int16_t  speed;      // 速度    // 单位：    // 正数:远离 负数:靠近
+    uint16_t vertical;   // 俯仰角  // Units : 1/256 degree  // 数据0实际上是-2.5°
+    uint16_t  horizontal; // 水平角  // units : 360/32000*2 
+}PC_PointMeta_st;   // 14Bytes
+
 
 
 typedef struct 
 {
 	PointCloud_st 	pcHeader; 
-	PointMeta_st 	pcUdpData[UDP_PC_SIZE_SINGLE_V01];
+	PC_PointMeta_st 	pcUdpData[UDP_PC_SIZE_SINGLE_V01];
 } pcData_v01;
 
 typedef struct 
