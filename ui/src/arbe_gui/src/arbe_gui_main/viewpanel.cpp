@@ -235,6 +235,11 @@ void viewpanel::init_queue()
         udpPcMsg_free_buf_queue.put(fbuf3);
 
     }
+	vertical_bin = 1 / 256; 
+	speed_bin = 1 / 128; 
+	horizontal_bin = 360 / 32000 * 2; 
+	distance_bin = 1 / 65536; 
+	vertical_offset = -2.5;
 	motorSerialConnectTest();
 }
 
@@ -2905,6 +2910,9 @@ void viewpanel::pcDataProc()
 	}
 	int pcFrameSize = pmsg->pcDataOneFrame.size();
 	int pcDataSize = pmsg->pcDataOneFrame.size() * 100;
+	double distance_m;
+	double vertical_m;
+	double horizontal_m;
 	ROS_INFO("pcDataSize is %d", pcDataSize);
 	cloud.points.resize(pcDataSize);
 
@@ -2913,19 +2921,27 @@ void viewpanel::pcDataProc()
 	for(int j = 0; j < pcFrameSize; j++)
 	{
 		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){
+			distance_m = pmsg->pcDataOneFrame[j].pcUdpData[index].distance * distance_bin;
+			vertical_m = pmsg->pcDataOneFrame[j].pcUdpData[index].vertical * vertical_bin + vertical_offset;
+			horizontal_m = pmsg->pcDataOneFrame[j].pcUdpData[index].horizontal * horizontal_bin;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].vertical = pmsg->pcDataOneFrame[j].pcUdpData[index].vertical;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].horizontal = pmsg->pcDataOneFrame[j].pcUdpData[index].horizontal;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].indensity = pmsg->pcDataOneFrame[j].pcUdpData[index].indensity;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].speed = pmsg->pcDataOneFrame[j].pcUdpData[index].speed;
 
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].x = pmsg->pcDataOneFrame[j].pcUdpData[index].distance;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].y = pmsg->pcDataOneFrame[j].pcUdpData[index].distance ;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].z = pmsg->pcDataOneFrame[j].pcUdpData[index].distance ;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].x = distance_m * cos(vertical_m * PI_FMCW / 180) * \
+																cos(horizontal_m * PI_FMCW / 180);
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].y = distance_m * cos(vertical_m * PI_FMCW / 180) * \
+																sin(horizontal_m * PI_FMCW / 180);
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].z = distance_m * sin(vertical_m * PI_FMCW / 180);
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].r = 255;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].g = 0;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].b = 0;
 		}
 	}
+	ROS_INFO("distance_m is %0.3f", pmsg->pcDataOneFrame[106].pcUdpData[66].distance * distance_bin);
+	ROS_INFO("vertical_m is %0.3f", pmsg->pcDataOneFrame[106].pcUdpData[66].vertical * vertical_bin + + vertical_offset);
+	ROS_INFO("horizontal_m is %0.3f", pmsg->pcDataOneFrame[106].pcUdpData[66].horizontal * horizontal_bin);
 	index++;
 	//std::cout << "cloud.points[103].range_bin is " << cloud.points[103].range_bin << std::endl;
 	output.header.stamp = ros::Time::now();

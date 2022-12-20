@@ -472,6 +472,12 @@ private:
 	motorWorkModeMsg motorMsgWorkMode_;
 	motorShowCycleMsg motorMsgShowCycle_;
 	motorPidSetMsg  motorMsgPidSet_;
+	float vertical_bin; 
+	float speed_bin; 
+	float horizontal_bin; 
+	float vertical_offset; 
+	float distance_bin; 
+
 };
 
 

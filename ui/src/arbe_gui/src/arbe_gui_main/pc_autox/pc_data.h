@@ -35,6 +35,7 @@
 #define UDP_TIMES_PER_FRAME 256
 #define UDP_PC_TIMES_PER_FRAME 200
 #define BST_MAX_TASK_NUM		(16)
+#define PI_FMCW 3.14159265
 
 namespace fmcw_types
 {
