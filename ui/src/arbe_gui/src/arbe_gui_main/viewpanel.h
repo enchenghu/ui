@@ -300,8 +300,8 @@ private:
 	QString lidar_ip_;
 	QString distance_offset_;
 	QString power_offset_;
-	pcData_v01 pcDataRaw_;
-	std::vector< pcData_v01 > pcDataOneFrame_;
+	UDP_PC_package_st pcDataRaw_;
+	std::vector< UDP_PC_package_st > pcDataOneFrame_;
 
 	rviz::VisualizationManager* manager_;
 	rviz::RenderPanel* render_panel_;
@@ -472,11 +472,11 @@ private:
 	motorWorkModeMsg motorMsgWorkMode_;
 	motorShowCycleMsg motorMsgShowCycle_;
 	motorPidSetMsg  motorMsgPidSet_;
-	float vertical_bin; 
-	float speed_bin; 
-	float horizontal_bin; 
-	float vertical_offset; 
-	float distance_bin; 
+	double vertical_bin; 
+	double speed_bin; 
+	double horizontal_bin; 
+	double vertical_offset; 
+	double distance_bin; 
 
 };
 

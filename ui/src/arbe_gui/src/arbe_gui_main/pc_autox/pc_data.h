@@ -210,50 +210,40 @@ typedef struct
 	uint8_t 	pcTcpData[TCP_PC_SIZE_SINGLE];
 } pcData_t;
 
-
-typedef struct {	// 某个点的维度信息的系数
-	uint16_t dfPower1;		// 功率1
-	uint16_t dfPower2;		// 功率2
-	uint16_t dfRange;			// 距离
-	uint16_t dfDoppler;		// 速度
-	uint16_t dfAzimuth;		// 方位角
-	uint16_t dfElevation;		// 俯仰角
-}DataFactor_st;	// 12Bytes
+/* pointcloud info*/
 
 typedef struct {
-	uint16_t pcPrefix; 		// 0xeeff
-	uint16_t pcVersion;		// Version：0x0102 = V1.2
-	uint32_t pcTimeLsb;		// 时间戳低位（ns为单位，还是UTC时间戳）
-	uint32_t pcTimeMsb;		// 时间戳高位
-	uint32_t pcPayloadLength;	// 点云数据长度  // 目前固定：1200
-	uint16_t pcFrameCounter; 	// 点云图的帧计数
-	uint16_t pcMessageNumber;	// rolling counter
-	uint16_t pcState;			// 报文标志（比如：是否是最后一帧）
-	DataFactor_st DataFactor; 	// 点云数据单位系数
-	uint16_t pcHeaderCrc;		// UDP头Crc校验值（整个Header）
-	uint16_t pcPayloadCrc;		// UDP点云数据校验值（Payload）
-}PointCloud_st;	// 38Bytes
+    uint16_t uphPrefix;         // 0xEEFF
+    uint16_t uphVersion;        // 0x0102: Version V1.2
+    uint32_t uphTimeLsb;        // 时间戳低位（ns为单位，还是UTC时间戳）
+    uint32_t uphTimeMsb;        // 时间戳高位
+    uint16_t uphPayloadLength;  // 点云数据长度  // 目前固定：1400（包含100个点云元数据）
+    uint16_t uphFrameCounter;   // 点云图的帧计数
+    uint16_t uphRollingCounter; // rolling counter
+    uint16_t uphState;          // 报文标志（比如：是否是最后一帧）
+    uint16_t uphHeaderCrc;      // UDP头数据Crc校验值（Header）
+    uint16_t uphPayloadCrc;     // UDP载荷数据校验值（Payload）
+}UDP_PC_head_st;    // 24Bytes
 
 
 typedef struct {	
-    uint32_t indensity;  // 功率    // (indensity_0 + indensity_1)/2
-    uint32_t distance;   // 距离    // 单位：
-    int16_t  speed;      // 速度    // 单位：    // 正数:远离 负数:靠近
-    uint16_t vertical;   // 俯仰角  // Units : 1/256 degree  // 数据0实际上是-2.5°
-    uint16_t  horizontal; // 水平角  // units : 360/32000*2 
-}PC_PointMeta_st;   // 14Bytes
+    uint32_t pcmIndensity;  // 功率
+    uint32_t pcmDistance;   // 距离（单位：米）   // 实际值：÷65536
+    int16_t  pcmSpeed;      // 速度（单位：米/s） // 实际值：÷128(1bit-signed, 8bit-integer, 7bit-decimal-fraction)  // 正数:远离 负数:靠近
+    uint16_t pcmVertical;   // 俯仰角（单位：°）  // 实际值：÷256  // 数据0实际上是-2.5°
+    uint16_t pcmHorizontal; // 水平角（单位：°）  // 实际值：*360/32000*2  // 0° ~ 359°
+}PC_pointMeta_st;   // 14Bytes
 
+
+typedef struct {
+    UDP_PC_head_st  UDP_PC_head;                        // head：24字节
+    PC_pointMeta_st UDP_PC_payload[100];   // Payload：1400字节 = 14 * 100
+} UDP_PC_package_st;    // 1424字节
 
 
 typedef struct 
 {
-	PointCloud_st 	pcHeader; 
-	PC_PointMeta_st 	pcUdpData[UDP_PC_SIZE_SINGLE_V01];
-} pcData_v01;
-
-typedef struct 
-{
-	std::vector<pcData_v01> pcDataOneFrame;
+	std::vector<UDP_PC_package_st> pcDataOneFrame;
 }udpPcMsgOneFrame;
 
 typedef enum

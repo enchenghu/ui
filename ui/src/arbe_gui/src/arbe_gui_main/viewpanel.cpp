@@ -235,10 +235,10 @@ void viewpanel::init_queue()
         udpPcMsg_free_buf_queue.put(fbuf3);
 
     }
-	vertical_bin = 1 / 256; 
-	speed_bin = 1 / 128; 
-	horizontal_bin = 360 / 32000 * 2; 
-	distance_bin = 1 / 65536; 
+	vertical_bin = 1 / 256.0; 
+	speed_bin = 1 / 128.0; 
+	horizontal_bin = 360.0 / 32000.0 * 2; 
+	distance_bin = 1 / 65536.0; 
 	vertical_offset = -2.5;
 	motorSerialConnectTest();
 }
@@ -2846,6 +2846,15 @@ void viewpanel::udpPcConnect() {
 	}else{
 		::close(udpRecvPCSocketFd_);
 		udpPCStop_ = true;
+		commandMsg cmdMsg;
+		memset(&cmdMsg, 0, sizeof(commandMsg));
+		cmdMsg.mHead.usCommand = commandType::POINTCLOUD_DISPLAY_STOP;
+		if(::write(ctrl_sock, &cmdMsg, sizeof(commandMsg)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("Close PointCloud failed!");
+			msgBox.exec();
+			return;
+		}
 		pcSwitchBtn->setStyleSheet("color: black");
 		pcSwitchBtn->setText("&Start PointCloud");
 		//QMessageBox msgBox;
@@ -2913,6 +2922,8 @@ void viewpanel::pcDataProc()
 	double distance_m;
 	double vertical_m;
 	double horizontal_m;
+	double speed_m;
+
 	ROS_INFO("pcDataSize is %d", pcDataSize);
 	cloud.points.resize(pcDataSize);
 
@@ -2921,13 +2932,16 @@ void viewpanel::pcDataProc()
 	for(int j = 0; j < pcFrameSize; j++)
 	{
 		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){
-			distance_m = pmsg->pcDataOneFrame[j].pcUdpData[index].distance * distance_bin;
-			vertical_m = pmsg->pcDataOneFrame[j].pcUdpData[index].vertical * vertical_bin + vertical_offset;
-			horizontal_m = pmsg->pcDataOneFrame[j].pcUdpData[index].horizontal * horizontal_bin;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].vertical = pmsg->pcDataOneFrame[j].pcUdpData[index].vertical;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].horizontal = pmsg->pcDataOneFrame[j].pcUdpData[index].horizontal;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].indensity = pmsg->pcDataOneFrame[j].pcUdpData[index].indensity;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].speed = pmsg->pcDataOneFrame[j].pcUdpData[index].speed;
+			distance_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmDistance * distance_bin;
+			vertical_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmVertical * vertical_bin + vertical_offset;
+			horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
+			speed_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmSpeed * speed_bin;
+
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].vertical = vertical_m;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].horizontal = horizontal_m;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].distance = distance_m;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].indensity = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].speed = speed_m;
 
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].x = distance_m * cos(vertical_m * PI_FMCW / 180) * \
 																cos(horizontal_m * PI_FMCW / 180);
@@ -2939,9 +2953,19 @@ void viewpanel::pcDataProc()
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].b = 0;
 		}
 	}
-	ROS_INFO("distance_m is %0.3f", pmsg->pcDataOneFrame[106].pcUdpData[66].distance * distance_bin);
-	ROS_INFO("vertical_m is %0.3f", pmsg->pcDataOneFrame[106].pcUdpData[66].vertical * vertical_bin + + vertical_offset);
-	ROS_INFO("horizontal_m is %0.3f", pmsg->pcDataOneFrame[106].pcUdpData[66].horizontal * horizontal_bin);
+
+	distance_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmDistance * distance_bin;
+	vertical_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmVertical * vertical_bin + vertical_offset;
+	horizontal_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmHorizontal * horizontal_bin;
+	speed_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmSpeed * speed_bin;
+	std::cout << "distance_m is " << distance_m << std::endl;
+	std::cout << "vertical_m is " << vertical_m << std::endl;
+	std::cout << "horizontal_m is " << horizontal_m << std::endl;
+	std::cout << "speed_m is " << speed_m << std::endl;
+
+	std::cout << "x is " << cloud.points[106 * UDP_PC_SIZE_SINGLE_V01 + 66].x << std::endl;
+	std::cout << "y is " << cloud.points[106 * UDP_PC_SIZE_SINGLE_V01 + 66].z << std::endl;
+	std::cout << "z is " << cloud.points[106 * UDP_PC_SIZE_SINGLE_V01 + 66].z << std::endl;
 	index++;
 	//std::cout << "cloud.points[103].range_bin is " << cloud.points[103].range_bin << std::endl;
 	output.header.stamp = ros::Time::now();
@@ -3050,9 +3074,9 @@ void viewpanel::udpRecvPCOnce()
 	pcDataOneFrame_.clear();
 	ifLost  = false;
 	for(int i = 0; i < UDP_PC_TIMES_PER_FRAME; i++){
-		memset(&pcDataRaw_, 0, sizeof(pcData_v01));
+		memset(&pcDataRaw_, 0, sizeof(pcDataRaw_));
 		//printf("ready recv udp msg!\n");
-		ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcData_v01), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
+		ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcDataRaw_), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
 		//printf("recv udp msg! receive byte is %d, g_udpMsg: %c %c %c %c %c\n", ret, g_udpMsg.pcUdpData[11], \
 		//g_udpMsg.pcUdpData[13], g_udpMsg.pcUdpData[15], g_udpMsg.pcUdpData[17], g_udpMsg.pcUdpData[19]);
 		if(ret <= 0){
@@ -3067,12 +3091,12 @@ void viewpanel::udpRecvPCOnce()
 			continue;
 		}
 
-		if(i == 0) head_frame_index = pcDataRaw_.pcHeader.pcFrameCounter;
+		if(i == 0) head_frame_index = pcDataRaw_.UDP_PC_head.uphFrameCounter;
 		pcDataOneFrame_.emplace_back(pcDataRaw_);
-		if(pcDataRaw_.pcHeader.pcFrameCounter!= head_frame_index) {
+		if(pcDataRaw_.UDP_PC_head.uphFrameCounter!= head_frame_index) {
 			if(pcDataOneFrame_.size() > 2)pcDataOneFrame_.pop_back();
 			ifLost = true;
-			std::cout << "!!!warnning!!! current usFrameCounter is " << pcDataRaw_.pcHeader.pcFrameCounter
+			std::cout << "!!!warnning!!! current usFrameCounter is " << pcDataRaw_.UDP_PC_head.uphFrameCounter
 				<< ", head_frame_index is " << head_frame_index << std::endl;	
 			break;
 		} 
@@ -3090,6 +3114,11 @@ void viewpanel::udpRecvPCOnce()
 			std::cout << "error!!! udpPcMsg_free_buf_queue timeout!! "  << std::endl;
 			return;
 		}
+	}else{
+		QMessageBox msgBox;
+		msgBox.setText("udpRecvPCOnce fail! pcDataOneFrame_ points are not enough!!");
+		msgBox.exec();
+		return;		
 	}	
 }
 
@@ -3108,9 +3137,9 @@ void viewpanel::udpRecvPCLoop()
 		pcDataOneFrame_.clear();
 		ifLost  = false;
 		for(int i = 0; i < UDP_PC_TIMES_PER_FRAME; i++){
-			memset(&pcDataRaw_, 0, sizeof(pcData_v01));
+			memset(&pcDataRaw_, 0, sizeof(pcDataRaw_));
 			//printf("ready recv udp msg!\n");
-			ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcData_v01), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
+			ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcDataRaw_), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
 			//printf("recv udp msg! receive byte is %d, g_udpMsg: %c %c %c %c %c\n", ret, g_udpMsg.pcUdpData[11], \
 			//g_udpMsg.pcUdpData[13], g_udpMsg.pcUdpData[15], g_udpMsg.pcUdpData[17], g_udpMsg.pcUdpData[19]);
 			if(ret <= 0){
@@ -3125,12 +3154,12 @@ void viewpanel::udpRecvPCLoop()
 				continue;
 			}
 
-			if(i == 0) head_frame_index = pcDataRaw_.pcHeader.pcFrameCounter;
+			if(i == 0) head_frame_index = pcDataRaw_.UDP_PC_head.uphFrameCounter;
 			pcDataOneFrame_.emplace_back(pcDataRaw_);
-			if(pcDataRaw_.pcHeader.pcFrameCounter!= head_frame_index) {
+			if(pcDataRaw_.UDP_PC_head.uphFrameCounter!= head_frame_index) {
 				if(pcDataOneFrame_.size() > 2)pcDataOneFrame_.pop_back();
 				ifLost = true;
-				std::cout << "!!!warnning!!! current usFrameCounter is " << pcDataRaw_.pcHeader.pcFrameCounter
+				std::cout << "!!!warnning!!! current usFrameCounter is " << pcDataRaw_.UDP_PC_head.uphFrameCounter
 				 << ", head_frame_index is " << head_frame_index << std::endl;	
 				break;
 			} 
