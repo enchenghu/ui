@@ -2004,50 +2004,55 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	std::ofstream csvfile; 
 	csvfile.open(csvPath, std::ios::out); 
 	int32_t cur_data = 0;
+	double distance;
+	double speed;
+	double vAngle;
+	double hAngle;
+
 	int index = 0;
-	csvfile << "indensity_0" << "," << "indensity_1" << "," 
-	<< "distance(m)" << "," << "speed(m/s)" << "," << "reserved" << "\n";	
+	csvfile << "intensity" << "," << "distance(m)" << "," 
+	<< "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)" << "\n";	
 	for(int i = 0; i < data.size(); i++) {
 		index += 1;
 		if(index < 5)
 			cur_data += data[i] << (8 * (index - 1));
 		else if (index < 9)
 			cur_data += data[i] << (8 * (index - 5));
-		else if (index < 12)
+		else if (index < 11)
 			cur_data += data[i] << (8 * (index - 9));
-		else if (index < 16)
-			cur_data += data[i] << (8 * (index - 12));
+		else if (index < 13)
+			cur_data += data[i] << (8 * (index - 11));
+		else if (index < 15)
+			cur_data += data[i] << (8 * (index - 13));
 
 		if(index == 4 || index == 8){
-			csvfile << cur_data << ",";	
-			if(index == 4) 
-				curPcPoint.indensity_0 = cur_data;
-			else
-				curPcPoint.indensity_1 = cur_data;
-			cur_data = 0;
-		}
-
-		if(index == 11){
-			curPcPoint.distance = (double)(cur_data / 65536.0) - distance_offset;
-			csvfile << curPcPoint.distance << ",";	
-			cur_data = 0;
-		}
-
-		if(index == 15){
-			if(cur_data > 0x2000000){
-				cur_data = cur_data - 0x4000000;
+			if(index == 4) {
+				csvfile << cur_data << ",";	//intensity
 			}
-			cur_data  =  cur_data / 2;
-			curPcPoint.speed = (double)(cur_data / 65536.0);
-			csvfile << curPcPoint.speed << ",";	
+			else{
+				distance = cur_data / 65536.0; //distance
+				csvfile << distance << ",";	
+			}
 			cur_data = 0;
 		}
 
-		if(index == 16){
-			curPcPoint.reserved = cur_data;
-			csvfile << curPcPoint.reserved << "\n";	
-			fmcwPointsData_->emplace_back(curPcPoint);
-			memset(&curPcPoint, 0, sizeof(curPcPoint));
+		if(index == 10){
+			if(cur_data > SIGN_LIMIT_NUM)
+				cur_data -= SIGN_OFFSET_NUM;
+			speed = cur_data / 128.0;
+			csvfile << speed << ",";	 // speed
+			cur_data = 0;
+		}
+
+		if(index == 12){
+			vAngle = cur_data / 256.0 - 2.5; //vertical
+			csvfile << vAngle << ",";	
+			cur_data = 0;
+		}
+
+		if(index == 14){
+			hAngle = cur_data * 720.0 / 32000.0; //horizontal
+			csvfile << hAngle << ",";	
 			cur_data = 0;
 			index = 0;
 		}
