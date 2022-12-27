@@ -874,6 +874,16 @@ void viewpanel::registerPointcloudRviz()
 #endif
 }
 
+void viewpanel::ctrlShowWindows(bool show)
+{
+	ctrlDock->setVisible(show);
+}
+
+void viewpanel::ctrlPcPanel(bool show)
+{
+	selection_panel_->setVisible(show);
+}
+
 void viewpanel::register_pointcloud_displays(int radar_id)
 {
 
@@ -1572,7 +1582,7 @@ void viewpanel::CreatUIWindow()
 	const QSize slider_size = QSize(200, 20);
 
 	QWidget* multiWidget = new QWidget();
-	QDockWidget* ctrlDock = new QDockWidget();
+	ctrlDock = new QDockWidget();
 	QWidget* ctrlDockWidget = new QWidget();
 
 	ctrlDock->setFeatures(QDockWidget::DockWidgetClosable );

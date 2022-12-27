@@ -1123,6 +1123,17 @@ void MainWindow::RecFusion_Control( void )
     }
 
 }
+
+void MainWindow::CtrlPanel_Control( void )
+{
+	viewPanel->ctrlShowWindows(showCtrlDockAct->isChecked());
+}
+
+void MainWindow::PcPanel_Control( void )
+{
+	viewPanel->ctrlPcPanel(showPcPanelAct->isChecked());
+}
+
 void MainWindow::RecParsed_Control( void )
 {
     if(recParsedAct->isChecked())
@@ -1504,6 +1515,20 @@ void MainWindow::createActions()
 	recParsedAct->setChecked(rec_parsed);
 	connect(recParsedAct, SIGNAL(triggered()), this, SLOT(RecParsed_Control()));
 
+#if 1
+	showCtrlDockAct = new QAction(tr("Control Panel"), this);
+	//recParsedAct->setStatusTip(tr("When recording, record *all* parsed topics"));
+	showCtrlDockAct->setCheckable(true);
+	showCtrlDockAct->setChecked(true);
+	connect(showCtrlDockAct, SIGNAL(triggered()), this, SLOT(CtrlPanel_Control()));
+
+	showPcPanelAct = new QAction(tr("PointCloud Panel"), this);
+	//recParsedAct->setStatusTip(tr("When recording, record *all* parsed topics"));
+	showPcPanelAct->setCheckable(true);
+	showPcPanelAct->setChecked(true);
+	connect(showPcPanelAct, SIGNAL(triggered()), this, SLOT(PcPanel_Control()));
+#endif
+
 	recNavTopicsAct = new QAction(tr("Record all &nav topics"), this);
 	recNavTopicsAct->setStatusTip(tr("When recording, record *all* nav topics (GPS and IMU)"));
 	recNavTopicsAct->setCheckable(true);
@@ -1819,6 +1844,11 @@ void MainWindow::createMenus()
 #endif
 	//systemMenu->addAction(captureRadarDebugDataAct);
 	menuBar()->addSeparator();
+	viewFMCWMenu = menuBar()->addMenu(tr("&View"));
+	viewFMCWMenu->addAction(showCtrlDockAct);
+	viewFMCWMenu->addAction(showPcPanelAct);
+
+
 #if 0
     recordingMenu = menuBar()->addMenu(tr("&Recording"));
 	recordingMenu->addAction(recCheckAllAct);
@@ -1840,6 +1870,7 @@ void MainWindow::createMenus()
 	recordingMenu->addAction(recRvizPointcloudAct);
 	menuBar()->addSeparator();
 #endif
+	menuBar()->addSeparator();
 	helpMenu = menuBar()->addMenu(tr("&Update"));
 	helpMenu->addAction(aboutAct);
 	helpMenu->addAction(updateAct);

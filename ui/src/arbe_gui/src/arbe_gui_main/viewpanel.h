@@ -179,6 +179,9 @@ public Q_SLOTS:
 	void read3DFT(void);
 	void readDiff(void);
 	void readReg(void);
+	void ctrlShowWindows(bool);
+	void ctrlPcPanel(bool);
+
 
 private Q_SLOTS:
 	void setLoadFileType( void );
@@ -441,7 +444,7 @@ private:
 	QPushButton * singelADCBtn_;
 	QPushButton * resetADCBtn_;
 	QPushButton * mFFTShowdBBtn;
-
+	QDockWidget* ctrlDock;
 	std::vector<QPushButton* > ctlWriteBtn_;
 	std::vector<QPushButton* > ctlReadBtn_;
 	std::vector<QLineEdit* > ctlReadLine_;

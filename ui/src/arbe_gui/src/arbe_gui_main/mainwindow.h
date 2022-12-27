@@ -97,6 +97,11 @@ private Q_SLOTS:
     void RecDLTraining_Control();
     void RecFusion_Control();
     void RecParsed_Control();
+
+    void CtrlPanel_Control();
+    void PcPanel_Control();
+
+
     void RecNav_Control();
 	void RecObjList_Control();
     void RecRawTopics_Control();
@@ -156,6 +161,8 @@ private:
 	QMenu *systemMenu;
     QMenu *recordingMenu;
 	QMenu *helpMenu;
+	QMenu *viewFMCWMenu;
+
 	QToolBar *fileToolBar;
 	QToolBar *editToolBar;
 	QAction *newAct;
@@ -221,6 +228,10 @@ private:
     QAction *recNavTopicsAct;
     QAction *recLegacyPcAct;
 	QAction *recObjectListAct;
+
+
+    QAction *showCtrlDockAct;
+    QAction *showPcPanelAct;
 
 	QAction *recRvizPointcloudAct;
 	QAction *loadCamCalibAct;
