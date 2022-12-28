@@ -1974,9 +1974,11 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 {
 	if(!ifsave) return;
 	//memset(&curPcData, 0, sizeof(curPcData));
-#if 0
+	static long findex = 0;
+#if 1
 	std::string datPath;
-	datPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".dat";
+	datPath = save_folder_.toStdString() + "/data_index" + std::to_string(findex++) +".dat";
+	ROS_INFO("datPath is %s \n", datPath.c_str());
 	std::ofstream datfile; 
 	datfile.open(datPath, std::ios::out | std::ios::binary); 
 	for(int i = 0; i < data.size(); i++) {
@@ -2055,6 +2057,9 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 			hAngle = cur_data * 720.0 / 32000.0; //horizontal
 			csvfile << hAngle << "\n";	
 			cur_data = 0;
+		}
+
+		if(index == 16){
 			index = 0;
 		}
 	}
