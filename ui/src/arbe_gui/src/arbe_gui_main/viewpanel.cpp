@@ -1713,6 +1713,7 @@ void viewpanel::CreatUIWindow()
 	CFARCombo = new QComboBox;
 	m3DFTCombo = new QComboBox;
 	PowerCombo = new QComboBox;
+	PowerCombo->setEditable(true);
 	DiffCombo = new QComboBox;
 
 	for (int i = 0; i < 8; i++){
