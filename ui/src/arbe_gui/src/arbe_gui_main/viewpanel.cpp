@@ -382,6 +382,7 @@ void viewpanel::connectControl(void){
 			msgBox.setText("connect to the lidar failed!");
 			msgBox.exec();
 		}else {
+			configRegLidar();
 			lidar_connect_button->setStyleSheet("color: green");
 			lidar_connect_button->setText("&Disconnect");
 			ifStarted = true;
@@ -597,6 +598,32 @@ void viewpanel::configDiff(void){
 	QMessageBox msgBox;
 	msgBox.setText("config Diff success!");
 	msgBox.exec();
+}
+
+int viewpanel::configRegLidar(void)
+{
+	std::string addr = "0xa00a0004";
+	std::string value = "0x91ec0001";
+
+	std::stringstream ss;
+	ss << std::hex << addr;
+	ss >> cmdMsg_.mCommandVal[0];
+
+	std::stringstream tt;
+	tt << std::hex << value;
+	tt >> cmdMsg_.mCommandVal[1];
+
+	cmdMsg_.mHead.usCommand = commandType::REG_WRITE;
+	std::cout << "cmdMsg_.regAddr is " << cmdMsg_.mCommandVal[0] << " cmdMsg_.regVal " << cmdMsg_.mCommandVal[1] << std::endl;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("config lidar register failed!");
+		msgBox.exec();
+		return -1;
+	}
+
+	return 0;
+
 }
 void viewpanel::configReg(void){
 	QString strAddr = regAddr_line->text();

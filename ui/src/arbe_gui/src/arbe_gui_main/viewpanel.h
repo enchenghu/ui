@@ -255,6 +255,7 @@ private:
 	int serialClose(QSerialPort* );
 	void releaseSerial();
 	int checkMotorConnected();
+	int configRegLidar();
 
 	void pcParseLoop();
 	void pcDataProc();
