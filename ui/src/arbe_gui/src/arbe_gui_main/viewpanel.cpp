@@ -2977,7 +2977,6 @@ void viewpanel::pcDataProc()
 	ROS_INFO("pcDataSize is %d", pcDataSize);
 	cloud.points.resize(pcDataSize);
 
-	static long index = 0;
 
 	for(int j = 0; j < pcFrameSize; j++)
 	{
@@ -3016,7 +3015,6 @@ void viewpanel::pcDataProc()
 	std::cout << "x is " << cloud.points[106 * UDP_PC_SIZE_SINGLE_V01 + 66].x << std::endl;
 	std::cout << "y is " << cloud.points[106 * UDP_PC_SIZE_SINGLE_V01 + 66].y << std::endl;
 	std::cout << "z is " << cloud.points[106 * UDP_PC_SIZE_SINGLE_V01 + 66].z << std::endl;
-	index++;
 	//std::cout << "cloud.points[103].range_bin is " << cloud.points[103].range_bin << std::endl;
 	output.header.stamp = ros::Time::now();
 	pcl::toROSMsg(cloud,output);
