@@ -1725,7 +1725,9 @@ void viewpanel::CreatUIWindow()
 	QLabel* adc_label1 = new QLabel( "ADC attenuation" );
 
 	regAddr_line = new QLineEdit;
+	regAddr_line->setText(m_reg_addr_);
 	regVal_line = new QLineEdit;
+	regVal_line->setText(m_reg_value_);
 	regRead_line = new QLineEdit;
 	adcRead0_line = new QLineEdit;
 	adcRead1_line = new QLineEdit;
@@ -3542,6 +3544,9 @@ void viewpanel::load_settings()
 		QCoreApplication::applicationName());
 
 	lidar_ip_ = settings.value("IP Addr","127.0.0.1").toString();
+	m_reg_addr_ = settings.value("Reg Addr","0xa0070010").toString();
+	m_reg_value_ = settings.value("Reg Value","0x400040F3").toString();
+
 	lidar_ctrl_port_ = settings.value("TCP Port","5000").toString();
 	lidar_UDP_port_ = settings.value("UDP Port","8000").toString();
 	distance_offset_ = settings.value("Distance Offset","0.0").toString();
@@ -3575,12 +3580,16 @@ void viewpanel::save_settings(void )
 		QCoreApplication::applicationName());
 
 	lidar_ip = ip_edit->text().toStdString();
+	reg_addr_ = regAddr_line->text().toStdString();
+	reg_value_ = regVal_line->text().toStdString();
 	lidar_ctrl_port = port_edit->text().toInt();
 	lidar_UDP_port = udp_port_edit->text().toInt();
 	distance_offset = distance_Offset_edit->text().toInt();
 	power_offset = power_Offset_edit->text().toInt();
 
 	lidar_ip_ = QString::fromStdString(lidar_ip);
+	m_reg_addr_ = QString::fromStdString(reg_addr_);
+	m_reg_value_ = QString::fromStdString(reg_value_);
 	lidar_ctrl_port_ = QString::number(lidar_ctrl_port);
 	lidar_UDP_port_ = QString::number(lidar_UDP_port);
 	distance_offset_ = QString::number(distance_offset);
@@ -3592,5 +3601,6 @@ void viewpanel::save_settings(void )
 	settings.setValue("Distance Offset", distance_offset_);
 	settings.setValue("Power Offset", power_offset_);
 	settings.setValue("Save Folder", save_folder_);
-
+	settings.setValue("Reg Addr", m_reg_addr_);
+	settings.setValue("Ref Value", m_reg_value_);
 }

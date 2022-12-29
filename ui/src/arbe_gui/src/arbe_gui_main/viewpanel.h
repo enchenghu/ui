@@ -287,6 +287,9 @@ private:
 	int udpRecvPCSocketFd_;
 
 	std::string lidar_ip;
+	std::string reg_addr_;
+	std::string reg_value_;
+
 	int lidar_ctrl_port;
 	int lidar_UDP_port;
 	int lidar_UDP_pc_port;
@@ -302,6 +305,9 @@ private:
 	QString lidar_ctrl_port_;
 	QString lidar_UDP_port_;
 	QString lidar_ip_;
+	QString m_reg_addr_;
+	QString m_reg_value_;
+
 	QString distance_offset_;
 	QString power_offset_;
 	UDP_PC_package_st pcDataRaw_;
