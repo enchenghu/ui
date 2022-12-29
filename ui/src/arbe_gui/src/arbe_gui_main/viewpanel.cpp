@@ -415,6 +415,12 @@ void viewpanel::showdBFFT(void){
 void viewpanel::configPower(void){
 
 	QString str = PowerCombo->currentText();
+	if(str.toDouble() < 0.0 || str.toDouble() > 5000.0){
+		QMessageBox msgBox;
+		msgBox.setText("input power invaild!");
+		msgBox.exec();
+		return;		
+	}
 	cmdMsg_.mCommandVal[0] = str.toDouble() * 100;
 	cmdMsg_.mHead.usCommand = commandType::POWER_WRITE;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
