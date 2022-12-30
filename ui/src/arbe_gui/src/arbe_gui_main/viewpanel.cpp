@@ -2983,6 +2983,17 @@ void viewpanel::pcDataProc()
 	ROS_INFO("pcDataSize is %d", pcDataSize);
 	cloud.points.resize(pcDataSize);
 
+#if 0
+	std::string datPath;
+	datPath = save_folder_.toStdString() + "/data_index" + std::to_string(findex++) +".dat";
+	ROS_INFO("datPath is %s \n", datPath.c_str());
+	std::ofstream datfile; 
+	datfile.open(datPath, std::ios::out | std::ios::binary); 
+	for(int i = 0; i < data.size(); i++) {
+		datfile << data[i];
+	}
+	datfile.close();
+#endif
 
 	for(int j = 0; j < pcFrameSize; j++)
 	{
@@ -3126,13 +3137,16 @@ void viewpanel::udpRecvPCOnce()
 	len = sizeof(sockaddr);
 	auto start = std::chrono::steady_clock::now();
 	pcDataOneFrame_.clear();
+	pcDataOneFrameRaw_.clear();
 	ifLost  = false;
 	for(int i = 0; i < UDP_PC_TIMES_PER_FRAME; i++){
-		memset(&pcDataRaw_, 0, sizeof(pcDataRaw_));
+		//memset(&pcDataRaw_, 0, sizeof(pcDataRaw_));
+		memset(pc_raw_, 0, 1424);
 		//printf("ready recv udp msg!\n");
-		ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcDataRaw_), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
-		//printf("recv udp msg! receive byte is %d, g_udpMsg: %c %c %c %c %c\n", ret, g_udpMsg.pcUdpData[11], \
-		//g_udpMsg.pcUdpData[13], g_udpMsg.pcUdpData[15], g_udpMsg.pcUdpData[17], g_udpMsg.pcUdpData[19]);
+		//ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcDataRaw_), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
+
+		ret = recvfrom(udpRecvPCSocketFd_, pc_raw_, 1424, MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
+
 		if(ret <= 0){
 			if(udpPCStop_) {
 				printf("pc raw udp  quit!\n"); 
@@ -3146,7 +3160,11 @@ void viewpanel::udpRecvPCOnce()
 		}
 
 		if(i == 0) head_frame_index = pcDataRaw_.UDP_PC_head.uphFrameCounter;
-		pcDataOneFrame_.emplace_back(pcDataRaw_);
+
+		pcDataOneFrameRaw_.insert(pcDataOneFrameRaw_.end(), pc_raw_, pc_raw_ + 1424);
+ 
+		//pcDataOneFrame_.emplace_back(pcDataRaw_);
+#if 0	
 		if(pcDataRaw_.UDP_PC_head.uphFrameCounter!= head_frame_index) {
 			if(pcDataOneFrame_.size() > 2)pcDataOneFrame_.pop_back();
 			ifLost = true;
@@ -3154,11 +3172,28 @@ void viewpanel::udpRecvPCOnce()
 				<< ", head_frame_index is " << head_frame_index << std::endl;	
 			break;
 		} 
+#endif
 	}
+
+#if 1
+	static long findex = 0;
+	std::string datPath;
+	datPath = save_folder_.toStdString() + "/data_pc_raw_index" + std::to_string(findex++) +".bin";
+	ROS_INFO("datPath is %s \n", datPath.c_str());
+	std::ofstream datfile; 
+	datfile.open(datPath, std::ios::out | std::ios::binary); 
+	std::cout << "pcDataOneFrameRaw_.size() is " << pcDataOneFrameRaw_.size() / 1424 << std::endl;
+	for(int i = 0; i < pcDataOneFrameRaw_.size(); i++) {
+		datfile << pcDataOneFrameRaw_[i];
+	}
+	datfile.close();
+#endif
+
 	auto end = std::chrono::steady_clock::now();
 	elapsed = end - start;
 	std::cout << "time for one frame udp: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
 	//std::cout << "!!recv udp pkg successfully! "  << std::endl;
+#if 0
 	if(pcDataOneFrame_.size() > 2){
 		udpPcMsgOneFrame* pUdp = NULL;
 		if(udpPcMsg_free_buf_queue.get(pUdp) == 0){
@@ -3174,6 +3209,7 @@ void viewpanel::udpRecvPCOnce()
 		msgBox.exec();
 		return;		
 	}	
+#endif
 }
 
 void viewpanel::udpRecvPCLoop()
@@ -3578,8 +3614,6 @@ void viewpanel::setCheckBoxUnvaild(QCheckBox* checkBox)
 
 void viewpanel::save_settings(void )
 {
-	ROS_INFO("enter save_settings");
-	ROS_DEBUG("enter save_settings");
 	QSettings settings(QCoreApplication::organizationName(),
 		QCoreApplication::applicationName());
 	settings.setValue("IP Addr", ip_edit->text());

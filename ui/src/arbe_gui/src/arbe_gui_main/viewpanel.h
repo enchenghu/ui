@@ -311,7 +311,9 @@ private:
 	QString distance_offset_;
 	QString power_offset_;
 	UDP_PC_package_st pcDataRaw_;
+	uint8_t pc_raw_[1424];
 	std::vector< UDP_PC_package_st > pcDataOneFrame_;
+	std::vector< uint8_t > pcDataOneFrameRaw_;
 
 	rviz::VisualizationManager* manager_;
 	rviz::RenderPanel* render_panel_;
