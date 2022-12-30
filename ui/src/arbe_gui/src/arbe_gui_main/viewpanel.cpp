@@ -2876,7 +2876,7 @@ void viewpanel::startPcUdpOnce() {
 		return;
 	}	
 	udpRecvPCOnce();	
-	pcDataProc();
+	//pcDataProc();
 }
 
 void viewpanel::udpPcConnect() {
@@ -3187,6 +3187,10 @@ void viewpanel::udpRecvPCOnce()
 		datfile << pcDataOneFrameRaw_[i];
 	}
 	datfile.close();
+	QMessageBox msgBox;
+	msgBox.setText("pc raw save finished!!");
+	msgBox.exec();
+	return;	
 #endif
 
 	auto end = std::chrono::steady_clock::now();
