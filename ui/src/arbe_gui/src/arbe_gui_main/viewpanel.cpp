@@ -3582,29 +3582,12 @@ void viewpanel::save_settings(void )
 	ROS_DEBUG("enter save_settings");
 	QSettings settings(QCoreApplication::organizationName(),
 		QCoreApplication::applicationName());
-
-	lidar_ip = ip_edit->text().toStdString();
-	reg_addr_ = regAddr_line->text().toStdString();
-	reg_value_ = regVal_line->text().toStdString();
-	lidar_ctrl_port = port_edit->text().toInt();
-	lidar_UDP_port = udp_port_edit->text().toInt();
-	distance_offset = distance_Offset_edit->text().toInt();
-	power_offset = power_Offset_edit->text().toInt();
-
-	lidar_ip_ = QString::fromStdString(lidar_ip);
-	m_reg_addr_ = QString::fromStdString(reg_addr_);
-	m_reg_value_ = QString::fromStdString(reg_value_);
-	lidar_ctrl_port_ = QString::number(lidar_ctrl_port);
-	lidar_UDP_port_ = QString::number(lidar_UDP_port);
-	distance_offset_ = QString::number(distance_offset);
-	power_offset_ = QString::number(power_offset);
-
-	settings.setValue("IP Addr", lidar_ip_);
-	settings.setValue("TCP Port", lidar_ctrl_port_);
-	settings.setValue("UDP Port", lidar_UDP_port_);
-	settings.setValue("Distance Offset", distance_offset_);
-	settings.setValue("Power Offset", power_offset_);
+	settings.setValue("IP Addr", ip_edit->text());
+	settings.setValue("TCP Port", port_edit->text());
+	settings.setValue("UDP Port", udp_port_edit->text());
+	settings.setValue("Distance Offset", distance_Offset_edit->text());
+	settings.setValue("Power Offset", power_Offset_edit->text());
 	settings.setValue("Save Folder", save_folder_);
-	settings.setValue("Reg Addr", m_reg_addr_);
-	settings.setValue("Ref Value", m_reg_value_);
+	settings.setValue("Reg Addr", regAddr_line->text());
+	settings.setValue("Ref Value", regVal_line->text());
 }
