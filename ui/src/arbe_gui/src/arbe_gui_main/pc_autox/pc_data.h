@@ -36,7 +36,6 @@
 #define UDP_PC_TIMES_PER_FRAME 200
 #define BST_MAX_TASK_NUM		(16)
 #define PI_FMCW 3.14159265
-
 namespace fmcw_types
 {
 typedef struct 
@@ -211,7 +210,7 @@ typedef struct
 } pcData_t;
 
 /* pointcloud info*/
-
+#pragma pack(1)    // pack(1): pack之间的数据类型，1字节对齐
 typedef struct {
     uint16_t uphPrefix;         // 0xEEFF
     uint16_t uphVersion;        // 0x0102: Version V1.2
@@ -245,7 +244,7 @@ typedef struct
 {
 	std::vector<UDP_PC_package_st> pcDataOneFrame;
 }udpPcMsgOneFrame;
-
+#pragma pack()     // pack() 结束
 typedef enum
 {
     MOTOR_CONNECT = 0x01,
