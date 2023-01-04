@@ -181,9 +181,9 @@ viewpanel::viewpanel(QTabWidget* parent )
 	motorMsgShowCycle_.mHead = 0x55aa;
 
 
-	power_index = {0.2, 12, 20, 70, 290, 346, 347, 
+	power_index = {0, 12, 20, 70, 290, 346, 347, 
 				   397, 415, 500, 510, 560, 625, 1000, 
-				   1130, 1450, 1580, 1600};
+				   1130, 1450, 1580, 1600, 20000};
 	load_settings();
 	CreatUIWindow();
 	CreatDebugWindow();
@@ -421,7 +421,7 @@ void viewpanel::configPower(void){
 		msgBox.exec();
 		return;		
 	}
-	cmdMsg_.mCommandVal[0] = str.toDouble() * 100;
+	cmdMsg_.mCommandVal[0] = str.toInt();
 	cmdMsg_.mHead.usCommand = commandType::POWER_WRITE;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
