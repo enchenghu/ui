@@ -415,7 +415,7 @@ void viewpanel::showdBFFT(void){
 void viewpanel::configPower(void){
 
 	QString str = PowerCombo->currentText();
-	if(str.toDouble() < 0.0 || str.toDouble() > 5000.0){
+	if(str.toDouble() < 0.0 || str.toDouble() > 50000.0){
 		QMessageBox msgBox;
 		msgBox.setText("input power invaild!");
 		msgBox.exec();
