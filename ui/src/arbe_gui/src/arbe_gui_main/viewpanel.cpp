@@ -382,7 +382,7 @@ void viewpanel::connectControl(void){
 			msgBox.setText("connect to the lidar failed!");
 			msgBox.exec();
 		}else {
-			configRegLidar();
+			//configRegLidar();
 			lidar_connect_button->setStyleSheet("color: green");
 			lidar_connect_button->setText("&Disconnect");
 			ifStarted = true;
