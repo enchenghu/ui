@@ -2090,6 +2090,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 
 		if(index == 14){
 			hAngle = cur_data * 720.0 / 32000.0; //horizontal
+			if(hAngle > 360.0) hAngle -= 360.0;
 			csvfile << hAngle << "\n";	
 			cur_data = 0;
 		}
