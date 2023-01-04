@@ -2010,9 +2010,9 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	if(!ifsave) return;
 	//memset(&curPcData, 0, sizeof(curPcData));
 	static long findex = 0;
-#if 0
+#if 1
 	std::string datPath;
-	datPath = save_folder_.toStdString() + "/data_index" + std::to_string(findex++) +".dat";
+	datPath = save_folder_.toStdString() + "/data_test_raw_index" + std::to_string(findex++) +".bin";
 	ROS_INFO("datPath is %s \n", datPath.c_str());
 	std::ofstream datfile; 
 	datfile.open(datPath, std::ios::out | std::ios::binary); 
