@@ -179,7 +179,7 @@ SystemState RadarState;
 //uint16_t host_vel; // Ego Velocity
 double ego_velocity = 0; // Ego Velocity (signed double)
 int countTargets = 0;
-int grid_cell_size = 30;
+int grid_cell_size = 10;
 TStartTxInfo startInfo;
 TStopInfo stopInfo;
 int mux = 0; //for alternating pointclouds

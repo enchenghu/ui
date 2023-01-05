@@ -894,7 +894,7 @@ void viewpanel::registerPointcloudRviz()
 	pointcloud_fmcw->subProp("Topic")->setValue( pointcloud_topic.c_str() );
 	pointcloud_fmcw->subProp("Style")->setValue("Spheres");
 	pointcloud_fmcw->subProp("Size (Pixels)")->setValue("3");
-	pointcloud_fmcw->subProp("Size (m)")->setValue("0.3");
+	pointcloud_fmcw->subProp("Size (m)")->setValue("0.1");
 
 	//pointcloud_fmcw->subProp("Decay Time")->setValue((float)DetectionMemoryTime / 1000);
 
