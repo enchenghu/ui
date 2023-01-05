@@ -2068,7 +2068,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 				csvfile << cur_data << ",";	//intensity
 			}
 			else{
-				distance = cur_data / 65536.0; //distance
+				distance = cur_data / 65536.0 - distance_offset; //distance
 				csvfile << distance << ",";	
 			}
 			cur_data = 0;
@@ -3014,7 +3014,7 @@ void viewpanel::pcDataProc()
 	for(int j = 0; j < pcFrameSize; j++)
 	{
 		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){
-			distance_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmDistance * distance_bin;
+			distance_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmDistance * distance_bin - distance_offset;
 			vertical_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmVertical * vertical_bin + vertical_offset;
 			horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
 			if(horizontal_m > 360.0) horizontal_m -= 360.0;
