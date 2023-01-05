@@ -205,7 +205,7 @@ typedef struct
 
 typedef struct 
 {
-	commandMsg 	cmdmsg; 
+	commandMsg 	cmdmsg;  //head 20byte
 	uint8_t 	pcTcpData[TCP_PC_SIZE_SINGLE];
 } pcData_t;
 

@@ -2982,16 +2982,46 @@ void viewpanel::pcDataProc()
 	double speed_m;
 
 	ROS_INFO("pcDataSize is %d", pcDataSize);
+
+
+#if 1
+	time_t rawtime;
+	struct tm *ptminfo;
+	time(&rawtime);
+	ptminfo = localtime(&rawtime);
+	printf("current: %02d-%02d-%02d %02d:%02d:%02d\n",
+	ptminfo->tm_year + 1900, ptminfo->tm_mon + 1, ptminfo->tm_mday,
+	ptminfo->tm_hour, ptminfo->tm_min, ptminfo->tm_sec);
+	std::string csvPath;
+	csvPath = save_folder_.toStdString() + "/pc_test_data_convert_" + 
+	std::to_string(ptminfo->tm_year + 1900) + 
+	"-" + std::to_string(ptminfo->tm_mon + 1) +
+	"-" + std::to_string(ptminfo->tm_mday) +
+	"-" + std::to_string(ptminfo->tm_hour) +
+	"-" + std::to_string(ptminfo->tm_min) +
+	"-" + std::to_string(ptminfo->tm_sec) +
+	+".csv";
+	ROS_INFO("csvPath is %s \n", csvPath.c_str());
+	std::ofstream csvfile; 
+	csvfile.open(csvPath, std::ios::out); 
+
+	csvfile << "intensity" << "," << "distance(m)" << "," 
+	<< "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)" << "\n";
+	
+#endif
+
 	cloud.points.resize(pcDataSize);
-
-
 	for(int j = 0; j < pcFrameSize; j++)
 	{
 		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){
 			distance_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmDistance * distance_bin;
 			vertical_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmVertical * vertical_bin + vertical_offset;
 			horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
+			if(horizontal_m > 360.0) horizontal_m -= 360.0;
 			speed_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmSpeed * speed_bin;
+
+			csvfile << pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity << "," << distance_m << "," << speed_m << "," \
+			<< vertical_m << ", " << horizontal_m << "\n";
 
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].vertical = vertical_m;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].horizontal = horizontal_m;
@@ -3009,6 +3039,7 @@ void viewpanel::pcDataProc()
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].b = 0;
 		}
 	}
+	csvfile.close();
 
 	distance_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmDistance * distance_bin;
 	vertical_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmVertical * vertical_bin + vertical_offset;
