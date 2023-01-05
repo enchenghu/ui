@@ -3011,6 +3011,7 @@ void viewpanel::pcDataProc()
 #endif
 
 	cloud.points.resize(pcDataSize);
+	distance_offset = distance_Offset_edit->text().toDouble();
 	for(int j = 0; j < pcFrameSize; j++)
 	{
 		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){
