@@ -3079,7 +3079,7 @@ void viewpanel::pcDataProc()
 		}
 	}
 	std::cout << "realSize is " << realSize << std::endl;
-	cloud.points.resize(realSize);
+	//cloud.points.resize(realSize);
 	csvfile.close();
 #if 0
 	distance_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmDistance * distance_bin;
