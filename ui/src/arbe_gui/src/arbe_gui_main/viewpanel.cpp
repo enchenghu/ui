@@ -3047,6 +3047,7 @@ void viewpanel::pcDataProc()
 
 	cloud.points.resize(pcDataSize);
 	distance_offset = distance_Offset_edit->text().toDouble();
+	int realSize = 0;
 	for(int j = 0; j < pcFrameSize; j++)
 	{
 		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){
@@ -3054,6 +3055,8 @@ void viewpanel::pcDataProc()
 			vertical_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmVertical * vertical_bin + vertical_offset;
 			horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
 			if(horizontal_m > 360.0) horizontal_m -= 360.0;
+			if(horizontal_m > 125.0 && horizontal_m < 306.0) continue;
+			realSize++;
 			speed_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmSpeed * speed_bin;
 
 			csvfile << pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity << "," << distance_m << "," << speed_m << "," \
@@ -3068,15 +3071,17 @@ void viewpanel::pcDataProc()
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].x = distance_m * cos(vertical_m * PI_FMCW / 180) * \
 																cos(horizontal_m * PI_FMCW / 180);
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].y = distance_m * cos(vertical_m * PI_FMCW / 180) * \
-																sin(horizontal_m * PI_FMCW / 180);
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].z = distance_m * sin(vertical_m * PI_FMCW / 180);
+																sin(horizontal_m * PI_FMCW / 180) * (-1.0);
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].z = distance_m * sin(vertical_m * PI_FMCW / 180) * (-1.0);
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].r = 255;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].g = 0;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].b = 0;
 		}
 	}
+	std::cout << "realSize is " << realSize << std::endl;
+	cloud.points.resize(realSize);
 	csvfile.close();
-
+#if 0
 	distance_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmDistance * distance_bin;
 	vertical_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmVertical * vertical_bin + vertical_offset;
 	horizontal_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmHorizontal * horizontal_bin;
@@ -3089,6 +3094,7 @@ void viewpanel::pcDataProc()
 	std::cout << "x is " << cloud.points[106 * UDP_PC_SIZE_SINGLE_V01 + 66].x << std::endl;
 	std::cout << "y is " << cloud.points[106 * UDP_PC_SIZE_SINGLE_V01 + 66].y << std::endl;
 	std::cout << "z is " << cloud.points[106 * UDP_PC_SIZE_SINGLE_V01 + 66].z << std::endl;
+#endif
 	//std::cout << "cloud.points[103].range_bin is " << cloud.points[103].range_bin << std::endl;
 	output.header.stamp = ros::Time::now();
 	pcl::toROSMsg(cloud,output);
