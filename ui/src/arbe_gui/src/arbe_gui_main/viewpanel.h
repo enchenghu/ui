@@ -172,13 +172,13 @@ public Q_SLOTS:
 	void configCFAR(void);
 	void config3DFT(void);
 	void configDiff(void);
-	void configReg(void);
+	void configReg(int);
 
 	void readPower(void);
 	void readCFAR(void);
 	void read3DFT(void);
 	void readDiff(void);
-	void readReg(void);
+	void readReg(int);
 	void ctrlShowWindows(bool);
 	void ctrlPcPanel(bool);
 
@@ -304,9 +304,10 @@ private:
 
 	QString lidar_ctrl_port_;
 	QString lidar_UDP_port_;
+	QString lidar_UDP_PC_port_;
 	QString lidar_ip_;
-	QString m_reg_addr_;
-	QString m_reg_value_;
+	QString m_reg_addr_[4];
+	QString m_reg_value_[4];
 
 	QString distance_offset_;
 	QString power_offset_;
@@ -363,9 +364,9 @@ private:
 	QLineEdit *distance_Offset_edit;
 	QLineEdit *power_Offset_edit;
 	QString save_folder_;
-	QLineEdit* regAddr_line ;
-	QLineEdit* regVal_line ;
-	QLineEdit* regRead_line;
+	QLineEdit* regAddr_line[4] ;
+	QLineEdit* regVal_line[4] ;
+	QLineEdit* regRead_line[4];
 	QLineEdit* adcRead0_line;
 	QLineEdit* adcRead1_line;
 
@@ -442,8 +443,8 @@ private:
 
 	QPushButton *pcOnceBtn;
 
-	QPushButton *regBtnWrite;
-	QPushButton *regBtnRead;
+	QPushButton *regBtnWrite[4];
+	QPushButton *regBtnRead[4];
 	QPushButton * settingADCSavebutton;
 	QPushButton * settingADCConfigbutton;
 	QPushButton * singelFFTBtn_;

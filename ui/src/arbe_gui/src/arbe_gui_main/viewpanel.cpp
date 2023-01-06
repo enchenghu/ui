@@ -138,6 +138,19 @@ static QStringList motorDataString = {
 	"time",
 	"error time"
 };
+static QStringList regAddrList = {
+	"0xa00a0014",
+	"0xa00a0018",
+	"0xa00a0004",
+	"0xa0070010"
+};
+
+static QStringList regValueList = {
+	"0xFFFF00B4",
+	"0x0A6CFC8F",
+	"0x91EC0001",
+	"0X40001183"
+};
 float UnsignedChar4ToFloat(unsigned char *strBuf) 
 {
 	float fNum;
@@ -183,7 +196,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 
 	power_index = {0, 12, 20, 70, 290, 346, 347, 
 				   397, 415, 500, 510, 560, 625, 1000, 
-				   1130, 1450, 1580, 1600, 20000};
+				   1130, 1450, 1580, 1600, 3000, 20000};
 	load_settings();
 	CreatUIWindow();
 	CreatDebugWindow();
@@ -631,9 +644,9 @@ int viewpanel::configRegLidar(void)
 	return 0;
 
 }
-void viewpanel::configReg(void){
-	QString strAddr = regAddr_line->text();
-	QString strValue = regVal_line->text();
+void viewpanel::configReg(int index){
+	QString strAddr = regAddr_line[index]->text();
+	QString strValue = regVal_line[index]->text();
 	//unsigned int x;
 	std::stringstream ss;
 	ss << std::hex << strAddr.toStdString();
@@ -696,15 +709,15 @@ std::string viewpanel::tohex(uint32_t a){
 	res = temp + res;
 	return res; 	
 }
-void viewpanel::readReg(void){
+void viewpanel::readReg(int index){
 	cmdMsg_.mHead.usCommand = commandType::REG_READ;
-	QString strAddr = regAddr_line->text();
+	QString strAddr = regAddr_line[index]->text();
 	std::stringstream ss;
 	ss << std::hex << strAddr.toStdString();
 	ss >> cmdMsg_.mCommandVal[0];
 
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
-		regBtnRead->setStyleSheet("color: black");	
+		regBtnRead[index]->setStyleSheet("color: black");	
 		QMessageBox msgBox;
 		msgBox.setText("read Reg failed!");
 		msgBox.exec();
@@ -730,7 +743,7 @@ void viewpanel::readReg(void){
 			if(cmdMsg.mHead.usCommand == commandType::REG_READ){
 				std::string tmp = tohex(cmdMsg.mCommandVal[1]);
 				//regRead_line->setText(QString::number(cmdMsg.mCommandVal[1]));
-				regRead_line->setText(QString::fromStdString(tmp));
+				regRead_line[index]->setText(QString::fromStdString(tmp));
 				break;
 			} else {
 				QMessageBox msgBox;
@@ -1560,7 +1573,6 @@ void viewpanel::CreatConnect()
 	connect(ctlWriteBtn_[1], SIGNAL(clicked()), this, SLOT( configCFAR( void )));
 	connect(ctlWriteBtn_[2], SIGNAL(clicked()), this, SLOT( config3DFT( void )));
 	connect(ctlWriteBtn_[3], SIGNAL(clicked()), this, SLOT( configDiff( void )));
-	connect(regBtnWrite, SIGNAL(clicked()), this, SLOT( configReg( void )));
 	connect(saveBtn, SIGNAL(clicked()), this, SLOT( saveDataThead( void )));
 	connect(setSaveBtn, SIGNAL(clicked()), this, SLOT( setSaveFolder( void )));
 	connect(settingADCSavebutton, SIGNAL(clicked()), this, SLOT( udpConnect( void )));
@@ -1569,12 +1581,25 @@ void viewpanel::CreatConnect()
 	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
 	connect(ctlReadBtn_[2], SIGNAL(clicked()), this, SLOT( read3DFT( void )));
 	connect(ctlReadBtn_[3], SIGNAL(clicked()), this, SLOT( readDiff( void )));
-	connect(regBtnRead, SIGNAL(clicked()), this, SLOT( readReg( void )));
-	connect(mFFTShowdBBtn, SIGNAL(clicked()), this, SLOT( showdBFFT( void )));
 
+	QSignalMapper * configMapper;
+	QSignalMapper * readMapper;
+	configMapper = new QSignalMapper(this);
+	readMapper = new QSignalMapper(this);
+	for(int i = 0; i < 4; i++)
+	{
+		connect(regBtnWrite[i], SIGNAL(clicked(bool)), configMapper, SLOT(map()));//这个map(）是QSignalMapper类的槽函数，不需要我们定义
+		connect(regBtnRead[i], SIGNAL(clicked(bool)), readMapper, SLOT(map()));
+		configMapper->setMapping(regBtnWrite[i], i);//这个i就是我们传给槽函数的值，可以是字符串，其他等等。
+		readMapper->setMapping(regBtnRead[i], i);
+	}
+
+	connect(configMapper, SIGNAL(mapped(int)), this, SLOT(configReg(int)));
+	connect(readMapper, SIGNAL(mapped(int)), this, SLOT(readReg(int)));
+
+	connect(mFFTShowdBBtn, SIGNAL(clicked()), this, SLOT( showdBFFT( void )));
 	connect(pcSwitchBtn, SIGNAL(clicked()), this, SLOT( udpPcConnect( void )));
 	connect(pcOnceBtn, SIGNAL(clicked()), this, SLOT( startPcUdpOnce( void )));
-
 	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
@@ -1691,6 +1716,7 @@ void viewpanel::CreatUIWindow()
 	QLabel* lidar_port_label = new QLabel( "TCP Port" );
 	QLabel* lidar_udp_port_label = new QLabel( "UDP Port" );
 	QLabel* distanceOffset_label = new QLabel( "distance Offset" );
+	QLabel* pcPort_label = new QLabel( "PointCloud port" );
 
 	ip_edit =  new QLineEdit();
 	port_edit =  new QLineEdit();
@@ -1705,6 +1731,8 @@ void viewpanel::CreatUIWindow()
 	port_edit->setText(lidar_ctrl_port_);
 	udp_port_edit->setPlaceholderText("input udp port");
 	udp_port_edit->setText(lidar_UDP_port_);
+	udp_pc_port_edit->setPlaceholderText("input udp pc port");
+	udp_pc_port_edit->setText(lidar_UDP_PC_port_);
 	distance_Offset_edit->setPlaceholderText("input distance offset ");
 	distance_Offset_edit->setText(distance_offset_);
 
@@ -1715,34 +1743,38 @@ void viewpanel::CreatUIWindow()
 
 	controls_layout->addWidget( lidar_udp_port_label, 2, 0, Qt::AlignLeft);
 	controls_layout->addWidget( udp_port_edit, 2, 1, Qt::AlignLeft);
-
-	controls_layout->addWidget( lidar_connect_button, 3, 0, Qt::AlignLeft);
-	controls_layout->addWidget( setSaveBtn, 3, 1, Qt::AlignLeft);
+	controls_layout->addWidget( pcPort_label, 3, 0, Qt::AlignLeft);	
+	controls_layout->addWidget( udp_pc_port_edit, 3, 1, Qt::AlignLeft);	
+	controls_layout->addWidget( lidar_connect_button, 4, 0, Qt::AlignLeft);
+	controls_layout->addWidget( setSaveBtn, 4, 1, Qt::AlignLeft);
 
 	QLabel* CFAR_label = new QLabel( "CFAR" );
 	QLabel* m3DFT_label = new QLabel( "3DFT" );
 	QLabel* Power_label = new QLabel( "Power/mW" );
 	QLabel* diff_label = new QLabel( "Diff" );
-	QLabel* regAddr_label = new QLabel( "Register Addr" );
-	QLabel* regVal_label = new QLabel( "Register value" );
-	QLabel* pcPort_label = new QLabel( "PointCloud port" );
+	QLabel* regAddr_label = new QLabel( "Reg Addr" );
+	QLabel* regVal_label = new QLabel( "Reg value" );
 
-	QLabel* adc_label0 = new QLabel( "ADC overvoltage" );
-	QLabel* adc_label1 = new QLabel( "ADC attenuation" );
+	QLabel* adc_label0 = new QLabel( "ADC OverVol" );
+	QLabel* adc_label1 = new QLabel( "ADC Atten" );
 
-	regAddr_line = new QLineEdit;
-	regAddr_line->setText(m_reg_addr_);
-	regVal_line = new QLineEdit;
-	regVal_line->setText(m_reg_value_);
-	regRead_line = new QLineEdit;
+	for (int i = 0; i < 4; i++){
+		regAddr_line[i] = new QLineEdit;
+		regAddr_line[i]->setText(m_reg_addr_[i]);
+		regVal_line[i] = new QLineEdit;
+		regVal_line[i]->setText(m_reg_value_[i]);
+		regRead_line[i] = new QLineEdit;
+		regBtnWrite[i] = new QPushButton("&Write", this);
+		regBtnRead[i] = new QPushButton("&Read", this);
+		setReadOnlyLineEdit(regRead_line[i]);
+	}
+
 	adcRead0_line = new QLineEdit;
 	adcRead1_line = new QLineEdit;
-	setReadOnlyLineEdit(regRead_line);
 	setReadOnlyLineEdit(adcRead0_line);
 	setReadOnlyLineEdit(adcRead1_line);
 
-	regBtnWrite = new QPushButton("&Write", this);
-	regBtnRead = new QPushButton("&Read", this);
+
 	settingADCSavebutton = new QPushButton("FFT-ADC &Start");
 	settingADCConfigbutton = new QPushButton("FFT-ADC &Stop");
 	CFARCombo = new QComboBox;
@@ -1758,6 +1790,7 @@ void viewpanel::CreatUIWindow()
 	for (int i = 0; i < power_index.size(); i++){
 		PowerCombo->addItem(QString::number(power_index[i]));
 	}
+	PowerCombo->setCurrentIndex(18);
 
 	m3DFTCombo->addItem(tr("0"));
 	m3DFTCombo->addItem(tr("1"));
@@ -1785,22 +1818,24 @@ void viewpanel::CreatUIWindow()
 		controls_layout->addWidget( ctlReadBtn_[i], i, 6, Qt::AlignLeft);			
 	}
 	controls_layout->addWidget( regAddr_label, 0, 7, Qt::AlignLeft);
-	controls_layout->addWidget( distanceOffset_label, 1, 7, Qt::AlignLeft);
-	controls_layout->addWidget( regAddr_line, 0, 8, Qt::AlignLeft);	
-	controls_layout->addWidget( distance_Offset_edit, 1, 8, Qt::AlignLeft);	
 	controls_layout->addWidget( regVal_label, 0, 9, Qt::AlignLeft);	
-	controls_layout->addWidget( regVal_line, 0, 10, Qt::AlignLeft);	
-	controls_layout->addWidget( regBtnWrite, 0, 11, Qt::AlignLeft);	
-	controls_layout->addWidget( regRead_line, 0, 12, Qt::AlignLeft);	
-	controls_layout->addWidget( regBtnRead, 0, 13, Qt::AlignLeft);	
-	controls_layout->addWidget( settingADCSavebutton, 2, 7, Qt::AlignLeft);
-	controls_layout->addWidget( settingADCConfigbutton, 2, 8, Qt::AlignLeft);
-	controls_layout->addWidget( saveBtn, 3, 7, Qt::AlignLeft);
 
-	controls_layout->addWidget( pcPort_label, 3, 9, Qt::AlignLeft);	
-	controls_layout->addWidget( udp_pc_port_edit, 3, 10, Qt::AlignLeft);	
-	controls_layout->addWidget( pcSwitchBtn, 3, 11, Qt::AlignLeft);	
-	controls_layout->addWidget( pcOnceBtn, 3, 12, Qt::AlignLeft);	
+	for(int i = 0; i < 4; i++){
+		controls_layout->addWidget( regAddr_line[i], i, 8, Qt::AlignLeft);	
+		controls_layout->addWidget( regVal_line[i], i, 10, Qt::AlignLeft);	
+		controls_layout->addWidget( regBtnWrite[i], i, 11, Qt::AlignLeft);	
+		controls_layout->addWidget( regRead_line[i], i, 12, Qt::AlignLeft);	
+		controls_layout->addWidget( regBtnRead[i], i, 13, Qt::AlignLeft);	
+	}
+
+
+	controls_layout->addWidget( settingADCSavebutton, 4, 7, Qt::AlignLeft);
+	controls_layout->addWidget( settingADCConfigbutton, 4, 8, Qt::AlignLeft);
+	controls_layout->addWidget( distanceOffset_label, 4, 9, Qt::AlignLeft);
+	controls_layout->addWidget( distance_Offset_edit, 4, 10, Qt::AlignLeft);	
+	controls_layout->addWidget( pcSwitchBtn, 4, 11, Qt::AlignLeft);	
+	controls_layout->addWidget( pcOnceBtn, 4, 12, Qt::AlignLeft);	
+	controls_layout->addWidget( saveBtn, 4, 13, Qt::AlignLeft);
 
 	controlsBox->setLayout(controls_layout);
 
@@ -1845,7 +1880,7 @@ void viewpanel::CreatUIWindow()
 	controls->addWidget(stateShowBox, 0, 1, Qt::AlignLeft);
 	//controls->addWidget(fileBox, 0, 2, Qt::AlignLeft);
 
-	controls->setColumnStretch(0,4);
+	controls->setColumnStretch(0,6);
 	for(int i = 1; i < 2;i++)
 		controls->setColumnStretch(i,2);
 
@@ -3581,9 +3616,11 @@ void viewpanel::load_settings()
 		QCoreApplication::applicationName());
 
 	lidar_ip_ = settings.value("IP Addr","127.0.0.1").toString();
-	m_reg_addr_ = settings.value("Reg Addr","0xa0070010").toString();
-	m_reg_value_ = settings.value("Reg Value","0x400040F3").toString();
-
+	for(int i = 0; i < 4; i++){
+		m_reg_addr_[i] = settings.value("Reg Addr " + QString::number(i), regAddrList[i]).toString();
+		m_reg_value_[i] = settings.value("Reg Value " + QString::number(i), regValueList[i]).toString();
+	}
+	lidar_UDP_PC_port_ = settings.value("UDP PC Port","8001").toString();
 	lidar_ctrl_port_ = settings.value("TCP Port","5000").toString();
 	lidar_UDP_port_ = settings.value("UDP Port","8000").toString();
 	distance_offset_ = settings.value("Distance Offset","0.0").toString();
@@ -3612,15 +3649,17 @@ void viewpanel::setCheckBoxUnvaild(QCheckBox* checkBox)
 void viewpanel::save_settings(void )
 {
 	ROS_INFO("enter save_settings");
-	ROS_DEBUG("enter save_settings");
 	QSettings settings(QCoreApplication::organizationName(),
 		QCoreApplication::applicationName());
 	settings.setValue("IP Addr", ip_edit->text());
 	settings.setValue("TCP Port", port_edit->text());
 	settings.setValue("UDP Port", udp_port_edit->text());
+	settings.setValue("UDP PC Port", udp_pc_port_edit->text());
 	settings.setValue("Distance Offset", distance_Offset_edit->text());
 	settings.setValue("Power Offset", power_Offset_edit->text());
 	settings.setValue("Save Folder", save_folder_);
-	settings.setValue("Reg Addr", regAddr_line->text());
-	settings.setValue("Ref Value", regVal_line->text());
+	for(int i = 0; i < 4; i++){
+		settings.setValue("Reg Addr " + QString::number(i), regAddr_line[i]->text());
+		settings.setValue("Ref Value " + QString::number(i), regVal_line[i]->text());
+	}
 }
