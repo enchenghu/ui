@@ -204,6 +204,7 @@ private Q_SLOTS:
 
 	void udpPcConnect();
 	void startPcUdpOnce();
+	void startPcUdpContinuous();
 
 	void udpClose();
 	void updateFFTdata();
@@ -280,6 +281,8 @@ private:
 	QTimer* timer_adc;  
 	bool udpStop_;
 	bool udpPCStop_;
+	bool udpPCSingle_;
+	bool udpPCContinu_;
 	void saveData();
 	int ctrl_sock;
 	int motor_ctrl_sock;
@@ -442,6 +445,7 @@ private:
 	QPushButton *pcSwitchBtn;
 
 	QPushButton *pcOnceBtn;
+	QPushButton *pcResetBtn;
 
 	QPushButton *regBtnWrite[4];
 	QPushButton *regBtnRead[4];

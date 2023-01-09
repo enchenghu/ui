@@ -177,7 +177,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
 	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_ORI),\
 	power_offset(0.0), distance_offset(0.0),ifConnectedMotor(false),\
-	ifOpenMotor(false), udpPCStop_(true)
+	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false)
 {
 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
@@ -205,7 +205,6 @@ viewpanel::viewpanel(QTabWidget* parent )
 	CreatConnect();
 
 	registerPointcloudRviz();
-	//startPcTask();
 	resize(QDesktopWidget().availableGeometry(this).size() * 0.85);
 }
 
@@ -1576,7 +1575,7 @@ void viewpanel::CreatConnect()
 	connect(saveBtn, SIGNAL(clicked()), this, SLOT( saveDataThead( void )));
 	connect(setSaveBtn, SIGNAL(clicked()), this, SLOT( setSaveFolder( void )));
 	connect(settingADCSavebutton, SIGNAL(clicked()), this, SLOT( udpConnect( void )));
-	connect(settingADCConfigbutton, SIGNAL(clicked()), this, SLOT( udpClose( void )));
+	//connect(settingADCConfigbutton, SIGNAL(clicked()), this, SLOT( udpClose( void )));
 	connect(ctlReadBtn_[0], SIGNAL(clicked()), this, SLOT( readPower( void )));
 	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
 	connect(ctlReadBtn_[2], SIGNAL(clicked()), this, SLOT( read3DFT( void )));
@@ -1600,6 +1599,8 @@ void viewpanel::CreatConnect()
 	connect(mFFTShowdBBtn, SIGNAL(clicked()), this, SLOT( showdBFFT( void )));
 	connect(pcSwitchBtn, SIGNAL(clicked()), this, SLOT( udpPcConnect( void )));
 	connect(pcOnceBtn, SIGNAL(clicked()), this, SLOT( startPcUdpOnce( void )));
+	connect(pcResetBtn, SIGNAL(clicked()), this, SLOT( startPcUdpContinuous( void )));
+
 	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
@@ -1708,6 +1709,7 @@ void viewpanel::CreatUIWindow()
 	setSaveBtn = new QPushButton("&Set save folder", this);
 	pcSwitchBtn = new QPushButton("&Start PointCloud", this);
 	pcOnceBtn = new QPushButton("&PointCloud Once", this);
+	pcResetBtn = new QPushButton("&PointCloud Reset", this);
 
 	//lidar_stop_button = new QPushButton("Stop", this);
 	//lidarIdCombo =  new QComboBox;
@@ -1830,11 +1832,12 @@ void viewpanel::CreatUIWindow()
 
 
 	controls_layout->addWidget( settingADCSavebutton, 4, 7, Qt::AlignLeft);
-	controls_layout->addWidget( settingADCConfigbutton, 4, 8, Qt::AlignLeft);
-	controls_layout->addWidget( distanceOffset_label, 4, 9, Qt::AlignLeft);
-	controls_layout->addWidget( distance_Offset_edit, 4, 10, Qt::AlignLeft);	
-	controls_layout->addWidget( pcSwitchBtn, 4, 11, Qt::AlignLeft);	
-	controls_layout->addWidget( pcOnceBtn, 4, 12, Qt::AlignLeft);	
+	//controls_layout->addWidget( settingADCConfigbutton, 4, 8, Qt::AlignLeft);
+	controls_layout->addWidget( distanceOffset_label, 4, 8, Qt::AlignLeft);
+	controls_layout->addWidget( distance_Offset_edit, 4, 9, Qt::AlignLeft);	
+	controls_layout->addWidget( pcSwitchBtn, 4, 10, Qt::AlignLeft);	
+	controls_layout->addWidget( pcOnceBtn, 4, 11, Qt::AlignLeft);	
+	controls_layout->addWidget( pcResetBtn, 4, 12, Qt::AlignLeft);	
 	controls_layout->addWidget( saveBtn, 4, 13, Qt::AlignLeft);
 
 	controlsBox->setLayout(controls_layout);
@@ -2365,6 +2368,7 @@ void viewpanel::udpClose(){
 	::close(udpRecvSocketFd_);
 	udpStop_ = true;
 	vx_task_delete(&bst_task[1]);
+	vx_task_delete(&bst_task[2]);
 	QMessageBox msgBox;
 	msgBox.setText("UDP close success!");
 	msgBox.exec();
@@ -2902,6 +2906,7 @@ void viewpanel::updateADCdata() {
 
 void viewpanel::startPcUdpOnce() {
 
+#if 0
 	commandMsg cmdMsg;
 	memset(&cmdMsg, 0, sizeof(commandMsg));
 	cmdMsg.mHead.usCommand = commandType::POINTCLOUD_DISPLAY_START;
@@ -2913,12 +2918,20 @@ void viewpanel::startPcUdpOnce() {
 	}	
 	udpRecvPCOnce();	
 	pcDataProc();
+#else
+	udpPCContinu_ = false;
+	udpPCSingle_ = true;
+#endif
+}
+
+void viewpanel::startPcUdpContinuous() {
+	udpPCContinu_ = true;
 }
 
 void viewpanel::udpPcConnect() {
 
 	if(udpPCStop_){
-#if 0
+#if 1
 		commandMsg cmdMsg;
 		memset(&cmdMsg, 0, sizeof(commandMsg));
 		cmdMsg.mHead.usCommand = commandType::POINTCLOUD_DISPLAY_START;
@@ -2930,7 +2943,7 @@ void viewpanel::udpPcConnect() {
 		}	
 #endif
 		udpRecvPCConnect();
-#if 0	
+#if 1	
 		startPcTask();
 #endif
 		pcSwitchBtn->setStyleSheet("color: green");
@@ -2978,10 +2991,15 @@ void viewpanel::udpConnect() {
 		bst_params.task_mode = 0;
 		bst_params.task_main = TaskFuncUdpParse;
 		vx_task_create(&bst_task[2], &bst_params);  
+		settingADCSavebutton->setStyleSheet("color: green");
+		settingADCSavebutton->setText("FFT-ADC &Stop");
 	}else{
-		QMessageBox msgBox;
-		msgBox.setText("UDP Connection is already working, please stop it first !");
-		msgBox.exec();		
+		udpClose();
+		settingADCSavebutton->setStyleSheet("color: black");
+		settingADCSavebutton->setText("FFT-ADC &Start");
+		//QMessageBox msgBox;
+		//msgBox.setText("UDP Connection is already working, please stop it first !");
+		//msgBox.exec();		
 	}
 }
 
@@ -3017,8 +3035,10 @@ void viewpanel::pcDataProc()
 	double speed_m;
 
 	ROS_INFO("pcDataSize is %d", pcDataSize);
-
-
+	if(!udpPCContinu_ && !udpPCSingle_){
+		udpPcMsg_free_buf_queue.put(pmsg);
+		return;
+	}
 #if 1
 	time_t rawtime;
 	struct tm *ptminfo;
@@ -3037,14 +3057,15 @@ void viewpanel::pcDataProc()
 	"-" + std::to_string(ptminfo->tm_sec) +
 	+".csv";
 	ROS_INFO("csvPath is %s \n", csvPath.c_str());
-	std::ofstream csvfile; 
-	csvfile.open(csvPath, std::ios::out); 
-
-	csvfile << "intensity" << "," << "distance(m)" << "," 
-	<< "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)" << "\n";
+	std::ofstream csvfile;
+	if(udpPCSingle_) {
+		csvfile.open(csvPath, std::ios::out); 
+		csvfile << "intensity" << "," << "distance(m)" << "," 
+		<< "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)" << "\n";
+	}
 	
 #endif
-
+	
 	cloud.points.resize(pcDataSize);
 	distance_offset = distance_Offset_edit->text().toDouble();
 	int realSize = 0;
@@ -3058,10 +3079,10 @@ void viewpanel::pcDataProc()
 			if(horizontal_m > 125.0 && horizontal_m < 306.0) continue;
 			realSize++;
 			speed_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmSpeed * speed_bin;
-
-			csvfile << pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity << "," << distance_m << "," << speed_m << "," \
-			<< vertical_m << ", " << horizontal_m << "\n";
-
+			if(udpPCSingle_) {
+				csvfile << pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity << "," << distance_m << "," << speed_m << "," \
+				<< vertical_m << ", " << horizontal_m << "\n";
+			}
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].vertical = vertical_m;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].horizontal = horizontal_m;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].distance = distance_m;
@@ -3081,6 +3102,7 @@ void viewpanel::pcDataProc()
 	std::cout << "realSize is " << realSize << std::endl;
 	//cloud.points.resize(realSize);
 	csvfile.close();
+	if(udpPCSingle_) udpPCSingle_ = false;
 #if 0
 	distance_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmDistance * distance_bin;
 	vertical_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmVertical * vertical_bin + vertical_offset;
