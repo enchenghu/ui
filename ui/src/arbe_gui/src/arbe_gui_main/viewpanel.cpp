@@ -906,7 +906,7 @@ void viewpanel::registerPointcloudRviz()
 	pointcloud_fmcw->subProp("Topic")->setValue( pointcloud_topic.c_str() );
 	pointcloud_fmcw->subProp("Style")->setValue("Spheres");
 	pointcloud_fmcw->subProp("Size (Pixels)")->setValue("3");
-	pointcloud_fmcw->subProp("Size (m)")->setValue("0.1");
+	pointcloud_fmcw->subProp("Size (m)")->setValue("0.03");
 
 	//pointcloud_fmcw->subProp("Decay Time")->setValue((float)DetectionMemoryTime / 1000);
 
@@ -3140,6 +3140,7 @@ void viewpanel::pcParseLoop()
 		auto end = std::chrono::steady_clock::now();
 		elapsed = end - start;
 		//std::cout << "time for pub 100 pc data: " <<  elapsed.count() * 1000 << " ms" << std::endl;    
+		if(udpPCStop_) break;
 	}
 	std::cout << "quit pcParseLoop" << std::endl;
 }
