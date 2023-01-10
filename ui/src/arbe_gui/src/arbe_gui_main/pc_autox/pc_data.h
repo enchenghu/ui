@@ -50,24 +50,23 @@ typedef struct
 
 typedef std::vector<fmcw_types::fmcwPoint> fmcwPoints;
 
-typedef enum
-{
-    POWER_WRITE = 1, 
-    CFAR_WRITE,
-    DFT3_WRITE,
-    DIFF_WRITE,
-	REG_WRITE,
-    POWER_READ,
-    CFAR_READ,
-    DFT3_READ,
-    DIFF_READ,
-	REG_READ,
-	PC_READ,
-	FFT_ADC_READ_START,
-	FFT_ADC_READ_STOP,
-	POINTCLOUD_DISPLAY_START,
-	POINTCLOUD_DISPLAY_STOP
-}commandType;
+typedef enum {
+    POWER_WRITE                 = 1 ,   // 设置激光器输出功率
+    CFAR_WRITE                  = 2 ,   // 设置CFAR
+    DFT3_WRITE                  = 3 ,   // 设置DFT3
+    DIFF_WRITE                  = 4 ,   // 设置DIFF
+    REG_WRITE                   = 5 ,   // 写REG
+    POWER_READ                  = 6 ,   // 读取激光器输出功率
+    CFAR_READ                   = 7 ,   // 读取CFAR
+    DFT3_READ                   = 8 ,   // 读取DFT3
+    DIFF_READ                   = 9 ,   // 读取DIFF
+    REG_READ                    = 10,   // 读REG
+    FFT_ADC_READ_START          = 11,   // 读FFT_ADC值（开始）
+    FFT_ADC_READ_STOP           = 12,   // 读FFT_ADC值（停止）
+    POINTCLOUD_TCP_READ         = 13,   // TCP读点云数据（400000个点）
+    POINTCLOUD_UDP_START        = 14,   // UDP读点云数据（开始）
+    POINTCLOUD_UDP_STOP         = 15,   // UDP读点云数据（停止）
+} commandType;
 
 typedef enum{
     FFT_ORI = 0,

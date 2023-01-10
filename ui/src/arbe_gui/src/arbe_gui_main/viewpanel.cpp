@@ -2150,7 +2150,7 @@ void viewpanel::saveData(){
 	distance_offset = distance_Offset_edit->text().toDouble();
 	std::cout << " distance_offset is " << distance_offset << std::endl;
 
-	cmdMsg_.mHead.usCommand = commandType::PC_READ;
+	cmdMsg_.mHead.usCommand = commandType::POINTCLOUD_TCP_READ;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
 		msgBox.setText("pc data save failed!");
@@ -2168,7 +2168,7 @@ void viewpanel::saveData(){
 			continue;
 		}
 		//std::cout << "receive byte is " << ret << std::endl;
-		if(g_msg.cmdmsg.mHead.usCommand == commandType::PC_READ){
+		if(g_msg.cmdmsg.mHead.usCommand == commandType::POINTCLOUD_TCP_READ){
 			//std::cout << "current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
 			if(g_msg.cmdmsg.mCommandVal[1] != i){
 				std::cout << "!!!error!!! current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
@@ -2181,7 +2181,7 @@ void viewpanel::saveData(){
 			mv.insert(mv.end(), g_msg.pcTcpData, g_msg.pcTcpData + TCP_PC_SIZE_SINGLE);
 		}else {
 			ROS_INFO("msg is %d, not pc data msg, continue\n", g_msg.cmdmsg.mHead.usCommand);
-			cmdMsg_.mHead.usCommand = commandType::PC_READ;
+			cmdMsg_.mHead.usCommand = commandType::POINTCLOUD_TCP_READ;
 			if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 				QMessageBox msgBox;
 				msgBox.setText("pc data save failed!");
@@ -2909,7 +2909,7 @@ void viewpanel::startPcUdpOnce() {
 #if 0
 	commandMsg cmdMsg;
 	memset(&cmdMsg, 0, sizeof(commandMsg));
-	cmdMsg.mHead.usCommand = commandType::POINTCLOUD_DISPLAY_START;
+	cmdMsg.mHead.usCommand = commandType::POINTCLOUD_UDP_START;
 	if(::write(ctrl_sock, &cmdMsg, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
 		msgBox.setText("startPcUdpOnce failed! Disconnect the target");
@@ -2934,7 +2934,7 @@ void viewpanel::udpPcConnect() {
 #if 1
 		commandMsg cmdMsg;
 		memset(&cmdMsg, 0, sizeof(commandMsg));
-		cmdMsg.mHead.usCommand = commandType::POINTCLOUD_DISPLAY_START;
+		cmdMsg.mHead.usCommand = commandType::POINTCLOUD_UDP_START;
 		if(::write(ctrl_sock, &cmdMsg, sizeof(commandMsg)) < 0){
 			QMessageBox msgBox;
 			msgBox.setText("UDP Connect failed!");
@@ -2953,7 +2953,7 @@ void viewpanel::udpPcConnect() {
 		udpPCStop_ = true;
 		commandMsg cmdMsg;
 		memset(&cmdMsg, 0, sizeof(commandMsg));
-		cmdMsg.mHead.usCommand = commandType::POINTCLOUD_DISPLAY_STOP;
+		cmdMsg.mHead.usCommand = commandType::POINTCLOUD_UDP_STOP;
 		if(::write(ctrl_sock, &cmdMsg, sizeof(commandMsg)) < 0){
 			QMessageBox msgBox;
 			msgBox.setText("Close PointCloud failed!");
