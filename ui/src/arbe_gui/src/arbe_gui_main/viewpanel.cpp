@@ -879,9 +879,9 @@ void viewpanel::registerPointcloudRviz()
 	/* Create the radar pointcloud fixed frame. */
 	manager_->setFixedFrame("image_lidar");
 
-	Car_ = manager_->createDisplay( "rviz/Marker", "Marker", true );
-	ROS_ASSERT( Car_ != NULL );
-	Car_->subProp("Marker Topic")->setValue("/arbe/rviz/car_marker");
+	//Car_ = manager_->createDisplay( "rviz/Marker", "Marker", true );
+	//ROS_ASSERT( Car_ != NULL );
+	//Car_->subProp("Marker Topic")->setValue("/arbe/rviz/car_marker");
 
 	FloatingText_ = manager_->createDisplay( "rviz/Marker", "Marker", true );
 	ROS_ASSERT( FloatingText_ != NULL );
@@ -890,7 +890,7 @@ void viewpanel::registerPointcloudRviz()
 	Axes_ = manager_->createDisplay( "rviz/Axes", "Axes", true );
 	ROS_ASSERT( Axes_ != NULL );
 	Axes_->subProp("Reference Frame")->setValue("odom");
-	Axes_->subProp("Length")->setValue("3");
+	Axes_->subProp("Length")->setValue("0.2");
 
 	std::string pointcloud_topic = "/fmcw/rviz/pointcloud";
 	ros::NodeHandle fmcw_pcl("~");// = boost::make_shared<ros::NodeHandle>();
@@ -906,7 +906,7 @@ void viewpanel::registerPointcloudRviz()
 	pointcloud_fmcw->subProp("Topic")->setValue( pointcloud_topic.c_str() );
 	pointcloud_fmcw->subProp("Style")->setValue("Spheres");
 	pointcloud_fmcw->subProp("Size (Pixels)")->setValue("3");
-	pointcloud_fmcw->subProp("Size (m)")->setValue("0.03");
+	pointcloud_fmcw->subProp("Size (m)")->setValue("0.015");
 
 	//pointcloud_fmcw->subProp("Decay Time")->setValue((float)DetectionMemoryTime / 1000);
 
@@ -1830,16 +1830,31 @@ void viewpanel::CreatUIWindow()
 		controls_layout->addWidget( regBtnRead[i], i, 13, Qt::AlignLeft);	
 	}
 
+	controls_layout->addWidget( settingADCSavebutton, 4, 2, Qt::AlignLeft);
+	controls_layout->addWidget( pcSwitchBtn, 4, 3, Qt::AlignLeft);	
+	controls_layout->addWidget( pcOnceBtn, 4, 4, Qt::AlignLeft);	
+	controls_layout->addWidget( pcResetBtn, 4, 5, Qt::AlignLeft);	
+	controls_layout->addWidget( saveBtn, 4, 6, Qt::AlignLeft);
 
-	controls_layout->addWidget( settingADCSavebutton, 4, 7, Qt::AlignLeft);
-	//controls_layout->addWidget( settingADCConfigbutton, 4, 8, Qt::AlignLeft);
-	controls_layout->addWidget( distanceOffset_label, 4, 8, Qt::AlignLeft);
-	controls_layout->addWidget( distance_Offset_edit, 4, 9, Qt::AlignLeft);	
-	controls_layout->addWidget( pcSwitchBtn, 4, 10, Qt::AlignLeft);	
-	controls_layout->addWidget( pcOnceBtn, 4, 11, Qt::AlignLeft);	
-	controls_layout->addWidget( pcResetBtn, 4, 12, Qt::AlignLeft);	
-	controls_layout->addWidget( saveBtn, 4, 13, Qt::AlignLeft);
+	controls_layout->addWidget( distanceOffset_label, 4, 7, Qt::AlignLeft);
+	controls_layout->addWidget( distance_Offset_edit, 4, 8, Qt::AlignLeft);	
 
+
+	QLabel* rotate_label = new QLabel( "rotate angle" );
+	rotate_angle_edit = new QLineEdit;
+	rotate_angle_edit->setText(QString::number(rotation_offset));
+	QLabel* left_label = new QLabel( "left angle" );
+	left_angle_edit = new QLineEdit;
+	left_angle_edit->setText(QString::number(leftAngle_offset));
+	QLabel* right_label = new QLabel( "right angle" );
+	right_angle_edit = new QLineEdit;
+	right_angle_edit->setText(QString::number(rightAngle_offset));
+	controls_layout->addWidget( rotate_label, 4, 9, Qt::AlignLeft);
+	controls_layout->addWidget( rotate_angle_edit, 4, 10, Qt::AlignLeft);	
+	controls_layout->addWidget( left_label, 4, 11, Qt::AlignLeft);
+	controls_layout->addWidget( left_angle_edit, 4, 12, Qt::AlignLeft);	
+	controls_layout->addWidget( right_label, 4, 13, Qt::AlignLeft);
+	controls_layout->addWidget( right_angle_edit, 4, 14, Qt::AlignLeft);	
 	controlsBox->setLayout(controls_layout);
 
 
@@ -1880,13 +1895,13 @@ void viewpanel::CreatUIWindow()
 	render_panel_ = new rviz::RenderPanel();
 	selection_panel_ = new rviz::SelectionPanel();
 	controls->addWidget(controlsBox, 0, 0, Qt::AlignLeft);
+#if 0
 	controls->addWidget(stateShowBox, 0, 1, Qt::AlignLeft);
 	//controls->addWidget(fileBox, 0, 2, Qt::AlignLeft);
-
 	controls->setColumnStretch(0,6);
 	for(int i = 1; i < 2;i++)
 		controls->setColumnStretch(i,2);
-
+#endif
 	ctrlDockWidget->setLayout(controls);
 	ctrlDock->setWidget(ctrlDockWidget);
 
@@ -3056,7 +3071,7 @@ void viewpanel::pcDataProc()
 	"-" + std::to_string(ptminfo->tm_min) +
 	"-" + std::to_string(ptminfo->tm_sec) +
 	+".csv";
-	ROS_INFO("csvPath is %s \n", csvPath.c_str());
+	if(udpPCSingle_) ROS_INFO("csvPath is %s \n", csvPath.c_str());
 	std::ofstream csvfile;
 	if(udpPCSingle_) {
 		csvfile.open(csvPath, std::ios::out); 
@@ -3068,6 +3083,12 @@ void viewpanel::pcDataProc()
 	
 	cloud.points.resize(pcDataSize);
 	distance_offset = distance_Offset_edit->text().toDouble();
+	rotation_offset = rotate_angle_edit->text().toDouble();
+	leftAngle_offset = left_angle_edit->text().toDouble();
+	rightAngle_offset = right_angle_edit->text().toDouble();
+	std::cout << "rotation_offset " << rotation_offset << "leftAngle_offset " << leftAngle_offset \
+	<< "rightAngle_offset " << rightAngle_offset << std::endl; 
+
 	int realSize = 0;
 	for(int j = 0; j < pcFrameSize; j++)
 	{
@@ -3076,24 +3097,25 @@ void viewpanel::pcDataProc()
 			vertical_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmVertical * vertical_bin + vertical_offset;
 			horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
 			if(horizontal_m > 360.0) horizontal_m -= 360.0;
-			if(horizontal_m > 125.0 && horizontal_m < 306.0) continue;
+			if( horizontal_m < leftAngle_offset && horizontal_m > rightAngle_offset) continue;
 			realSize++;
 			speed_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmSpeed * speed_bin;
 			if(udpPCSingle_) {
 				csvfile << pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity << "," << distance_m << "," << speed_m << "," \
 				<< vertical_m << ", " << horizontal_m << "\n";
 			}
+			if(distance_m < 0.0) continue;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].vertical = vertical_m;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].horizontal = horizontal_m;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].distance = distance_m;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].indensity = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].speed = speed_m;
-
+			horizontal_m += rotation_offset;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].x = distance_m * cos(vertical_m * PI_FMCW / 180) * \
 																cos(horizontal_m * PI_FMCW / 180);
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].y = distance_m * cos(vertical_m * PI_FMCW / 180) * \
 																sin(horizontal_m * PI_FMCW / 180) * (-1.0);
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].z = distance_m * sin(vertical_m * PI_FMCW / 180) * (-1.0);
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].z = distance_m * sin(vertical_m * PI_FMCW / 180) * (1.0);
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].r = 255;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].g = 0;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].b = 0;
@@ -3205,9 +3227,6 @@ int viewpanel::udpRecvPCConnect()
 		return -1;
     }
 	udpPCStop_ = false;
-	QMessageBox msgBox;
-	msgBox.setText("UDP Connect successfully!");
-	msgBox.exec();
 	return 0;
 
 }
@@ -3653,6 +3672,9 @@ void viewpanel::load_settings()
 	lidar_ctrl_port_ = settings.value("TCP Port","5000").toString();
 	lidar_UDP_port_ = settings.value("UDP Port","8000").toString();
 	distance_offset_ = settings.value("Distance Offset","0.0").toString();
+	rotation_offset = settings.value("rotate angle","45.0").toDouble();
+	leftAngle_offset = settings.value("left angle","306.0").toDouble();
+	rightAngle_offset = settings.value("right angle","125.0").toDouble();
 	power_offset_ = settings.value("Power Offset","0.0").toString();
 	save_folder_ = settings.value("Save Folder",".").toString();
 }
@@ -3685,10 +3707,14 @@ void viewpanel::save_settings(void )
 	settings.setValue("UDP Port", udp_port_edit->text());
 	settings.setValue("UDP PC Port", udp_pc_port_edit->text());
 	settings.setValue("Distance Offset", distance_Offset_edit->text());
+	settings.setValue("rotate angle", rotate_angle_edit->text());
+	settings.setValue("left angle", left_angle_edit->text());
+	settings.setValue("right angle", right_angle_edit->text());
+
 	settings.setValue("Power Offset", power_Offset_edit->text());
 	settings.setValue("Save Folder", save_folder_);
 	for(int i = 0; i < 4; i++){
 		settings.setValue("Reg Addr " + QString::number(i), regAddr_line[i]->text());
-		settings.setValue("Ref Value " + QString::number(i), regVal_line[i]->text());
+		settings.setValue("Reg Value " + QString::number(i), regVal_line[i]->text());
 	}
 }

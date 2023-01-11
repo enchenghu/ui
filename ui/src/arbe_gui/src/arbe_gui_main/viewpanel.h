@@ -304,6 +304,9 @@ private:
 
 	double distance_offset;
 	double power_offset;
+	double rotation_offset;
+	double leftAngle_offset;
+	double rightAngle_offset;
 
 	QString lidar_ctrl_port_;
 	QString lidar_UDP_port_;
@@ -365,6 +368,11 @@ private:
 	QLineEdit *udp_pc_port_edit;
 
 	QLineEdit *distance_Offset_edit;
+	QLineEdit *rotate_angle_edit;
+	QLineEdit *left_angle_edit;
+	QLineEdit *right_angle_edit;
+
+
 	QLineEdit *power_Offset_edit;
 	QString save_folder_;
 	QLineEdit* regAddr_line[4] ;
