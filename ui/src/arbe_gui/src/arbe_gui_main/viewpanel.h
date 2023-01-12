@@ -380,6 +380,7 @@ private:
 	QLineEdit *left_angle_edit;
 	QLineEdit *right_angle_edit;
 	QLineEdit *color_base_edit;
+	QLineEdit *point_size_edit;
 
 	QLineEdit *power_Offset_edit;
 	QString save_folder_;
@@ -509,6 +510,7 @@ private:
 	double vertical_offset; 
 	double distance_bin; 
 	double color_base;
+	std::string point_size_;
 
 };
 

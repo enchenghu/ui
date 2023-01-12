@@ -1873,6 +1873,8 @@ void viewpanel::CreatUIWindow()
 	right_angle_edit = new QLineEdit;
 	QLabel* color_base_label = new QLabel( "color base" );
 	color_base_edit = new QLineEdit;
+	QLabel* point_size_label = new QLabel( "point size" );
+	point_size_edit = new QLineEdit;
 	right_angle_edit->setText(QString::number(rightAngle_offset));
 	controls_layout->addWidget( rotate_label, 4, 9, Qt::AlignLeft);
 	controls_layout->addWidget( rotate_angle_edit, 4, 10, Qt::AlignLeft);	
@@ -1882,6 +1884,8 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( right_angle_edit, 4, 14, Qt::AlignLeft);	
 	controls_layout->addWidget( color_base_label, 4, 15, Qt::AlignLeft);
 	controls_layout->addWidget( color_base_edit, 4, 16, Qt::AlignLeft);	
+	controls_layout->addWidget( point_size_label, 0, 15, Qt::AlignLeft);
+	controls_layout->addWidget( point_size_edit, 0, 16, Qt::AlignLeft);	
 	controlsBox->setLayout(controls_layout);
 
 
@@ -3143,6 +3147,8 @@ void viewpanel::pcDataProc()
 	leftAngle_offset = left_angle_edit->text().toDouble();
 	rightAngle_offset = right_angle_edit->text().toDouble();
 	color_base = color_base_edit->text().toDouble();
+	point_size_ = point_size_edit->text().toStdString();
+	pointcloud_fmcw->subProp("Size (m)")->setValue(point_size_.c_str());
 	std::cout << "rotation_offset " << rotation_offset << "leftAngle_offset " << leftAngle_offset \
 	<< "rightAngle_offset " << rightAngle_offset << std::endl; 
 
