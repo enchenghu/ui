@@ -151,6 +151,23 @@ static QStringList regValueList = {
 	"0x91EC0001",
 	"0X40001183"
 };
+
+//色表构建
+static std::vector<unsigned char> R_V_g = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+											0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+											0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240,
+											255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
+
+static std::vector<unsigned char> G_V_g = { 0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240,
+											255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+											255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 ,
+											240, 220, 200, 180, 160, 140, 120, 100, 80, 60, 40, 20, 0};
+
+static std::vector<unsigned char> B_V_g = { 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+											240, 220, 200, 180, 160, 140, 120, 100, 80, 60, 40, 20, 0,
+											0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,
+											0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
 float UnsignedChar4ToFloat(unsigned char *strBuf) 
 {
 	float fNum;
@@ -206,6 +223,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 
 	registerPointcloudRviz();
 	resize(QDesktopWidget().availableGeometry(this).size() * 0.85);
+	std::cout << "R: " << R_V_g.size() << " G: " << G_V_g.size() <<  " B: " << B_V_g.size() << std::endl;
 }
 
 // Destructor.
@@ -3032,6 +3050,40 @@ void viewpanel::startPcTask() {
 	vx_task_create(&bst_task[4], &bst_params); 
 }
 
+void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
+{
+	if(!pmsg) return;
+	double distance_min = 0.0;
+	double distance_max = 0.0;
+	double indensity_min = 0.0;
+	double indensity_max = 0.0;
+	double speed_min = 0.0;
+	double speed_max = 0.0;
+	int pcFrameSize = pmsg->pcDataOneFrame.size();
+	for(int j = 0; j < pcFrameSize; j++)
+	{
+		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++)
+		{
+			double horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
+			if(horizontal_m > 360.0) horizontal_m -= 360.0;
+			if( horizontal_m < leftAngle_offset && horizontal_m > rightAngle_offset) continue;
+			double distance_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmDistance * distance_bin - distance_offset;
+			if( distance_m < 0.0 || distance_m > 101.0) continue;
+			int speed_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmSpeed * speed_bin;
+			if( speed_m < -60.0 || speed_m > 60.0) continue;
+			int  indensity_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity;
+			if(distance_min > distance_m )distance_min = distance_m;
+			if(distance_max < distance_m )distance_max = distance_m;
+			if(indensity_min > indensity_m )indensity_min = indensity_m;
+			if(indensity_max < indensity_m )indensity_max = indensity_m;
+			if(speed_min > speed_m )speed_min = speed_m;
+			if(speed_max < speed_m )speed_max = speed_m;
+		}
+	}
+	std::cout << "distance_min: " << distance_min << " distance_max: " << distance_max \
+	<< " indensity_min: " << indensity_min << " indensity_max: " << indensity_max << " speed_min: " << speed_min \ 
+	<< " speed_max: " << speed_max << std::endl; 
+}
 
 void viewpanel::pcDataProc()
 {
@@ -3042,6 +3094,7 @@ void viewpanel::pcDataProc()
 		std::cout << "warning!!udpMsg_done_buf_queue get timeout!!!" << std::endl;
 		return;
 	}
+	pcDataFindMaxMin(pmsg);
 	int pcFrameSize = pmsg->pcDataOneFrame.size();
 	int pcDataSize = pmsg->pcDataOneFrame.size() * 100;
 	double distance_m;

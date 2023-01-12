@@ -260,6 +260,7 @@ private:
 
 	void pcParseLoop();
 	void pcDataProc();
+	void pcDataFindMaxMin(udpPcMsgOneFrame*);
 	void registerPointcloudRviz();
 	void startPcTask();
 
