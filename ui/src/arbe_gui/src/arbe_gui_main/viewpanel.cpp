@@ -209,7 +209,12 @@ viewpanel::viewpanel(QTabWidget* parent )
 	motorMsgShow_.mHead = 0x55aa;
 	motorMsgWorkMode_.mHead = 0x55aa;
 	motorMsgShowCycle_.mHead = 0x55aa;
-
+	distance_min  = 0.0;
+	distance_max = 0.0;
+	indensity_min = 0.0;
+	indensity_max = 0.0;
+	speed_min = 0.0;
+	speed_max = 0.0;
 
 	power_index = {0, 12, 20, 70, 290, 346, 347, 
 				   397, 415, 500, 510, 560, 625, 1000, 
@@ -1866,6 +1871,8 @@ void viewpanel::CreatUIWindow()
 	left_angle_edit->setText(QString::number(leftAngle_offset));
 	QLabel* right_label = new QLabel( "right angle" );
 	right_angle_edit = new QLineEdit;
+	QLabel* color_base_label = new QLabel( "color base" );
+	color_base_edit = new QLineEdit;
 	right_angle_edit->setText(QString::number(rightAngle_offset));
 	controls_layout->addWidget( rotate_label, 4, 9, Qt::AlignLeft);
 	controls_layout->addWidget( rotate_angle_edit, 4, 10, Qt::AlignLeft);	
@@ -1873,6 +1880,8 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( left_angle_edit, 4, 12, Qt::AlignLeft);	
 	controls_layout->addWidget( right_label, 4, 13, Qt::AlignLeft);
 	controls_layout->addWidget( right_angle_edit, 4, 14, Qt::AlignLeft);	
+	controls_layout->addWidget( color_base_label, 4, 15, Qt::AlignLeft);
+	controls_layout->addWidget( color_base_edit, 4, 16, Qt::AlignLeft);	
 	controlsBox->setLayout(controls_layout);
 
 
@@ -3053,12 +3062,6 @@ void viewpanel::startPcTask() {
 void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 {
 	if(!pmsg) return;
-	double distance_min = 0.0;
-	double distance_max = 0.0;
-	double indensity_min = 0.0;
-	double indensity_max = 0.0;
-	double speed_min = 0.0;
-	double speed_max = 0.0;
 	int pcFrameSize = pmsg->pcDataOneFrame.size();
 	for(int j = 0; j < pcFrameSize; j++)
 	{
@@ -3139,6 +3142,7 @@ void viewpanel::pcDataProc()
 	rotation_offset = rotate_angle_edit->text().toDouble();
 	leftAngle_offset = left_angle_edit->text().toDouble();
 	rightAngle_offset = right_angle_edit->text().toDouble();
+	color_base = color_base_edit->text().toDouble();
 	std::cout << "rotation_offset " << rotation_offset << "leftAngle_offset " << leftAngle_offset \
 	<< "rightAngle_offset " << rightAngle_offset << std::endl; 
 
@@ -3169,9 +3173,12 @@ void viewpanel::pcDataProc()
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].y = distance_m * cos(vertical_m * PI_FMCW / 180) * \
 																sin(horizontal_m * PI_FMCW / 180) * (-1.0);
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].z = distance_m * sin(vertical_m * PI_FMCW / 180) * (1.0);
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].r = 255;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].g = 0;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].b = 0;
+			int index_rgb = distance_m / color_base * 52;
+			if(index_rgb > 51) index_rgb = 51;
+			if(index_rgb < 0) index_rgb = 0;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].r = R_V_g[index_rgb];
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].g = G_V_g[index_rgb];
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].b = B_V_g[index_rgb];
 		}
 	}
 	std::cout << "realSize is " << realSize << std::endl;
@@ -3467,7 +3474,7 @@ void viewpanel::udpRecvLoop(){
     				::close(udpRecvSocketFd_);
 					return;
 				}
-				ROS_INFO("fft data recv failed, continue\n");
+				ROS_INFO("fft data recv failed, ret is %d, continue\n", ret);
 				usleep(100*1000);
 				i--;
 				continue;

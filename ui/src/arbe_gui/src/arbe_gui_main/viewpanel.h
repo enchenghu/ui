@@ -309,6 +309,13 @@ private:
 	double leftAngle_offset;
 	double rightAngle_offset;
 
+	double distance_min ;
+	double distance_max ;
+	double indensity_min ;
+	double indensity_max;
+	double speed_min ;
+	double speed_max ;
+
 	QString lidar_ctrl_port_;
 	QString lidar_UDP_port_;
 	QString lidar_UDP_PC_port_;
@@ -372,7 +379,7 @@ private:
 	QLineEdit *rotate_angle_edit;
 	QLineEdit *left_angle_edit;
 	QLineEdit *right_angle_edit;
-
+	QLineEdit *color_base_edit;
 
 	QLineEdit *power_Offset_edit;
 	QString save_folder_;
@@ -501,6 +508,7 @@ private:
 	double horizontal_bin; 
 	double vertical_offset; 
 	double distance_bin; 
+	double color_base;
 
 };
 
