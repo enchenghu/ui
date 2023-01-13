@@ -3005,6 +3005,8 @@ void viewpanel::udpPcConnect() {
 	}else{
 		::close(udpRecvPCSocketFd_);
 		udpPCStop_ = true;
+		vx_task_delete(&bst_task[3]);
+		vx_task_delete(&bst_task[4]);
 		commandMsg cmdMsg;
 		memset(&cmdMsg, 0, sizeof(commandMsg));
 		cmdMsg.mHead.usCommand = commandType::POINTCLOUD_UDP_STOP;
@@ -3016,9 +3018,6 @@ void viewpanel::udpPcConnect() {
 		}
 		pcSwitchBtn->setStyleSheet("color: black");
 		pcSwitchBtn->setText("&Start PointCloud");
-		//QMessageBox msgBox;
-		//msgBox.setText("UDP Connection is already working, please stop it first !");
-		//msgBox.exec();		
 	}
 }
 
