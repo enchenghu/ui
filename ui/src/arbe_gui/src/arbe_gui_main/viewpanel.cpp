@@ -1761,14 +1761,14 @@ void viewpanel::CreatUIWindow()
 	distance_Offset_edit->setPlaceholderText("input distance offset ");
 	distance_Offset_edit->setText(distance_offset_);
 
-	controls_layout->addWidget( lidar_IP_label, 0, 0, Qt::AlignLeft);
+	controls_layout->addWidget( lidar_IP_label, 0, 0, Qt::AlignRight);
 	controls_layout->addWidget( ip_edit, 0, 1, Qt::AlignLeft);
-	controls_layout->addWidget( lidar_port_label, 1, 0, Qt::AlignLeft);
+	controls_layout->addWidget( lidar_port_label, 1, 0, Qt::AlignRight);
 	controls_layout->addWidget( port_edit, 1, 1, Qt::AlignLeft);
 
-	controls_layout->addWidget( lidar_udp_port_label, 2, 0, Qt::AlignLeft);
+	controls_layout->addWidget( lidar_udp_port_label, 2, 0, Qt::AlignRight);
 	controls_layout->addWidget( udp_port_edit, 2, 1, Qt::AlignLeft);
-	controls_layout->addWidget( pcPort_label, 3, 0, Qt::AlignLeft);	
+	controls_layout->addWidget( pcPort_label, 3, 0, Qt::AlignRight);	
 	controls_layout->addWidget( udp_pc_port_edit, 3, 1, Qt::AlignLeft);	
 	controls_layout->addWidget( lidar_connect_button, 4, 0, Qt::AlignLeft);
 	controls_layout->addWidget( setSaveBtn, 4, 1, Qt::AlignLeft);
@@ -1823,10 +1823,10 @@ void viewpanel::CreatUIWindow()
 	DiffCombo->addItem(tr("0"));
 	DiffCombo->addItem(tr("1"));
 
-	controls_layout->addWidget( Power_label, 0, 2, Qt::AlignLeft);	
-	controls_layout->addWidget( CFAR_label, 1, 2, Qt::AlignLeft);			
-	controls_layout->addWidget( m3DFT_label, 2, 2, Qt::AlignLeft);			
-	controls_layout->addWidget( diff_label, 3, 2, Qt::AlignLeft);	
+	controls_layout->addWidget( Power_label, 0, 2, Qt::AlignRight);	
+	controls_layout->addWidget( CFAR_label, 1, 2, Qt::AlignRight);			
+	controls_layout->addWidget( m3DFT_label, 2, 2, Qt::AlignRight);			
+	controls_layout->addWidget( diff_label, 3, 2, Qt::AlignRight);	
 
 	controls_layout->addWidget( PowerCombo, 0, 3, Qt::AlignLeft);	
 	controls_layout->addWidget( CFARCombo, 1, 3, Qt::AlignLeft);			
@@ -1842,8 +1842,8 @@ void viewpanel::CreatUIWindow()
 		controls_layout->addWidget( ctlReadLine_[i], i, 5, Qt::AlignLeft);			
 		controls_layout->addWidget( ctlReadBtn_[i], i, 6, Qt::AlignLeft);			
 	}
-	controls_layout->addWidget( regAddr_label, 0, 7, Qt::AlignLeft);
-	controls_layout->addWidget( regVal_label, 0, 9, Qt::AlignLeft);	
+	controls_layout->addWidget( regAddr_label, 0, 7, Qt::AlignRight);
+	controls_layout->addWidget( regVal_label, 0, 9, Qt::AlignRight);	
 
 	for(int i = 0; i < 4; i++){
 		controls_layout->addWidget( regAddr_line[i], i, 8, Qt::AlignLeft);	
@@ -1873,19 +1873,27 @@ void viewpanel::CreatUIWindow()
 	right_angle_edit = new QLineEdit;
 	QLabel* color_base_label = new QLabel( "color base" );
 	color_base_edit = new QLineEdit;
+	color_base_edit->setText(QString::number(color_base));
 	QLabel* point_size_label = new QLabel( "point size" );
 	point_size_edit = new QLineEdit;
+	point_size_edit->setText(QString::number(point_size));
+	QLabel* cell_size_label = new QLabel( "cell size" );
+	cell_size_edit = new QLineEdit;
+	cell_size_edit->setText(QString::number(cell_size));
+
 	right_angle_edit->setText(QString::number(rightAngle_offset));
-	controls_layout->addWidget( rotate_label, 4, 9, Qt::AlignLeft);
+	controls_layout->addWidget( rotate_label, 4, 9, Qt::AlignRight);
 	controls_layout->addWidget( rotate_angle_edit, 4, 10, Qt::AlignLeft);	
-	controls_layout->addWidget( left_label, 4, 11, Qt::AlignLeft);
+	controls_layout->addWidget( left_label, 4, 11, Qt::AlignRight);
 	controls_layout->addWidget( left_angle_edit, 4, 12, Qt::AlignLeft);	
-	controls_layout->addWidget( right_label, 4, 13, Qt::AlignLeft);
+	controls_layout->addWidget( right_label, 4, 13, Qt::AlignRight);
 	controls_layout->addWidget( right_angle_edit, 4, 14, Qt::AlignLeft);	
-	controls_layout->addWidget( color_base_label, 4, 15, Qt::AlignLeft);
-	controls_layout->addWidget( color_base_edit, 4, 16, Qt::AlignLeft);	
-	controls_layout->addWidget( point_size_label, 0, 15, Qt::AlignLeft);
+	controls_layout->addWidget( color_base_label, 2, 15, Qt::AlignRight);
+	controls_layout->addWidget( color_base_edit, 2, 16, Qt::AlignLeft);	
+	controls_layout->addWidget( point_size_label, 0, 15, Qt::AlignRight);
 	controls_layout->addWidget( point_size_edit, 0, 16, Qt::AlignLeft);	
+	controls_layout->addWidget( cell_size_label, 1, 15, Qt::AlignRight);
+	controls_layout->addWidget( cell_size_edit, 1, 16, Qt::AlignLeft);	
 	controlsBox->setLayout(controls_layout);
 
 
@@ -3147,8 +3155,11 @@ void viewpanel::pcDataProc()
 	leftAngle_offset = left_angle_edit->text().toDouble();
 	rightAngle_offset = right_angle_edit->text().toDouble();
 	color_base = color_base_edit->text().toDouble();
-	point_size_ = point_size_edit->text().toStdString();
-	pointcloud_fmcw->subProp("Size (m)")->setValue(point_size_.c_str());
+	point_size = point_size_edit->text().toDouble();
+	cell_size = cell_size_edit->text().toDouble();
+	pointcloud_fmcw->subProp("Size (m)")->setValue(point_size);
+	grid_->subProp( "Cell Size" )->setValue(cell_size); 
+
 	std::cout << "rotation_offset " << rotation_offset << "leftAngle_offset " << leftAngle_offset \
 	<< "rightAngle_offset " << rightAngle_offset << std::endl; 
 
@@ -3740,6 +3751,9 @@ void viewpanel::load_settings()
 	distance_offset_ = settings.value("Distance Offset","0.0").toString();
 	rotation_offset = settings.value("rotate angle","45.0").toDouble();
 	leftAngle_offset = settings.value("left angle","306.0").toDouble();
+	color_base = settings.value("color base","10.0").toDouble();
+	point_size = settings.value("point size","0.03").toDouble();
+	cell_size = settings.value("cell size","10.0").toDouble();
 	rightAngle_offset = settings.value("right angle","125.0").toDouble();
 	power_offset_ = settings.value("Power Offset","0.0").toString();
 	save_folder_ = settings.value("Save Folder",".").toString();
@@ -3776,6 +3790,10 @@ void viewpanel::save_settings(void )
 	settings.setValue("rotate angle", rotate_angle_edit->text());
 	settings.setValue("left angle", left_angle_edit->text());
 	settings.setValue("right angle", right_angle_edit->text());
+
+	settings.setValue("cell size", cell_size_edit->text());
+	settings.setValue("point size", point_size_edit->text());
+	settings.setValue("color base", color_base_edit->text());
 
 	settings.setValue("Power Offset", power_Offset_edit->text());
 	settings.setValue("Save Folder", save_folder_);

@@ -308,6 +308,9 @@ private:
 	double rotation_offset;
 	double leftAngle_offset;
 	double rightAngle_offset;
+	double cell_size;
+	double point_size;
+	double color_base;
 
 	double distance_min ;
 	double distance_max ;
@@ -381,6 +384,7 @@ private:
 	QLineEdit *right_angle_edit;
 	QLineEdit *color_base_edit;
 	QLineEdit *point_size_edit;
+	QLineEdit *cell_size_edit;
 
 	QLineEdit *power_Offset_edit;
 	QString save_folder_;
@@ -509,8 +513,8 @@ private:
 	double horizontal_bin; 
 	double vertical_offset; 
 	double distance_bin; 
-	double color_base;
 	std::string point_size_;
+	std::string cell_size_;
 
 };
 
