@@ -207,6 +207,7 @@ private Q_SLOTS:
 	void startPcUdpContinuous();
 
 	void udpClose();
+	void pcShowBW();
 	void updateFFTdata();
 	void updateADCdata();
 	void showdBFFT();
@@ -464,6 +465,8 @@ private:
 	QPushButton *lidar_connect_button;
 	QPushButton *setSaveBtn;
 	QPushButton *pcSwitchBtn;
+	QPushButton *pcBWBtn;
+
 
 	QPushButton *pcOnceBtn;
 	QPushButton *pcResetBtn;

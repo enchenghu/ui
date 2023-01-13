@@ -876,7 +876,9 @@ void viewpanel::registerPointcloudRviz()
 	/* Initialize the main RViz classes */
 	manager_ = new rviz::VisualizationManager( render_panel_ );
 
-	render_panel_->setBackgroundColor( Ogre::ColourValue(238,238,236,0.3));
+	//render_panel_->setBackgroundColor( Ogre::ColourValue(238,238,236,0.3));
+	render_panel_->setBackgroundColor(Ogre::ColourValue(238,238,236,0.3));
+
 	render_panel_->initialize( manager_->getSceneManager(), manager_ );
 	selection_panel_->initialize( manager_ );
 	manager_->initialize();
@@ -914,6 +916,7 @@ void viewpanel::registerPointcloudRviz()
 	ROS_ASSERT( Axes_ != NULL );
 	Axes_->subProp("Reference Frame")->setValue("odom");
 	Axes_->subProp("Length")->setValue("0.2");
+	Axes_->subProp("Radius")->setValue("0.02");
 
 	std::string pointcloud_topic = "/fmcw/rviz/pointcloud";
 	ros::NodeHandle fmcw_pcl("~");// = boost::make_shared<ros::NodeHandle>();
@@ -1598,7 +1601,6 @@ void viewpanel::CreatConnect()
 	connect(saveBtn, SIGNAL(clicked()), this, SLOT( saveDataThead( void )));
 	connect(setSaveBtn, SIGNAL(clicked()), this, SLOT( setSaveFolder( void )));
 	connect(settingADCSavebutton, SIGNAL(clicked()), this, SLOT( udpConnect( void )));
-	//connect(settingADCConfigbutton, SIGNAL(clicked()), this, SLOT( udpClose( void )));
 	connect(ctlReadBtn_[0], SIGNAL(clicked()), this, SLOT( readPower( void )));
 	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
 	connect(ctlReadBtn_[2], SIGNAL(clicked()), this, SLOT( read3DFT( void )));
@@ -1623,6 +1625,9 @@ void viewpanel::CreatConnect()
 	connect(pcSwitchBtn, SIGNAL(clicked()), this, SLOT( udpPcConnect( void )));
 	connect(pcOnceBtn, SIGNAL(clicked()), this, SLOT( startPcUdpOnce( void )));
 	connect(pcResetBtn, SIGNAL(clicked()), this, SLOT( startPcUdpContinuous( void )));
+
+	connect(pcBWBtn, SIGNAL(clicked()), this, SLOT( pcShowBW( void )));
+
 
 	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
@@ -1733,6 +1738,7 @@ void viewpanel::CreatUIWindow()
 	pcSwitchBtn = new QPushButton("&Start PointCloud", this);
 	pcOnceBtn = new QPushButton("&PointCloud Once", this);
 	pcResetBtn = new QPushButton("&PointCloud Reset", this);
+	pcBWBtn = new QPushButton("&Bg Color Black", this);
 
 	//lidar_stop_button = new QPushButton("Stop", this);
 	//lidarIdCombo =  new QComboBox;
@@ -1894,6 +1900,8 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( point_size_edit, 0, 16, Qt::AlignLeft);	
 	controls_layout->addWidget( cell_size_label, 1, 15, Qt::AlignRight);
 	controls_layout->addWidget( cell_size_edit, 1, 16, Qt::AlignLeft);	
+	controls_layout->addWidget( pcBWBtn, 3, 15, Qt::AlignLeft);	
+
 	controlsBox->setLayout(controls_layout);
 
 
@@ -2409,6 +2417,16 @@ void viewpanel::saveDataThead()
 		msgBox.exec();
 	};
 #endif
+}
+void viewpanel::pcShowBW(){
+	static bool showBlack = true;
+	if(!showBlack){
+		render_panel_->setBackgroundColor(Ogre::ColourValue(238,238,236,0.3));
+		showBlack = true;
+	}else{
+		render_panel_->setBackgroundColor(Ogre::ColourValue(0,0,0,0.3));
+		showBlack = false;		
+	}
 }
 
 void viewpanel::udpClose(){
