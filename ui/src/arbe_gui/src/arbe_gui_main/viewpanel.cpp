@@ -3843,6 +3843,7 @@ void viewpanel::save_settings(void )
 	settings.setValue("cell size", cell_size_edit->text());
 	settings.setValue("point size", point_size_edit->text());
 	settings.setValue("color base", color_base_edit->text());
+	settings.setValue("axes size", axes_size_edit->text());
 
 	settings.setValue("Power Offset", power_Offset_edit->text());
 	settings.setValue("Save Folder", save_folder_);
