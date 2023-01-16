@@ -917,6 +917,7 @@ void viewpanel::registerPointcloudRviz()
 	Axes_->subProp("Reference Frame")->setValue("odom");
 	Axes_->subProp("Length")->setValue("0.2");
 	Axes_->subProp("Radius")->setValue("0.02");
+	Axes_->subProp("Alpha")->setValue("0.3");
 
 	std::string pointcloud_topic = "/fmcw/rviz/pointcloud";
 	ros::NodeHandle fmcw_pcl("~");// = boost::make_shared<ros::NodeHandle>();
