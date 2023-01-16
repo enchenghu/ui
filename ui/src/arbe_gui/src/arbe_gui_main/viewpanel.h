@@ -207,6 +207,12 @@ private Q_SLOTS:
 	void startPcUdpContinuous();
 
 	void udpClose();
+
+	void configAxesSize();
+	void configCellSize();
+	void configPointSize();
+
+
 	void pcShowBW();
 	void updateFFTdata();
 	void updateADCdata();
@@ -312,6 +318,7 @@ private:
 	double cell_size;
 	double point_size;
 	double color_base;
+	double axes_size;
 
 	double distance_min ;
 	double distance_max ;
@@ -373,6 +380,7 @@ private:
 	QComboBox* CFARCombo;
 	QComboBox* PowerCombo;
 	QComboBox* DiffCombo;
+	QComboBox* colorCombo;
 	QLineEdit *ip_edit;
 	QLineEdit *port_edit;
 	QLineEdit *udp_port_edit;
@@ -386,6 +394,7 @@ private:
 	QLineEdit *color_base_edit;
 	QLineEdit *point_size_edit;
 	QLineEdit *cell_size_edit;
+	QLineEdit *axes_size_edit;
 
 	QLineEdit *power_Offset_edit;
 	QString save_folder_;

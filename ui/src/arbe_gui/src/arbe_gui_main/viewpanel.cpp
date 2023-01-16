@@ -916,8 +916,8 @@ void viewpanel::registerPointcloudRviz()
 	ROS_ASSERT( Axes_ != NULL );
 	Axes_->subProp("Reference Frame")->setValue("odom");
 	Axes_->subProp("Length")->setValue("0.2");
-	Axes_->subProp("Radius")->setValue("0.02");
-	Axes_->subProp("Alpha")->setValue("0.3");
+	Axes_->subProp("Radius")->setValue("0.1");
+	Axes_->subProp("Alpha")->setValue("0.8");
 
 	std::string pointcloud_topic = "/fmcw/rviz/pointcloud";
 	ros::NodeHandle fmcw_pcl("~");// = boost::make_shared<ros::NodeHandle>();
@@ -1606,6 +1606,10 @@ void viewpanel::CreatConnect()
 	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
 	connect(ctlReadBtn_[2], SIGNAL(clicked()), this, SLOT( read3DFT( void )));
 	connect(ctlReadBtn_[3], SIGNAL(clicked()), this, SLOT( readDiff( void )));
+    connect( axes_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configAxesSize( void )));
+    connect( cell_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configCellSize( void )));
+    connect( point_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configPointSize( void )));
+
 
 	QSignalMapper * configMapper;
 	QSignalMapper * readMapper;
@@ -1812,6 +1816,11 @@ void viewpanel::CreatUIWindow()
 	CFARCombo = new QComboBox;
 	m3DFTCombo = new QComboBox;
 	PowerCombo = new QComboBox;
+	colorCombo = new QComboBox;
+	colorCombo->addItem(tr("range"));
+	colorCombo->addItem(tr("intensity"));
+	colorCombo->addItem(tr("speed"));
+
 	PowerCombo->setEditable(true);
 	DiffCombo = new QComboBox;
 
@@ -1888,6 +1897,11 @@ void viewpanel::CreatUIWindow()
 	cell_size_edit = new QLineEdit;
 	cell_size_edit->setText(QString::number(cell_size));
 
+	QLabel* axes_size_label = new QLabel( "axes size" );
+	axes_size_edit = new QLineEdit;
+	axes_size_edit->setText(QString::number(axes_size));
+
+	QLabel* color_by_label = new QLabel( "color by" );
 	right_angle_edit->setText(QString::number(rightAngle_offset));
 	controls_layout->addWidget( rotate_label, 4, 9, Qt::AlignRight);
 	controls_layout->addWidget( rotate_angle_edit, 4, 10, Qt::AlignLeft);	
@@ -1895,13 +1909,18 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( left_angle_edit, 4, 12, Qt::AlignLeft);	
 	controls_layout->addWidget( right_label, 4, 13, Qt::AlignRight);
 	controls_layout->addWidget( right_angle_edit, 4, 14, Qt::AlignLeft);	
-	controls_layout->addWidget( color_base_label, 2, 15, Qt::AlignRight);
-	controls_layout->addWidget( color_base_edit, 2, 16, Qt::AlignLeft);	
 	controls_layout->addWidget( point_size_label, 0, 15, Qt::AlignRight);
 	controls_layout->addWidget( point_size_edit, 0, 16, Qt::AlignLeft);	
 	controls_layout->addWidget( cell_size_label, 1, 15, Qt::AlignRight);
 	controls_layout->addWidget( cell_size_edit, 1, 16, Qt::AlignLeft);	
-	controls_layout->addWidget( pcBWBtn, 3, 15, Qt::AlignLeft);	
+	controls_layout->addWidget( color_base_label, 2, 15, Qt::AlignRight);
+	controls_layout->addWidget( color_base_edit, 2, 16, Qt::AlignLeft);	
+	controls_layout->addWidget( axes_size_label, 3, 15, Qt::AlignRight);	
+	controls_layout->addWidget( axes_size_edit, 3, 16, Qt::AlignLeft);	
+	controls_layout->addWidget( color_by_label, 4, 15, Qt::AlignRight);	
+	controls_layout->addWidget( colorCombo, 4, 16, Qt::AlignLeft);	
+	controls_layout->addWidget( pcBWBtn, 0, 14, Qt::AlignRight);	
+
 
 	controlsBox->setLayout(controls_layout);
 
@@ -2445,6 +2464,21 @@ void viewpanel::udpClose(){
 	QMessageBox msgBox;
 	msgBox.setText("UDP close success!");
 	msgBox.exec();
+}
+
+
+void viewpanel::configAxesSize(){
+	axes_size = axes_size_edit->text().toDouble();
+	Axes_->subProp("Length")->setValue(axes_size);
+
+}
+void viewpanel::configCellSize(){
+	cell_size = cell_size_edit->text().toDouble();
+	grid_->subProp( "Cell Size" )->setValue(cell_size); 
+}
+void viewpanel::configPointSize(){
+	point_size = point_size_edit->text().toDouble();
+	pointcloud_fmcw->subProp("Size (m)")->setValue(point_size);
 }
 
 void viewpanel::singleFFT() {
@@ -3173,10 +3207,6 @@ void viewpanel::pcDataProc()
 	leftAngle_offset = left_angle_edit->text().toDouble();
 	rightAngle_offset = right_angle_edit->text().toDouble();
 	color_base = color_base_edit->text().toDouble();
-	point_size = point_size_edit->text().toDouble();
-	cell_size = cell_size_edit->text().toDouble();
-	pointcloud_fmcw->subProp("Size (m)")->setValue(point_size);
-	grid_->subProp( "Cell Size" )->setValue(cell_size); 
 
 	std::cout << "rotation_offset " << rotation_offset << "leftAngle_offset " << leftAngle_offset \
 	<< "rightAngle_offset " << rightAngle_offset << std::endl; 
@@ -3772,6 +3802,7 @@ void viewpanel::load_settings()
 	color_base = settings.value("color base","10.0").toDouble();
 	point_size = settings.value("point size","0.03").toDouble();
 	cell_size = settings.value("cell size","10.0").toDouble();
+	axes_size = settings.value("axes size","0.1").toDouble();
 	rightAngle_offset = settings.value("right angle","125.0").toDouble();
 	power_offset_ = settings.value("Power Offset","0.0").toString();
 	save_folder_ = settings.value("Save Folder",".").toString();
