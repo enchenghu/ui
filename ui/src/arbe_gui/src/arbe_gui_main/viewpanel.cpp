@@ -3167,7 +3167,9 @@ void viewpanel::pcDataProc()
 	double distance_m;
 	double vertical_m;
 	double horizontal_m;
+	double intensity_m;
 	double speed_m;
+	int index_rgb;
 
 	ROS_INFO("pcDataSize is %d", pcDataSize);
 	if(!udpPCContinu_ && !udpPCSingle_){
@@ -3207,6 +3209,7 @@ void viewpanel::pcDataProc()
 	leftAngle_offset = left_angle_edit->text().toDouble();
 	rightAngle_offset = right_angle_edit->text().toDouble();
 	color_base = color_base_edit->text().toDouble();
+	QString strColor = colorCombo->currentText();
 
 	std::cout << "rotation_offset " << rotation_offset << "leftAngle_offset " << leftAngle_offset \
 	<< "rightAngle_offset " << rightAngle_offset << std::endl; 
@@ -3215,13 +3218,14 @@ void viewpanel::pcDataProc()
 	for(int j = 0; j < pcFrameSize; j++)
 	{
 		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){
-			distance_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmDistance * distance_bin - distance_offset;
-			vertical_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmVertical * vertical_bin + vertical_offset;
 			horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
 			if(horizontal_m > 360.0) horizontal_m -= 360.0;
 			if( horizontal_m < leftAngle_offset && horizontal_m > rightAngle_offset) continue;
 			realSize++;
 			speed_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmSpeed * speed_bin;
+			distance_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmDistance * distance_bin - distance_offset;
+			vertical_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmVertical * vertical_bin + vertical_offset;
+			intensity_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity;
 			if(udpPCSingle_) {
 				csvfile << pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity << "," << distance_m << "," << speed_m << "," \
 				<< vertical_m << ", " << horizontal_m << "\n";
@@ -3230,7 +3234,7 @@ void viewpanel::pcDataProc()
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].vertical = vertical_m;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].horizontal = horizontal_m;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].distance = distance_m;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].indensity = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity;
+			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].indensity = intensity_m;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].speed = speed_m;
 			horizontal_m += rotation_offset;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].x = distance_m * cos(vertical_m * PI_FMCW / 180) * \
@@ -3238,7 +3242,13 @@ void viewpanel::pcDataProc()
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].y = distance_m * cos(vertical_m * PI_FMCW / 180) * \
 																sin(horizontal_m * PI_FMCW / 180) * (-1.0);
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].z = distance_m * sin(vertical_m * PI_FMCW / 180) * (1.0);
-			int index_rgb = distance_m / color_base * 52;
+			if(strColor == "range")
+				index_rgb = distance_m / color_base * 52;
+			else if(strColor == "intensity")
+				index_rgb = (intensity_m - indensity_min) / (indensity_max - indensity_min) * 52;
+			else if(strColor == "speed")
+				index_rgb = (speed_m - speed_min) / (speed_max - speed_min) * 52;
+
 			if(index_rgb > 51) index_rgb = 51;
 			if(index_rgb < 0) index_rgb = 0;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].r = R_V_g[index_rgb];
