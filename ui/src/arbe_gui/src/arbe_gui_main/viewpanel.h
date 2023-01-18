@@ -214,6 +214,7 @@ private Q_SLOTS:
 
 
 	void pcShowBW();
+	void pcRecord();
 	void updateFFTdata();
 	void updateADCdata();
 	void showdBFFT();
@@ -475,8 +476,7 @@ private:
 	QPushButton *setSaveBtn;
 	QPushButton *pcSwitchBtn;
 	QPushButton *pcBWBtn;
-
-
+	QPushButton *pcRecordBtn;
 	QPushButton *pcOnceBtn;
 	QPushButton *pcResetBtn;
 

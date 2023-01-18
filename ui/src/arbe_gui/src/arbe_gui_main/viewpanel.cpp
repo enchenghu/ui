@@ -1632,7 +1632,7 @@ void viewpanel::CreatConnect()
 	connect(pcResetBtn, SIGNAL(clicked()), this, SLOT( startPcUdpContinuous( void )));
 
 	connect(pcBWBtn, SIGNAL(clicked()), this, SLOT( pcShowBW( void )));
-
+	connect(pcRecordBtn, SIGNAL(clicked()), this, SLOT( pcRecord( void )));
 
 	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
@@ -1744,6 +1744,7 @@ void viewpanel::CreatUIWindow()
 	pcOnceBtn = new QPushButton("&PointCloud Once", this);
 	pcResetBtn = new QPushButton("&PointCloud Reset", this);
 	pcBWBtn = new QPushButton("&Bg Color Black", this);
+	pcRecordBtn = new QPushButton("&PointCloud Record", this);
 
 	//lidar_stop_button = new QPushButton("Stop", this);
 	//lidarIdCombo =  new QComboBox;
@@ -1920,6 +1921,7 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( color_by_label, 4, 15, Qt::AlignRight);	
 	controls_layout->addWidget( colorCombo, 4, 16, Qt::AlignLeft);	
 	controls_layout->addWidget( pcBWBtn, 0, 14, Qt::AlignRight);	
+	controls_layout->addWidget( pcRecordBtn, 1, 14, Qt::AlignRight);	
 
 
 	controlsBox->setLayout(controls_layout);
@@ -2438,6 +2440,42 @@ void viewpanel::saveDataThead()
 	};
 #endif
 }
+
+void viewpanel::pcRecord(){
+	static bool recording = false;
+	if(!recording){
+		std::string pcRecordPath;
+		std::string cmd;
+		std::string node_name = " __name:=fmcw_record_node &";
+		pcRecordPath = save_folder_.toStdString() + "/pointCloud_record" +".bag";
+		std::string pointcloud_topic = " /fmcw/rviz/pointcloud";
+		ROS_INFO("pcRecordPath is %s \n", pcRecordPath.c_str());
+		cmd = "rosbag record -o " + pcRecordPath + pointcloud_topic + node_name;
+		int ret = system(cmd.c_str());
+		recording = true;
+		pcRecordBtn->setStyleSheet("color: red");
+		pcRecordBtn->setText("&Recording");
+	} else {
+		ros::V_string v_nodes;
+		ros::master::getNodes(v_nodes);
+		std::string node_name = std::string("/fmcw_record_node");
+		auto it = std::find(v_nodes.begin(), v_nodes.end(), node_name.c_str());
+		if (it != v_nodes.end()){
+			std::string cmd_str = "rosnode kill " + node_name;
+			int ret = system(cmd_str.c_str());
+			std::cout << "## stop rosbag record cmd: " << cmd_str << std::endl;
+		}else{
+			QMessageBox msgBox;
+			msgBox.setText("stop rosbag record failed!");
+			msgBox.exec();
+			return;
+		}
+		recording = false;
+		pcRecordBtn->setStyleSheet("color: black");
+		pcRecordBtn->setText("&PointCloud Record");
+	}
+}
+
 void viewpanel::pcShowBW(){
 	static bool showBlack = true;
 	if(!showBlack){
@@ -2461,9 +2499,6 @@ void viewpanel::udpClose(){
 	udpStop_ = true;
 	vx_task_delete(&bst_task[1]);
 	vx_task_delete(&bst_task[2]);
-	QMessageBox msgBox;
-	msgBox.setText("UDP close success!");
-	msgBox.exec();
 }
 
 
@@ -3049,7 +3084,7 @@ void viewpanel::udpPcConnect() {
 			return;
 		}	
 #endif
-		udpRecvPCConnect();
+		if(udpRecvPCConnect()) return;
 #if 1	
 		startPcTask();
 #endif
