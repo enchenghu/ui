@@ -494,7 +494,7 @@ void MainWindow::open( void )
 	{
 		char rqt_bag_launch_command[300];
 		/* Create rqt_bag launch command */
-		sprintf(rqt_bag_launch_command,"roslaunch arbe_phoenix_radar_driver arbe_rqt_bag.launch bag:=%c%c%s%c%c&",
+		sprintf(rqt_bag_launch_command,"roslaunch autox_ui arbe_rqt_bag.launch bag:=%c%c%s%c%c&",
 			'"','\047',(char *)playback_file.toStdString().c_str(),'\047','"');
 		ROS_DEBUG("launch playback menu control: %s",rqt_bag_launch_command);
 		//rosbag_playing = 1;
