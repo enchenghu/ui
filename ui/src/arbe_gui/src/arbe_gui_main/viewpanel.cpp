@@ -2532,7 +2532,7 @@ void viewpanel::udpPcClose(){
 		return;
 	}
 	pcSwitchBtn->setStyleSheet("color: black");
-	pcSwitchBtn->setText("&Start PointCloud");
+	pcSwitchBtn->setText("&Start PC");
 }
 
 
@@ -3124,7 +3124,7 @@ void viewpanel::udpPcConnect() {
 		startPcTask();
 #endif
 		pcSwitchBtn->setStyleSheet("color: green");
-		pcSwitchBtn->setText("&Close PointCloud");
+		pcSwitchBtn->setText("&Close PC");
 	}else{
 		udpPcClose();
 	}
