@@ -621,8 +621,9 @@ char rosbag_convert_command[500];
 char rosbag_convert_script_path[200];
 void MainWindow::convertRosbag( void )
 {
-	sprintf(rosbag_convert_script_path,SRC_DIR);
-	sprintf(rosbag_convert_script_path+strlen(rosbag_convert_script_path),"/scripts/rosbag_to_bin_and_mp4.py");
+	sprintf(rosbag_convert_script_path,"python3 ");
+	sprintf(rosbag_convert_script_path + strlen(rosbag_convert_script_path),SRC_DIR);
+	sprintf(rosbag_convert_script_path + strlen(rosbag_convert_script_path),"/scripts/rosbag_to_bin_and_mp4.py");
 	QString selectedFilter;
 	QStringList files;
 	files = QFileDialog::getOpenFileNames(
@@ -644,6 +645,7 @@ void MainWindow::convertRosbag( void )
 		sprintf(rosbag_convert_command,"%s",rosbag_convert_script_path);
 		sprintf(rosbag_convert_command+strlen(rosbag_convert_command)," %s",
 			files[i].toStdString().c_str());
+		printf("rosbag_convert_command is %s\n", rosbag_convert_command);
 		int ret = system(rosbag_convert_command);
 		if (progress.wasCanceled())
 		    break;

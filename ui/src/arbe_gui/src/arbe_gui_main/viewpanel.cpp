@@ -1487,6 +1487,7 @@ void viewpanel::CreatADCWindow()
 	QGridLayout* adcSettingBoxLayout = new QGridLayout ;
 	singelADCBtn_ = new QPushButton("&Single");
 	resetADCBtn_ = new QPushButton("&Reset");
+	
 	adcSettingBoxLayout->addWidget(singelADCBtn_, 0, 0);//, Qt::AlignTop);
 	adcSettingBoxLayout->addWidget(resetADCBtn_, 0, 1);//, Qt::AlignTop);
 	adcSettingBox->setLayout(adcSettingBoxLayout);
@@ -1563,6 +1564,9 @@ void viewpanel::CreatDebugWindow()
 	QLabel* power_Offset_label = new QLabel("Power Offset/dB" );
 	power_Offset_edit = new QLineEdit();	
 	power_Offset_edit->setText(power_offset_);
+
+	settingADCSavebutton = new QPushButton("&Start FFT-ADC");
+	settingADCLayout->addWidget(settingADCSavebutton, 0, 0);
 
 	settingADCLayout->addWidget(power_Offset_label, 1, 0);
 	settingADCLayout->addWidget(power_Offset_edit, 1, 1);
@@ -1740,10 +1744,10 @@ void viewpanel::CreatUIWindow()
 	lidar_connect_button = new QPushButton("&Connect", this);
 	//lidar_disconnect_button = new QPushButton("Disconnect", this);
 	setSaveBtn = new QPushButton("&Set save folder", this);
-	pcSwitchBtn = new QPushButton("&Start PointCloud", this);
-	pcOnceBtn = new QPushButton("&PointCloud Once", this);
-	pcResetBtn = new QPushButton("&PointCloud Reset", this);
-	pcBWBtn = new QPushButton("&Bg Color Black", this);
+	pcSwitchBtn = new QPushButton("&Start PC", this);
+	pcOnceBtn = new QPushButton("&PC Single", this);
+	pcResetBtn = new QPushButton("&PC Contin", this);
+	pcBWBtn = new QPushButton("&Bg Color", this);
 	pcRecordBtn = new QPushButton("&PointCloud Record", this);
 
 	//lidar_stop_button = new QPushButton("Stop", this);
@@ -1812,8 +1816,6 @@ void viewpanel::CreatUIWindow()
 	setReadOnlyLineEdit(adcRead1_line);
 
 
-	settingADCSavebutton = new QPushButton("FFT-ADC &Start");
-	settingADCConfigbutton = new QPushButton("FFT-ADC &Stop");
 	CFARCombo = new QComboBox;
 	m3DFTCombo = new QComboBox;
 	PowerCombo = new QComboBox;
@@ -1870,15 +1872,7 @@ void viewpanel::CreatUIWindow()
 		controls_layout->addWidget( regBtnRead[i], i, 13, Qt::AlignLeft);	
 	}
 
-	controls_layout->addWidget( settingADCSavebutton, 4, 2, Qt::AlignLeft);
-	controls_layout->addWidget( pcSwitchBtn, 4, 3, Qt::AlignLeft);	
-	controls_layout->addWidget( pcOnceBtn, 4, 4, Qt::AlignLeft);	
-	controls_layout->addWidget( pcResetBtn, 4, 5, Qt::AlignLeft);	
-	controls_layout->addWidget( saveBtn, 4, 6, Qt::AlignLeft);
-
-	controls_layout->addWidget( distanceOffset_label, 4, 7, Qt::AlignLeft);
-	controls_layout->addWidget( distance_Offset_edit, 4, 8, Qt::AlignLeft);	
-
+	//controls_layout->addWidget( settingADCSavebutton, 4, 2, Qt::AlignLeft);
 
 	QLabel* rotate_label = new QLabel( "rotate angle" );
 	rotate_angle_edit = new QLineEdit;
@@ -1904,25 +1898,41 @@ void viewpanel::CreatUIWindow()
 
 	QLabel* color_by_label = new QLabel( "color by" );
 	right_angle_edit->setText(QString::number(rightAngle_offset));
-	controls_layout->addWidget( rotate_label, 4, 9, Qt::AlignRight);
-	controls_layout->addWidget( rotate_angle_edit, 4, 10, Qt::AlignLeft);	
-	controls_layout->addWidget( left_label, 4, 11, Qt::AlignRight);
-	controls_layout->addWidget( left_angle_edit, 4, 12, Qt::AlignLeft);	
-	controls_layout->addWidget( right_label, 4, 13, Qt::AlignRight);
-	controls_layout->addWidget( right_angle_edit, 4, 14, Qt::AlignLeft);	
-	controls_layout->addWidget( point_size_label, 0, 15, Qt::AlignRight);
-	controls_layout->addWidget( point_size_edit, 0, 16, Qt::AlignLeft);	
-	controls_layout->addWidget( cell_size_label, 1, 15, Qt::AlignRight);
-	controls_layout->addWidget( cell_size_edit, 1, 16, Qt::AlignLeft);	
-	controls_layout->addWidget( color_base_label, 2, 15, Qt::AlignRight);
-	controls_layout->addWidget( color_base_edit, 2, 16, Qt::AlignLeft);	
-	controls_layout->addWidget( axes_size_label, 3, 15, Qt::AlignRight);	
-	controls_layout->addWidget( axes_size_edit, 3, 16, Qt::AlignLeft);	
-	controls_layout->addWidget( color_by_label, 4, 15, Qt::AlignRight);	
-	controls_layout->addWidget( colorCombo, 4, 16, Qt::AlignLeft);	
-	controls_layout->addWidget( pcBWBtn, 0, 14, Qt::AlignRight);	
-	controls_layout->addWidget( pcRecordBtn, 1, 14, Qt::AlignRight);	
 
+	//QFrame* hframe = new QFrame(this);
+	QFrame* vframe = new QFrame(this);
+	//hframe->setFrameShape(QFrame::HLine);      // 设置水平方向
+	//hframe->setStyleSheet("QFrame{background:red;min-height:5px}");
+	vframe->setFrameShape(QFrame::VLine);      // 设置垂直方向
+	vframe->setStyleSheet("QFrame{background:rgb(192,192,192);min-width:2px}");
+	controls_layout->addWidget( vframe, 0, 14, 5, 1);
+
+	controls_layout->addWidget( pcSwitchBtn, 0, 15, Qt::AlignRight);	
+	controls_layout->addWidget( pcOnceBtn, 1, 15, Qt::AlignRight);	
+	controls_layout->addWidget( pcResetBtn, 2, 15, Qt::AlignRight);	
+	controls_layout->addWidget( saveBtn, 3, 15, Qt::AlignRight);
+	controls_layout->addWidget( pcBWBtn, 4, 15, Qt::AlignRight);	
+	controls_layout->addWidget( pcRecordBtn, 4, 18, Qt::AlignRight);
+
+	controls_layout->addWidget( point_size_label, 0, 16, Qt::AlignRight);
+	controls_layout->addWidget( point_size_edit, 0, 17, Qt::AlignLeft);	
+	controls_layout->addWidget( cell_size_label, 1, 16, Qt::AlignRight);
+	controls_layout->addWidget( cell_size_edit, 1, 17, Qt::AlignLeft);	
+	controls_layout->addWidget( color_base_label, 2, 16, Qt::AlignRight);
+	controls_layout->addWidget( color_base_edit, 2, 17, Qt::AlignLeft);	
+	controls_layout->addWidget( axes_size_label, 3, 16, Qt::AlignRight);	
+	controls_layout->addWidget( axes_size_edit, 3, 17, Qt::AlignLeft);	
+	controls_layout->addWidget( color_by_label, 4, 16, Qt::AlignRight);	
+	controls_layout->addWidget( colorCombo, 4, 17, Qt::AlignLeft);		
+	
+	controls_layout->addWidget( distanceOffset_label, 0, 18, Qt::AlignRight);
+	controls_layout->addWidget( distance_Offset_edit, 0, 19, Qt::AlignLeft);	
+	controls_layout->addWidget( rotate_label, 1, 18, Qt::AlignRight);
+	controls_layout->addWidget( rotate_angle_edit, 1, 19, Qt::AlignLeft);	
+	controls_layout->addWidget( left_label, 2, 18, Qt::AlignRight);
+	controls_layout->addWidget( left_angle_edit, 2, 19, Qt::AlignLeft);	
+	controls_layout->addWidget( right_label, 3, 18, Qt::AlignRight);
+	controls_layout->addWidget( right_angle_edit, 3, 19, Qt::AlignLeft);	
 
 	controlsBox->setLayout(controls_layout);
 
@@ -2418,7 +2428,8 @@ void viewpanel::saveDataThead()
 		ifSave = false;
 		return;		
 	}
-	//usleep(100*1000);
+	if(!udpStop_) udpClose();
+	if(!udpPCStop_) udpPcClose();
 	saveData();
 #if 0
     vx_task_set_default_create_params(&bst_params);
@@ -2499,6 +2510,26 @@ void viewpanel::udpClose(){
 	udpStop_ = true;
 	vx_task_delete(&bst_task[1]);
 	vx_task_delete(&bst_task[2]);
+	settingADCSavebutton->setStyleSheet("color: black");
+	settingADCSavebutton->setText("&Start FFT-ADC");
+}
+
+void viewpanel::udpPcClose(){
+	::close(udpRecvPCSocketFd_);
+	udpPCStop_ = true;
+	vx_task_delete(&bst_task[3]);
+	vx_task_delete(&bst_task[4]);
+	commandMsg cmdMsg;
+	memset(&cmdMsg, 0, sizeof(commandMsg));
+	cmdMsg.mHead.usCommand = commandType::POINTCLOUD_UDP_STOP;
+	if(::write(ctrl_sock, &cmdMsg, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("Close PointCloud failed!");
+		msgBox.exec();
+		return;
+	}
+	pcSwitchBtn->setStyleSheet("color: black");
+	pcSwitchBtn->setText("&Start PointCloud");
 }
 
 
@@ -3072,6 +3103,7 @@ void viewpanel::startPcUdpContinuous() {
 
 void viewpanel::udpPcConnect() {
 
+	if(!udpStop_) udpClose();
 	if(udpPCStop_){
 #if 1
 		commandMsg cmdMsg;
@@ -3091,26 +3123,12 @@ void viewpanel::udpPcConnect() {
 		pcSwitchBtn->setStyleSheet("color: green");
 		pcSwitchBtn->setText("&Close PointCloud");
 	}else{
-		::close(udpRecvPCSocketFd_);
-		udpPCStop_ = true;
-		vx_task_delete(&bst_task[3]);
-		vx_task_delete(&bst_task[4]);
-		commandMsg cmdMsg;
-		memset(&cmdMsg, 0, sizeof(commandMsg));
-		cmdMsg.mHead.usCommand = commandType::POINTCLOUD_UDP_STOP;
-		if(::write(ctrl_sock, &cmdMsg, sizeof(commandMsg)) < 0){
-			QMessageBox msgBox;
-			msgBox.setText("Close PointCloud failed!");
-			msgBox.exec();
-			return;
-		}
-		pcSwitchBtn->setStyleSheet("color: black");
-		pcSwitchBtn->setText("&Start PointCloud");
+		udpPcClose();
 	}
 }
 
 void viewpanel::udpConnect() {
-
+	if(!udpPCStop_) udpPcClose();
 	if(udpStop_){
 		commandMsg cmdMsg;
 		memset(&cmdMsg, 0, sizeof(commandMsg));
@@ -3133,11 +3151,9 @@ void viewpanel::udpConnect() {
 		bst_params.task_main = TaskFuncUdpParse;
 		vx_task_create(&bst_task[2], &bst_params);  
 		settingADCSavebutton->setStyleSheet("color: green");
-		settingADCSavebutton->setText("FFT-ADC &Stop");
+		settingADCSavebutton->setText("&Stop FFT-ADC");
 	}else{
 		udpClose();
-		settingADCSavebutton->setStyleSheet("color: black");
-		settingADCSavebutton->setText("FFT-ADC &Start");
 		//QMessageBox msgBox;
 		//msgBox.setText("UDP Connection is already working, please stop it first !");
 		//msgBox.exec();		

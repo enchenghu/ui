@@ -207,6 +207,7 @@ private Q_SLOTS:
 	void startPcUdpContinuous();
 
 	void udpClose();
+	void udpPcClose();
 
 	void configAxesSize();
 	void configCellSize();
