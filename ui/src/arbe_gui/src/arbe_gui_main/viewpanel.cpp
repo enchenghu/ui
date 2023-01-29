@@ -194,7 +194,8 @@ viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
 	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_ORI),\
 	power_offset(0.0), distance_offset(0.0),ifConnectedMotor(false),\
-	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false)
+	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
+	ifStarted(false)
 {
 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
@@ -1904,7 +1905,7 @@ void viewpanel::CreatUIWindow()
 	//hframe->setFrameShape(QFrame::HLine);      // 设置水平方向
 	//hframe->setStyleSheet("QFrame{background:red;min-height:5px}");
 	vframe->setFrameShape(QFrame::VLine);      // 设置垂直方向
-	vframe->setStyleSheet("QFrame{background:rgb(192,192,192);min-width:2px}");
+	vframe->setStyleSheet("QFrame{background:rgb(192,192,192);min-width:10px;border:0.0px solid black}");
 	controls_layout->addWidget( vframe, 0, 14, 5, 1);
 
 	controls_layout->addWidget( pcSwitchBtn, 0, 15, Qt::AlignRight);	
@@ -1912,7 +1913,7 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( pcResetBtn, 2, 15, Qt::AlignRight);	
 	controls_layout->addWidget( saveBtn, 3, 15, Qt::AlignRight);
 	controls_layout->addWidget( pcBWBtn, 4, 15, Qt::AlignRight);	
-	controls_layout->addWidget( pcRecordBtn, 4, 18, Qt::AlignRight);
+	controls_layout->addWidget( pcRecordBtn, 4, 19, Qt::AlignRight);
 
 	controls_layout->addWidget( point_size_label, 0, 16, Qt::AlignRight);
 	controls_layout->addWidget( point_size_edit, 0, 17, Qt::AlignLeft);	
@@ -2418,14 +2419,10 @@ void viewpanel::start_save_task()
 }
 void viewpanel::saveDataThead()
 {
-	if(!ifSave && ifStarted){
-		saveBtn->setStyleSheet("color: green");
-		saveBtn->setText("Saving..");
-		ifSave = true;
-	}else {
-		saveBtn->setStyleSheet("color: black");
-		saveBtn->setText("Save PC");
-		ifSave = false;
+	if(!ifStarted){
+		QMessageBox msgBox;
+		msgBox.setText("tcp is not connected, save failed!");
+		msgBox.exec();
 		return;		
 	}
 	if(!udpStop_) udpClose();
@@ -2453,6 +2450,12 @@ void viewpanel::saveDataThead()
 }
 
 void viewpanel::pcRecord(){
+	if(udpPCStop_){
+		QMessageBox msgBox;
+		msgBox.setText("pointCloud udp is not connected!");
+		msgBox.exec();
+		return;		
+	}
 	static bool recording = false;
 	if(!recording){
 		std::string pcRecordPath;
