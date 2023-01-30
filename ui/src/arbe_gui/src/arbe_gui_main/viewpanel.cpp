@@ -3215,6 +3215,18 @@ void viewpanel::pcDataProc()
 		std::cout << "warning!!udpMsg_done_buf_queue get timeout!!!" << std::endl;
 		return;
 	}
+	if(!udpPCContinu_ && !udpPCSingle_){
+		udpPcMsg_free_buf_queue.put(pmsg);
+		return;
+	}
+	distance_offset = distance_Offset_edit->text().toDouble();
+	rotation_offset = rotate_angle_edit->text().toDouble();
+	leftAngle_offset = left_angle_edit->text().toDouble();
+	rightAngle_offset = right_angle_edit->text().toDouble();
+	color_base = color_base_edit->text().toDouble();
+	QString strColor = colorCombo->currentText();
+	std::cout << "rotation_offset: " << rotation_offset << ", leftAngle_offset: " << leftAngle_offset \
+	<< ", rightAngle_offset: " << rightAngle_offset << std::endl; 
 	pcDataFindMaxMin(pmsg);
 	int pcFrameSize = pmsg->pcDataOneFrame.size();
 	int pcDataSize = pmsg->pcDataOneFrame.size() * 100;
@@ -3224,12 +3236,8 @@ void viewpanel::pcDataProc()
 	double intensity_m;
 	double speed_m;
 	int index_rgb;
-
 	ROS_INFO("pcDataSize is %d", pcDataSize);
-	if(!udpPCContinu_ && !udpPCSingle_){
-		udpPcMsg_free_buf_queue.put(pmsg);
-		return;
-	}
+
 #if 1
 	time_t rawtime;
 	struct tm *ptminfo;
@@ -3247,7 +3255,7 @@ void viewpanel::pcDataProc()
 	"-" + std::to_string(ptminfo->tm_min) +
 	"-" + std::to_string(ptminfo->tm_sec) +
 	+".csv";
-	if(udpPCSingle_) ROS_INFO("csvPath is %s \n", csvPath.c_str());
+	if(udpPCSingle_) ROS_INFO("will save udp pc data, csvPath is %s \n", csvPath.c_str());
 	std::ofstream csvfile;
 	if(udpPCSingle_) {
 		csvfile.open(csvPath, std::ios::out); 
@@ -3258,16 +3266,6 @@ void viewpanel::pcDataProc()
 #endif
 	
 	cloud.points.resize(pcDataSize);
-	distance_offset = distance_Offset_edit->text().toDouble();
-	rotation_offset = rotate_angle_edit->text().toDouble();
-	leftAngle_offset = left_angle_edit->text().toDouble();
-	rightAngle_offset = right_angle_edit->text().toDouble();
-	color_base = color_base_edit->text().toDouble();
-	QString strColor = colorCombo->currentText();
-
-	std::cout << "rotation_offset " << rotation_offset << "leftAngle_offset " << leftAngle_offset \
-	<< "rightAngle_offset " << rightAngle_offset << std::endl; 
-
 	int realSize = 0;
 	for(int j = 0; j < pcFrameSize; j++)
 	{
