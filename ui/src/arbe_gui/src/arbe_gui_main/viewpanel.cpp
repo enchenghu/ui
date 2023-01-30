@@ -235,23 +235,15 @@ viewpanel::viewpanel(QTabWidget* parent )
 // Destructor.
 viewpanel::~viewpanel()
 {
-	if(!udpStop_) {
-		udpClose();
-		udpStop_ = true;
-	}
-	if(!udpPCStop_) {
-		udpPcClose();
-		udpPCStop_ = true;
-	}
+	if(!udpStop_) udpClose();
+	if(!udpPCStop_) udpPcClose();
 	delete manager_;
 	save_settings();
-	cmdMsg_.mHead.usCommand = commandType::FFT_ADC_READ_STOP;
-	::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg));
 	::close(udpRecvSocketFd_);
+	::close(udpRecvPCSocketFd_);
 	::close(ctrl_sock);
 	serialClose(m_serialPort);	
 	serialClose(m_serialPort_test);	
-
 }
 
 void viewpanel::init_queue()
