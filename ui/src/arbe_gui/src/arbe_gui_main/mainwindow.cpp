@@ -429,7 +429,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 	int ret = system("pkill -f rqt_bag");
 	close();
 	radar_quit();
-	ret = 	system("rosnode kill --all");
+	//ret = 	system("rosnode kill --all");
 }
 
 void MainWindow::init_cmnd_line_subs( void )

@@ -578,11 +578,11 @@ void radar_configure_pc()
 void radar_quit()
 {
 	int ret;
-	ROS_WARN("received stop command 'q'... stop the GUI");
-	if (rosbag_recording == 1) {
-		rosbag_stop_recording();
-	}
-	ROS_WARN("trying to stop radar nodes");
+	//ROS_WARN("received stop command 'q'... stop the GUI");
+	//if (rosbag_recording == 1) {
+		//rosbag_stop_recording();
+	//}
+	//ROS_WARN("trying to stop radar nodes");
 
 	/* Publish the goodbye command to trigger a kill of radar nodes */
 	std_msgs::String msg;
@@ -590,12 +590,11 @@ void radar_quit()
 	ss << "goodbye";
 	msg.data = ss.str();
 	ROS_INFO("%s", msg.data.c_str());
-	arbe_gui_commands_pub.publish(msg);
-	ret = system("rosnode kill screen_grab screen_recorder");
-	ret = system("killall cv_camera_node");
+	//arbe_gui_commands_pub.publish(msg);
+	//ret = system("rosnode kill screen_grab screen_recorder");
+	//ret = system("killall cv_camera_node");
 
 	terminating = 1;
-	exit(0);
 }
 
 

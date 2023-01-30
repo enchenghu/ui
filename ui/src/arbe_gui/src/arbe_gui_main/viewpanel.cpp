@@ -235,7 +235,23 @@ viewpanel::viewpanel(QTabWidget* parent )
 // Destructor.
 viewpanel::~viewpanel()
 {
+	if(!udpStop_) {
+		udpClose();
+		udpStop_ = true;
+	}
+	if(!udpPCStop_) {
+		udpPcClose();
+		udpPCStop_ = true;
+	}
 	delete manager_;
+	save_settings();
+	cmdMsg_.mHead.usCommand = commandType::FFT_ADC_READ_STOP;
+	::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg));
+	::close(udpRecvSocketFd_);
+	::close(ctrl_sock);
+	serialClose(m_serialPort);	
+	serialClose(m_serialPort_test);	
+
 }
 
 void viewpanel::init_queue()
@@ -826,19 +842,11 @@ void viewpanel::readDiff(void){
 
 void viewpanel::printView(  )
 {
-	cmdMsg_.mHead.usCommand = commandType::FFT_ADC_READ_STOP;
-	::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg));
-	::close(udpRecvSocketFd_);
-	::close(ctrl_sock);
-	udpStop_ = true;
 	ROS_INFO("Like this view? [D,Y,P,F] = [%f,%f,%f,%s]",
 			manager_->getViewManager()->getCurrent()->subProp("Distance")->getValue().toFloat(),
 			manager_->getViewManager()->getCurrent()->subProp("Yaw")->getValue().toFloat(),
 			manager_->getViewManager()->getCurrent()->subProp("Pitch")->getValue().toFloat(),
 			manager_->getViewManager()->getCurrent()->subProp("Focal Point")->getValue().toString().toStdString().c_str());
-	save_settings();
-	serialClose(m_serialPort);	
-	serialClose(m_serialPort_test);	
 }
 
 void viewpanel::setView( view_vals_t &view_vals )
@@ -1487,7 +1495,7 @@ void viewpanel::CreatADCWindow()
 	QGroupBox* adcSettingBox = new QGroupBox(tr("ADC control:"));
 	QGridLayout* adcSettingBoxLayout = new QGridLayout ;
 	singelADCBtn_ = new QPushButton("&Single");
-	resetADCBtn_ = new QPushButton("&Reset");
+	resetADCBtn_ = new QPushButton("&Continue");
 	
 	adcSettingBoxLayout->addWidget(singelADCBtn_, 0, 0);//, Qt::AlignTop);
 	adcSettingBoxLayout->addWidget(resetADCBtn_, 0, 1);//, Qt::AlignTop);
@@ -1560,7 +1568,7 @@ void viewpanel::CreatDebugWindow()
 	QPushButton * settingFFTSavebutton = new QPushButton("&Save");
 	QPushButton * settingFFTConfigbutton = new QPushButton("&Config");
 	singelFFTBtn_ = new QPushButton("&Single");
-	resetFFTBtn_ = new QPushButton("&Reset");
+	resetFFTBtn_ = new QPushButton("&Continue");
 
 	QLabel* power_Offset_label = new QLabel("Power Offset/dB" );
 	power_Offset_edit = new QLineEdit();	
