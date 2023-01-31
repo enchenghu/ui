@@ -187,7 +187,6 @@ src/arbe_gui_main/main.cpp
 src/arbe_gui_main/mainwindow.cpp
 src/arbe_gui_main/viewpanel.cpp
 src/arbe_gui_main/common.cpp
-src/arbe_gui_main/terminal.cpp
 src/arbe_gui_main/ctkrangeslider.cpp
 src/arbe_gui_main/Per_radar_settings.cpp
 src/arbe_gui_main/osc_chart.cpp
