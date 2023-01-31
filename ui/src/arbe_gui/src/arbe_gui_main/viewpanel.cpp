@@ -75,7 +75,6 @@
 static pcData_t g_msg;
 static udpMsg g_udpMsg;
 extern void radar_quit();
-extern void rosbag_start_recording();
 extern void rosbag_stop_recording();
 
 extern int terminating;
@@ -399,7 +398,6 @@ void viewpanel::recording_control( void )
 {
 	if (rosbag_recording == 0)
 	{
-		rosbag_start_recording();
 		if (rosbag_recording == 1)
 		{
 		record_button->setStyleSheet("color: red");
@@ -408,7 +406,6 @@ void viewpanel::recording_control( void )
 	}
 	else
 	{
-		rosbag_stop_recording();
 		record_button->setStyleSheet("color: black");
 		record_button->setText("Rec&ord");
 	}

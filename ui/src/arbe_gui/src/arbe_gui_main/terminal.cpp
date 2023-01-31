@@ -48,14 +48,14 @@ using namespace std;
 extern void radar_disconnect();
 extern void radar_stop_transmit();
 extern int terminating;
-extern bool logging_enabled;
+bool logging_enabled;
 extern QPushButton *radar_connect_button;
 extern QPushButton *radar_start_stop_button;
 extern bool radar_playing;
 int fd;
 const char RecordFileName[40] = "arbe-radar-log";
 FILE * log_file;
-extern QString radar_debug_port;
+QString radar_debug_port;
 
 /*
    Implement system software reset and uart logging

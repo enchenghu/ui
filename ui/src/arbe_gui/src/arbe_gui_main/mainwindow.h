@@ -44,11 +44,6 @@
 #include <std_msgs/String.h>
 #include <QInputDialog>
 
-bool get_rec_topics(bool &all_pp, bool &camera, bool &all_debug, bool &dl_training, bool &fusion, bool &parsed, bool &raw_topics, bool &settings_topics, bool &legacy_pc, bool &nav_topics, bool &object_list);
-bool get_rec_all_pp();
-std::string get_save_folder();
-bool get_rec_rviz_pointcloud();
-uint8_t get_video_dev_num();
 
 class QAction;
 class QMenu;
@@ -62,11 +57,6 @@ class MainWindow : public QMainWindow
 
 public:
 	MainWindow();
-	void init_cmnd_line_subs( void );
-	void on_cmnd_line_distdisp_callback(std_msgs::Bool);
-    void on_cmnd_dview_x_callback(std_msgs::Float32);
-    void on_cmnd_dview_y_callback(std_msgs::Float32);
-	void on_cmnd_camera_file_callback(std_msgs::String);
 protected:
     void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
 
@@ -75,77 +65,17 @@ private Q_SLOTS:
 	void stopPlayback();
 	void setSaveFolder();
 	void about();
-	void ConfigDialog();
-	//void DebugDialog();
-
-	void load_settings();
-	void save_settings();
-	void updateSettingsStrings( void );
 	void quit();
-	void enableCamera();
-	void launchUSBCam();
-	void launchGigECam();
-	void enableFreeSpaceTopView();
-	void radarReset();
 	void convertRosbag();
-	void LoggingControl();
-	void RecCheckAll_Control();
-	void RecUncheckAll_Control();
-	void RecAllPostProcessing_Control();
-    void RecCamera_Control();
-    void RecDebug_Control();
-    void RecDLTraining_Control();
-    void RecFusion_Control();
-    void RecParsed_Control();
-
     void CtrlPanel_Control();
     void PcPanel_Control();
-
-
-    void RecNav_Control();
-	void RecObjList_Control();
-    void RecRawTopics_Control();
-    void RecSettingsTopics_Control();
-    void RecLegacyPointcloud_Control();
-
 	void RecRvizPointcloudControl();
-	void selectDetectionsType();
-	void selectSlam();
-	void resetOmegaCalib( void );
-	void imposeOmegaZero( void );
-	void restoreDefaults( void );
-	void dispFSOnPc( void );
-	void EnableAggregation( void );
-	void setDLTrainingPlayback( void );
-    void setDLTrainingView( void );
-    void setClassesToShow(void );
-    void EnableGeoLocalization( void );
-	void ResetLocalCartesian( void );
-	void enableSlam( void );
-	void enableClassification( void );
-	void enableFreeSpace( void );
-	void resetSlam( void );
-	void ChamberModeControl();
-	void read_radar_debug_data();
 
-	void load_camera_calibration();
-	void toggle_camera_buffering();
-	void toggle_slam_on_cam();
-    void toggle_FS_on_cam();
-	void toggle_funnel_on_cam();
-	void toggle_discard_out_of_el_context();
-	void toggle_asphalt_text();
-	void toggle_dist_on_cam();
-	void toggle_slam_display_economy();
-    void toggle_slam_color_by_class();
-	void slam_reconfigure();
 	void SetTestDescription( void );
 
 private:
 	void createActions();
 	void createMenus();
-	void createToolBars();
-	void createStatusBar();
 	void readSettings();
 	void writeSettings();
 	void setCurrentFile(const QString &fileName);
@@ -155,9 +85,7 @@ private:
 	QPlainTextEdit *textEdit;
 	QString curFile;
 	QMenu *fileMenu;
-	QMenu *aiMenu;
 	QMenu *viewMenu;
-	QMenu *cameraMenu;
 	QMenu *systemMenu;
     QMenu *recordingMenu;
 	QMenu *helpMenu;
@@ -178,90 +106,20 @@ private:
 	QAction *debugAct;
 	QAction *controlAct;
 	QAction *convertAct;
-	QAction *cameraAct;
-	QAction *GigEcameraAct;
-	QAction *USBcameraAct;
-	QAction *freeSpaceTopVeiwAct;
-	QAction *resetAct;
-	QAction *loggingAct;
-	QAction *ChamberAct;
-	QAction *DetectionsTypeAct;
-	QAction *ShowSlamAct;
-	QAction *EnableGeogAct;
-	QAction *EnableAggregationAct;
-    QAction *DLTrainingViewAct;
-	QAction *DLTrainingPlaybackAct;
-    QAction *DLTrainingChooseAllClassesAct;
-    QAction *DLTrainingChooseClass0Act;
-    QAction *DLTrainingChooseClass1Act;
-    QAction *DLTrainingChooseClass2Act;
-    QAction *DLTrainingChooseClass3Act;
-    QAction *DLTrainingChooseClass4Act;
-    QAction *ResetLocalCartesianAct;
-	QAction *EnableSlamAct;
-	QAction *EnableClassificationAct;
-	QAction *EnableFreeSpaceAct;
-	QAction *ResetSlamAct;
-	QAction *ResetOmegaCalibAct;
-	QAction *ImposeOmegaZeroAct;
-	QAction *dispFSPolyOnPcAct;
-	QAction *restoreDefaultsAct;
 	QAction *TestDescriptionAct;
+
 	QListWidget *contentsWidget;
 	QComboBox *debug_port_combo;
 	QComboBox *video_device_combo;
 	QComboBox *radar_region_combo;
-	QLineEdit *bias_4d_edit;
-	QLineEdit *noise_level_edit;
 	QString openFilesPath;
-
-	QAction *recCheckAllAct;
-	QAction *recUncheckAllAct;
-    QAction *recAllProcessedTopicsAct;
-    QAction *recCameraAct;
-    QAction *recDebugAct;
-    QAction *recDLTrainingAct;
-    QAction *recFusionAct;
-    QAction *recParsedAct;
-    QAction *recRawTopicsAct;
-    QAction *recSettingsTopicsAct;
-    QAction *recNavTopicsAct;
-    QAction *recLegacyPcAct;
-	QAction *recObjectListAct;
 
 
     QAction *showCtrlDockAct;
     QAction *showPcPanelAct;
 
 	QAction *recRvizPointcloudAct;
-	QAction *loadCamCalibAct;
-	QAction *slamReconfigureAct;
-	QAction *allowCameraBufferingForSyncAct;
-	QAction *toggleSlamOnImageAct;
-	QAction *toggleFSOnImageAct;
-	QAction *toggleFunnelOnImageAct;
-	QAction *toggleDiscardOutOfContextAct;
-	QAction *toggleAsphaltTextSlidersAct;
 
-	QAction *toggleDispDistOnImageAct;
-	QAction *toggleSlamDisplayEconomyModeAct;
-    QAction *toggleSlamColorByClassAct;
-	QAction *captureRadarDebugDataAct;
-	QCheckBox *ntc_3d_checkbox;
-	QCheckBox *ntc_4d_checkbox;
-	QCheckBox *cfar_3d_checkbox;
-	QCheckBox *cfar_4d_checkbox;
-	QCheckBox *enable_phase_checkbox;
-	QCheckBox *enable_thr_metadata_checkbox;
-
-	bool slamDispOnCamEcoMode;
-	bool cameraBuffering;
-	bool slamDispOnCam;
-	bool FSDispOnCam = true;
-	bool FunnelDispOnCam = true;
-	bool slamDispDistOnCam;
-    bool slamColorByClass;
-	bool discardOutOfElContext = false;
 };
 
 #endif
