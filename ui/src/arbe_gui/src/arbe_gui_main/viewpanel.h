@@ -67,7 +67,6 @@
 #include <QFileDialog>
 #include <QDebug>
 #include <QGroupBox>
-#include "ctkrangeslider.h"
 #include <QShortcut>
 #include "types_fmcw.hpp"
 #include <QtSerialPort/QSerialPort>

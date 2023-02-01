@@ -36,7 +36,7 @@
 #include "geometry_msgs/PolygonStamped.h"
 #include "geometry_msgs/Point32.h"
 #include "mainwindow.h"
-#include "Per_radar_settings.hpp"
+//#include "Per_radar_settings.hpp"
 
 #include "sensor_msgs/CompressedImage.h"
 #include "sensor_msgs/Image.h"
@@ -61,7 +61,7 @@
 #include "Utils.h"
 #include "rqt_gauges/my_plugin.h"
 #include "rqt_gauges/qcgaugewidget.h"
-#include "ctkrangeslider.h"
+//#include "ctkrangeslider.h"
 #include "viewpanel.h"
 #include <vector>
 //#define ENABLE_MESH_DISPLAY

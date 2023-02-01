@@ -187,22 +187,14 @@ src/arbe_gui_main/main.cpp
 src/arbe_gui_main/mainwindow.cpp
 src/arbe_gui_main/viewpanel.cpp
 src/arbe_gui_main/common.cpp
-src/arbe_gui_main/ctkrangeslider.cpp
-src/arbe_gui_main/Per_radar_settings.cpp
 src/arbe_gui_main/osc_chart.cpp
 src/arbe_gui_main/fft_charts.cpp
 src/arbe_gui_main/fft_chartview.cpp
 src/arbe_gui_main/qcustomplot.cpp
 src/arbe_gui_main/plot_tracer.cpp
-
-#src/ArbeApiCommon/RAF_API_Library/src/Raf_Api.c
-#src/ArbeApiCommon/RAF_API_Library/src/User_Extended.c
-#src/ArbeApiCommon/Utilities/src/Utils.c
-#src/ArbeApiCommon/Utilities/src/tlv.c
-#src/ArbeApiCommon/Reference_Design_Driver/src/Accumulator.c
 )
 
-add_executable(arbe_pointcloud_receiver 
+#[[add_executable(arbe_pointcloud_receiver 
 src/arbe_pointcloud_receiver/pointcloud_node.cpp
 )
 
@@ -216,12 +208,12 @@ src/arbe_visualization_engine/vis_utils.cpp
 add_executable(arbe_slam_can_publisher 
 src/arbe_slam_can_publisher/main.cpp
 )
-
 ## Declare a C++ library
 add_library(arbe_points_publisher
   src/arbe_points_publisher/src/arbe_points_publisher.cpp
   ${MOC_FILES}
 )
+]]
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -252,7 +244,7 @@ target_link_libraries(arbe_gui
    ${CXX_FILESYSTEM_LIBRARIES}
  )
 
-add_dependencies(arbe_pointcloud_receiver ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#[[add_dependencies(arbe_pointcloud_receiver ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(arbe_pointcloud_receiver
    ${catkin_LIBRARIES}
    ${PCL_LIBRARIES}
@@ -275,12 +267,12 @@ target_link_libraries(arbe_slam_can_publisher
    ${catkin_LIBRARIES}
    ${PCL_LIBRARIES}
  )
-
+]]
 #############
 ## Install ##
 #############
 
-install(TARGETS arbe_points_publisher
+#[[install(TARGETS arbe_points_publisher
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -289,7 +281,7 @@ install(TARGETS arbe_points_publisher
 install(FILES arbe_points_publisher
   plugin_description.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-
+]]
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 

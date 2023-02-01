@@ -43,7 +43,7 @@
 #include "viewpanel.h"
 #include "common.hpp"
 #include <arbe_msgs/arbeGUIsettings.h>
-#include "Per_radar_settings.hpp"
+//#include "Per_radar_settings.hpp"
 #include "arbe_msgs/arbeNewPcMsg.h"
 #include <arbe_msgs/arbeBuildNumber.h>
 #include <arbe_msgs/arbeBoolWithTime.h>
