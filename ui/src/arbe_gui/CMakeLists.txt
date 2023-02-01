@@ -47,9 +47,9 @@ else()
   set(QT_LIBRARIES Qt5::Widgets)
 endif()
 
-qt5_wrap_cpp(MOC_FILES
+#[[qt5_wrap_cpp(MOC_FILES
   src/arbe_points_publisher/include/arbe_points_publisher/arbe_points_publisher.hpp
-  )
+  )]]
 
 ## I prefer the Qt signals and slots to avoid defining "emit", "slots",
 ## etc because they can conflict with boost signals, so define QT_NO_KEYWORDS here.
