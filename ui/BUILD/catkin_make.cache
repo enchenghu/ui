@@ -1,2 +1,0 @@
-arbe_api_common:arbe_gui:arbe_msgs:gauges:rqt_bag/rqt_bag:rqt_bag/rqt_bag_plugins:screen_grab/screen_grab
--DCATKIN_DEVEL_PREFIX=/home/encheng/code_ui/ui/ui/devel -DCMAKE_INSTALL_PREFIX=/home/encheng/code_ui/ui/ui/install -G Unix Makefiles

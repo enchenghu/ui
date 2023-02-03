@@ -1,8 +1,0 @@
-prefix=/home/encheng/code_ui/ui/ui/install
-
-Name: rqt_gauges
-Description: Description of rqt_gauges
-Version: 1.0.7
-Cflags: -I${prefix}/include
-Libs: -L${prefix}/lib -lrqt_gauges -lqcgaugewidget
-Requires: roscpp rqt_gui rqt_gui_cpp std_msgs
