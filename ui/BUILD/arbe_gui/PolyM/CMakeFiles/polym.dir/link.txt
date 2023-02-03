@@ -1,0 +1,2 @@
+/usr/bin/ar qc /home/encheng/code_ui/ui/ui/devel/lib/libpolym.a  CMakeFiles/polym.dir/polym_autogen/mocs_compilation.cpp.o CMakeFiles/polym.dir/Msg.cpp.o CMakeFiles/polym.dir/Queue.cpp.o
+/usr/bin/ranlib /home/encheng/code_ui/ui/ui/devel/lib/libpolym.a

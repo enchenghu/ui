@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC   -shared -Wl,-soname,libos.so -o /home/encheng/code_ui/ui/ui/devel/lib/libos.so CMakeFiles/os.dir/os_autogen/mocs_compilation.cpp.o CMakeFiles/os.dir/vx_event.c.o CMakeFiles/os.dir/vx_mutex.c.o CMakeFiles/os.dir/vx_queue.c.o CMakeFiles/os.dir/vx_task.c.o  -lpthread 

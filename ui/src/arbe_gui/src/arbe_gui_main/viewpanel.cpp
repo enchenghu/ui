@@ -153,17 +153,17 @@ static QStringList regValueList = {
 
 //色表构建
 static std::vector<unsigned char> R_V_g = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-											0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+											0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 192,192,
 											0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240,
 											255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
 
 static std::vector<unsigned char> G_V_g = { 0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240,
-											255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+											255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,192,192,
 											255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 ,
 											240, 220, 200, 180, 160, 140, 120, 100, 80, 60, 40, 20, 0};
 
 static std::vector<unsigned char> B_V_g = { 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-											240, 220, 200, 180, 160, 140, 120, 100, 80, 60, 40, 20, 0,
+											240, 220, 200, 180, 160, 140, 120, 100, 80, 60, 40, 20, 0,192,192,
 											0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,
 											0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -3292,13 +3292,15 @@ void viewpanel::pcDataProc()
 																sin(horizontal_m * PI_FMCW / 180) * (-1.0);
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].z = distance_m * sin(vertical_m * PI_FMCW / 180) * (1.0);
 			if(strColor == "range")
-				index_rgb = distance_m / color_base * 52;
+				index_rgb = distance_m / color_base * R_V_g.size();
 			else if(strColor == "intensity")
-				index_rgb = (intensity_m - indensity_min) / (indensity_max - indensity_min) * 52;
-			else if(strColor == "speed")
-				index_rgb = (speed_m - speed_min) / (speed_max - speed_min) * 52;
+				index_rgb = (intensity_m - indensity_min) / (indensity_max - indensity_min) * R_V_g.size();
+			else if(strColor == "speed"){
+				index_rgb = (speed_m + color_base) / (color_base * 2) * R_V_g.size();
+				index_rgb = R_V_g.size() - 1 - index_rgb;
+			}
 
-			if(index_rgb > 51) index_rgb = 51;
+			if(index_rgb > (R_V_g.size() - 1)) index_rgb = R_V_g.size() - 1;
 			if(index_rgb < 0) index_rgb = 0;
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].r = R_V_g[index_rgb];
 			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].g = G_V_g[index_rgb];
