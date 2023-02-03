@@ -3296,15 +3296,34 @@ void viewpanel::pcDataProc()
 			else if(strColor == "intensity")
 				index_rgb = (intensity_m - indensity_min) / (indensity_max - indensity_min) * R_V_g.size();
 			else if(strColor == "speed"){
-				index_rgb = (speed_m + color_base) / (color_base * 2) * R_V_g.size();
-				index_rgb = R_V_g.size() - 1 - index_rgb;
+				uint8_t r, g, b = 0;
+				if(speed_m < 0 && speed_m < - 0.4){
+					r = 255;
+					g = 0;
+					b = 0;
+				} else if(speed_m > 0 && speed_m > 0.4) {
+					r = 0;
+					g = 0;
+					b = 240;
+				}else {
+					r = 192;
+					g = 192;
+					b = 192;					
+				}
+				cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].r = r;
+				cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].g = g;
+				cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].b = b;
+				//index_rgb = (speed_m + color_base) / (color_base * 2) * R_V_g.size();
+				//index_rgb = R_V_g.size() - 1 - index_rgb;
 			}
 
 			if(index_rgb > (R_V_g.size() - 1)) index_rgb = R_V_g.size() - 1;
 			if(index_rgb < 0) index_rgb = 0;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].r = R_V_g[index_rgb];
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].g = G_V_g[index_rgb];
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].b = B_V_g[index_rgb];
+			if(strColor != "speed"){
+				cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].r = R_V_g[index_rgb];
+				cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].g = G_V_g[index_rgb];
+				cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].b = B_V_g[index_rgb];
+			}
 		}
 	}
 	std::cout << "realSize is " << realSize << std::endl;
