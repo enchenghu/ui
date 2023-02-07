@@ -284,6 +284,7 @@ void viewpanel::init_queue()
 	distance_bin = 1 / 65536.0; 
 	vertical_offset = -2.5;
 	udpPCBuff_last.pcDataOneFrame.clear();
+	udpPCBuff_last.frameCounter.clear();
 	motorSerialConnectTest();
 }
 
@@ -3208,7 +3209,7 @@ void viewpanel::pcDataProc()
 {
 
 	udpPcMsgOneFrame* pmsg = nullptr;
-	//static long long frame_index = 0;
+	static long long frame_index = 0;
 	auto start = std::chrono::steady_clock::now();
 	if(udpPcMsg_done_buf_queue.get(pmsg)){
 		std::cout << "warning!!udpMsg_done_buf_queue get timeout!!!" << std::endl;
@@ -3227,6 +3228,7 @@ void viewpanel::pcDataProc()
 		{
 			for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){	
 				udpPCBuff_last.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
+				udpPCBuff_last.frameCounter.push_back(pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter);
 			}
 		}
 		if(udpPcMsg_done_buf_queue.get(pmsg)){
@@ -3247,36 +3249,49 @@ void viewpanel::pcDataProc()
 		}
 		if(!begin_save) continue;
 		oneFrame360.pcDataOneFrame.push_back(udpPCBuff_last.pcDataOneFrame[j]);
+		oneFrame360.frameCounter.push_back(udpPCBuff_last.frameCounter[j]);
+
 		if(begin_save && horizontal_m > 359.5 && horizontal_m < 360.0){
 			std::cout << "warnning, one_frame_360 is done in udpPCBuff_last" << horizontal_m << std::endl;
 			one_frame_360 = true;
 			break;
 		}
 	}
+	//frame_index++;
 	udpPCBuff_last.pcDataOneFrame.clear();
-
+	udpPCBuff_last.frameCounter.clear();
 	if(oneFrame360.pcDataOneFrame.empty()){
 		std::cout << "=============oneFrame360.pcDataOneFrame is empty, can't find 0" << std::endl;
 	}
 
 	begin_save = false;
 	pcFrameSize = pmsg->pcDataOneFrame.size();
-	oneFrame360.frameCounterCur = pmsg->pcDataOneFrame[0].UDP_PC_head.uphFrameCounter; 
+	oneFrame360.frameCounterCur = pmsg->pcDataOneFrame[0].UDP_PC_head.uphFrameCounter;
+/* 	auto last =  oneFrame360.pcDataOneFrame.end() - 1;
+	double horizontal_tmp = (*last).pcmHorizontal * horizontal_bin;
+	if(horizontal_tmp > 360.0) horizontal_tmp -= 360.0; */
 	if(!one_frame_360){
 		for(int j = 0; j < pcFrameSize; j++)
 		{
 			for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){	
 				horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
 				if(horizontal_m > 360.0) horizontal_m -= 360.0;
+				//if(horizontal_tmp >= horizontal_m) continue;
 				if(horizontal_m > 359.5 && horizontal_m < 360.0){
 					oneFrame360.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
+					oneFrame360.frameCounter.push_back(pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter);
 					one_frame_360 = true;
 					continue;
-				}
-				if(one_frame_360)
+				}				
+				if(one_frame_360){
 					udpPCBuff_last.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
-				else
+					udpPCBuff_last.frameCounter.push_back(pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter);
+					udpPCBuff_last.frameCounterLast = pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter;
+				}
+				else{
+					oneFrame360.frameCounter.push_back(pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter);
 					oneFrame360.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
+				}
 			}
 		}	
 	}
@@ -3323,8 +3338,8 @@ void viewpanel::pcDataProc()
 	if(udpPCSingle_) {
 		csvfile.open(csvPath, std::ios::out); 
 		csvfile << "intensity" << "," << "distance(m)" << "," 
-		<< "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)" << "," << "last count" \
-		<< "," << "current count" <<"\n";
+		<< "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)" << "," << "frame count" \
+		<<"\n";
 	}
 	
 #endif
@@ -3348,7 +3363,7 @@ void viewpanel::pcDataProc()
 		intensity_m = oneFrame360.pcDataOneFrame[j].pcmIndensity;
 		if(udpPCSingle_) {
 			csvfile << oneFrame360.pcDataOneFrame[j].pcmIndensity << "," << distance_m << "," << speed_m << "," \
-			<< vertical_m << ", " << horizontal_m << "," << oneFrame360.frameCounterLast << "," << oneFrame360.frameCounterCur << "\n";
+			<< vertical_m << ", " << horizontal_m << "," << oneFrame360.frameCounter[j] <<  "\n";
 		}
 		if(distance_m < 0.0) continue;
 		cloud.points[j].vertical = vertical_m;

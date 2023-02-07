@@ -247,6 +247,7 @@ typedef struct
 typedef struct 
 {
 	std::vector<PC_pointMeta_st> pcDataOneFrame;
+	std::vector<uint16_t> frameCounter;
 	uint16_t frameCounterLast;   // 点云图的帧计数
 	uint16_t frameCounterCur;   // 点云图的帧计数
 }udpPcMsgOneFrame360;
