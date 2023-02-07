@@ -283,6 +283,7 @@ void viewpanel::init_queue()
 	horizontal_bin = 360.0 / 32000.0 * 2; 
 	distance_bin = 1 / 65536.0; 
 	vertical_offset = -2.5;
+	udpPCBuff_last.pcDataOneFrame.clear();
 	motorSerialConnectTest();
 }
 
@@ -914,7 +915,7 @@ void viewpanel::registerPointcloudRviz()
 	ROS_ASSERT( Axes_ != NULL );
 	Axes_->subProp("Reference Frame")->setValue("odom");
 	Axes_->subProp("Length")->setValue("0.2");
-	Axes_->subProp("Radius")->setValue("0.1");
+	Axes_->subProp("Radius")->setValue("0.03");
 	Axes_->subProp("Alpha")->setValue("0.8");
 
 	std::string pointcloud_topic = "/fmcw/rviz/pointcloud";
@@ -3207,11 +3208,79 @@ void viewpanel::pcDataProc()
 {
 
 	udpPcMsgOneFrame* pmsg = nullptr;
+	//static long long frame_index = 0;
 	auto start = std::chrono::steady_clock::now();
 	if(udpPcMsg_done_buf_queue.get(pmsg)){
 		std::cout << "warning!!udpMsg_done_buf_queue get timeout!!!" << std::endl;
 		return;
 	}
+
+	int pcFrameSize = 0;
+	double horizontal_m = 0.0;
+	bool begin_save = false;
+	bool one_frame_360 = false;
+#if 1
+	if(udpPCBuff_last.pcDataOneFrame.empty()){
+		pcFrameSize = pmsg->pcDataOneFrame.size(); 
+		udpPCBuff_last.frameCounterLast = pmsg->pcDataOneFrame[0].UDP_PC_head.uphFrameCounter;
+		for(int j = 0; j < pcFrameSize; j++)
+		{
+			for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){	
+				udpPCBuff_last.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
+			}
+		}
+		if(udpPcMsg_done_buf_queue.get(pmsg)){
+			std::cout << "warning!!udpMsg_done_buf_queue get timeout!!!" << std::endl;
+			return;
+		}
+	}
+	pcFrameSize = udpPCBuff_last.pcDataOneFrame.size();
+	udpPcMsgOneFrame360 oneFrame360;
+	oneFrame360.pcDataOneFrame.clear();
+	oneFrame360.frameCounterLast = udpPCBuff_last.frameCounterLast;
+	for(int j = 0; j < pcFrameSize; j++)
+	{
+		horizontal_m = udpPCBuff_last.pcDataOneFrame[j].pcmHorizontal * horizontal_bin;
+		if(horizontal_m > 360.0) horizontal_m -= 360.0;
+		if(horizontal_m >= 0.0 && horizontal_m < 1.0) {
+			begin_save = true;
+		}
+		if(!begin_save) continue;
+		oneFrame360.pcDataOneFrame.push_back(udpPCBuff_last.pcDataOneFrame[j]);
+		if(begin_save && horizontal_m > 359.5 && horizontal_m < 360.0){
+			std::cout << "warnning, one_frame_360 is done in udpPCBuff_last" << horizontal_m << std::endl;
+			one_frame_360 = true;
+			break;
+		}
+	}
+	udpPCBuff_last.pcDataOneFrame.clear();
+
+	if(oneFrame360.pcDataOneFrame.empty()){
+		std::cout << "=============oneFrame360.pcDataOneFrame is empty, can't find 0" << std::endl;
+	}
+
+	begin_save = false;
+	pcFrameSize = pmsg->pcDataOneFrame.size();
+	oneFrame360.frameCounterCur = pmsg->pcDataOneFrame[0].UDP_PC_head.uphFrameCounter; 
+	if(!one_frame_360){
+		for(int j = 0; j < pcFrameSize; j++)
+		{
+			for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){	
+				horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
+				if(horizontal_m > 360.0) horizontal_m -= 360.0;
+				if(horizontal_m > 359.5 && horizontal_m < 360.0){
+					oneFrame360.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
+					one_frame_360 = true;
+					continue;
+				}
+				if(one_frame_360)
+					udpPCBuff_last.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
+				else
+					oneFrame360.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
+			}
+		}	
+	}
+#endif
 	if(!udpPCContinu_ && !udpPCSingle_){
 		udpPcMsg_free_buf_queue.put(pmsg);
 		return;
@@ -3222,18 +3291,15 @@ void viewpanel::pcDataProc()
 	rightAngle_offset = right_angle_edit->text().toDouble();
 	color_base = color_base_edit->text().toDouble();
 	QString strColor = colorCombo->currentText();
-	std::cout << "rotation_offset: " << rotation_offset << ", leftAngle_offset: " << leftAngle_offset \
+	//std::cout << "rotation_offset: " << rotation_offset << ", leftAngle_offset: " << leftAngle_offset \
 	<< ", rightAngle_offset: " << rightAngle_offset << std::endl; 
-	pcDataFindMaxMin(pmsg);
-	int pcFrameSize = pmsg->pcDataOneFrame.size();
-	int pcDataSize = pmsg->pcDataOneFrame.size() * 100;
+	//pcDataFindMaxMin(pmsg);
+
 	double distance_m;
 	double vertical_m;
-	double horizontal_m;
 	double intensity_m;
 	double speed_m;
 	int index_rgb;
-	ROS_INFO("pcDataSize is %d", pcDataSize);
 
 #if 1
 	time_t rawtime;
@@ -3257,94 +3323,82 @@ void viewpanel::pcDataProc()
 	if(udpPCSingle_) {
 		csvfile.open(csvPath, std::ios::out); 
 		csvfile << "intensity" << "," << "distance(m)" << "," 
-		<< "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)" << "\n";
+		<< "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)" << "," << "last count" \
+		<< "," << "current count" <<"\n";
 	}
 	
 #endif
-	
-	cloud.points.resize(pcDataSize);
+	pcFrameSize = oneFrame360.pcDataOneFrame.size();
+	std::cout << "pcFrameSize is " << pcFrameSize << std::endl;
+	cloud.points.resize(pcFrameSize);
 	int realSize = 0;
+	double horizontal_mm = 0.0;
+	if(!oneFrame360.pcDataOneFrame.empty())horizontal_mm = oneFrame360.pcDataOneFrame[0].pcmHorizontal * horizontal_bin;
+	if(horizontal_mm > 360.0) horizontal_mm -= 360.0;
+	std::cout << "=============horizontal_m[0] is " << horizontal_mm << std::endl;
 	for(int j = 0; j < pcFrameSize; j++)
 	{
-		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){
-			horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
-			if(horizontal_m > 360.0) horizontal_m -= 360.0;
-			if( horizontal_m < leftAngle_offset && horizontal_m > rightAngle_offset) continue;
-			realSize++;
-			speed_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmSpeed * speed_bin;
-			distance_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmDistance * distance_bin - distance_offset;
-			vertical_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmVertical * vertical_bin + vertical_offset;
-			intensity_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity;
-			if(udpPCSingle_) {
-				csvfile << pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity << "," << distance_m << "," << speed_m << "," \
-				<< vertical_m << ", " << horizontal_m << "\n";
+		horizontal_m = oneFrame360.pcDataOneFrame[j].pcmHorizontal * horizontal_bin;
+		if(horizontal_m > 360.0) horizontal_m -= 360.0;
+		if( horizontal_m < leftAngle_offset && horizontal_m > rightAngle_offset) continue;
+		realSize++;
+		speed_m = oneFrame360.pcDataOneFrame[j].pcmSpeed * speed_bin;
+		distance_m = oneFrame360.pcDataOneFrame[j].pcmDistance * distance_bin - distance_offset;
+		vertical_m = oneFrame360.pcDataOneFrame[j].pcmVertical * vertical_bin + vertical_offset;
+		intensity_m = oneFrame360.pcDataOneFrame[j].pcmIndensity;
+		if(udpPCSingle_) {
+			csvfile << oneFrame360.pcDataOneFrame[j].pcmIndensity << "," << distance_m << "," << speed_m << "," \
+			<< vertical_m << ", " << horizontal_m << "," << oneFrame360.frameCounterLast << "," << oneFrame360.frameCounterCur << "\n";
+		}
+		if(distance_m < 0.0) continue;
+		cloud.points[j].vertical = vertical_m;
+		cloud.points[j].horizontal = horizontal_m;
+		cloud.points[j].distance = distance_m;
+		cloud.points[j].indensity = intensity_m;
+		cloud.points[j].speed = speed_m;
+		horizontal_m += rotation_offset;
+		cloud.points[j].x = distance_m * cos(vertical_m * PI_FMCW / 180) * \
+															cos(horizontal_m * PI_FMCW / 180);
+		cloud.points[j].y = distance_m * cos(vertical_m * PI_FMCW / 180) * \
+															sin(horizontal_m * PI_FMCW / 180) * (-1.0);
+		cloud.points[j].z = distance_m * sin(vertical_m * PI_FMCW / 180) * (1.0);
+		if(strColor == "range")
+			index_rgb = distance_m / color_base * R_V_g.size();
+		else if(strColor == "intensity")
+			index_rgb = (intensity_m - indensity_min) / (indensity_max - indensity_min) * R_V_g.size();
+		else if(strColor == "speed"){
+			uint8_t r, g, b = 0;
+			if(speed_m < 0 && speed_m < - 0.4){
+				r = 255;
+				g = 0;
+				b = 0;
+			} else if(speed_m > 0 && speed_m > 0.4) {
+				r = 0;
+				g = 0;
+				b = 240;
+			}else {
+				r = 192;
+				g = 192;
+				b = 192;					
 			}
-			if(distance_m < 0.0) continue;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].vertical = vertical_m;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].horizontal = horizontal_m;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].distance = distance_m;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].indensity = intensity_m;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].speed = speed_m;
-			horizontal_m += rotation_offset;
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].x = distance_m * cos(vertical_m * PI_FMCW / 180) * \
-																cos(horizontal_m * PI_FMCW / 180);
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].y = distance_m * cos(vertical_m * PI_FMCW / 180) * \
-																sin(horizontal_m * PI_FMCW / 180) * (-1.0);
-			cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].z = distance_m * sin(vertical_m * PI_FMCW / 180) * (1.0);
-			if(strColor == "range")
-				index_rgb = distance_m / color_base * R_V_g.size();
-			else if(strColor == "intensity")
-				index_rgb = (intensity_m - indensity_min) / (indensity_max - indensity_min) * R_V_g.size();
-			else if(strColor == "speed"){
-				uint8_t r, g, b = 0;
-				if(speed_m < 0 && speed_m < - 0.4){
-					r = 255;
-					g = 0;
-					b = 0;
-				} else if(speed_m > 0 && speed_m > 0.4) {
-					r = 0;
-					g = 0;
-					b = 240;
-				}else {
-					r = 192;
-					g = 192;
-					b = 192;					
-				}
-				cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].r = r;
-				cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].g = g;
-				cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].b = b;
-				//index_rgb = (speed_m + color_base) / (color_base * 2) * R_V_g.size();
-				//index_rgb = R_V_g.size() - 1 - index_rgb;
-			}
+			cloud.points[j].r = r;
+			cloud.points[j].g = g;
+			cloud.points[j].b = b;
+			//index_rgb = (speed_m + color_base) / (color_base * 2) * R_V_g.size();
+			//index_rgb = R_V_g.size() - 1 - index_rgb;
+		}
 
-			if(index_rgb > (R_V_g.size() - 1)) index_rgb = R_V_g.size() - 1;
-			if(index_rgb < 0) index_rgb = 0;
-			if(strColor != "speed"){
-				cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].r = R_V_g[index_rgb];
-				cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].g = G_V_g[index_rgb];
-				cloud.points[j * UDP_PC_SIZE_SINGLE_V01 + index].b = B_V_g[index_rgb];
-			}
+		if(index_rgb > (R_V_g.size() - 1)) index_rgb = R_V_g.size() - 1;
+		if(index_rgb < 0) index_rgb = 0;
+		if(strColor != "speed"){
+			cloud.points[j].r = R_V_g[index_rgb];
+			cloud.points[j].g = G_V_g[index_rgb];
+			cloud.points[j].b = B_V_g[index_rgb];
 		}
 	}
 	std::cout << "realSize is " << realSize << std::endl;
-	//cloud.points.resize(realSize);
 	csvfile.close();
 	if(udpPCSingle_) udpPCSingle_ = false;
-#if 0
-	distance_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmDistance * distance_bin;
-	vertical_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmVertical * vertical_bin + vertical_offset;
-	horizontal_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmHorizontal * horizontal_bin;
-	speed_m = pmsg->pcDataOneFrame[106].UDP_PC_payload[66].pcmSpeed * speed_bin;
-	std::cout << "distance_m is " << distance_m << std::endl;
-	std::cout << "vertical_m is " << vertical_m << std::endl;
-	std::cout << "horizontal_m is " << horizontal_m << std::endl;
-	std::cout << "speed_m is " << speed_m << std::endl;
-
-	std::cout << "x is " << cloud.points[106 * UDP_PC_SIZE_SINGLE_V01 + 66].x << std::endl;
-	std::cout << "y is " << cloud.points[106 * UDP_PC_SIZE_SINGLE_V01 + 66].y << std::endl;
-	std::cout << "z is " << cloud.points[106 * UDP_PC_SIZE_SINGLE_V01 + 66].z << std::endl;
-#endif
-	//std::cout << "cloud.points[103].range_bin is " << cloud.points[103].range_bin << std::endl;
 	output.header.stamp = ros::Time::now();
 	pcl::toROSMsg(cloud,output);
 	output.header.frame_id = "image_lidar";
@@ -3366,7 +3420,7 @@ void viewpanel::pcParseLoop()
 		pcDataProc();
 		auto end = std::chrono::steady_clock::now();
 		elapsed = end - start;
-		//std::cout << "time for pub 100 pc data: " <<  elapsed.count() * 1000 << " ms" << std::endl;    
+		std::cout << "time for pub one frame pc data: " <<  elapsed.count() * 1000 << " ms" << std::endl;    
 		if(udpPCStop_) break;
 	}
 	std::cout << "quit pcParseLoop" << std::endl;

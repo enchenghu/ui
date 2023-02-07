@@ -243,6 +243,14 @@ typedef struct
 {
 	std::vector<UDP_PC_package_st> pcDataOneFrame;
 }udpPcMsgOneFrame;
+
+typedef struct 
+{
+	std::vector<PC_pointMeta_st> pcDataOneFrame;
+	uint16_t frameCounterLast;   // 点云图的帧计数
+	uint16_t frameCounterCur;   // 点云图的帧计数
+}udpPcMsgOneFrame360;
+
 #pragma pack()     // pack() 结束
 typedef enum
 {

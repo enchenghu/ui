@@ -364,6 +364,8 @@ private:
 
 	rviz::Display* Speedometer_;
 	pcl::PointCloud<FmcwPointXYZRGBGeneric> cloud;
+	pcl::PointCloud<FmcwPointXYZRGBGeneric> cloud_360;
+
 
 	sensor_msgs::PointCloud2 output;
 
@@ -454,6 +456,8 @@ private:
 	adcMsg adcBuff[MAX_BUFF_LEN];
 	udp_ADC_FFT_Msg udpFABuff[MAX_BUFF_LEN];
 	udpPcMsgOneFrame udpPCBuff[MAX_BUFF_LEN];
+	udpPcMsgOneFrame360 udpPCBuff_last;
+
 	bstMsgQueue<fftMsg*> fftMsg_free_buf_queue;
 	bstMsgQueue<fftMsg*> fftMsg_done_buf_queue;
 	bstMsgQueue<adcMsg*> adcMsg_free_buf_queue;
