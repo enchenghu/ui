@@ -3220,6 +3220,7 @@ void viewpanel::pcDataProc()
 	double horizontal_m = 0.0;
 	bool begin_save = false;
 	bool one_frame_360 = false;
+	double horizontal_last = 0.0;
 #if 1
 	if(udpPCBuff_last.pcDataOneFrame.empty()){
 		pcFrameSize = pmsg->pcDataOneFrame.size(); 
@@ -3258,25 +3259,30 @@ void viewpanel::pcDataProc()
 		}
 	}
 	//frame_index++;
+
+	if(oneFrame360.pcDataOneFrame.empty()){
+		std::cout << "=============oneFrame360.pcDataOneFrame is empty, can't find 0 , frame index is " << udpPCBuff_last.frameCounter[0]<< std::endl;
+	}
 	udpPCBuff_last.pcDataOneFrame.clear();
 	udpPCBuff_last.frameCounter.clear();
-	if(oneFrame360.pcDataOneFrame.empty()){
-		std::cout << "=============oneFrame360.pcDataOneFrame is empty, can't find 0" << std::endl;
-	}
-
 	begin_save = false;
 	pcFrameSize = pmsg->pcDataOneFrame.size();
 	oneFrame360.frameCounterCur = pmsg->pcDataOneFrame[0].UDP_PC_head.uphFrameCounter;
-/* 	auto last =  oneFrame360.pcDataOneFrame.end() - 1;
-	double horizontal_tmp = (*last).pcmHorizontal * horizontal_bin;
-	if(horizontal_tmp > 360.0) horizontal_tmp -= 360.0; */
+ 	//auto last =  oneFrame360.pcDataOneFrame.end() - 1;
+	if(!oneFrame360.pcDataOneFrame.empty())horizontal_last = oneFrame360.pcDataOneFrame[oneFrame360.pcDataOneFrame.size() - 1].pcmHorizontal * horizontal_bin;
+	if(horizontal_last > 360.0) horizontal_last -= 360.0; 
+	bool find_flag = true;
 	if(!one_frame_360){
 		for(int j = 0; j < pcFrameSize; j++)
 		{
 			for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){	
 				horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
 				if(horizontal_m > 360.0) horizontal_m -= 360.0;
-				//if(horizontal_tmp >= horizontal_m) continue;
+				if((horizontal_last > horizontal_m) && find_flag) {
+					continue;
+				}else{
+					find_flag = false;
+				}
 				if(horizontal_m > 359.5 && horizontal_m < 360.0){
 					oneFrame360.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
 					oneFrame360.frameCounter.push_back(pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter);
@@ -3308,7 +3314,7 @@ void viewpanel::pcDataProc()
 	QString strColor = colorCombo->currentText();
 	//std::cout << "rotation_offset: " << rotation_offset << ", leftAngle_offset: " << leftAngle_offset \
 	<< ", rightAngle_offset: " << rightAngle_offset << std::endl; 
-	//pcDataFindMaxMin(pmsg);
+	pcDataFindMaxMin(pmsg);
 
 	double distance_m;
 	double vertical_m;
