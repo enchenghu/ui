@@ -3179,6 +3179,12 @@ void viewpanel::startPcTask() {
 void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 {
 	if(!pmsg) return;
+	distance_min  = 0.0;
+	distance_max = 0.0;
+	indensity_min = 0.0;
+	indensity_max = 0.0;
+	speed_min = 0.0;
+	speed_max = 0.0;
 	int pcFrameSize = pmsg->pcDataOneFrame.size();
 	for(int j = 0; j < pcFrameSize; j++)
 	{
@@ -3353,10 +3359,6 @@ void viewpanel::pcDataProc()
 	std::cout << "pcFrameSize is " << pcFrameSize << std::endl;
 	cloud.points.resize(pcFrameSize);
 	int realSize = 0;
-	double horizontal_mm = 0.0;
-	if(!oneFrame360.pcDataOneFrame.empty())horizontal_mm = oneFrame360.pcDataOneFrame[0].pcmHorizontal * horizontal_bin;
-	if(horizontal_mm > 360.0) horizontal_mm -= 360.0;
-	std::cout << "=============horizontal_m[0] is " << horizontal_mm << std::endl;
 	for(int j = 0; j < pcFrameSize; j++)
 	{
 		horizontal_m = oneFrame360.pcDataOneFrame[j].pcmHorizontal * horizontal_bin;
