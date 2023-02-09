@@ -226,6 +226,8 @@ private Q_SLOTS:
 	void printErrorLog();
 	void slotTextTcpChanged();
 	void recvSerialInfo();
+	void parseMotorInfo(uint8_t*);
+
 	void recvSerialInfoTest();
 	void sendMotorConnectCmd();
 	void sendMotorWorkModeCmd();

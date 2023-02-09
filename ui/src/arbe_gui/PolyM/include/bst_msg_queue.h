@@ -37,7 +37,7 @@ class bstMsgQueue {
         auto Message = m_queue.get(wait_us);
         if(Message.get()->getMsgId() < 0) 
         {
-            std::cout << m_queueName << " is empty! get element timeout!!" << std::endl;
+            std::cout << "=========WARNNING!!!MSG QUEUQ: " << m_queueName << " is empty, get element timeout" << std::endl;
             return GET_TIME_OUT;
         }
         auto& dMessage = dynamic_cast<PolyM::DataMsg<dataType>&>(*Message);

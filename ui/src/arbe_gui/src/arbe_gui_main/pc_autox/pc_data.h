@@ -297,6 +297,9 @@ typedef enum
 	MOTOR_SHOW_ITEMS_CTRL = 0x0F,
 	MOTOR_SHOW_ITEMS_CTRL_RET = 0xAF,
 
+	MOTOR_ITEMS_INFO = 0xC0,
+	//MOTOR_SHOW_ITEMS_CTRL_RET = 0xAF,
+
 	MOTOR_SHOW_ITEMS_DISPLAY
 }motorCmdType;
 //PcMetadata PcMetadata_Arr[100];	// 每个UDP报文，包含2列激光数据

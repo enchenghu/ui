@@ -1642,6 +1642,8 @@ void viewpanel::CreatConnect()
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
 	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
+
+
 	connect(motorConnectBtn, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
 	connect(motorSwitchBtn, SIGNAL(clicked()), this, SLOT( sendMotorOpenCmd( void )));
 	connect(motorPidReadBtn, SIGNAL(clicked()), this, SLOT( readMotorPid( void )));
@@ -2653,22 +2655,28 @@ void viewpanel::slotTextTcpChanged()
    errorLogText->moveCursor(QTextCursor::End);
 }
 
-void viewpanel::recvSerialInfo()
+
+void viewpanel::parseMotorInfo(uint8_t* ptr)
 {
-	//m_serialPort->waitForReadyRead(10);
-	QByteArray info = m_serialPort->readAll();
-	if(info.isEmpty()){
-		qDebug() << "info recvSerialInfo  is empty";
+	if(ptr == nullptr){
+		QMessageBox msgBox;
+		msgBox.setText("MOTOR info is empty!");
+		msgBox.exec();	
+		return;		
+	}
+	if(ptr[0] != 0xaa || ptr[1] != 0x55){
+		qDebug() << "the msg is not motor info!";
 		return;
 	}
-	QByteArray hexData = info.toHex();
-	qDebug() << "info recvSerialInfo is " << hexData;
-	uint8_t* ptr = (uint8_t*)info.data();
+	uint8_t motor_id = ptr[2];
+	uint8_t cmd_id = ptr[3];
+	int datalen = ptr[4];
+	std::cout << "the motor_id is " << motor_id  << ", cmd_id is " << cmd_id << ", datalen is " << datalen << std::endl;
 
-	switch (ptr[2])
+	switch (ptr[3])
 	{
 	case MOTOR_CONNECT_RET:
-		if(ptr[4] == 0xFF){
+		if(ptr[5] == 0xFF){
 			motorConnectBtn->setStyleSheet("color: green");
 			motorConnectBtn->setText("&Disconnect");
 			ifConnectedMotor = true;
@@ -2679,7 +2687,7 @@ void viewpanel::recvSerialInfo()
 		}	
 		break;
 	case MOTOR_DISCONNECT_RET:
-		if(ptr[4] == 0xFF){
+		if(ptr[5] == 0xFF){
 			motorConnectBtn->setStyleSheet("color: black");
 			motorConnectBtn->setText("&Connect");
 			ifConnectedMotor = false;
@@ -2691,7 +2699,7 @@ void viewpanel::recvSerialInfo()
 		}
 		break;
 	case MOTOR_OPEN_RET:
-		if(ptr[4] == 0xFF){
+		if(ptr[5] == 0xFF){
 			if(ifOpenMotor){
 				motorSwitchBtn->setStyleSheet("color: black");
 				motorSwitchBtn->setText("&Open");
@@ -2708,7 +2716,7 @@ void viewpanel::recvSerialInfo()
 		}	
 		break;	
 	case MOTOR_PID_READ_RET:
-		if(ptr[3] == 16){
+		if(ptr[4] == 16){
 			for(int i = 0; i < 4; i++){
 				int index = 4 * (i+1);
 				motorPidReadLine[i]->setText(QString::number( UnsignedChar4ToFloat(&(ptr[index])) ,'f',3));
@@ -2736,36 +2744,36 @@ void viewpanel::recvSerialInfo()
 		}
 		break;
 	case MOTOR_WORKMODE_SET_RET:
-		if(ptr[4] == 0xFF){
+		if(ptr[5] == 0xFF){
 			QMessageBox msgBox;
 			msgBox.setText("MOTOR MOTOR_WORKMODE_SET successfully!");
 			msgBox.exec();
 		}
 		break;
 	case MOTOR_SHOW_CYCLE_SET_RET:
-		if(ptr[4] == 0xFF){
+		if(ptr[5] == 0xFF){
 			QMessageBox msgBox;
 			msgBox.setText("MOTOR MOTOR_SHOW_CYCLE_SET successfully!");
 			msgBox.exec();
 		}
 		break;
 	case MOTOR_PID_SET_RET:
-		if(ptr[4] == 0xFF){
+		if(ptr[5] == 0xFF){
 			QMessageBox msgBox;
 			msgBox.setText("MOTOR MOTOR_PID_SET_RET successfully!");
 			msgBox.exec();
-		} else if(ptr[4] == 0x7F) {
+		} else if(ptr[5] == 0x7F) {
 			QMessageBox msgBox;
 			msgBox.setText("MOTOR MOTOR_PID_SET_RET failed!");
 			msgBox.exec();
 		}
 		break;
 	case MOTOR_WORKMODE_READ_RET:
-		if(ptr[4] == 0x00){
+		if(ptr[5] == 0x00){
 			motorWorkModeReadLine->setText(QString("speed"));
-		}else if(ptr[4] == 0x01){
+		}else if(ptr[5] == 0x01){
 			motorWorkModeReadLine->setText(QString("location"));
-		}else if(ptr[4] == 0x02){
+		}else if(ptr[5] == 0x02){
 			motorWorkModeReadLine->setText(QString("Phase-lock"));
 		}else {
 			QMessageBox msgBox;
@@ -2779,9 +2787,25 @@ void viewpanel::recvSerialInfo()
 			msgBox.exec();	
 		}
 		break;
+	case MOTOR_ITEMS_INFO:
+		break;
+		
 	default:
 		break;
 	}
+}
+void viewpanel::recvSerialInfo()
+{
+	//m_serialPort->waitForReadyRead(10);
+	QByteArray info = m_serialPort->readAll();
+	if(info.isEmpty()){
+		qDebug() << "info recvSerialInfo  is empty";
+		return;
+	}
+	QByteArray hexData = info.toHex();
+	qDebug() << "info recvSerialInfo is " << hexData;
+	uint8_t* ptr = (uint8_t*)info.data();
+	parseMotorInfo(ptr);
 }
 
 void viewpanel::recvSerialInfoTest()
@@ -3218,7 +3242,6 @@ void viewpanel::pcDataProc()
 	static long long frame_index = 0;
 	auto start = std::chrono::steady_clock::now();
 	if(udpPcMsg_done_buf_queue.get(pmsg)){
-		std::cout << "warning!!udpMsg_done_buf_queue get timeout!!!" << std::endl;
 		return;
 	}
 
@@ -3238,8 +3261,8 @@ void viewpanel::pcDataProc()
 				udpPCBuff_last.frameCounter.push_back(pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter);
 			}
 		}
+		udpPcMsg_free_buf_queue.put(pmsg);
 		if(udpPcMsg_done_buf_queue.get(pmsg)){
-			std::cout << "warning!!udpMsg_done_buf_queue get timeout!!!" << std::endl;
 			return;
 		}
 	}
@@ -3321,13 +3344,12 @@ void viewpanel::pcDataProc()
 	//std::cout << "rotation_offset: " << rotation_offset << ", leftAngle_offset: " << leftAngle_offset \
 	<< ", rightAngle_offset: " << rightAngle_offset << std::endl; 
 	pcDataFindMaxMin(pmsg);
-
+	udpPcMsg_free_buf_queue.put(pmsg);
 	double distance_m;
 	double vertical_m;
 	double intensity_m;
 	double speed_m;
 	int index_rgb;
-
 #if 1
 	time_t rawtime;
 	struct tm *ptminfo;
@@ -3427,7 +3449,6 @@ void viewpanel::pcDataProc()
 	output.header.frame_id = "image_lidar";
 	fmcw_pcl_pub.publish(output);
 	cloud.clear();
-	udpPcMsg_free_buf_queue.put(pmsg);
 	auto end = std::chrono::steady_clock::now();
 
 }
@@ -3626,7 +3647,6 @@ void viewpanel::udpRecvPCLoop()
 				pUdp->pcDataOneFrame = pcDataOneFrame_;
 				udpPcMsg_done_buf_queue.put(pUdp);	
 			}else{
-				std::cout << "error!!! udpPcMsg_free_buf_queue timeout!! "  << std::endl;
 				return;
 			}
 		}
