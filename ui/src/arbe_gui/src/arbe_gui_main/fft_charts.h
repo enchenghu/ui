@@ -40,6 +40,7 @@ public:
     void setContineFlag(bool);
     void setXChart(int xmin, int xmax);
     void setGraph(uint8_t index_graph);
+    void setGraphShow(uint8_t index_graph, bool show);
 
 private:
     bool rescale_;

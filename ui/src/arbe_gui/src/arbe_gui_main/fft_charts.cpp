@@ -23,6 +23,11 @@ void ChartFFT::setXChart(int xmin, int xmax)
 }
 
 
+void ChartFFT::setGraphShow(uint8_t index_graph, bool show)
+{
+    pCustomPlot->graph(index_graph)->setVisible(show);//曲线颜色设置
+}
+
 void ChartFFT::setGraph(uint8_t index_graph)
 {
     QPen pen;

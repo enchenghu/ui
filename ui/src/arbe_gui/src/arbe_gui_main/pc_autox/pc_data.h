@@ -29,6 +29,8 @@
 #define UDP_PC_SIZE_SINGLE_V01 100
 
 #define BUFF_LEN 1024
+#define ITEMS_NUM 3
+
 #define MAX_BUFF_LEN 8
 
 #define TCP_TIMES_PER_FRAME 200
@@ -148,7 +150,7 @@ typedef struct {
 typedef struct 
 {
 	MotorMsgHeader header;
-	ItemData data[5];
+	ItemData data[ITEMS_NUM];
 	MotorMsgTailer 	tailer; 
 } motorItemsShowMsg;
 

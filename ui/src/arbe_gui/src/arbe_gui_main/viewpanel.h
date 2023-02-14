@@ -240,6 +240,7 @@ private Q_SLOTS:
 	void readMotorPid();
 	void readMotorWorkMode();
 	void readMotorShowItems();
+	void motorItemsShow(int);
 
 
 protected:

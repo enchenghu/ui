@@ -1615,14 +1615,12 @@ void viewpanel::CreatConnect()
 	QSignalMapper * readMapper;
 	configMapper = new QSignalMapper(this);
 	readMapper = new QSignalMapper(this);
-	for(int i = 0; i < 4; i++)
-	{
+	for(int i = 0; i < 4; i++) {
 		connect(regBtnWrite[i], SIGNAL(clicked(bool)), configMapper, SLOT(map()));//这个map(）是QSignalMapper类的槽函数，不需要我们定义
 		connect(regBtnRead[i], SIGNAL(clicked(bool)), readMapper, SLOT(map()));
 		configMapper->setMapping(regBtnWrite[i], i);//这个i就是我们传给槽函数的值，可以是字符串，其他等等。
 		readMapper->setMapping(regBtnRead[i], i);
 	}
-
 	connect(configMapper, SIGNAL(mapped(int)), this, SLOT(configReg(int)));
 	connect(readMapper, SIGNAL(mapped(int)), this, SLOT(readReg(int)));
 
@@ -1639,7 +1637,6 @@ void viewpanel::CreatConnect()
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
 	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
 
-
 	connect(motorConnectBtn, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
 	connect(motorSwitchBtn, SIGNAL(clicked()), this, SLOT( sendMotorOpenCmd( void )));
 	connect(motorPidReadBtn, SIGNAL(clicked()), this, SLOT( readMotorPid( void )));
@@ -1648,6 +1645,12 @@ void viewpanel::CreatConnect()
 	connect(motorWorkModeSetBtn, SIGNAL(clicked()), this, SLOT( sendMotorWorkModeCmd( void )));
 	connect(motorShowCycleSetBtn, SIGNAL(clicked()), this, SLOT( sendMotorDisplayCycleCmd( void )));
 	connect(motorPidSetBtn, SIGNAL(clicked()), this, SLOT( sendMotorPidCmd( void )));
+	QSignalMapper * motorItemsMapper = new QSignalMapper(this);
+	for(int i = 0; i < ITEMS_NUM; i++) {
+		connect(checkShowV[i], SIGNAL(clicked(bool)), motorItemsMapper, SLOT(map()));//这个map(）是QSignalMapper类的槽函数，不需要我们定义
+		motorItemsMapper->setMapping(checkShowV[i], i);//这个i就是我们传给槽函数的值，可以是字符串，其他等等。
+	}
+	connect(motorItemsMapper, SIGNAL(mapped(int)), this, SLOT(motorItemsShow(int)));
 
 	connect(errorLogText,SIGNAL(textChanged()),SLOT(slotTextTcpChanged()));
     timer_  = new QTimer(this);
@@ -2818,8 +2821,8 @@ void viewpanel::sendItemsInfoTest()
 	motorMsgSend.header.mHead = 0x55aa;
 	motorMsgSend.header.cmd = MOTOR_ITEMS_INFO;
 	motorMsgSend.header.motor_index = 0;
-	motorMsgSend.header.dataLen = sizeof(ItemData) * 5;
-	for(int i = 0; i < 5; i++){
+	motorMsgSend.header.dataLen = sizeof(ItemData) * ITEMS_NUM;
+	for(int i = 0; i < ITEMS_NUM; i++){
 		motorMsgSend.data[i].item_id = i;
 		motorMsgSend.data[i].data = qrand() % 200;
 	}
@@ -3013,6 +3016,11 @@ void viewpanel::readMotorShowItems()
 	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
 	int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
 	ROS_INFO("MOTOR_SHOW_ITEMS_READ m_serialPort->write is %d", ret);
+}
+void viewpanel::motorItemsShow(int index)
+{
+	bool enable_show = checkShowV[index]->isChecked();
+	pMotorchart->setGraphShow(index, enable_show);
 }
 
 void viewpanel::readMotorWorkMode()
@@ -4033,15 +4041,17 @@ void viewpanel:: motorInfoShow(uint8_t *ptr, int datalen)
 		y_pos[i].clear();
 	int item_index = 0;
 	static int frame_index = 0;
-	x_pos.append(frame_index++);
+	x_pos.append(frame_index);
 	for(int i = 0; i < datalen; i = i + 5){
 		item_index = ptr[5 + i];
+		if(frame_index == 0)checkShowV[item_index]->setChecked(true);
 		if(item_index > MOTOR_ITEMS_NUM - 1) {
 			ROS_INFO("error!!! item_index > MOTOR_ITEMS_NUM - 1, item_index is %d", item_index);
 		}
 		y_pos[item_index].append(UnsignedChar4ToFloat(&(ptr[5 + i + 1])));
 		pMotorchart->setData(x_pos, y_pos[item_index], item_index);
 	}
+	frame_index++;
 }
 
 void viewpanel::save_settings(void )
