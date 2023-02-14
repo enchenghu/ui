@@ -33,6 +33,8 @@
 
 #define TCP_TIMES_PER_FRAME 200
 #define UDP_TIMES_PER_FRAME 256
+#define MOTOR_ITEMS_NUM 10
+
 #define UDP_PC_TIMES_PER_FRAME 200
 #define BST_MAX_TASK_NUM		(16)
 #define PI_FMCW 3.14159265
@@ -71,7 +73,8 @@ typedef enum {
 typedef enum{
     FFT_ORI = 0,
     FFT_DB,
-    ADC_ORI
+    ADC_ORI,
+    MOTOR_ORI
 } showModel;
 
 typedef struct API_Header
@@ -99,80 +102,98 @@ typedef struct
 	uint32_t 	mCommandVal[2];
 } commandMsg;
 
+#pragma pack(1)    // pack(1): pack之间的数据类型，1字节对齐
+
 typedef struct 
 {
 	uint16_t 	mHead; 
+	uint8_t     motor_index;
 	uint8_t     cmd;
 	uint8_t     dataLen;
+} MotorMsgHeader; // 5 bytes
+
+
+typedef struct 
+{
 	uint8_t		count;
 	uint16_t 	crc; 
+} MotorMsgTailer; // 3 bytes
+
+typedef struct 
+{
+	MotorMsgHeader	header;
+	uint8_t data[50];
+	MotorMsgTailer 	tailer; 
+} motorItemsMsg;
+
+typedef struct 
+{
+	MotorMsgHeader header;
+	MotorMsgTailer tailer; 
 } motorCmdMsg;
 
 typedef struct 
 {
-	uint16_t 	mHead; 
-	uint8_t     cmd;
-	uint8_t     dataLen;
+	MotorMsgHeader header;
 	uint8_t     data;
-	uint8_t		count;
-	uint16_t 	crc; 
+	MotorMsgTailer 	tailer; 
 } motorCmdMsg1;
+
+
+typedef struct {
+	uint8_t     item_id;
+	float     data;
+} ItemData;
 
 typedef struct 
 {
-	uint16_t 	mHead; 
-	uint8_t     cmd;
-	uint8_t     dataLen;
+	MotorMsgHeader header;
+	ItemData data[5];
+	MotorMsgTailer 	tailer; 
+} motorItemsShowMsg;
+
+typedef struct 
+{
+	MotorMsgHeader header;
 	uint8_t     data[16];
-	uint8_t		count;
-	uint16_t 	crc; 
+	MotorMsgTailer 	tailer; 
 } motorPidMsg;
 
 typedef struct 
 {
-	uint16_t 	mHead; 
-	uint8_t     cmd;
-	uint8_t     dataLen;
+	MotorMsgHeader header;
 	float       cycle;
 	float       p;
 	float       i;
 	float       d;
-	uint8_t		count;
-	uint16_t 	crc; 
+	MotorMsgTailer 	tailer; 
 } motorPidSetMsg;
 
 typedef struct 
 {
-	uint16_t 	mHead; 
-	uint8_t     cmd;
-	uint8_t     dataLen;
+	MotorMsgHeader header;
 	uint16_t     data;
-	uint8_t		count;
-	uint16_t 	crc; 
+	MotorMsgTailer 	tailer; 
 } motorShowCycleMsg;
 
 typedef struct 
 {
-	uint16_t 	mHead; 
-	uint8_t     cmd;
-	uint8_t     dataLen;
+	MotorMsgHeader header;
 	uint16_t     speed;
 	uint16_t     angle;
 	uint16_t     location;
 	uint8_t		mode;
-	uint8_t		count;
-	uint16_t 	crc; 
+	MotorMsgTailer 	tailer; 
 } motorWorkModeMsg;
 
 typedef struct 
 {
-	uint16_t 	mHead; 
-	uint8_t     cmd;
-	uint8_t     dataLen;
+	MotorMsgHeader header;
 	uint8_t     data[5];
-	uint8_t		count;
-	uint16_t 	crc; 
+	MotorMsgTailer 	tailer; 
 } motorShowMsg;
+
+#pragma pack()     // pack() 结束
 
 typedef struct 
 {

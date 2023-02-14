@@ -1,10 +1,18 @@
 #include "fft_charts.h"
 
-ChartFFT::ChartFFT(QWidget* parent): QWidget(parent), showType_(FFT_ORI), \
+extern QStringList motorDataString;
+ChartFFT::ChartFFT(QWidget* parent, showModel type): QWidget(parent), showType_(type), \
 rescale_(true), contineFlag_(true), singleShow_(false)
 {
 	pCustomPlot = new QCustomPlot(parent);
-	QCPGraph* pgraph = pCustomPlot->addGraph();
+    uint8_t graph_num = 1;
+    if(type == MOTOR_ORI)
+    {
+        graph_num = MOTOR_ITEMS_NUM;
+    }
+    for(int i = 0; i < graph_num; i++){
+        pCustomPlot->addGraph();
+    }
     this->hide();  
 	//添加一条曲线
 }
@@ -12,6 +20,17 @@ rescale_(true), contineFlag_(true), singleShow_(false)
 void ChartFFT::setXChart(int xmin, int xmax)
 {
     pCustomPlot->xAxis->setRange(xmin, xmax);
+}
+
+
+void ChartFFT::setGraph(uint8_t index_graph)
+{
+    QPen pen;
+    pen.setWidth(2);//曲线的粗细
+    pen.setColor(colotList[index_graph]);
+    pCustomPlot->graph(index_graph)->setPen(pen);//曲线颜色设置
+    pCustomPlot->graph(index_graph)->setAntialiasedFill(true);//设置抗锯齿
+    pCustomPlot->graph(index_graph)->setName(motorDataString[index_graph]);//设置画布曲线名称
 }
 
 QCustomPlot* ChartFFT::setChart(int xmin, int xmax, int ymin, int ymax){
@@ -52,16 +71,21 @@ void ChartFFT::setContineFlag(bool t)
 }
 
 
-void ChartFFT::setData(const QVector<double> &x, const QVector<double> &y)
+void ChartFFT::setData(const QVector<double> &x, const QVector<double> &y, uint8_t index_graph)
 {
     if(singleShow_ || contineFlag_ ) {
         if(showType_ == FFT_ORI || showType_ == FFT_DB){
-            pCustomPlot->graph(0)->setData(x, y);
-        } else if (showType_ == ADC_ORI) {
-            pCustomPlot->graph(0)->setData(x, y);
-            //pCustomPlot->graph(0)->addData(x, y);
+            pCustomPlot->graph(index_graph)->setData(x, y);
+        }else if(showType_ == ADC_ORI) {
+            pCustomPlot->graph(index_graph)->setData(x, y);
             pCustomPlot->xAxis->setRange(x[0], x[x.size() - 1]);
-        }    
+        }else if(showType_ == MOTOR_ORI){
+            pCustomPlot->graph(index_graph)->addData(x, y);
+            setGraph(index_graph);
+            pCustomPlot->legend->setVisible(true);
+            pCustomPlot->legend->setBrush(QColor(255, 255, 255, 150));
+            //pCustomPlot->xAxis->setRange(x[0], x[x.size() - 1]);
+        }   
     }
 
     if(singleShow_) singleShow_  = false;
@@ -77,7 +101,6 @@ void ChartFFT::setData(const QVector<double> &x, const QVector<double> &y)
     }
     pCustomPlot->replot();
 }
-
 
 void ChartFFT::showTracer(QMouseEvent* event)
 {

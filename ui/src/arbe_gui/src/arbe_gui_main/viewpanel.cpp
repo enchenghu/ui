@@ -125,7 +125,7 @@ static float intrinsic_mat[3][3] = {{1526.97,0,934.05},
 									{0,1533.03,537.37},
 									{0,0,1}};
 
-static QStringList motorDataString = {
+QStringList motorDataString = {
 	"speed",
 	"angle",
 	"speed P",
@@ -203,12 +203,12 @@ viewpanel::viewpanel(QTabWidget* parent )
 	cmdMsg_.mHead.usType = 0x10;
 	cmdMsg_.mHead.usPayloadCrc = 0x00;
 	cmdMsg_.mHead.unLength = 12;
-	motorMsgSend_.mHead = 0x55aa;
-	motorMsgSend1_.mHead = 0x55aa;
-	motorMsgPid_.mHead = 0x55aa;
-	motorMsgShow_.mHead = 0x55aa;
-	motorMsgWorkMode_.mHead = 0x55aa;
-	motorMsgShowCycle_.mHead = 0x55aa;
+	motorMsgSend_.header.mHead = 0x55aa;
+	motorMsgSend1_.header.mHead = 0x55aa;
+	motorMsgPid_.header.mHead = 0x55aa;
+	motorMsgShow_.header.mHead = 0x55aa;
+	motorMsgWorkMode_.header.mHead = 0x55aa;
+	motorMsgShowCycle_.header.mHead = 0x55aa;
 	distance_min  = 0.0;
 	distance_max = 0.0;
 	indensity_min = 0.0;
@@ -670,9 +670,7 @@ int viewpanel::configRegLidar(void)
 		msgBox.exec();
 		return -1;
 	}
-
 	return 0;
-
 }
 void viewpanel::configReg(int index){
 	QString strAddr = regAddr_line[index]->text();
@@ -1215,10 +1213,10 @@ void viewpanel::CreatMotorWindow()
 
 	chartChooseBox->setLayout(chartChooseBoxLayout);
 
-	pMotorchart = new ChartFFT(this);
-	pMotorchart->setShowType(ADC_ORI);
+	pMotorchart = new ChartFFT(this, MOTOR_ORI);
+	//pMotorchart->setShowType(MOTOR_ORI);
 
-	chartMotorBoxLayout->addWidget(pMotorchart->setChart(0, 8192, -32768, 32768), 0 , 0);
+	chartMotorBoxLayout->addWidget(pMotorchart->setChart(0, 200, -220, 220), 0 , 0);
 	chartMotorBoxLayout->addWidget(chartChooseBox, 0 , 1);
 	
 	chartMotorBoxLayout->setColumnStretch(0, 9);
@@ -1463,10 +1461,8 @@ void viewpanel::CreatADCWindow()
     label_OSC_0->Add_Line_Data(0, 100);
     label_OSC_0->View_Chart(1000);
 #endif
-	pADCchart[0] = new ChartFFT(this);
-	pADCchart[1] = new ChartFFT(this);
-	pADCchart[0]->setShowType(ADC_ORI);
-	pADCchart[1]->setShowType(ADC_ORI);
+	pADCchart[0] = new ChartFFT(this, ADC_ORI);
+	pADCchart[1] = new ChartFFT(this, ADC_ORI);
 	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, 8192, -32768, 32768), 0 , 0);
 	chartADCBox0->setLayout(chartADCLayout0);
 #if 0
@@ -1667,9 +1663,12 @@ void viewpanel::CreatConnect()
     QTimer* timer_state  = new QTimer(this);
     connect(timer_state, SIGNAL(timeout()), this, SLOT(updateState(void)));
     connect(timer_state, SIGNAL(timeout()), this, SLOT(printErrorLog(void)));
-    //connect(timer_state, SIGNAL(timeout()), this, SLOT(recvSerialInfo(void)));
-
     timer_state->start(300);
+    //connect(timer_state, SIGNAL(timeout()), this, SLOT(recvSerialInfo(void)));
+    QTimer* test_show_item  = new QTimer(this);
+    connect(test_show_item, SIGNAL(timeout()), this, SLOT(sendItemsInfoTest(void)));
+	test_show_item->start(500);
+
 
 }
 
@@ -2671,7 +2670,8 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 	uint8_t motor_id = ptr[2];
 	uint8_t cmd_id = ptr[3];
 	int datalen = ptr[4];
-	std::cout << "the motor_id is " << motor_id  << ", cmd_id is " << cmd_id << ", datalen is " << datalen << std::endl;
+	std::cout << " msg datalen is " << datalen << std::endl;
+	printf("motor_id is %d, cmd_id is %d\n", motor_id, cmd_id);
 
 	switch (ptr[3])
 	{
@@ -2788,6 +2788,7 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 		}
 		break;
 	case MOTOR_ITEMS_INFO:
+		motorInfoShow(ptr, datalen);
 		break;
 		
 	default:
@@ -2808,6 +2809,24 @@ void viewpanel::recvSerialInfo()
 	parseMotorInfo(ptr);
 }
 
+
+void viewpanel::sendItemsInfoTest()
+{
+	if(!m_serialPort_test || !m_serialPort_test_open ) return;
+	motorItemsShowMsg motorMsgSend;
+	memset(&motorMsgSend, 0, sizeof(motorItemsShowMsg));
+	motorMsgSend.header.mHead = 0x55aa;
+	motorMsgSend.header.cmd = MOTOR_ITEMS_INFO;
+	motorMsgSend.header.motor_index = 0;
+	motorMsgSend.header.dataLen = sizeof(ItemData) * 5;
+	for(int i = 0; i < 5; i++){
+		motorMsgSend.data[i].item_id = i;
+		motorMsgSend.data[i].data = qrand() % 200;
+	}
+	int ret = m_serialPort_test->write((const char *)&motorMsgSend,sizeof(motorMsgSend));
+	ROS_INFO("sendItemsInfoTest send bytes are %d", ret);	
+	//while ()
+}
 void viewpanel::recvSerialInfoTest()
 {
 	//m_serialPort_test->waitForReadyRead(10);
@@ -2822,40 +2841,41 @@ void viewpanel::recvSerialInfoTest()
 	int ret;
 	float dataPid[4] = {6.666, 7.777, 8.888, 9.999};
 
-	switch (ptr[2])
+	switch (ptr[3])
 	{
 	case MOTOR_CONNECT:
-		motorMsgSend1_.cmd = motorCmdType::MOTOR_CONNECT_RET;
-		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.header.motor_index = 0;
+		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_CONNECT_RET;
+		motorMsgSend1_.header.dataLen = 0x01;
 		motorMsgSend1_.data = 0xff;
 		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
 		ROS_INFO("connect motor ok, ret is %d", ret);
 		break;
 	case MOTOR_DISCONNECT:
 		ROS_INFO("disconnect motor ready");
-		motorMsgSend1_.cmd = motorCmdType::MOTOR_DISCONNECT_RET;
-		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_DISCONNECT_RET;
+		motorMsgSend1_.header.dataLen = 0x01;
 		motorMsgSend1_.data = 0xff;
 		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
 		ROS_INFO("disconnect motor ok, ret is %d", ret);
 		break;
 	case MOTOR_OPEN:
-		motorMsgSend1_.cmd = motorCmdType::MOTOR_OPEN_RET;
-		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_OPEN_RET;
+		motorMsgSend1_.header.dataLen = 0x01;
 		motorMsgSend1_.data = 0xff;
 		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
 		ROS_INFO("switch motor ok, ret is %d", ret);
 		break;	
 	case MOTOR_WORKMODE_READ:
-		motorMsgSend1_.cmd = motorCmdType::MOTOR_WORKMODE_READ_RET;
-		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_WORKMODE_READ_RET;
+		motorMsgSend1_.header.dataLen = 0x01;
 		motorMsgSend1_.data = 0x02;
 		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
 		ROS_INFO("MOTOR_WORKMODE_READ ok, ret is %d", ret);
 		break;	
 	case MOTOR_WORKMODE_SET:
-		motorMsgSend1_.cmd = motorCmdType::MOTOR_WORKMODE_SET_RET;
-		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_WORKMODE_SET_RET;
+		motorMsgSend1_.header.dataLen = 0x01;
 		motorMsgSend1_.data = 0xff;
 		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
 		ROS_INFO("MOTOR_WORKMODE_SET ok, ret is %d", ret);
@@ -2865,22 +2885,22 @@ void viewpanel::recvSerialInfoTest()
 			int index = 4 * (i+1);
 			motorPidReadLine[i]->setText(QString::number( UnsignedChar4ToFloat(&(ptr[index])) ,'f',3));
 		}	
-		motorMsgSend1_.cmd = motorCmdType::MOTOR_PID_SET_RET;
-		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_PID_SET_RET;
+		motorMsgSend1_.header.dataLen = 0x01;
 		motorMsgSend1_.data = 0xff;
 		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
 		ROS_INFO("MOTOR_PID_SET ok, ret is %d", ret);
 		break;	
 	case MOTOR_SHOW_CYCLE_SET:
-		motorMsgSend1_.cmd = motorCmdType::MOTOR_SHOW_CYCLE_SET_RET;
-		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_SHOW_CYCLE_SET_RET;
+		motorMsgSend1_.header.dataLen = 0x01;
 		motorMsgSend1_.data = 0xff;
 		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
 		ROS_INFO("MOTOR_SHOW_CYCLE_SET ok, ret is %d", ret);
 		break;	
 	case MOTOR_SHOW_ITEMS_READ:
-		motorMsgShow_.cmd = motorCmdType::MOTOR_SHOW_ITEMS_READ_RET;
-		motorMsgShow_.dataLen = 0x05;
+		motorMsgShow_.header.cmd = motorCmdType::MOTOR_SHOW_ITEMS_READ_RET;
+		motorMsgShow_.header.dataLen = 0x05;
 		motorMsgShow_.data[0] = 0x01;
 		motorMsgShow_.data[1] = 0x02;
 		motorMsgShow_.data[2] = 0x04;
@@ -2890,14 +2910,12 @@ void viewpanel::recvSerialInfoTest()
 		ROS_INFO("MOTOR_SHOW_ITEMS_READ_RET ok, ret is %d", ret);
 		break;	
 	case MOTOR_PID_READ:
-		motorMsgPid_.cmd = motorCmdType::MOTOR_PID_READ_RET;
-		motorMsgPid_.dataLen = 0x10;
+		motorMsgPid_.header.cmd = motorCmdType::MOTOR_PID_READ_RET;
+		motorMsgPid_.header.dataLen = 0x10;
 		for(int i = 0; i < 4; i++){
 			int index = 4 * ( i );
 			FloatToChar(dataPid[i], &(motorMsgPid_.data[index]));
 		}
-		motorMsgPid_.count = 0x01;
-		motorMsgPid_.crc = 0;
 		ret = m_serialPort_test->write((const char *)&motorMsgPid_,sizeof(motorMsgPid_));
 		ROS_INFO("MOTOR_PID para send ok, ret is %d", ret);
 		break;	
@@ -2922,14 +2940,14 @@ int viewpanel::checkMotorConnected()
 void viewpanel::sendMotorPidCmd()
 {
 	if(checkMotorConnected()) return;
-	motorMsgPidSet_.cmd = motorCmdType::MOTOR_PID_SET;
-	motorMsgPidSet_.dataLen = 0x10;
-	motorMsgPidSet_.count = 0x01;
+	motorMsgPidSet_.header.cmd = motorCmdType::MOTOR_PID_SET;
+	motorMsgPidSet_.header.dataLen = 0x10;
+	motorMsgPidSet_.tailer.count = 0x01;
 	motorMsgPidSet_.cycle = motorPidCycleSetLine->text().toDouble();
 	motorMsgPidSet_.p = motorPidPSetLine->text().toDouble();
 	motorMsgPidSet_.i = motorPidISetLine->text().toDouble();
 	motorMsgPidSet_.d = motorPidDSetLine->text().toDouble();
-	motorMsgPidSet_.crc = 0;
+	motorMsgPidSet_.tailer.crc = 0;
 
 #if 0
 	motorMsgPidSet_.crc = motorMsgPidSet_.cmd + motorMsgPidSet_.dataLen + \
@@ -2945,9 +2963,9 @@ void viewpanel::sendMotorPidCmd()
 void viewpanel::sendMotorWorkModeCmd()
 {
 	if(checkMotorConnected()) return;
-	motorMsgWorkMode_.cmd = motorCmdType::MOTOR_WORKMODE_SET;
-	motorMsgWorkMode_.dataLen = 0x07;
-	motorMsgWorkMode_.count = 0x01;
+	motorMsgWorkMode_.header.cmd = motorCmdType::MOTOR_WORKMODE_SET;
+	motorMsgWorkMode_.header.dataLen = 0x07;
+	motorMsgWorkMode_.tailer.count = 0x01;
 	motorMsgWorkMode_.speed = motorWorkModeSpeedSetLine->text().toInt();
 	motorMsgWorkMode_.angle = motorWorkModeAngleSetLine->text().toInt();
 	motorMsgWorkMode_.location = motorWorkModeLocSetLine->text().toInt();
@@ -2963,11 +2981,11 @@ void viewpanel::sendMotorWorkModeCmd()
 		ROS_INFO("MODE IS speed");
 	}
 	motorMsgWorkMode_.mode = mode;
-	motorMsgWorkMode_.crc = motorMsgWorkMode_.cmd + motorMsgWorkMode_.dataLen + \
+	motorMsgWorkMode_.tailer.crc = motorMsgWorkMode_.header.cmd + motorMsgWorkMode_.header.dataLen + \
 	(motorMsgWorkMode_.speed & 0xff) + (motorMsgWorkMode_.speed >> 8) + \
 	(motorMsgWorkMode_.angle & 0xff) + (motorMsgWorkMode_.angle >> 8) + \
 	(motorMsgWorkMode_.location & 0xff) + (motorMsgWorkMode_.location >> 8) + \
-	motorMsgWorkMode_.mode + motorMsgWorkMode_.count;
+	motorMsgWorkMode_.mode + motorMsgWorkMode_.tailer.count;
 	int ret = m_serialPort->write((const char *)&motorMsgWorkMode_,sizeof(motorMsgWorkMode_));
 	ROS_INFO("MOTOR_WORKMODE_SET m_serialPort->write is %d", ret);
 }
@@ -2975,13 +2993,13 @@ void viewpanel::sendMotorWorkModeCmd()
 void viewpanel::sendMotorDisplayCycleCmd()
 {
 	if(checkMotorConnected()) return;
-	motorMsgShowCycle_.cmd = motorCmdType::MOTOR_SHOW_CYCLE_SET;
-	motorMsgShowCycle_.dataLen = 0x02;
+	motorMsgShowCycle_.header.cmd = motorCmdType::MOTOR_SHOW_CYCLE_SET;
+	motorMsgShowCycle_.header.dataLen = 0x02;
 	motorMsgShowCycle_.data = motorShowCycleSetLine->text().toInt();
-	motorMsgShowCycle_.count = 0x01;
-	motorMsgShowCycle_.crc = motorMsgShowCycle_.cmd + motorMsgShowCycle_.dataLen +\
+	motorMsgShowCycle_.tailer.count = 0x01;
+	motorMsgShowCycle_.tailer.crc = motorMsgShowCycle_.header.cmd + motorMsgShowCycle_.header.dataLen +\
 	(motorMsgShowCycle_.data & 0xff) + (motorMsgShowCycle_.data >> 8) + \
-	 motorMsgShowCycle_.count;
+	 motorMsgShowCycle_.tailer.count;
 	int ret = m_serialPort->write((const char *)&motorMsgShowCycle_,sizeof(motorMsgShowCycle_));
 	ROS_INFO("MOTOR_SHOW_CYCLE_SET m_serialPort->write is %d", ret);
 }
@@ -2989,10 +3007,10 @@ void viewpanel::sendMotorDisplayCycleCmd()
 void viewpanel::readMotorShowItems()
 {
 	if(checkMotorConnected()) return;
-	motorMsgSend_.cmd = motorCmdType::MOTOR_SHOW_ITEMS_READ;
-	motorMsgSend_.dataLen = 0x00;
-	motorMsgSend_.count = 0x01;
-	motorMsgSend_.crc = motorMsgSend_.cmd + motorMsgSend_.dataLen + motorMsgSend_.count;
+	motorMsgSend_.header.cmd = motorCmdType::MOTOR_SHOW_ITEMS_READ;
+	motorMsgSend_.header.dataLen = 0x00;
+	motorMsgSend_.tailer.count = 0x01;
+	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
 	int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
 	ROS_INFO("MOTOR_SHOW_ITEMS_READ m_serialPort->write is %d", ret);
 }
@@ -3000,10 +3018,10 @@ void viewpanel::readMotorShowItems()
 void viewpanel::readMotorWorkMode()
 {
 	if(checkMotorConnected()) return;
-	motorMsgSend_.cmd = motorCmdType::MOTOR_WORKMODE_READ;
-	motorMsgSend_.dataLen = 0x00;
-	motorMsgSend_.count = 0x01;
-	motorMsgSend_.crc = motorMsgSend_.cmd + motorMsgSend_.dataLen + motorMsgSend_.count;
+	motorMsgSend_.header.cmd = motorCmdType::MOTOR_WORKMODE_READ;
+	motorMsgSend_.header.dataLen = 0x00;
+	motorMsgSend_.tailer.count = 0x01;
+	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
 	int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
 	ROS_INFO("MOTOR_WORKMODE_READ m_serialPort->write is %d", ret);
 }
@@ -3011,10 +3029,10 @@ void viewpanel::readMotorWorkMode()
 void viewpanel::readMotorPid()
 {
 	if(checkMotorConnected()) return;
-	motorMsgSend_.cmd = motorCmdType::MOTOR_PID_READ;
-	motorMsgSend_.dataLen = 0x00;
-	motorMsgSend_.count = 0x01;
-	motorMsgSend_.crc = motorMsgSend_.cmd + motorMsgSend_.dataLen + motorMsgSend_.count;
+	motorMsgSend_.header.cmd = motorCmdType::MOTOR_PID_READ;
+	motorMsgSend_.header.dataLen = 0x00;
+	motorMsgSend_.tailer.count = 0x01;
+	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
 	int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
 	ROS_INFO("m_serialPort->write is %d", ret);
 }
@@ -3023,19 +3041,21 @@ void viewpanel::sendMotorOpenCmd()
 {
 	if(!ifOpenMotor){
 		if(checkMotorConnected()) return;
-		motorMsgSend1_.cmd = motorCmdType::MOTOR_OPEN;
-		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_OPEN;
+		motorMsgSend1_.header.dataLen = 0x01;
 		motorMsgSend1_.data = 0x01;
-		motorMsgSend1_.count = 0x01;
-		motorMsgSend1_.crc = motorMsgSend1_.cmd + motorMsgSend1_.dataLen +  motorMsgSend1_.data + motorMsgSend1_.count;
+		motorMsgSend1_.tailer.count = 0x01;
+		motorMsgSend1_.tailer.crc = motorMsgSend1_.header.cmd + motorMsgSend1_.header.dataLen +  motorMsgSend1_.data + \
+		 motorMsgSend1_.tailer.count;
 		int ret = m_serialPort->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
 		ROS_INFO("m_serialPort->write is %d", ret);	
 	}else{
-		motorMsgSend1_.cmd = motorCmdType::MOTOR_OPEN;
-		motorMsgSend1_.dataLen = 0x01;
+		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_OPEN;
+		motorMsgSend1_.header.dataLen = 0x01;
 		motorMsgSend1_.data = 0x00;
-		motorMsgSend1_.count = 0x01;
-		motorMsgSend1_.crc = motorMsgSend1_.cmd + motorMsgSend1_.dataLen +  motorMsgSend1_.data + motorMsgSend1_.count;
+		motorMsgSend1_.tailer.count = 0x01;
+		motorMsgSend1_.tailer.crc = motorMsgSend1_.header.cmd + motorMsgSend1_.header.dataLen +  motorMsgSend1_.data + \
+		motorMsgSend1_.tailer.count;
 		int ret = m_serialPort->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
 		ROS_INFO("m_serialPort->write is %d", ret);	
 		//releaseSerial();
@@ -3051,18 +3071,18 @@ void viewpanel::sendMotorConnectCmd()
 			msgBox.exec();
 			return;
 		} 
-		motorMsgSend_.cmd = motorCmdType::MOTOR_CONNECT;
-		motorMsgSend_.dataLen = 0x00;
-		motorMsgSend_.count = 0x01;
-		motorMsgSend_.crc = motorMsgSend_.cmd + motorMsgSend_.dataLen + motorMsgSend_.count;
+		motorMsgSend_.header.cmd = motorCmdType::MOTOR_CONNECT;
+		motorMsgSend_.header.dataLen = 0x00;
+		motorMsgSend_.tailer.count = 0x01;
+		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
 
 		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
 		ROS_INFO("MOTOR_CONNECT write is %d", ret);	
 	}else{
-		motorMsgSend_.cmd = motorCmdType::MOTOR_DISCONNECT;
-		motorMsgSend_.dataLen = 0x00;
-		motorMsgSend_.count = 0x01;
-		motorMsgSend_.crc = motorMsgSend_.cmd + motorMsgSend_.dataLen + motorMsgSend_.count;
+		motorMsgSend_.header.cmd = motorCmdType::MOTOR_DISCONNECT;
+		motorMsgSend_.header.dataLen = 0x00;
+		motorMsgSend_.tailer.count = 0x01;
+		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
 		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
 		ROS_INFO("MOTOR_DISCONNECT write is %d", ret);
 	}
@@ -3792,7 +3812,7 @@ int viewpanel::motorSerialConnectTest()
 
 	//设置串口名字 假设我们上面已经成功获取到了 并且使用第一个
 	//QString serialDevName = motorSerialCombo->currentText();
-	m_serialPort_test->setPortName(QString("/dev/pts/2"));
+	m_serialPort_test->setPortName(QString("/dev/pts/4"));
 
 	if(!m_serialPort_test->open(QIODevice::ReadWrite))//用ReadWrite 的模式尝试打开串口
 	{
@@ -3807,8 +3827,8 @@ int viewpanel::motorSerialConnectTest()
     m_serialPort_test->setParity(QSerialPort::NoParity);	//无校验位
     m_serialPort_test->setStopBits(QSerialPort::OneStop); //一位停止位
 
-	//连接信号槽 当下位机发送数据QSerialPortInfo 会发送个 readyRead 信号,我们定义个槽void receiveInfo()解析数据
 	connect(m_serialPort_test,SIGNAL(readyRead()),this,SLOT(recvSerialInfoTest()));
+	m_serialPort_test_open = true;
 	return 0;
 }
 
@@ -4001,6 +4021,27 @@ void viewpanel::setCheckBoxUnvaild(QCheckBox* checkBox)
 	palette.setBrush(QPalette::Base,palette.brush(QPalette::Disabled, QPalette::Base));
 	checkBox->setPalette(palette);
 	checkBox->setStyleSheet("QCheckBox::indicator {width: 20px; height: 20px;}");	
+}
+
+void viewpanel:: motorInfoShow(uint8_t *ptr, int datalen)
+{
+	if(!ptr || datalen <= 0) return;
+	QVector<double> x_pos;
+	x_pos.clear();
+	QVector<double> y_pos[MOTOR_ITEMS_NUM];
+	for(int i = 0; i < MOTOR_ITEMS_NUM; i++)
+		y_pos[i].clear();
+	int item_index = 0;
+	static int frame_index = 0;
+	x_pos.append(frame_index++);
+	for(int i = 0; i < datalen; i = i + 5){
+		item_index = ptr[5 + i];
+		if(item_index > MOTOR_ITEMS_NUM - 1) {
+			ROS_INFO("error!!! item_index > MOTOR_ITEMS_NUM - 1, item_index is %d", item_index);
+		}
+		y_pos[item_index].append(UnsignedChar4ToFloat(&(ptr[5 + i + 1])));
+		pMotorchart->setData(x_pos, y_pos[item_index], item_index);
+	}
 }
 
 void viewpanel::save_settings(void )

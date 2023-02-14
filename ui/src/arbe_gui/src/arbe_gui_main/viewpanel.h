@@ -229,6 +229,8 @@ private Q_SLOTS:
 	void parseMotorInfo(uint8_t*);
 
 	void recvSerialInfoTest();
+	void sendItemsInfoTest();
+
 	void sendMotorConnectCmd();
 	void sendMotorWorkModeCmd();
 	void sendMotorDisplayCycleCmd();
@@ -267,6 +269,7 @@ private:
 	void releaseSerial();
 	int checkMotorConnected();
 	int configRegLidar();
+	void motorInfoShow(uint8_t *ptr, int datalen);
 
 	void pcParseLoop();
 	void pcDataProc();
@@ -311,6 +314,7 @@ private:
 	int motor_port;
 	QSerialPort *m_serialPort;
 	QSerialPort *m_serialPort_test;
+	bool m_serialPort_test_open;
 
 
 	double distance_offset;

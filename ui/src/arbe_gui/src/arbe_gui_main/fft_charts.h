@@ -14,7 +14,11 @@
 #include "plot_tracer.h"
 #include <QGridLayout>
 #include "pc_data.h"
+#include <vector>
 QT_CHARTS_USE_NAMESPACE
+
+static QVector<QColor> colotList = {{0,255,255}, {0,255,0}, {0,0,255}, {255,0,0},{255,0,255}, \
+                                    {255,125,64}, {255,255,0}, {128,42,42}, {218,112,214}, {34,139,34}};
 
 class ChartFFT : public QWidget
 {
@@ -23,9 +27,11 @@ class ChartFFT : public QWidget
 	myTracer* plotTracer;
     QTimer* timer_;
 public:
-    ChartFFT(QWidget* parent = nullptr);
+    ChartFFT(QWidget* parent = nullptr, showModel type = FFT_ORI);
     ~ChartFFT(){}
-    void setData(const QVector<double> &x, const QVector<double> &y);
+    //void setData(const QVector<double> &x, const QVector<double> &y);
+    void setData(const QVector<double> &x, const QVector<double> &y, uint8_t index_graph = 0);
+
     void showTracer(QMouseEvent* event);
     QCustomPlot* setChart(int xmin, int xmax, int ymin, int ymax);
     void setShowType(showModel);
@@ -33,12 +39,14 @@ public:
     void setSingleShow(bool);
     void setContineFlag(bool);
     void setXChart(int xmin, int xmax);
+    void setGraph(uint8_t index_graph);
 
 private:
     bool rescale_;
     showModel showType_;
     bool singleShow_;
     bool contineFlag_;
+    QCPGraph* pgraph_motor[MOTOR_ITEMS_NUM];
 };
 #endif // CHART_H
 
