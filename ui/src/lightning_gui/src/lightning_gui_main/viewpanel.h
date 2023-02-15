@@ -292,6 +292,7 @@ private:
 	void init_queue();
 	void setReadOnlyLineEdit(QLineEdit* line);
 	void setCheckBoxUnvaild(QCheckBox* line);
+	void readMotorItemsFile();
     QTimer* timer_;
 	QTimer* timer_adc;  
 	bool udpStop_;

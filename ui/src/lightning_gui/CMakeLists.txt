@@ -159,8 +159,8 @@ catkin_package(CATKIN_DEPENDS
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
- include src/arbe_points_publisher/include/
- include src/arbe_gui_main/pc_autox/
+ #include src/arbe_points_publisher/include/
+ include src/lightning_gui_main/pc_autox/
  include ${OpenCV_INCLUDE_DIRS}
  include ${catkin_INCLUDE_DIRS}
  include ${PCL_LIBRARY_DIRS}
@@ -182,16 +182,16 @@ link_directories(${catkin_LIBRARY_DIRS})
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(arbe_gui 
-src/arbe_gui_main/main.cpp
-src/arbe_gui_main/mainwindow.cpp
-src/arbe_gui_main/viewpanel.cpp
-src/arbe_gui_main/common.cpp
-src/arbe_gui_main/osc_chart.cpp
-src/arbe_gui_main/fft_charts.cpp
-src/arbe_gui_main/fft_chartview.cpp
-src/arbe_gui_main/qcustomplot.cpp
-src/arbe_gui_main/plot_tracer.cpp
+add_executable(lightning_gui 
+src/lightning_gui_main/main.cpp
+src/lightning_gui_main/mainwindow.cpp
+src/lightning_gui_main/viewpanel.cpp
+src/lightning_gui_main/common.cpp
+src/lightning_gui_main/osc_chart.cpp
+src/lightning_gui_main/fft_charts.cpp
+src/lightning_gui_main/fft_chartview.cpp
+src/lightning_gui_main/qcustomplot.cpp
+src/lightning_gui_main/plot_tracer.cpp
 )
 
 #[[add_executable(arbe_pointcloud_receiver 
@@ -231,8 +231,8 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 ## Specify libraries to link a library or executable target against
-add_dependencies(arbe_gui ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(arbe_gui
+add_dependencies(lightning_gui ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(lightning_gui
    os
    polym
    Qt5::Charts
@@ -331,7 +331,7 @@ install(FILES arbe_points_publisher
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 set(CMAKE_BUILD_TYPE DEBUG)
-target_compile_definitions(arbe_gui PRIVATE SRC_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\")
+target_compile_definitions(lightning_gui PRIVATE SRC_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\")
 
 set(ARBE_BUILD_TYPE RELEASE)
 IF(ARBE_BUILD_TYPE MATCHES RELEASE)
@@ -348,7 +348,7 @@ IF(ARBE_BUILD_TYPE MATCHES RELEASE)
 	string(REPLACE ":" ";" VERSION_LIST ${pscm_ver})
 	list(GET VERSION_LIST 1 cs_number)
 
-	set(build_num_file ${CMAKE_CURRENT_SOURCE_DIR}/addons/arbe_gui_build.ver)
+	set(build_num_file ${CMAKE_CURRENT_SOURCE_DIR}/addons/lightning_gui_build.ver)
 	message(STATUS "build_num_file: ${build_num_file}")
 	file(WRITE ${build_num_file} "${cs_number}")
     ENDIF()

@@ -286,6 +286,7 @@ void viewpanel::init_queue()
 	udpPCBuff_last.pcDataOneFrame.clear();
 	udpPCBuff_last.frameCounter.clear();
 	motorSerialConnectTest();
+	readMotorItemsFile();
 }
 
 void viewpanel::loadLidarFile(void){
@@ -4029,6 +4030,32 @@ void viewpanel::setCheckBoxUnvaild(QCheckBox* checkBox)
 	palette.setBrush(QPalette::Base,palette.brush(QPalette::Disabled, QPalette::Base));
 	checkBox->setPalette(palette);
 	checkBox->setStyleSheet("QCheckBox::indicator {width: 20px; height: 20px;}");	
+}
+
+void viewpanel:: readMotorItemsFile()
+{
+	//qDebug() <<  QCoreApplication::applicationDirPath();
+	std::string s;
+	//The server_host should be corresponding to the robot controller setup.
+	bool res = ros::param::get("/lightning_gui/MotorItem6", s); 
+	std::cout  << "==================== " << res << std::endl;
+	if(res){
+		std::cout  << "==================== " << s << std::endl;
+	}
+
+#if 0
+	std::ifstream file("./test0.txt", std::ios::in);
+	if (! file.is_open()){ 
+		std::cout << "=======================Error opening file" << std::endl;
+	}
+	//while (!in.eof() )
+	std::string s;
+	while (getline(file, s))
+	{
+		std::cout << s << std::endl;
+	}
+	file.close();
+#endif
 }
 
 void viewpanel:: motorInfoShow(uint8_t *ptr, int datalen)
