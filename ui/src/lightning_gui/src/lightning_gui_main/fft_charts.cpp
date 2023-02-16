@@ -97,6 +97,7 @@ void ChartFFT::setData(const QVector<double> &x, const QVector<double> &y, uint8
     if(singleShow_) {
         singleShow_  = false;
         if(showType_ == ADC_ORI){
+            static int f_index = 0;
             time_t rawtime;
             struct tm *ptminfo;
             time(&rawtime);
@@ -111,7 +112,7 @@ void ChartFFT::setData(const QVector<double> &x, const QVector<double> &y, uint8
             "-" + std::to_string(ptminfo->tm_mday) +
             "-" + std::to_string(ptminfo->tm_hour) +
             "-" + std::to_string(ptminfo->tm_min) +
-            "-" + std::to_string(ptminfo->tm_sec) +
+            "-" + std::to_string(ptminfo->tm_sec) + "-" +std::to_string(f_index++)
             +".csv";
             printf("csvPath is %s \n", csvPath.c_str());
             std::ofstream csvfile; 
