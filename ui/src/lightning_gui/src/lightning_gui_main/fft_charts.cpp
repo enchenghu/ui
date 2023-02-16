@@ -1,4 +1,5 @@
 #include "fft_charts.h"
+#include <fstream>
 
 extern QStringList motorDataString;
 ChartFFT::ChartFFT(QWidget* parent, showModel type): QWidget(parent), showType_(type), \
@@ -93,7 +94,33 @@ void ChartFFT::setData(const QVector<double> &x, const QVector<double> &y, uint8
         }   
     }
 
-    if(singleShow_) singleShow_  = false;
+    if(singleShow_) {
+        singleShow_  = false;
+        if(showType_ == ADC_ORI){
+            time_t rawtime;
+            struct tm *ptminfo;
+            time(&rawtime);
+            ptminfo = localtime(&rawtime);
+            printf("current: %02d-%02d-%02d %02d:%02d:%02d\n",
+            ptminfo->tm_year + 1900, ptminfo->tm_mon + 1, ptminfo->tm_mday,
+            ptminfo->tm_hour, ptminfo->tm_min, ptminfo->tm_sec);
+            std::string csvPath;
+            csvPath =  "./adc_data_" + 
+            std::to_string(ptminfo->tm_year + 1900) + 
+            "-" + std::to_string(ptminfo->tm_mon + 1) +
+            "-" + std::to_string(ptminfo->tm_mday) +
+            "-" + std::to_string(ptminfo->tm_hour) +
+            "-" + std::to_string(ptminfo->tm_min) +
+            "-" + std::to_string(ptminfo->tm_sec) +
+            +".csv";
+            printf("csvPath is %s \n", csvPath.c_str());
+            std::ofstream csvfile; 
+            csvfile.open(csvPath, std::ios::out); 
+            for(int i  = 0; i < y.size(); i++){
+                csvfile << y[i] << "\n";	               
+            }
+        }
+    }
 
     if(showType_ == FFT_ORI) 
         pCustomPlot->yAxis->setLabel("amplitude");

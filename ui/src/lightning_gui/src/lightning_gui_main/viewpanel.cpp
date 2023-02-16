@@ -194,7 +194,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_ORI),\
 	power_offset(0.0), distance_offset(0.0),ifConnectedMotor(false),\
 	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
-	ifStarted(false)
+	ifStarted(false),saveadc_(false)
 {
 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
@@ -2037,15 +2037,20 @@ void viewpanel::setSaveFolder()
 void viewpanel::parseADCData(std::vector<uint8_t> &data)
 {
 	//std::cout << "!!enter parseADCData! input point num is  "  <<  data.size() / 2 << std::endl;
-#if 0
-	std::string datPath;
-	datPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".dat";
-	std::ofstream datfile; 
-	datfile.open(datPath, std::ios::out | std::ios::binary); 
-	for(int i = 0; i < data.size(); i++) {
-		datfile << data[i];
+#if 1
+	if(saveadc_){
+		std::string datPath;
+		static int findex = 0;
+		datPath = save_folder_.toStdString() + "/adc_data_index" + std::to_string(findex++) +".bin";
+		std::ofstream datfile; 
+		datfile.open(datPath, std::ios::out | std::ios::binary); 
+		for(int i = 0; i < data.size(); i++) {
+			datfile << data[i];
+		}
+		datfile.close();
+		saveadc_ = false;
 	}
-	datfile.close();
+
 #endif
 	int32_t cur_data  = 0;
 	int index = 0;
@@ -2562,6 +2567,7 @@ void viewpanel::singleFFT() {
 }
 
 void viewpanel::singleADC() {
+	saveadc_ = true;
 	for(int i = 0 ; i < 2; i++){
 		pADCchart[i]->setSingleShow(true);
 		pADCchart[i]->setContineFlag(false);
@@ -4035,14 +4041,20 @@ void viewpanel::setCheckBoxUnvaild(QCheckBox* checkBox)
 void viewpanel:: readMotorItemsFile()
 {
 	//qDebug() <<  QCoreApplication::applicationDirPath();
-	std::string s;
+	std::string item_name;
+	std::string motor_item_temp;
 	//The server_host should be corresponding to the robot controller setup.
-	bool res = ros::param::get("/lightning_gui/MotorItem6", s); 
-	std::cout  << "==================== " << res << std::endl;
-	if(res){
-		std::cout  << "==================== " << s << std::endl;
+	motorItemMap.clear();
+	std::string motor_item = "/lightning_gui/MotorItem";
+	for(int i = 0 ; i < 10; i++){
+		motor_item_temp = motor_item + std::to_string(i);
+		bool res = ros::param::get(motor_item_temp, item_name); 
+		if(res) motorItemMap.insert(std::pair<int, std::string>(i, motor_item_temp));
 	}
 
+	for(const auto & it : motorItemMap){
+		std::cout << it.first << ", "<<  it.second << std::endl;
+	}
 #if 0
 	std::ifstream file("./test0.txt", std::ios::in);
 	if (! file.is_open()){ 

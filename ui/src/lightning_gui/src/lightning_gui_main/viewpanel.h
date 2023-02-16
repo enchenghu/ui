@@ -107,6 +107,7 @@
 #include "types_fmcw.hpp"
 #include "bst_msg_queue.h"
 #include  <cmath>
+#include <map>
 
 using namespace fmcw_types;
 namespace rviz
@@ -299,6 +300,7 @@ private:
 	bool udpPCStop_;
 	bool udpPCSingle_;
 	bool udpPCContinu_;
+	bool saveadc_;
 	void saveData();
 	int ctrl_sock;
 	int motor_ctrl_sock;
@@ -380,6 +382,7 @@ private:
 	QGridLayout * mainRadarLayout;
     static viewpanel* m_pInstance;
 	commandMsg cmdMsg_;
+	std::map<int, std::string> motorItemMap;
 
     double display_offset_x_;
     double display_offset_y_;
