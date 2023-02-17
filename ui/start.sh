@@ -49,3 +49,6 @@ echo -e ">>>>>>>>>> flidar_ui boot >>>>>>>>>> \n"
 source ./devel/setup.bash 
 #sudo ifconfig $1 $2
 roslaunch autox_ui arbe.launch
+while [ true ]; do
+    sleep 100
+done
