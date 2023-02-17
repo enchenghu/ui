@@ -20,15 +20,15 @@ QT_CHARTS_USE_NAMESPACE
 static QVector<QColor> colotList = {{0,255,255}, {0,255,0}, {0,0,255}, {255,0,0},{255,0,255}, \
                                     {255,125,64}, {255,255,0}, {128,42,42}, {218,112,214}, {34,139,34}};
 
-class ChartFFT : public QWidget
+class ChartLighting : public QWidget
 {
     Q_OBJECT
     QCustomPlot *pCustomPlot;
 	myTracer* plotTracer;
     QTimer* timer_;
 public:
-    ChartFFT(QWidget* parent = nullptr, showModel type = FFT_ORI);
-    ~ChartFFT(){}
+    ChartLighting(QWidget* parent = nullptr, showModel type = FFT_ORI);
+    ~ChartLighting(){}
     //void setData(const QVector<double> &x, const QVector<double> &y);
     void setData(const QVector<double> &x, const QVector<double> &y, uint8_t index_graph = 0);
 

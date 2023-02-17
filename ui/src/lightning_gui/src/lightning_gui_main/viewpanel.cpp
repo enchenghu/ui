@@ -1203,18 +1203,20 @@ void viewpanel::CreatMotorWindow()
 	QGridLayout* chartChooseBoxLayout = new QGridLayout ;
 	motorChartResetBtn = new QPushButton("&Reset Chart");
 	motorChartSingleBtn = new QPushButton("&Single");
-	for(int i = 0; i < motorDataString.size(); i++){
-		QCheckBox* newBox = new QCheckBox(motorDataString[i], this);
+	for(const auto & it : motorItemMap){
+		QCheckBox* newBox = new QCheckBox(QString::fromStdString(it.second), this);
+		setCheckBoxUnvaild(newBox, false);
 		checkShowV.push_back(newBox);
-		chartChooseBoxLayout->addWidget(checkShowV[i], i, 0, Qt::AlignLeft);
-		//checkShowV.push_back(tmp);
 	}
+	for(int i = 0; i < checkShowV.size(); i++)
+		chartChooseBoxLayout->addWidget(checkShowV[i], i, 0, Qt::AlignLeft);
+
 	chartChooseBoxLayout->addWidget(motorChartResetBtn, 0, 1, Qt::AlignLeft);
 	chartChooseBoxLayout->addWidget(motorChartSingleBtn, 1, 1, Qt::AlignLeft);
 
 	chartChooseBox->setLayout(chartChooseBoxLayout);
 
-	pMotorchart = new ChartFFT(this, MOTOR_ORI);
+	pMotorchart = new ChartLighting(this, MOTOR_ORI);
 	//pMotorchart->setShowType(MOTOR_ORI);
 
 	chartMotorBoxLayout->addWidget(pMotorchart->setChart(0, 200, -220, 220), 0 , 0);
@@ -1462,8 +1464,8 @@ void viewpanel::CreatADCWindow()
     label_OSC_0->Add_Line_Data(0, 100);
     label_OSC_0->View_Chart(1000);
 #endif
-	pADCchart[0] = new ChartFFT(this, ADC_ORI);
-	pADCchart[1] = new ChartFFT(this, ADC_ORI);
+	pADCchart[0] = new ChartLighting(this, ADC_ORI);
+	pADCchart[1] = new ChartLighting(this, ADC_ORI);
 	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, 8192, -32768, 32768), 0 , 0);
 	chartADCBox0->setLayout(chartADCLayout0);
 #if 0
@@ -1506,8 +1508,8 @@ void viewpanel::CreatDebugWindow()
 	QWidget* multiWidget_new = new QWidget();
 	QGroupBox *chartADCBox = new QGroupBox(tr("FFT  chart 0:"));
 	QGridLayout* chartADCLayout = new QGridLayout ;
-	QGroupBox *chartFFTBox = new QGroupBox(tr("FFT  chart 1:"));
-	QGridLayout* chartFFTLayout = new QGridLayout ;
+	QGroupBox *ChartLightingBox = new QGroupBox(tr("FFT  chart 1:"));
+	QGridLayout* ChartLightingLayout = new QGridLayout ;
 
 	std::cout << "this->width() is "  << this->width() << " this->height() is " << this->height() << std::endl;
 #if 0
@@ -1516,8 +1518,8 @@ void viewpanel::CreatDebugWindow()
     label_OSC_0->Add_Line_Data(0, 100);
     label_OSC_0->View_Chart(1000);
 #endif
-	pFFTchart[0] = new ChartFFT(this);
-	pFFTchart[1] = new ChartFFT(this);
+	pFFTchart[0] = new ChartLighting(this);
+	pFFTchart[1] = new ChartLighting(this);
 	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, 8192, 0, 256 * 4096), 0 , 0);
 	chartADCBox->setLayout(chartADCLayout);
 #if 0
@@ -1526,8 +1528,8 @@ void viewpanel::CreatDebugWindow()
     label_OSC_1->Add_Line_Data(0, 100);
     //label_OSC_1->View_Chart(10000);
 #endif
-	if(pFFTchart[1]) chartFFTLayout->addWidget(pFFTchart[1]->setChart(-8191, 0, 0, 256 * 4096), 0, 0);
-	chartFFTBox->setLayout(chartFFTLayout);
+	if(pFFTchart[1]) ChartLightingLayout->addWidget(pFFTchart[1]->setChart(-8191, 0, 0, 256 * 4096), 0, 0);
+	ChartLightingBox->setLayout(ChartLightingLayout);
 
 	QGridLayout* main_show= new QGridLayout ;
 	main_show->setColumnStretch(0, 9);
@@ -1535,7 +1537,7 @@ void viewpanel::CreatDebugWindow()
 
 	QVBoxLayout* charts= new QVBoxLayout ;
 	charts->addWidget(chartADCBox);
-	charts->addWidget(chartFFTBox);
+	charts->addWidget(ChartLightingBox);
 
 	QHBoxLayout* configs = new QHBoxLayout ;
 	QGroupBox *addrConfigsBox = new QGroupBox(tr("Configs:"));
@@ -1647,7 +1649,7 @@ void viewpanel::CreatConnect()
 	connect(motorShowCycleSetBtn, SIGNAL(clicked()), this, SLOT( sendMotorDisplayCycleCmd( void )));
 	connect(motorPidSetBtn, SIGNAL(clicked()), this, SLOT( sendMotorPidCmd( void )));
 	QSignalMapper * motorItemsMapper = new QSignalMapper(this);
-	for(int i = 0; i < ITEMS_NUM; i++) {
+	for(int i = 0; i < checkShowV.size(); i++) {
 		connect(checkShowV[i], SIGNAL(clicked(bool)), motorItemsMapper, SLOT(map()));//这个map(）是QSignalMapper类的槽函数，不需要我们定义
 		motorItemsMapper->setMapping(checkShowV[i], i);//这个i就是我们传给槽函数的值，可以是字符串，其他等等。
 	}
@@ -2059,21 +2061,22 @@ void viewpanel::parseADCData(std::vector<uint8_t> &data)
 		adcMsg_free_buf_queue.get(padc);
 		padc->dataADC0.clear();
 		padc->dataADC1.clear();
-		for(int i = 0; i < data.size(); i++) {	
-			index += 1;
+		for(int i = 0; i < data.size(); i++) {			
 			if(i >= data.size() / 2) break;
 			int flagNum = i % 2;
 			cur_data += data[i] << (8 * (flagNum));
 			if(flagNum){
+				index += 1;
 				if(cur_data > SIGN_LIMIT_NUM){
 					cur_data -= SIGN_OFFSET_NUM;
 				}
-				if(index % 4){
+				if(index < 9){
 					padc->dataADC0.append(cur_data);
-				}else{
+				}else if( index < 17 ){
 					padc->dataADC1.append(cur_data);
 				}
 				cur_data = 0;
+				if(index == 16) index = 0;
 			}
 		}
 		adcMsg_done_buf_queue.put(padc);
@@ -3827,7 +3830,7 @@ int viewpanel::motorSerialConnectTest()
 
 	//设置串口名字 假设我们上面已经成功获取到了 并且使用第一个
 	//QString serialDevName = motorSerialCombo->currentText();
-	m_serialPort_test->setPortName(QString("/dev/pts/4"));
+	m_serialPort_test->setPortName(QString("/dev/pts/2"));
 
 	if(!m_serialPort_test->open(QIODevice::ReadWrite))//用ReadWrite 的模式尝试打开串口
 	{
@@ -4029,13 +4032,26 @@ void viewpanel::setReadOnlyLineEdit(QLineEdit* line)
 	line->setPalette(palette);
 }
 
+void viewpanel::setCheckBoxUnvaild(QCheckBox* checkBox, bool check)
+{
+	checkBox->setCheckable(check);
+	QPalette palette = checkBox->palette();
+	if(!check)
+		palette.setBrush(QPalette::Base,palette.brush(QPalette::Inactive, QPalette::Base));
+	else
+		palette.setBrush(QPalette::Base,palette.brush(QPalette::Active, QPalette::Base));
+
+	checkBox->setPalette(palette);
+	checkBox->setStyleSheet("QCheckBox::indicator {width: 20px; height: 20px;}");	
+}
+
 void viewpanel::setCheckBoxUnvaild(QCheckBox* checkBox)
 {
-	checkBox->setCheckable(true);
+	checkBox->setCheckable(false);
 	QPalette palette = checkBox->palette();
 	palette.setBrush(QPalette::Base,palette.brush(QPalette::Disabled, QPalette::Base));
 	checkBox->setPalette(palette);
-	checkBox->setStyleSheet("QCheckBox::indicator {width: 20px; height: 20px;}");	
+	checkBox->setStyleSheet("QCheckBox::indicator {width: 1px; height: 1px;}");	
 }
 
 void viewpanel:: readMotorItemsFile()
@@ -4049,7 +4065,7 @@ void viewpanel:: readMotorItemsFile()
 	for(int i = 0 ; i < 10; i++){
 		motor_item_temp = motor_item + std::to_string(i);
 		bool res = ros::param::get(motor_item_temp, item_name); 
-		if(res) motorItemMap.insert(std::pair<int, std::string>(i, motor_item_temp));
+		if(res) motorItemMap.insert(std::pair<int, std::string>(i, item_name));
 	}
 
 	for(const auto & it : motorItemMap){
@@ -4081,15 +4097,35 @@ void viewpanel:: motorInfoShow(uint8_t *ptr, int datalen)
 	int item_index = 0;
 	static int frame_index = 0;
 	x_pos.append(frame_index);
+	QVector<int> itemV;
+	//itemV.clear();
 	for(int i = 0; i < datalen; i = i + 5){
 		item_index = ptr[5 + i];
-		if(frame_index == 0)checkShowV[item_index]->setChecked(true);
+		itemV.append(item_index);
+		if(frame_index == 0) {
+			setCheckBoxUnvaild(checkShowV[item_index], true);
+			checkShowV[item_index]->setChecked(true);
+		}
 		if(item_index > MOTOR_ITEMS_NUM - 1) {
 			ROS_INFO("error!!! item_index > MOTOR_ITEMS_NUM - 1, item_index is %d", item_index);
 		}
 		y_pos[item_index].append(UnsignedChar4ToFloat(&(ptr[5 + i + 1])));
 		pMotorchart->setData(x_pos, y_pos[item_index], item_index);
 	}
+	if(frame_index == 0){
+		bool find = false;
+		for(int i = 0; i < checkShowV.size(); i++){
+			find = false;
+			for(int j = 0; j < itemV.size(); j++){
+				if(i  == itemV[j]){	
+					find = true;
+					break;		
+				}
+			}
+			if(!find)setCheckBoxUnvaild(checkShowV[i]);
+		}
+	}
+
 	frame_index++;
 }
 

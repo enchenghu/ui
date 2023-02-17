@@ -90,7 +90,7 @@
 #include "qcustomplot.h"
 
 #include "osc_chart.h"
-#include "fft_charts.h"
+#include "chartLightning.h"
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
@@ -292,6 +292,7 @@ private:
 	void init_pubs( void );
 	void init_queue();
 	void setReadOnlyLineEdit(QLineEdit* line);
+	void setCheckBoxUnvaild(QCheckBox* line, bool);
 	void setCheckBoxUnvaild(QCheckBox* line);
 	void readMotorItemsFile();
     QTimer* timer_;
@@ -513,9 +514,9 @@ private:
 	vx_task_create_params_t bst_params;
 	std::shared_ptr<fmcw_types::fmcwPoints> fmcwPointsData_;
 	fmcw_types::fmcwPoint curPcPoint;
-	ChartFFT* pFFTchart[2];
-	ChartFFT* pADCchart[2];
-	ChartFFT* pMotorchart;
+	ChartLighting* pFFTchart[2];
+	ChartLighting* pADCchart[2];
+	ChartLighting* pMotorchart;
 	QVector<QCheckBox*> checkShowV;
 
 	QVector<double> x_FFT;

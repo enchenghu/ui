@@ -1,8 +1,8 @@
-#include "fft_charts.h"
+#include "chartLightning.h"
 #include <fstream>
 
 extern QStringList motorDataString;
-ChartFFT::ChartFFT(QWidget* parent, showModel type): QWidget(parent), showType_(type), \
+ChartLighting::ChartLighting(QWidget* parent, showModel type): QWidget(parent), showType_(type), \
 rescale_(true), contineFlag_(true), singleShow_(false)
 {
 	pCustomPlot = new QCustomPlot(parent);
@@ -18,18 +18,18 @@ rescale_(true), contineFlag_(true), singleShow_(false)
 	//添加一条曲线
 }
 
-void ChartFFT::setXChart(int xmin, int xmax)
+void ChartLighting::setXChart(int xmin, int xmax)
 {
     pCustomPlot->xAxis->setRange(xmin, xmax);
 }
 
 
-void ChartFFT::setGraphShow(uint8_t index_graph, bool show)
+void ChartLighting::setGraphShow(uint8_t index_graph, bool show)
 {
     pCustomPlot->graph(index_graph)->setVisible(show);//曲线颜色设置
 }
 
-void ChartFFT::setGraph(uint8_t index_graph)
+void ChartLighting::setGraph(uint8_t index_graph)
 {
     QPen pen;
     pen.setWidth(2);//曲线的粗细
@@ -39,7 +39,7 @@ void ChartFFT::setGraph(uint8_t index_graph)
     pCustomPlot->graph(index_graph)->setName(motorDataString[index_graph]);//设置画布曲线名称
 }
 
-QCustomPlot* ChartFFT::setChart(int xmin, int xmax, int ymin, int ymax){
+QCustomPlot* ChartLighting::setChart(int xmin, int xmax, int ymin, int ymax){
 	//设置数据
 	//this->graph(0)->setData(x_FFT,y_FFT);
 	//设置Y轴范围
@@ -54,30 +54,30 @@ QCustomPlot* ChartFFT::setChart(int xmin, int xmax, int ymin, int ymax){
 	pCustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 	//pCustomPlot->xAxis->setNumberPrecision(1);
 	plotTracer = new myTracer(pCustomPlot, pCustomPlot->graph(0), TracerType::DataTracer, showType_);
-	connect(pCustomPlot, &QCustomPlot::mouseMove, this, &ChartFFT::showTracer);
+	connect(pCustomPlot, &QCustomPlot::mouseMove, this, &ChartLighting::showTracer);
 	pCustomPlot->replot();
     return pCustomPlot;
 }
 
-void ChartFFT::setShowType(showModel t)
+void ChartLighting::setShowType(showModel t)
 {
     showType_ = t;
 }
-void ChartFFT::setIfScale(bool t)
+void ChartLighting::setIfScale(bool t)
 {
     rescale_ = t;
 }
-void ChartFFT::setSingleShow(bool t)
+void ChartLighting::setSingleShow(bool t)
 {
     singleShow_ = t;
 }
-void ChartFFT::setContineFlag(bool t)
+void ChartLighting::setContineFlag(bool t)
 {
     contineFlag_ = t;
 }
 
 
-void ChartFFT::setData(const QVector<double> &x, const QVector<double> &y, uint8_t index_graph)
+void ChartLighting::setData(const QVector<double> &x, const QVector<double> &y, uint8_t index_graph)
 {
     if(singleShow_ || contineFlag_ ) {
         if(showType_ == FFT_ORI || showType_ == FFT_DB){
@@ -135,7 +135,7 @@ void ChartFFT::setData(const QVector<double> &x, const QVector<double> &y, uint8
     pCustomPlot->replot();
 }
 
-void ChartFFT::showTracer(QMouseEvent* event)
+void ChartLighting::showTracer(QMouseEvent* event)
 {
     double x = pCustomPlot->xAxis->pixelToCoord(event->pos().x());
     double y = 0;
