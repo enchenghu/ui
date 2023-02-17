@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# create flidar_ui.desktop
+echo "[Desktop Entry]
+Encoding=UTF-8
+Name=flidar_ui
+Icon=${PWD}/flidar_ui.icon
+Exec=bash ${PWD}/flidar_ui.boot
+Type=Application
+Terminal=true
+StartupNotify=true" > flidar_ui.desktop
+chmod 777 flidar_ui.desktop
+
+# create flidar_ui.desktop link
+sudo rm -f /usr/share/applications/fluid.desktop
+sudo ln -s ${PWD}/flidar_ui.desktop /usr/share/applications/fluid.desktop
+
+# create flidar.boot
+echo "#!/bin/bash
+cd ${PWD}/../
+./start.sh" > flidar_ui.boot
+chmod 777 flidar_ui.boot
+
+# reboot
+sudo reboot
+
