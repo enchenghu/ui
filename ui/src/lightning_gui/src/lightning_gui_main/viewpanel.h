@@ -242,6 +242,7 @@ private Q_SLOTS:
 	void readMotorWorkMode();
 	void readMotorShowItems();
 	void motorItemsShow(int);
+	void showADCDataSim();
 
 
 protected:
@@ -283,6 +284,10 @@ private:
 	void Save2filecsv(std::vector<uint8_t> &, bool );
 	void parseFFTData(std::vector<uint8_t> &data);
 	void parseADCData(std::vector<uint8_t> &data);
+	void simulateADCData();
+
+	std::vector<uint8_t> dataSimulateADC;
+
 	void setLED(QLabel* label, int color);
 	void setLEDColor(QLabel* label, int color);
 	std::string tohex(uint32_t a);
