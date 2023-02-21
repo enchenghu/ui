@@ -195,6 +195,11 @@ typedef struct
 	MotorMsgTailer 	tailer; 
 } motorShowMsg;
 
+typedef struct 
+{
+	uint8_t     data[128];
+} motorMaxBuff;
+
 #pragma pack()     // pack() 结束
 
 typedef struct 

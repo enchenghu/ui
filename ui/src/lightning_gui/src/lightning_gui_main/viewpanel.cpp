@@ -321,16 +321,20 @@ void viewpanel::init_queue()
     udpMsg_done_buf_queue.setParam("udpMsg_done_buf_queue", MAX_BUFF_LEN); 
 	udpPcMsg_free_buf_queue.setParam("udpPcMsg_free_buf_queue", MAX_BUFF_LEN);
     udpPcMsg_done_buf_queue.setParam("udpPcMsg_done_buf_queue", MAX_BUFF_LEN); 
+	motorMsg_free_buf_queue.setParam("motorMsg_free_buf_queue", MAX_BUFF_LEN);
+	motorMsg_done_buf_queue.setParam("motorMsg_done_buf_queue", MAX_BUFF_LEN);
+
     for (int loop = 0; loop < 4; loop++) {
         fftMsg *fbuf0 = &fftBuff[loop];
         adcMsg *fbuf1 = &adcBuff[loop];
         udp_ADC_FFT_Msg *fbuf2 = &udpFABuff[loop];
         udpPcMsgOneFrame *fbuf3 = &udpPCBuff[loop];
+		motorMaxBuff *fbuf4 = &motorBuff[loop];
         fftMsg_free_buf_queue.put(fbuf0);
         adcMsg_free_buf_queue.put(fbuf1);
         udpMsg_free_buf_queue.put(fbuf2);
         udpPcMsg_free_buf_queue.put(fbuf3);
-
+		motorMsg_free_buf_queue.put(fbuf4);
     }
 	vertical_bin = 1 / 256.0; 
 	speed_bin = 1 / 128.0; 
@@ -532,6 +536,50 @@ void viewpanel::configPower(void){
 	msgBox.setText("config power success!");
 	msgBox.exec();
 }
+
+void viewpanel::recvMotorInfoloop()
+{
+	uint8_t motorInfoHead[3]; //motor id + cmd + datalen
+	int ret;
+	uint16_t 	mHead; //0x55aa
+	int dataLen = 0;
+	//ret = ::send(motor_ctrl_sock, &dataLen, sizeof(int), 0);
+	//printf("send motorMsg , ret is %d!\n", ret);
+	ROS_INFO("====enter recvMotorInfoloop ");
+	ifConnectedMotor = true;
+	while(!terminating){
+		if(!ifConnectedMotor) break;
+		memset(&mHead, 0, 2);
+		memset(motorInfoHead, 0, 3);
+		ret = ::recv(motor_ctrl_sock, &mHead, 2, MSG_WAITALL);
+		if (ret <= 0){
+			printf("read MotorInfo timeout!\n");
+			continue;
+		} 
+		if(mHead != 0x55aa) return;
+		ROS_INFO("====recv motor info ");
+		ret = ::recv(motor_ctrl_sock, motorInfoHead, 3, MSG_WAITALL);
+		if (ret <= 0){
+			printf("read MotorInfo timeout!\n");
+			continue;
+		} 
+		dataLen = motorInfoHead[2] + 3; // + count + crc
+		motorMaxBuff *ptr_msg = nullptr;
+		if(motorMsg_free_buf_queue.get(ptr_msg)) continue;
+		ret = ::recv(motor_ctrl_sock, ptr_msg->data + 5, dataLen, MSG_WAITALL);
+		if (ret <= 0){
+			printf("read MotorInfo timeout!\n");
+			continue;
+		} 
+		memcpy(ptr_msg->data, &mHead, 2);
+		memcpy(ptr_msg->data + 2, motorInfoHead, 3);
+		motorMsg_done_buf_queue.put(ptr_msg);
+		ROS_INFO("====send motor msg ");
+		//parseMotorInfo(recvBuffBody);
+		//ROS_INFO("====finish parse motor info ");
+	}
+}
+
 
 void viewpanel::readPower(void){
 	cmdMsg_.mHead.usCommand = commandType::POWER_READ;
@@ -1695,7 +1743,7 @@ void viewpanel::CreatConnect()
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
 	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
 
-	connect(motorConnectBtn, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
+	connect(motorConnectBtn, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmdM( void )));
 	connect(motorSwitchBtn, SIGNAL(clicked()), this, SLOT( sendMotorOpenCmd( void )));
 	connect(motorPidReadBtn, SIGNAL(clicked()), this, SLOT( readMotorPid( void )));
 	connect(motorWorkModeReadBtn, SIGNAL(clicked()), this, SLOT( readMotorWorkMode( void )));
@@ -1730,10 +1778,8 @@ void viewpanel::CreatConnect()
     timer_state->start(300);
     //connect(timer_state, SIGNAL(timeout()), this, SLOT(recvSerialInfo(void)));
     QTimer* test_show_item  = new QTimer(this);
-    connect(test_show_item, SIGNAL(timeout()), this, SLOT(sendItemsInfoTest(void)));
-	test_show_item->start(500);
-
-
+    connect(test_show_item, SIGNAL(timeout()), this, SLOT(updateMotorChart(void)));
+	test_show_item->start(10);
 }
 
 void viewpanel::CreatUIWindow()
@@ -2513,6 +2559,14 @@ void viewpanel::TaskFuncPCParse(void *arg){
     }
 }
 
+void viewpanel::TaskFuncMotorRecv(void *arg){
+    viewpanel *pSave = (viewpanel *)arg;
+	std::cout << "enter TaskFuncMotorRecv" << std::endl;
+    if (pSave && pSave->TaskFuncMotorRecv) {
+        pSave->recvMotorInfoloop();
+    }
+}
+
 void viewpanel::start_save_task()
 {
 
@@ -2774,7 +2828,7 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 	std::cout << " msg datalen is " << datalen << std::endl;
 	printf("motor_id is %d, cmd_id is %d\n", motor_id, cmd_id);
 
-	switch (ptr[3])
+	switch (cmd_id)
 	{
 	case MOTOR_CONNECT_RET:
 		if(ptr[5] == 0xFF){
@@ -3168,6 +3222,44 @@ void viewpanel::sendMotorOpenCmd()
 	}
 }
 
+
+void viewpanel::sendMotorConnectCmdM()
+{
+	if(!ifConnectedMotor){
+		if(motorConnect()){
+			QMessageBox msgBox;
+			msgBox.setText("connect to the serial device failed!");
+			msgBox.exec();
+			return;
+		} 
+		startMotorTask(); 
+		motorConnectBtn->setStyleSheet("color: green");
+		motorConnectBtn->setText("&Disconnect");
+#if 0
+		motorMsgSend_.header.cmd = motorCmdType::MOTOR_CONNECT;
+		motorMsgSend_.header.dataLen = 0x00;
+		motorMsgSend_.tailer.count = 0x01;
+		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
+
+		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
+		ROS_INFO("MOTOR_CONNECT write is %d", ret);	
+#endif
+	}else{
+		ifConnectedMotor = false;
+		::close(motor_ctrl_sock);
+		motorConnectBtn->setStyleSheet("color: black");
+		motorConnectBtn->setText("&Connect");
+#if 0
+		motorMsgSend_.header.cmd = motorCmdType::MOTOR_DISCONNECT;
+		motorMsgSend_.header.dataLen = 0x00;
+		motorMsgSend_.tailer.count = 0x01;
+		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
+		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
+		ROS_INFO("MOTOR_DISCONNECT write is %d", ret);
+#endif
+	}
+}
+
 void viewpanel::sendMotorConnectCmd()
 {
 	if(!ifConnectedMotor){
@@ -3191,6 +3283,17 @@ void viewpanel::sendMotorConnectCmd()
 		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
 		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
 		ROS_INFO("MOTOR_DISCONNECT write is %d", ret);
+	}
+}
+
+void viewpanel::updateMotorChart() {
+
+	if(!motorMsg_done_buf_queue.empty()){
+		motorMaxBuff* pMotor = NULL;
+		motorMsg_done_buf_queue.get(pMotor);
+		parseMotorInfo(pMotor->data);
+		motorMsg_free_buf_queue.put(pMotor);
+		ROS_INFO("motor chart update");  
 	}
 }
 
@@ -3325,6 +3428,14 @@ void viewpanel::startPcTask() {
 	bst_params.task_mode = 0;
 	bst_params.task_main = TaskFuncPCParse;
 	vx_task_create(&bst_task[4], &bst_params); 
+}
+
+void viewpanel::startMotorTask() {
+	vx_task_set_default_create_params(&bst_params);
+	bst_params.app_var = this;
+	bst_params.task_mode = 0;
+	bst_params.task_main = TaskFuncMotorRecv;
+	vx_task_create(&bst_task[5], &bst_params);  
 }
 
 void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
@@ -4015,7 +4126,7 @@ int viewpanel::motorConnect()
 	struct timeval timeout_send = {2, 0};
 	setsockopt(motor_ctrl_sock, SOL_SOCKET, SO_SNDTIMEO, &timeout_send, sizeof(timeout_send)); //send timeout
 
-	struct timeval timeout_recv = {2, 0};
+	struct timeval timeout_recv = {5, 0};
 	setsockopt(motor_ctrl_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout_recv, sizeof(timeout_recv)); //recv timeout
 
 #endif
@@ -4187,6 +4298,7 @@ void viewpanel:: motorInfoShow(uint8_t *ptr, int datalen)
 	static int frame_index = 0;
 	x_pos.append(frame_index);
 	QVector<int> itemV;
+	QVector<float> itemData;
 	//itemV.clear();
 	for(int i = 0; i < datalen; i = i + 5){
 		item_index = ptr[5 + i];
@@ -4198,8 +4310,11 @@ void viewpanel:: motorInfoShow(uint8_t *ptr, int datalen)
 		if(item_index > MOTOR_ITEMS_NUM - 1) {
 			ROS_INFO("error!!! item_index > MOTOR_ITEMS_NUM - 1, item_index is %d", item_index);
 		}
-		y_pos[item_index].append(UnsignedChar4ToFloat(&(ptr[5 + i + 1])));
+		double dataT = UnsignedChar4ToFloat(&(ptr[5 + i + 1]));
+		y_pos[item_index].append(dataT);
 		pMotorchart->setData(x_pos, y_pos[item_index], item_index);
+		//pMotorchart->setData(QVector<double>(10, 10), QVector<double>(10, 10), item_index);
+
 	}
 	if(frame_index == 0){
 		bool find = false;
@@ -4214,7 +4329,6 @@ void viewpanel:: motorInfoShow(uint8_t *ptr, int datalen)
 			if(!find)setCheckBoxUnvaild(checkShowV[i]);
 		}
 	}
-
 	frame_index++;
 }
 

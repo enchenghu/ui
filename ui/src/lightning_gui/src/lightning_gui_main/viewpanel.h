@@ -218,6 +218,7 @@ private Q_SLOTS:
 	void pcRecord();
 	void updateFFTdata();
 	void updateADCdata();
+	void updateMotorChart();
 	void showdBFFT();
 	void singleFFT();
 	void singleADC();
@@ -233,6 +234,7 @@ private Q_SLOTS:
 	void sendItemsInfoTest();
 
 	void sendMotorConnectCmd();
+	void sendMotorConnectCmdM();
 	void sendMotorWorkModeCmd();
 	void sendMotorDisplayCycleCmd();
 
@@ -245,18 +247,22 @@ private Q_SLOTS:
 	void showADCDataSim();
 
 
+
 protected:
     static void TaskFunc(void *arg);
     static void TaskFuncUdpRecv(void *arg);
     static void TaskFuncUdpParse(void *arg);
     static void TaskFuncPCRecv(void *arg);
     static void TaskFuncPCParse(void *arg);
+    static void TaskFuncMotorRecv(void *arg);
+
 
 private:
 	void udpRecvLoop();
 	void udpRecvPCLoop();
 	void udpRecvPCOnce();
 	int udpRecvPCConnect();
+	void recvMotorInfoloop();
 
 	void udpParseLoop();
 	void CreatDebugWindow();
@@ -279,6 +285,8 @@ private:
 	void pcDataFindMaxMin(udpPcMsgOneFrame*);
 	void registerPointcloudRviz();
 	void startPcTask();
+	void startMotorTask();
+
 
 	void CreatConnect();
 	void Save2filecsv(std::vector<uint8_t> &, bool );
@@ -474,6 +482,7 @@ private:
 	udp_ADC_FFT_Msg udpFABuff[MAX_BUFF_LEN];
 	udpPcMsgOneFrame udpPCBuff[MAX_BUFF_LEN];
 	udpPcMsgOneFrame360 udpPCBuff_last;
+	motorMaxBuff motorBuff[MAX_BUFF_LEN];
 
 	bstMsgQueue<fftMsg*> fftMsg_free_buf_queue;
 	bstMsgQueue<fftMsg*> fftMsg_done_buf_queue;
@@ -483,6 +492,8 @@ private:
 	bstMsgQueue<udp_ADC_FFT_Msg*> udpMsg_done_buf_queue;
 	bstMsgQueue<udpPcMsgOneFrame*> udpPcMsg_free_buf_queue;
 	bstMsgQueue<udpPcMsgOneFrame*> udpPcMsg_done_buf_queue;
+	bstMsgQueue<motorMaxBuff*> motorMsg_free_buf_queue;
+	bstMsgQueue<motorMaxBuff*> motorMsg_done_buf_queue;
 	
 	std::string loadFileType_;
 	QString  loadLidarFile_;
