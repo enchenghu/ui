@@ -237,8 +237,11 @@ typedef struct
 #pragma pack()     // pack() 结束
 
 
+void motorSockerInit();
+
 void *motor_msg_sender(void *)
 {
+    motorSockerInit();
     motorItemsShowMsg motorMsg;
     int counter = 0;
     motorMsg.header.mHead = 0x55aa;
@@ -343,7 +346,7 @@ void pcSockerInit()
     }
 }
 
-void motorSockerInit()
+void motorSockerInit(void)
 {
     motorSocketFd_ = socket(AF_INET, SOCK_STREAM, 0); //AF_INET:IPV4;SOCK_DGRAM:UDP
     if(motorSocketFd_ < 0)
@@ -741,7 +744,7 @@ int main(int argc, char** argv)
 	int nSendBuf= 320 * 1024;//设置为32K
 	setsockopt(connfd, SOL_SOCKET,SO_SNDBUF,(const char*)&nSendBuf,sizeof(int));
 #endif
-    motorSockerInit();
+   // motorSockerInit();
     ros::init(argc, argv, "talker");
     ros::NodeHandle roshandle;
     ros::V_string v_nodes;
@@ -761,6 +764,8 @@ int main(int argc, char** argv)
     }
 
     pthread_t motor_send;
+    //pthread_t motor_init;
+    //pthread_create(&motor_init, NULL, motorSockerInit, NULL);
     pthread_create(&motor_send, NULL, motor_msg_sender, NULL);
     //pthread_join(motor_send, NULL);
 
