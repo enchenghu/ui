@@ -222,8 +222,11 @@ private Q_SLOTS:
 	void showdBFFT();
 	void singleFFT();
 	void singleADC();
+	void singleMotor();
 	void resetFFT();
 	void resetADC();
+	void resetMotor();
+
 	void updateState();
 	void printErrorLog();
 	void slotTextTcpChanged();

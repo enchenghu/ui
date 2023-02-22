@@ -1751,6 +1751,9 @@ void viewpanel::CreatConnect()
 	connect(motorWorkModeSetBtn, SIGNAL(clicked()), this, SLOT( sendMotorWorkModeCmd( void )));
 	connect(motorShowCycleSetBtn, SIGNAL(clicked()), this, SLOT( sendMotorDisplayCycleCmd( void )));
 	connect(motorPidSetBtn, SIGNAL(clicked()), this, SLOT( sendMotorPidCmd( void )));
+	connect(motorChartSingleBtn, SIGNAL(clicked()), this, SLOT( singleMotor( void )));
+	connect(motorChartResetBtn, SIGNAL(clicked()), this, SLOT( resetMotor( void )));
+	
 	QSignalMapper * motorItemsMapper = new QSignalMapper(this);
 	for(int i = 0; i < checkShowV.size(); i++) {
 		connect(checkShowV[i], SIGNAL(clicked(bool)), motorItemsMapper, SLOT(map()));//这个map(）是QSignalMapper类的槽函数，不需要我们定义
@@ -2719,6 +2722,11 @@ void viewpanel::singleADC() {
 	}
 }
 
+void viewpanel::singleMotor() {
+	pMotorchart->setSingleShow(true);
+	pMotorchart->setContineFlag(false);
+}
+
 void viewpanel::resetFFT() {
 	power_offset = power_Offset_edit->text().toDouble();
 	for(int i = 0 ; i < 2; i++){
@@ -2734,6 +2742,11 @@ void viewpanel::resetADC() {
 		pADCchart[i]->setContineFlag(true);
 		pADCchart[i]->setIfScale(true);
 	}
+}
+void viewpanel::resetMotor() {
+	pMotorchart->setSingleShow(false);
+	pMotorchart->setContineFlag(true);
+	pMotorchart->setIfScale(true);
 }
 
 void viewpanel::updateFFTdata() {

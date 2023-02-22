@@ -194,6 +194,10 @@ src/lightning_gui_main/qcustomplot.cpp
 src/lightning_gui_main/plot_tracer.cpp
 )
 
+add_executable(lightning_server src/local_server/server.cpp)
+target_link_libraries(lightning_server
+   ${catkin_LIBRARIES}
+ )
 #[[add_executable(arbe_pointcloud_receiver 
 src/arbe_pointcloud_receiver/pointcloud_node.cpp
 )
