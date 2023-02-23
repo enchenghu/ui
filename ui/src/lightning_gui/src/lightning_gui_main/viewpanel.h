@@ -232,9 +232,6 @@ private Q_SLOTS:
 	void slotTextTcpChanged();
 	void recvSerialInfo();
 	void parseMotorInfo(uint8_t*);
-	void parseMotorInfoOld(uint8_t*);
-
-
 	void recvSerialInfoTest();
 	void sendItemsInfoTest();
 
@@ -329,6 +326,8 @@ private:
 	std::string lidar_ip;
 	std::string reg_addr_;
 	std::string reg_value_;
+
+	QByteArray motorBuffAll; 
 
 	int lidar_ctrl_port;
 	int lidar_UDP_port;

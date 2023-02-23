@@ -2972,146 +2972,6 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 		break;
 	}
 }
-void viewpanel::parseMotorInfoOld(uint8_t* ptr)
-{
-	if(ptr == nullptr){
-		QMessageBox msgBox;
-		msgBox.setText("MOTOR info is empty!");
-		msgBox.exec();	
-		return;		
-	}
-	if(ptr[0] != 0xaa || ptr[1] != 0x55){
-		qDebug() << "the msg is not motor info!";
-		return;
-	}
-	uint8_t cmd_id = ptr[2];
-	int datalen = ptr[3];
-	uint8_t ret_val = ptr[4];
-	std::cout << " msg datalen is " << datalen << std::endl;
-	printf("cmd_id is %d\n", cmd_id);
-
-	switch (cmd_id)
-	{
-	case MOTOR_CONNECT_RET:
-		if(ret_val == 0xFF){
-			motorConnectBtn->setStyleSheet("color: green");
-			motorConnectBtn->setText("&Disconnect");
-			ifConnectedMotor = true;
-		} else {
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR CONNECT failed!");
-			msgBox.exec();			
-		}	
-		break;
-	case MOTOR_DISCONNECT_RET:
-		if(ret_val == 0xFF){
-			motorConnectBtn->setStyleSheet("color: black");
-			motorConnectBtn->setText("&Connect");
-			ifConnectedMotor = false;
-			releaseSerial();
-		} else {
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR DISCONNECT failed!");
-			msgBox.exec();			
-		}
-		break;
-	case MOTOR_OPEN_RET:
-		if(ret_val == 0xFF){
-			if(ifOpenMotor){
-				motorSwitchBtn->setStyleSheet("color: black");
-				motorSwitchBtn->setText("&Open");
-				ifOpenMotor = false;
-			}else {
-				motorSwitchBtn->setStyleSheet("color: green");
-				motorSwitchBtn->setText("&Close");
-				ifOpenMotor = true;				
-			}
-		} else {
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR SWITCH failed!");
-			msgBox.exec();			
-		}	
-		break;	
-	case MOTOR_PID_READ_RET:
-		if(datalen == 16){
-			for(int i = 0; i < 4; i++){
-				int index = 4 * (i+1);
-				motorPidReadLine[i]->setText(QString::number( UnsignedChar4ToFloat(&(ptr[index])) ,'f',3));
-			}	
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_PID_READ successfully!");
-			msgBox.exec();	
-		}else {
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_PID_READ failed!");
-			msgBox.exec();					
-		}
-		break;
-
-	case MOTOR_SHOW_ITEMS_READ_RET:
-		{
-			QString showName;
-			for(int i = 0; i < ptr[3]; i++){
-				showName = showName + QString::number(ptr[4 + i]) +  QString(" ");
-			}
-			motorShowItemsLine->setText(showName);
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_PID_READ successfully!");
-			msgBox.exec();
-		}
-		break;
-	case MOTOR_WORKMODE_SET_RET:
-		if(ret_val == 0xFF){
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_WORKMODE_SET successfully!");
-			msgBox.exec();
-		}
-		break;
-	case MOTOR_SHOW_CYCLE_SET_RET:
-		if(ret_val == 0xFF){
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_SHOW_CYCLE_SET successfully!");
-			msgBox.exec();
-		}
-		break;
-	case MOTOR_PID_SET_RET:
-		if(ret_val == 0xFF){
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_PID_SET_RET successfully!");
-			msgBox.exec();
-		} else if(ret_val == 0x7F) {
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_PID_SET_RET failed!");
-			msgBox.exec();
-		}
-		break;
-	case MOTOR_WORKMODE_READ_RET:
-		if(ret_val == 0x00){
-			motorWorkModeReadLine->setText(QString("speed"));
-		}else if(ret_val == 0x01){
-			motorWorkModeReadLine->setText(QString("location"));
-		}else if(ret_val == 0x02){
-			motorWorkModeReadLine->setText(QString("Phase-lock"));
-		}else {
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_PID_READ failed!");
-			msgBox.exec();	
-			return;				
-		}
-		{
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_PID_READ successfully!");
-			msgBox.exec();	
-		}
-		break;
-	case MOTOR_ITEMS_INFO:
-		motorInfoShow(ptr + 4, datalen);
-		break;
-		
-	default:
-		break;
-	}
-}
 
 void viewpanel::recvSerialInfo()
 {
@@ -3122,19 +2982,41 @@ void viewpanel::recvSerialInfo()
 		return;
 	}
 	QByteArray hexData = info.toHex();
-	qDebug() << "info recvSerialInfo is " << hexData;
+	qDebug() << "current recvSerialInfo is " << hexData;
 	uint8_t* ptr = (uint8_t*)info.data();
-	parseMotorInfoOld(ptr);
+	if(ptr[0] != 0xaa || ptr[1] != 0x55){
+		if(motorBuffAll.isEmpty()){
+			return;
+		} else {
+			motorBuffAll.append(info);
+			uint8_t* ptr_all = (uint8_t*)motorBuffAll.data();
+			QByteArray hexData = motorBuffAll.toHex();
+			qDebug() << "will process motorBuffAll : " << hexData;
+			parseMotorInfo(ptr_all);
+			motorBuffAll.clear();
+		}		
+	} else {
+		if(motorBuffAll.isEmpty()){
+			motorBuffAll = info;
+			return;
+		}
+		QByteArray hexData = motorBuffAll.toHex();
+		qDebug() << "will process motorBuffAll : " << hexData;
+		uint8_t* ptr_all = (uint8_t*)motorBuffAll.data();
+		parseMotorInfo(ptr_all);
+		motorBuffAll = info;
+	}
 }
 
 
 void viewpanel::sendItemsInfoTest()
 {
 	if(!m_serialPort_test || !m_serialPort_test_open ) return;
-	motorItemsShowMsgOld motorMsgSend;
+	motorItemsShowMsg motorMsgSend;
 	memset(&motorMsgSend, 0, sizeof(motorItemsShowMsg));
 	motorMsgSend.header.mHead = 0x55aa;
 	motorMsgSend.header.cmd = MOTOR_ITEMS_INFO;
+	motorMsgSend.header.motor_index = 0;
 	motorMsgSend.header.dataLen = sizeof(ItemData) * ITEMS_NUM;
 	for(int i = 0; i < ITEMS_NUM; i++){
 		motorMsgSend.data[i].item_id = i;
