@@ -257,12 +257,12 @@ viewpanel::viewpanel(QTabWidget* parent )
 	cmdMsg_.mHead.usType = 0x10;
 	cmdMsg_.mHead.usPayloadCrc = 0x00;
 	cmdMsg_.mHead.unLength = 12;
-	motorMsgSend_.header.mHead = 0x55aa;
-	motorMsgSend1_.header.mHead = 0x55aa;
-	motorMsgPid_.header.mHead = 0x55aa;
-	motorMsgShow_.header.mHead = 0x55aa;
-	motorMsgWorkMode_.header.mHead = 0x55aa;
-	motorMsgShowCycle_.header.mHead = 0x55aa;
+	motorMsgSend_.header.mHead = 0xaa55;
+	motorMsgSend1_.header.mHead = 0xaa55;
+	motorMsgPid_.header.mHead = 0xaa55;
+	motorMsgShow_.header.mHead = 0xaa55;
+	motorMsgWorkMode_.header.mHead = 0xaa55;
+	motorMsgShowCycle_.header.mHead = 0xaa55;
 	distance_min  = 0.0;
 	distance_max = 0.0;
 	indensity_min = 0.0;
@@ -541,7 +541,7 @@ void viewpanel::recvMotorInfoloop()
 {
 	uint8_t motorInfoHead[3]; //motor id + cmd + datalen
 	int ret;
-	uint16_t 	mHead; //0x55aa
+	uint16_t 	mHead; //0xaa55
 	int dataLen = 0;
 	//ret = ::send(motor_ctrl_sock, &dataLen, sizeof(int), 0);
 	//printf("send motorMsg , ret is %d!\n", ret);
@@ -556,7 +556,7 @@ void viewpanel::recvMotorInfoloop()
 			printf("read MotorInfo timeout!\n");
 			continue;
 		} 
-		if(mHead != 0x55aa) return;
+		if(mHead != 0xaa55) return;
 		ROS_INFO("====recv motor info ");
 		ret = ::recv(motor_ctrl_sock, motorInfoHead, 3, MSG_WAITALL);
 		if (ret <= 0){
@@ -2840,7 +2840,7 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 		msgBox.exec();	
 		return;		
 	}
-	if(ptr[0] != 0xaa || ptr[1] != 0x55){
+	if(ptr[0] != 0x55 || ptr[1] != 0xaa){
 		qDebug() << "the msg is not motor info!";
 		return;
 	}
@@ -2984,7 +2984,7 @@ void viewpanel::recvSerialInfo()
 	QByteArray hexData = info.toHex();
 	qDebug() << "current recvSerialInfo is " << hexData;
 	uint8_t* ptr = (uint8_t*)info.data();
-	if(ptr[0] != 0xaa || ptr[1] != 0x55){
+	if(ptr[0] != 0x55 || ptr[1] != 0xaa){
 		if(motorBuffAll.isEmpty()){
 			return;
 		} else {
@@ -3014,7 +3014,7 @@ void viewpanel::sendItemsInfoTest()
 	if(!m_serialPort_test || !m_serialPort_test_open ) return;
 	motorItemsShowMsg motorMsgSend;
 	memset(&motorMsgSend, 0, sizeof(motorItemsShowMsg));
-	motorMsgSend.header.mHead = 0x55aa;
+	motorMsgSend.header.mHead = 0xaa55;
 	motorMsgSend.header.cmd = MOTOR_ITEMS_INFO;
 	motorMsgSend.header.motor_index = 0;
 	motorMsgSend.header.dataLen = sizeof(ItemData) * ITEMS_NUM;
