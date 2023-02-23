@@ -2996,8 +2996,6 @@ void viewpanel::recvSerialInfo()
 			motorBuffAll.clear();
 		}		
 	} else {
-		uint8_t cmd_id = ptr[3];
-		if(cmd_id != MOTOR_ITEMS_INFO) return;
 		if(motorBuffAll.isEmpty()){
 			motorBuffAll = info;
 			return;
@@ -4345,7 +4343,7 @@ void viewpanel:: readMotorItemsFile()
 
 void viewpanel:: motorInfoShow(uint8_t *ptr, int datalen)
 {
-	if(!ptr || datalen <= 0) return;
+	if(!ptr || datalen < 5) return;
 	QVector<double> x_pos;
 	x_pos.clear();
 	QVector<double> y_pos[MOTOR_ITEMS_NUM];
