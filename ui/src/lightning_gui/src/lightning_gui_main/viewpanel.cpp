@@ -2996,6 +2996,8 @@ void viewpanel::recvSerialInfo()
 			motorBuffAll.clear();
 		}		
 	} else {
+		uint8_t cmd_id = ptr[3];
+		if(cmd_id != MOTOR_ITEMS_INFO) return;
 		if(motorBuffAll.isEmpty()){
 			motorBuffAll = info;
 			return;
