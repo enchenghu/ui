@@ -232,6 +232,8 @@ private Q_SLOTS:
 	void slotTextTcpChanged();
 	void recvSerialInfo();
 	void parseMotorInfo(uint8_t*);
+	void parseMotorInfoOld(uint8_t*);
+
 
 	void recvSerialInfoTest();
 	void sendItemsInfoTest();

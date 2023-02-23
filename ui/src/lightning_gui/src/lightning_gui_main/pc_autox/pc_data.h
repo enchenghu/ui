@@ -114,6 +114,12 @@ typedef struct
 	uint8_t     dataLen;
 } MotorMsgHeader; // 5 bytes
 
+typedef struct 
+{
+	uint16_t 	mHead; 
+	uint8_t     cmd;
+	uint8_t     dataLen;
+} MotorMsgHeaderOld; // 5 bytes
 
 typedef struct 
 {
@@ -153,6 +159,14 @@ typedef struct
 	ItemData data[ITEMS_NUM];
 	MotorMsgTailer 	tailer; 
 } motorItemsShowMsg;
+
+typedef struct 
+{
+	MotorMsgHeaderOld header;
+	ItemData data[ITEMS_NUM];
+	MotorMsgTailer 	tailer; 
+} motorItemsShowMsgOld;
+
 
 typedef struct 
 {

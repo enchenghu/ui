@@ -1743,7 +1743,9 @@ void viewpanel::CreatConnect()
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
 	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
 
-	connect(motorConnectBtn, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmdM( void )));
+	//connect(motorConnectBtn, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmdM( void )));
+	connect(motorConnectBtn, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
+
 	connect(motorSwitchBtn, SIGNAL(clicked()), this, SLOT( sendMotorOpenCmd( void )));
 	connect(motorPidReadBtn, SIGNAL(clicked()), this, SLOT( readMotorPid( void )));
 	connect(motorWorkModeReadBtn, SIGNAL(clicked()), this, SLOT( readMotorWorkMode( void )));
@@ -1780,9 +1782,16 @@ void viewpanel::CreatConnect()
     connect(timer_state, SIGNAL(timeout()), this, SLOT(printErrorLog(void)));
     timer_state->start(300);
     //connect(timer_state, SIGNAL(timeout()), this, SLOT(recvSerialInfo(void)));
+
+#if 1	
     QTimer* test_show_item  = new QTimer(this);
-    connect(test_show_item, SIGNAL(timeout()), this, SLOT(updateMotorChart(void)));
-	test_show_item->start(10);
+    connect(test_show_item, SIGNAL(timeout()), this, SLOT(sendItemsInfoTest(void)));
+	test_show_item->start(500);
+#endif
+
+    QTimer* tcp_show_item  = new QTimer(this);
+    connect(tcp_show_item, SIGNAL(timeout()), this, SLOT(updateMotorChart(void)));
+	tcp_show_item->start(10);
 }
 
 void viewpanel::CreatUIWindow()
@@ -2884,9 +2893,9 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 		}	
 		break;	
 	case MOTOR_PID_READ_RET:
-		if(ptr[4] == 16){
+		if(datalen == 16){
 			for(int i = 0; i < 4; i++){
-				int index = 4 * (i+1);
+				int index = 4 * i + 5;
 				motorPidReadLine[i]->setText(QString::number( UnsignedChar4ToFloat(&(ptr[index])) ,'f',3));
 			}	
 			QMessageBox msgBox;
@@ -2902,8 +2911,8 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 	case MOTOR_SHOW_ITEMS_READ_RET:
 		{
 			QString showName;
-			for(int i = 0; i < ptr[3]; i++){
-				showName = showName + QString::number(ptr[4 + i]) +  QString(" ");
+			for(int i = 0; i < datalen; i++){
+				showName = showName + QString::number(ptr[5 + i]) +  QString(" ");
 			}
 			motorShowItemsLine->setText(showName);
 			QMessageBox msgBox;
@@ -2956,13 +2965,154 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 		}
 		break;
 	case MOTOR_ITEMS_INFO:
-		motorInfoShow(ptr, datalen);
+		motorInfoShow(ptr + 5, datalen);
 		break;
 		
 	default:
 		break;
 	}
 }
+void viewpanel::parseMotorInfoOld(uint8_t* ptr)
+{
+	if(ptr == nullptr){
+		QMessageBox msgBox;
+		msgBox.setText("MOTOR info is empty!");
+		msgBox.exec();	
+		return;		
+	}
+	if(ptr[0] != 0xaa || ptr[1] != 0x55){
+		qDebug() << "the msg is not motor info!";
+		return;
+	}
+	uint8_t cmd_id = ptr[2];
+	int datalen = ptr[3];
+	uint8_t ret_val = ptr[4];
+	std::cout << " msg datalen is " << datalen << std::endl;
+	printf("cmd_id is %d\n", cmd_id);
+
+	switch (cmd_id)
+	{
+	case MOTOR_CONNECT_RET:
+		if(ret_val == 0xFF){
+			motorConnectBtn->setStyleSheet("color: green");
+			motorConnectBtn->setText("&Disconnect");
+			ifConnectedMotor = true;
+		} else {
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR CONNECT failed!");
+			msgBox.exec();			
+		}	
+		break;
+	case MOTOR_DISCONNECT_RET:
+		if(ret_val == 0xFF){
+			motorConnectBtn->setStyleSheet("color: black");
+			motorConnectBtn->setText("&Connect");
+			ifConnectedMotor = false;
+			releaseSerial();
+		} else {
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR DISCONNECT failed!");
+			msgBox.exec();			
+		}
+		break;
+	case MOTOR_OPEN_RET:
+		if(ret_val == 0xFF){
+			if(ifOpenMotor){
+				motorSwitchBtn->setStyleSheet("color: black");
+				motorSwitchBtn->setText("&Open");
+				ifOpenMotor = false;
+			}else {
+				motorSwitchBtn->setStyleSheet("color: green");
+				motorSwitchBtn->setText("&Close");
+				ifOpenMotor = true;				
+			}
+		} else {
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR SWITCH failed!");
+			msgBox.exec();			
+		}	
+		break;	
+	case MOTOR_PID_READ_RET:
+		if(datalen == 16){
+			for(int i = 0; i < 4; i++){
+				int index = 4 * (i+1);
+				motorPidReadLine[i]->setText(QString::number( UnsignedChar4ToFloat(&(ptr[index])) ,'f',3));
+			}	
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_PID_READ successfully!");
+			msgBox.exec();	
+		}else {
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_PID_READ failed!");
+			msgBox.exec();					
+		}
+		break;
+
+	case MOTOR_SHOW_ITEMS_READ_RET:
+		{
+			QString showName;
+			for(int i = 0; i < ptr[3]; i++){
+				showName = showName + QString::number(ptr[4 + i]) +  QString(" ");
+			}
+			motorShowItemsLine->setText(showName);
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_PID_READ successfully!");
+			msgBox.exec();
+		}
+		break;
+	case MOTOR_WORKMODE_SET_RET:
+		if(ret_val == 0xFF){
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_WORKMODE_SET successfully!");
+			msgBox.exec();
+		}
+		break;
+	case MOTOR_SHOW_CYCLE_SET_RET:
+		if(ret_val == 0xFF){
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_SHOW_CYCLE_SET successfully!");
+			msgBox.exec();
+		}
+		break;
+	case MOTOR_PID_SET_RET:
+		if(ret_val == 0xFF){
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_PID_SET_RET successfully!");
+			msgBox.exec();
+		} else if(ret_val == 0x7F) {
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_PID_SET_RET failed!");
+			msgBox.exec();
+		}
+		break;
+	case MOTOR_WORKMODE_READ_RET:
+		if(ret_val == 0x00){
+			motorWorkModeReadLine->setText(QString("speed"));
+		}else if(ret_val == 0x01){
+			motorWorkModeReadLine->setText(QString("location"));
+		}else if(ret_val == 0x02){
+			motorWorkModeReadLine->setText(QString("Phase-lock"));
+		}else {
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_PID_READ failed!");
+			msgBox.exec();	
+			return;				
+		}
+		{
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_PID_READ successfully!");
+			msgBox.exec();	
+		}
+		break;
+	case MOTOR_ITEMS_INFO:
+		motorInfoShow(ptr + 4, datalen);
+		break;
+		
+	default:
+		break;
+	}
+}
+
 void viewpanel::recvSerialInfo()
 {
 	//m_serialPort->waitForReadyRead(10);
@@ -2974,18 +3124,17 @@ void viewpanel::recvSerialInfo()
 	QByteArray hexData = info.toHex();
 	qDebug() << "info recvSerialInfo is " << hexData;
 	uint8_t* ptr = (uint8_t*)info.data();
-	parseMotorInfo(ptr);
+	parseMotorInfoOld(ptr);
 }
 
 
 void viewpanel::sendItemsInfoTest()
 {
 	if(!m_serialPort_test || !m_serialPort_test_open ) return;
-	motorItemsShowMsg motorMsgSend;
+	motorItemsShowMsgOld motorMsgSend;
 	memset(&motorMsgSend, 0, sizeof(motorItemsShowMsg));
 	motorMsgSend.header.mHead = 0x55aa;
 	motorMsgSend.header.cmd = MOTOR_ITEMS_INFO;
-	motorMsgSend.header.motor_index = 0;
 	motorMsgSend.header.dataLen = sizeof(ItemData) * ITEMS_NUM;
 	for(int i = 0; i < ITEMS_NUM; i++){
 		motorMsgSend.data[i].item_id = i;
@@ -3282,6 +3431,9 @@ void viewpanel::sendMotorConnectCmd()
 			msgBox.exec();
 			return;
 		} 
+		motorConnectBtn->setStyleSheet("color: green");
+		motorConnectBtn->setText("&Disconnect");
+#if 0
 		motorMsgSend_.header.cmd = motorCmdType::MOTOR_CONNECT;
 		motorMsgSend_.header.dataLen = 0x00;
 		motorMsgSend_.tailer.count = 0x01;
@@ -3289,13 +3441,20 @@ void viewpanel::sendMotorConnectCmd()
 
 		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
 		ROS_INFO("MOTOR_CONNECT write is %d", ret);	
+#endif
 	}else{
+		serialClose(m_serialPort);
+		ifConnectedMotor = false;
+		motorConnectBtn->setStyleSheet("color: black");
+		motorConnectBtn->setText("&Connect");
+#if 0
 		motorMsgSend_.header.cmd = motorCmdType::MOTOR_DISCONNECT;
 		motorMsgSend_.header.dataLen = 0x00;
 		motorMsgSend_.tailer.count = 0x01;
 		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
 		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
 		ROS_INFO("MOTOR_DISCONNECT write is %d", ret);
+#endif
 	}
 }
 
@@ -4113,6 +4272,7 @@ int viewpanel::motorSerialConnect()
 
 	//连接信号槽 当下位机发送数据QSerialPortInfo 会发送个 readyRead 信号,我们定义个槽void receiveInfo()解析数据
 	connect(m_serialPort,SIGNAL(readyRead()),this,SLOT(recvSerialInfo()));
+	ifConnectedMotor = true;
 	return 0;
 }
 
@@ -4314,7 +4474,7 @@ void viewpanel:: motorInfoShow(uint8_t *ptr, int datalen)
 	QVector<float> itemData;
 	//itemV.clear();
 	for(int i = 0; i < datalen; i = i + 5){
-		item_index = ptr[5 + i];
+		item_index = ptr[i];
 		itemV.append(item_index);
 		if(frame_index == 0) {
 			setCheckBoxUnvaild(checkShowV[item_index], true);
@@ -4323,7 +4483,7 @@ void viewpanel:: motorInfoShow(uint8_t *ptr, int datalen)
 		if(item_index > MOTOR_ITEMS_NUM - 1) {
 			ROS_INFO("error!!! item_index > MOTOR_ITEMS_NUM - 1, item_index is %d", item_index);
 		}
-		double dataT = UnsignedChar4ToFloat(&(ptr[5 + i + 1]));
+		double dataT = UnsignedChar4ToFloat(&(ptr[i + 1]));
 		y_pos[item_index].append(dataT);
 		pMotorchart->setData(x_pos, y_pos[item_index], item_index);
 		//pMotorchart->setData(QVector<double>(10, 10), QVector<double>(10, 10), item_index);
