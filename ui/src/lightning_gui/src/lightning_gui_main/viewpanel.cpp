@@ -1368,13 +1368,13 @@ void viewpanel::CreatMotorWindow()
 	showCycleLabel ->setAlignment(Qt::AlignHCenter);
 #endif
 
-	motorControlBoxLayout->addWidget(tcpPortLabel, 0, 0, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(tcpPortLabel, 0, 0, Qt::AlignRight);
 	motorControlBoxLayout->addWidget(motorConnectPortLine, 0, 1, Qt::AlignLeft);
-	motorControlBoxLayout->addWidget(serialLabel, 1, 0, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(serialLabel, 1, 0, Qt::AlignRight);
 	motorControlBoxLayout->addWidget(motorSerialCombo, 1, 1, Qt::AlignLeft);
-	motorControlBoxLayout->addWidget(motorConnectBtnTcp, 2, 0, Qt::AlignLeft);
-	motorControlBoxLayout->addWidget(motorConnectBtnSerial, 3, 0, Qt::AlignLeft);
-	motorControlBoxLayout->addWidget(motorSwitchBtn, 2, 1, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motorConnectBtnTcp, 0, 2, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motorConnectBtnSerial, 1, 2, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motorSwitchBtn, 2, 2, Qt::AlignLeft);
 
 	QGroupBox* workModeBox = new QGroupBox(tr("Work Mode:"));
 	QGridLayout* workModeBoxLayout = new QGridLayout ;
@@ -1388,7 +1388,7 @@ void viewpanel::CreatMotorWindow()
 	workModeBoxLayout->addWidget(motorWorkModeLocSetLine, 0, 7, Qt::AlignLeft | Qt::AlignTop);
 	workModeBoxLayout->addWidget(motorWorkModeSetBtn, 0, 8, Qt::AlignLeft | Qt::AlignTop);
 	workModeBox->setLayout(workModeBoxLayout);
-	motorControlBoxLayout->addWidget(workModeBox, 0, 2, Qt::AlignLeft | Qt::AlignTop);
+	motorControlBoxLayout->addWidget(workModeBox, 0, 3, Qt::AlignLeft);
 
 
 	QGroupBox* pidBox = new QGroupBox(tr("PID:"));
@@ -1410,7 +1410,7 @@ void viewpanel::CreatMotorWindow()
 	pidBoxLayout->addWidget(motorPidDSetLine, 0, 7, Qt::AlignLeft | Qt::AlignTop);
 	pidBoxLayout->addWidget(motorPidSetBtn, 0, 8, Qt::AlignLeft | Qt::AlignTop);
 	pidBox->setLayout(pidBoxLayout);
-	motorControlBoxLayout->addWidget(pidBox, 1, 2, Qt::AlignLeft | Qt::AlignTop);
+	motorControlBoxLayout->addWidget(pidBox, 1, 3, Qt::AlignLeft | Qt::AlignTop);
 
 	QGroupBox* showSetBox = new QGroupBox;
 	QGridLayout*showSetBoxLayout = new QGridLayout ;
@@ -1418,10 +1418,12 @@ void viewpanel::CreatMotorWindow()
 	showSetBoxLayout->addWidget(motorShowCycleSetLine, 0, 1, Qt::AlignLeft | Qt::AlignTop);
 	showSetBoxLayout->addWidget(motorShowCycleSetBtn, 0, 2, Qt::AlignLeft | Qt::AlignTop);
 	showSetBox->setLayout(showSetBoxLayout);
-	motorControlBoxLayout->addWidget(showSetBox, 2, 2, Qt::AlignLeft | Qt::AlignTop);
+	motorControlBoxLayout->addWidget(showSetBox, 2, 3, Qt::AlignLeft | Qt::AlignTop);
+	
 	motorControlBoxLayout->setColumnStretch(0, 1);
 	motorControlBoxLayout->setColumnStretch(1, 1);
-	motorControlBoxLayout->setColumnStretch(2, 9);
+	motorControlBoxLayout->setColumnStretch(2, 3);
+	motorControlBoxLayout->setColumnStretch(3, 10);
 
 	motorControlBox->setLayout(motorControlBoxLayout);
 
@@ -2822,9 +2824,9 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 	{
 	case MOTOR_CONNECT_RET:
 		if(ptr[5] == 0xFF){
-/* 			motorConnectBtn->setStyleSheet("color: green");
-			motorConnectBtn->setText("&Disconnect");
-			ifConnectedMotor = true; */
+			motorConnectBtnTcp->setStyleSheet("color: green");
+			motorConnectBtnTcp->setText("&Disconnect");
+			ifConnectedMotorTcp = true;
 		} else {
 			QMessageBox msgBox;
 			msgBox.setText("MOTOR CONNECT failed!");
@@ -3093,13 +3095,12 @@ void viewpanel::recvSerialInfoTest()
 
 int viewpanel::checkMotorConnected()
 {
-	if(!ifConnectedMotorSerial){
+	if(!ifConnectedMotorSerial && !ifConnectedMotorTcp){
 		QMessageBox msgBox;
 		msgBox.setText("please connect to the motor serial device firstly!");
 		msgBox.exec();
 		return -1;
 	} 
-
 	return 0;
 }
 
@@ -3240,29 +3241,34 @@ void viewpanel::sendMotorConnectCmdM()
 	if(!ifConnectedMotorTcp){
 		if(motorConnect()){
 			QMessageBox msgBox;
-			msgBox.setText("connect to the serial device failed!");
+			msgBox.setText("connect to Motor failed!");
 			msgBox.exec();
 			return;
 		} 
-		startMotorTask(); 
+		startMotorTask(); 		
+#if 1
+		motorMsgSend_.header.cmd = motorCmdType::MOTOR_CONNECT;
+		motorMsgSend_.header.motor_index = 0x01;
+		motorMsgSend_.header.dataLen = 0x00;
+		motorMsgSend_.tailer.count = 0x01;	
+		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.motor_index + \
+									motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
+		if(::write(motor_ctrl_sock, &motorMsgSend_, sizeof(motorMsgSend_)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("send Motor ConnectCmdMsg failed!");
+			msgBox.exec();
+			return;
+		}	
+		ROS_INFO("send Motor ConnectCmdMsg ok");	
+#endif
 		motorConnectBtnTcp->setStyleSheet("color: green");
 		motorConnectBtnTcp->setText("&Disconnect");
 		motorConnectBtnSerial->setEnabled(false);
-		
-#if 0
-		motorMsgSend_.header.cmd = motorCmdType::MOTOR_CONNECT;
-		motorMsgSend_.header.dataLen = 0x00;
-		motorMsgSend_.tailer.count = 0x01;
-		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
-
-		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
-		ROS_INFO("MOTOR_CONNECT write is %d", ret);	
-#endif
 	}else{
 		ifConnectedMotorTcp = false;
 		::close(motor_ctrl_sock);
 		motorConnectBtnTcp->setStyleSheet("color: black");
-		motorConnectBtnTcp->setText("&Connect");
+		motorConnectBtnTcp->setText("&Tcp Connect");
 		motorConnectBtnSerial->setEnabled(true);
 #if 0
 		motorMsgSend_.header.cmd = motorCmdType::MOTOR_DISCONNECT;
@@ -3280,7 +3286,7 @@ void viewpanel::sendMotorConnectCmd()
 	if(!ifConnectedMotorSerial){
 		if(motorSerialConnect()){
 			QMessageBox msgBox;
-			msgBox.setText("connect to the serial device failed!");
+			msgBox.setText("connect to Motor failed!");
 			msgBox.exec();
 			return;
 		} 
@@ -3304,7 +3310,7 @@ void viewpanel::sendMotorConnectCmd()
 		serialClose(m_serialPort);
 		ifConnectedMotorSerial = false;
 		motorConnectBtnSerial->setStyleSheet("color: black");
-		motorConnectBtnSerial->setText("&Connect");
+		motorConnectBtnSerial->setText("&Serial Connect");
 		motorConnectBtnTcp->setEnabled(true);
 #if 0
 		motorMsgSend_.header.cmd = motorCmdType::MOTOR_DISCONNECT;
