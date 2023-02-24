@@ -244,7 +244,7 @@ void *motor_msg_sender(void *)
     motorSockerInit();
     motorItemsShowMsg motorMsg;
     int counter = 0;
-    motorMsg.header.mHead = 0x55aa;
+    motorMsg.header.mHead = 0xaa55;
     motorMsg.header.motor_index = 0;
     motorMsg.header.cmd = 0xc0;
     motorMsg.header.dataLen = sizeof(ItemData) * ITEMS_NUM;

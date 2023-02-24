@@ -1,42 +1,7 @@
-/*
- * Copyright (C) 2019 Arbe - http://www.arberobotics.com/ 
- * 
- * 
- *  Redistribution and use in source and binary forms, with or without 
- *  modification, are permitted provided that the following conditions 
- *  are met:
- *
- *    Redistributions of source code must retain the above copyright 
- *    notice, this list of conditions and the following disclaimer.
- *
- *    Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the 
- *    documentation and/or other materials provided with the   
- *    distribution.
- *
- *    Neither the name of Arbe nor the names of
- *    its contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
- *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
- *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
- *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
- *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
- *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
- *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
-*/
-
 
 #include "geometry_msgs/PolygonStamped.h"
 #include "geometry_msgs/Point32.h"
 #include "mainwindow.h"
-//#include "Per_radar_settings.hpp"
 
 #include "sensor_msgs/CompressedImage.h"
 #include "sensor_msgs/Image.h"
@@ -246,7 +211,7 @@ uint8_t * LoadDat(const char *cali_file_path)
 viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
 	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_ORI),\
-	power_offset(0.0), distance_offset(0.0),ifConnectedMotor(false),\
+	power_offset(0.0), distance_offset(0.0),ifConnectedMotorSerial(false), ifConnectedMotorTcp(false),\
 	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
 	ifStarted(false),saveadc_(false)
 {
@@ -546,9 +511,9 @@ void viewpanel::recvMotorInfoloop()
 	//ret = ::send(motor_ctrl_sock, &dataLen, sizeof(int), 0);
 	//printf("send motorMsg , ret is %d!\n", ret);
 	ROS_INFO("====enter recvMotorInfoloop ");
-	ifConnectedMotor = true;
+	ifConnectedMotorTcp = true;
 	while(!terminating){
-		if(!ifConnectedMotor) break;
+		if(!ifConnectedMotorTcp) break;
 		memset(&mHead, 0, 2);
 		memset(motorInfoHead, 0, 3);
 		ret = ::recv(motor_ctrl_sock, &mHead, 2, MSG_WAITALL);
@@ -1344,7 +1309,9 @@ void viewpanel::CreatMotorWindow()
 	QGridLayout* motorStateBoxLayout = new QGridLayout ;
 	
 
-	motorConnectBtn = new QPushButton("&Connect");
+	motorConnectBtnTcp = new QPushButton("&Tcp Connect");
+	motorConnectBtnSerial = new QPushButton("&Serial Connect");
+
 	motorSwitchBtn = new QPushButton("&Open");
 	motorWorkModeSetBtn = new QPushButton("&Set");
 	motorPidSetBtn = new QPushButton("&Set");
@@ -1405,7 +1372,8 @@ void viewpanel::CreatMotorWindow()
 	motorControlBoxLayout->addWidget(motorConnectPortLine, 0, 1, Qt::AlignLeft);
 	motorControlBoxLayout->addWidget(serialLabel, 1, 0, Qt::AlignLeft);
 	motorControlBoxLayout->addWidget(motorSerialCombo, 1, 1, Qt::AlignLeft);
-	motorControlBoxLayout->addWidget(motorConnectBtn, 2, 0, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motorConnectBtnTcp, 2, 0, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motorConnectBtnSerial, 3, 0, Qt::AlignLeft);
 	motorControlBoxLayout->addWidget(motorSwitchBtn, 2, 1, Qt::AlignLeft);
 
 	QGroupBox* workModeBox = new QGroupBox(tr("Work Mode:"));
@@ -1743,8 +1711,8 @@ void viewpanel::CreatConnect()
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
 	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
 
-	//connect(motorConnectBtn, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmdM( void )));
-	connect(motorConnectBtn, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
+	connect(motorConnectBtnTcp, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmdM( void )));
+	connect(motorConnectBtnSerial, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
 
 	connect(motorSwitchBtn, SIGNAL(clicked()), this, SLOT( sendMotorOpenCmd( void )));
 	connect(motorPidReadBtn, SIGNAL(clicked()), this, SLOT( readMotorPid( void )));
@@ -2854,9 +2822,9 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 	{
 	case MOTOR_CONNECT_RET:
 		if(ptr[5] == 0xFF){
-			motorConnectBtn->setStyleSheet("color: green");
+/* 			motorConnectBtn->setStyleSheet("color: green");
 			motorConnectBtn->setText("&Disconnect");
-			ifConnectedMotor = true;
+			ifConnectedMotor = true; */
 		} else {
 			QMessageBox msgBox;
 			msgBox.setText("MOTOR CONNECT failed!");
@@ -2865,9 +2833,9 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 		break;
 	case MOTOR_DISCONNECT_RET:
 		if(ptr[5] == 0xFF){
-			motorConnectBtn->setStyleSheet("color: black");
+/* 			motorConnectBtn->setStyleSheet("color: black");
 			motorConnectBtn->setText("&Connect");
-			ifConnectedMotor = false;
+			ifConnectedMotor = false; */
 			releaseSerial();
 		} else {
 			QMessageBox msgBox;
@@ -3125,7 +3093,7 @@ void viewpanel::recvSerialInfoTest()
 
 int viewpanel::checkMotorConnected()
 {
-	if(!ifConnectedMotor){
+	if(!ifConnectedMotorSerial){
 		QMessageBox msgBox;
 		msgBox.setText("please connect to the motor serial device firstly!");
 		msgBox.exec();
@@ -3269,7 +3237,7 @@ void viewpanel::sendMotorOpenCmd()
 
 void viewpanel::sendMotorConnectCmdM()
 {
-	if(!ifConnectedMotor){
+	if(!ifConnectedMotorTcp){
 		if(motorConnect()){
 			QMessageBox msgBox;
 			msgBox.setText("connect to the serial device failed!");
@@ -3277,8 +3245,10 @@ void viewpanel::sendMotorConnectCmdM()
 			return;
 		} 
 		startMotorTask(); 
-		motorConnectBtn->setStyleSheet("color: green");
-		motorConnectBtn->setText("&Disconnect");
+		motorConnectBtnTcp->setStyleSheet("color: green");
+		motorConnectBtnTcp->setText("&Disconnect");
+		motorConnectBtnSerial->setEnabled(false);
+		
 #if 0
 		motorMsgSend_.header.cmd = motorCmdType::MOTOR_CONNECT;
 		motorMsgSend_.header.dataLen = 0x00;
@@ -3289,10 +3259,11 @@ void viewpanel::sendMotorConnectCmdM()
 		ROS_INFO("MOTOR_CONNECT write is %d", ret);	
 #endif
 	}else{
-		ifConnectedMotor = false;
+		ifConnectedMotorTcp = false;
 		::close(motor_ctrl_sock);
-		motorConnectBtn->setStyleSheet("color: black");
-		motorConnectBtn->setText("&Connect");
+		motorConnectBtnTcp->setStyleSheet("color: black");
+		motorConnectBtnTcp->setText("&Connect");
+		motorConnectBtnSerial->setEnabled(true);
 #if 0
 		motorMsgSend_.header.cmd = motorCmdType::MOTOR_DISCONNECT;
 		motorMsgSend_.header.dataLen = 0x00;
@@ -3306,34 +3277,42 @@ void viewpanel::sendMotorConnectCmdM()
 
 void viewpanel::sendMotorConnectCmd()
 {
-	if(!ifConnectedMotor){
+	if(!ifConnectedMotorSerial){
 		if(motorSerialConnect()){
 			QMessageBox msgBox;
 			msgBox.setText("connect to the serial device failed!");
 			msgBox.exec();
 			return;
 		} 
-		motorConnectBtn->setStyleSheet("color: green");
-		motorConnectBtn->setText("&Disconnect");
+
 #if 0
 		motorMsgSend_.header.cmd = motorCmdType::MOTOR_CONNECT;
+		motorMsgSend_.header.motor_index = 0x01;
 		motorMsgSend_.header.dataLen = 0x00;
 		motorMsgSend_.tailer.count = 0x01;
-		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
+		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.motor_index + \
+									motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
+		motorMsgSend_.tailer.crc = 0x03;
 
 		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
 		ROS_INFO("MOTOR_CONNECT write is %d", ret);	
 #endif
+		motorConnectBtnSerial->setStyleSheet("color: green");
+		motorConnectBtnSerial->setText("&Disconnect");
+		motorConnectBtnTcp->setEnabled(false);
 	}else{
 		serialClose(m_serialPort);
-		ifConnectedMotor = false;
-		motorConnectBtn->setStyleSheet("color: black");
-		motorConnectBtn->setText("&Connect");
+		ifConnectedMotorSerial = false;
+		motorConnectBtnSerial->setStyleSheet("color: black");
+		motorConnectBtnSerial->setText("&Connect");
+		motorConnectBtnTcp->setEnabled(true);
 #if 0
 		motorMsgSend_.header.cmd = motorCmdType::MOTOR_DISCONNECT;
+		motorMsgSend_.header.motor_index = 0x01;
 		motorMsgSend_.header.dataLen = 0x00;
 		motorMsgSend_.tailer.count = 0x01;
-		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
+		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.motor_index + \
+									motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
 		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
 		ROS_INFO("MOTOR_DISCONNECT write is %d", ret);
 #endif
@@ -4154,7 +4133,7 @@ int viewpanel::motorSerialConnect()
 
 	//连接信号槽 当下位机发送数据QSerialPortInfo 会发送个 readyRead 信号,我们定义个槽void receiveInfo()解析数据
 	connect(m_serialPort,SIGNAL(readyRead()),this,SLOT(recvSerialInfo()));
-	ifConnectedMotor = true;
+	ifConnectedMotorSerial = true;
 	return 0;
 }
 
@@ -4195,6 +4174,7 @@ int viewpanel::motorConnect()
 		ROS_INFO("Failed to connect to lidar_ip %s port: %d", lidar_ip.c_str(), motor_port);
 		return -2; /* Completely fail only if first radar didn't connect */
 	}
+	ifConnectedMotorTcp  = true;
 	//fcntl(ctrl_sock, F_SETFL, O_NONBLOCK); /* Set the socket to non blocking mode */
 	return 0;
 }

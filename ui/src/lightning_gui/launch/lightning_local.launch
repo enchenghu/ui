@@ -4,8 +4,8 @@
 <launch>
 	####  For GDB add: launch-prefix="gdb -ex run --args" ####
 	<node name="lightning_gui" pkg="autox_ui" type="lightning_gui" output="screen" required="true">
-		<param name="MotorItem0" value = "speed" />
-		<param name="MotorItem1" value = "angle" />
+		<param name="MotorItem0" value = "速度" />
+		<param name="MotorItem1" value = "角度" />
 		<param name="MotorItem2" value = "speed P" />
 		<param name="MotorItem3" value = "speed I" />
 		<param name="MotorItem4" value = "IQ" />
