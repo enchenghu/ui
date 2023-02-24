@@ -3,8 +3,7 @@
 ttl_5=""
 pin_cnt=0
 
-#ping_IP='10.20.30.40'
-ping_IP='127.0.0.1'
+ping_IP='10.20.30.40'
 ping_ret=""
 
 mkdir log -p
