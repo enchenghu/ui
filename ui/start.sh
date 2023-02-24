@@ -3,18 +3,20 @@
 ttl_5=""
 pin_cnt=0
 
-ping_IP='10.20.30.40'
+#ping_IP='10.20.30.40'
+ping_IP='127.0.0.1'
 ping_ret=""
 
 mkdir log -p
 nowTime=$(date "+%Y%m%d_%H%M%S")
-
+source ./devel/setup.bash 
 echo -e ">>>>>>>> flidar_ui ./start.sh >>>>>>>>\n"
 
 echo -e "nowTime: $(date "+%Y-%m-%d_%H-%M-%S") \n"
 
 if [ $# -eq 1 ] && [ "noping" == $1 ]; then
     echo "============== Not ping =============="
+    roslaunch autox_ui lightning_local.launch
 else
     echo "========== ping ${ping_IP} =========="
 
@@ -35,14 +37,9 @@ else
 
         sleep 1
     done
+    echo -e "\n>>>>>>>>>>> flidar_ui boot >>>>>>>>>>>\n"
+    roslaunch autox_ui lightning.launch
 fi
-
-echo -e "\n>>>>>>>>>>> flidar_ui boot >>>>>>>>>>>\n"
-
-# exit 1
-
-source ./devel/setup.bash 
-roslaunch autox_ui lightning_local.launch
 
 exit 0
 
