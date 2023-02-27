@@ -5,6 +5,8 @@ ui/.catkin_workspace
 ui/devel/
 ui/tmp/
 ui/.vscode
+ui/shortCut/*.boot
+ui/shortCut/*.desktop
 # 忽略Logs
 logs
 *.log

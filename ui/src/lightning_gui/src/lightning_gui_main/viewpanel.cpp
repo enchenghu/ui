@@ -2824,9 +2824,14 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 	{
 	case MOTOR_CONNECT_RET:
 		if(ptr[5] == 0xFF){
-			motorConnectBtnTcp->setStyleSheet("color: green");
-			motorConnectBtnTcp->setText("&Disconnect");
-			ifConnectedMotorTcp = true;
+			if(ifConnectedMotorSerial){
+				motorConnectBtnSerial->setStyleSheet("color: green");
+				motorConnectBtnSerial->setText("&Disconnect");
+			} else {
+				motorConnectBtnTcp->setStyleSheet("color: green");
+				motorConnectBtnTcp->setText("&Disconnect");
+				ifConnectedMotorTcp = true;
+			}
 		} else {
 			QMessageBox msgBox;
 			msgBox.setText("MOTOR CONNECT failed!");
@@ -3216,8 +3221,9 @@ void viewpanel::sendSerialBytes(const uint8_t *begin, int size)
 	for(int i = 0; i < size; i++){
 		//uint8_t *begin = (uint8_t *)&motorMsgSend1_;
 		int ret = m_serialPort->write((const char *)begin + i,1);
+		m_serialPort->flush();
 		count += ret;
-		usleep(100 * 1000);
+		usleep(20 * 1000);
 	}
 	ROS_INFO("m_serialPort write bytes are %d", count);		
 }
@@ -3241,6 +3247,7 @@ void viewpanel::sendMotorOpenCmd()
 		}	
 	}else{
 		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_OPEN;
+		motorMsgSend1_.header.mHead = 0xaa55;
 		motorMsgSend1_.header.dataLen = 0x01;
 		motorMsgSend1_.data = 0x00;
 		motorMsgSend1_.tailer.count = 0x01;
@@ -3316,6 +3323,7 @@ void viewpanel::sendMotorConnectCmd()
 									motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
 		motorMsgSend_.tailer.crc = 0x03;
 		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
+		ifConnectedMotorSerial = true;
 #if 0
 		//int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
 		//ROS_INFO("MOTOR_CONNECT write is %d", ret);	
