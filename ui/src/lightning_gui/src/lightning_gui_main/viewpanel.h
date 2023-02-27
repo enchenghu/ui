@@ -233,6 +233,7 @@ private:
 	int udpRecvPCConnect();
 	void recvMotorInfoloop();
 
+	void sendSerialBytes(const uint8_t *begin, int size);
 	void udpParseLoop();
 	void CreatDebugWindow();
 	void CreatUIWindow();

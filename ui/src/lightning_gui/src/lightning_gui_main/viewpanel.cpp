@@ -1753,7 +1753,7 @@ void viewpanel::CreatConnect()
     timer_state->start(300);
     //connect(timer_state, SIGNAL(timeout()), this, SLOT(recvSerialInfo(void)));
 
-#if 1	
+#if 0	
     QTimer* test_show_item  = new QTimer(this);
     connect(test_show_item, SIGNAL(timeout()), this, SLOT(sendItemsInfoTest(void)));
 	test_show_item->start(500);
@@ -3009,8 +3009,9 @@ void viewpanel::recvSerialInfoTest()
 	uint8_t* ptr = (uint8_t*)info.data();
 	int ret;
 	float dataPid[4] = {6.666, 7.777, 8.888, 9.999};
+	uint8_t cmd_id = 0;//ptr[3];
 
-	switch (ptr[3])
+	switch (cmd_id)
 	{
 	case MOTOR_CONNECT:
 		motorMsgSend1_.header.motor_index = 0;
@@ -3209,6 +3210,18 @@ void viewpanel::readMotorPid()
 	int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
 	ROS_INFO("m_serialPort->write is %d", ret);
 }
+void viewpanel::sendSerialBytes(const uint8_t *begin, int size)
+{
+	int count = 0;
+	for(int i = 0; i < size; i++){
+		//uint8_t *begin = (uint8_t *)&motorMsgSend1_;
+		int ret = m_serialPort->write((const char *)begin + i,1);
+		count += ret;
+		usleep(100 * 1000);
+	}
+	ROS_INFO("m_serialPort write bytes are %d", count);		
+}
+
 
 void viewpanel::sendMotorOpenCmd()
 {
@@ -3216,22 +3229,26 @@ void viewpanel::sendMotorOpenCmd()
 		if(checkMotorConnected()) return;
 		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_OPEN;
 		motorMsgSend1_.header.dataLen = 0x01;
+		motorMsgSend1_.header.motor_index = 0x01;
+		motorMsgSend1_.header.mHead = 0xaa55;
 		motorMsgSend1_.data = 0x01;
 		motorMsgSend1_.tailer.count = 0x01;
 		motorMsgSend1_.tailer.crc = motorMsgSend1_.header.cmd + motorMsgSend1_.header.dataLen +  motorMsgSend1_.data + \
-		 motorMsgSend1_.tailer.count;
-		int ret = m_serialPort->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
-		ROS_INFO("m_serialPort->write is %d", ret);	
+									motorMsgSend1_.header.motor_index + motorMsgSend1_.tailer.count;
+
+		if(ifConnectedMotorSerial){
+			sendSerialBytes((uint8_t *)&motorMsgSend1_, sizeof(motorMsgSend1_));
+		}	
 	}else{
 		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_OPEN;
 		motorMsgSend1_.header.dataLen = 0x01;
 		motorMsgSend1_.data = 0x00;
 		motorMsgSend1_.tailer.count = 0x01;
 		motorMsgSend1_.tailer.crc = motorMsgSend1_.header.cmd + motorMsgSend1_.header.dataLen +  motorMsgSend1_.data + \
-		motorMsgSend1_.tailer.count;
-		int ret = m_serialPort->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
-		ROS_INFO("m_serialPort->write is %d", ret);	
-		//releaseSerial();
+									motorMsgSend1_.header.motor_index + motorMsgSend1_.tailer.count;
+		if(ifConnectedMotorSerial){
+			sendSerialBytes((uint8_t *)&motorMsgSend1_, sizeof(motorMsgSend1_));
+		}
 	}
 }
 
@@ -3291,7 +3308,6 @@ void viewpanel::sendMotorConnectCmd()
 			return;
 		} 
 
-#if 0
 		motorMsgSend_.header.cmd = motorCmdType::MOTOR_CONNECT;
 		motorMsgSend_.header.motor_index = 0x01;
 		motorMsgSend_.header.dataLen = 0x00;
@@ -3299,26 +3315,28 @@ void viewpanel::sendMotorConnectCmd()
 		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.motor_index + \
 									motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
 		motorMsgSend_.tailer.crc = 0x03;
-
-		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
-		ROS_INFO("MOTOR_CONNECT write is %d", ret);	
+		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
+#if 0
+		//int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
+		//ROS_INFO("MOTOR_CONNECT write is %d", ret);	
 #endif
 		motorConnectBtnSerial->setStyleSheet("color: green");
 		motorConnectBtnSerial->setText("&Disconnect");
 		motorConnectBtnTcp->setEnabled(false);
 	}else{
-		serialClose(m_serialPort);
-		ifConnectedMotorSerial = false;
-		motorConnectBtnSerial->setStyleSheet("color: black");
-		motorConnectBtnSerial->setText("&Serial Connect");
-		motorConnectBtnTcp->setEnabled(true);
-#if 0
 		motorMsgSend_.header.cmd = motorCmdType::MOTOR_DISCONNECT;
 		motorMsgSend_.header.motor_index = 0x01;
 		motorMsgSend_.header.dataLen = 0x00;
 		motorMsgSend_.tailer.count = 0x01;
 		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.motor_index + \
 									motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
+		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
+		serialClose(m_serialPort);
+		ifConnectedMotorSerial = false;
+		motorConnectBtnSerial->setStyleSheet("color: black");
+		motorConnectBtnSerial->setText("&Serial Connect");
+		motorConnectBtnTcp->setEnabled(true);
+#if 0
 		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
 		ROS_INFO("MOTOR_DISCONNECT write is %d", ret);
 #endif
@@ -4069,11 +4087,11 @@ int viewpanel::motorSerialConnectTest()
 
 	//设置串口名字 假设我们上面已经成功获取到了 并且使用第一个
 	//QString serialDevName = motorSerialCombo->currentText();
-	m_serialPort_test->setPortName(QString("/dev/pts/2"));
+	m_serialPort_test->setPortName(QString("/dev/pts/4"));
 
 	if(!m_serialPort_test->open(QIODevice::ReadWrite))//用ReadWrite 的模式尝试打开串口
 	{
-		qDebug()<< QString("/dev/pts/2") <<"open failed!";
+		qDebug()<< QString("/dev/pts/4") <<"open failed!";
 		return -1;
 	}
 	//打开成功
