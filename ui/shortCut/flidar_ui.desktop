@@ -1,8 +1,0 @@
-[Desktop Entry]
-Encoding=UTF-8
-Name=flidar_ui
-Icon=/home/encheng/code_ui/ui/ui/shortCut/flidar_ui.icon
-Exec=bash /home/encheng/code_ui/ui/ui/shortCut/flidar_ui.boot
-Type=Application
-Terminal=true
-StartupNotify=true
