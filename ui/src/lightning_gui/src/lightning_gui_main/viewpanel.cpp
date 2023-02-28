@@ -1756,7 +1756,7 @@ void viewpanel::CreatConnect()
 #if 0	
     QTimer* test_show_item  = new QTimer(this);
     connect(test_show_item, SIGNAL(timeout()), this, SLOT(sendItemsInfoTest(void)));
-	test_show_item->start(500);
+	test_show_item->start(100);
 #endif
 
     QTimer* tcp_show_item  = new QTimer(this);

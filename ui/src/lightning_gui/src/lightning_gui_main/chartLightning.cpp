@@ -90,7 +90,7 @@ void ChartLighting::setData(const QVector<double> &x, const QVector<double> &y, 
             setGraph(index_graph);
             pCustomPlot->legend->setVisible(true);
             pCustomPlot->legend->setBrush(QColor(255, 255, 255, 150));
-            //pCustomPlot->xAxis->setRange(x[0], x[x.size() - 1]);
+            if(x[x.size() - 1] > 100) pCustomPlot->xAxis->setRange(x[x.size() - 1] - 200, x[x.size() - 1]);
         }   
     }
 
