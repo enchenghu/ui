@@ -6,6 +6,7 @@ ChartLighting::ChartLighting(QWidget* parent, showModel type): QWidget(parent), 
 rescale_(true), contineFlag_(true), singleShow_(false)
 {
 	pCustomPlot = new QCustomPlot(parent);
+    //pCustomPlot->setOpenGl(true); 
     uint8_t graph_num = 1;
     if(type == MOTOR_ORI)
     {
@@ -14,7 +15,7 @@ rescale_(true), contineFlag_(true), singleShow_(false)
     for(int i = 0; i < graph_num; i++){
         pCustomPlot->addGraph();
     }
-    this->hide();  
+    this->hide(); 
 	//添加一条曲线
 }
 
@@ -79,7 +80,7 @@ void ChartLighting::setContineFlag(bool t)
 
 void ChartLighting::setData(const QVector<double> &x, const QVector<double> &y, uint8_t index_graph)
 {
-    if(singleShow_ || contineFlag_ ) {
+    if(singleShow_ || contineFlag_) {
         if(showType_ == FFT_ORI || showType_ == FFT_DB){
             pCustomPlot->graph(index_graph)->setData(x, y);
         }else if(showType_ == ADC_ORI) {
@@ -132,7 +133,7 @@ void ChartLighting::setData(const QVector<double> &x, const QVector<double> &y, 
         pCustomPlot->rescaleAxes(true);
         rescale_ = false;
     }
-    pCustomPlot->replot();
+    pCustomPlot->replot(QCustomPlot::rpQueuedReplot);
 }
 
 void ChartLighting::showTracer(QMouseEvent* event)

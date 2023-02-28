@@ -1000,7 +1000,7 @@ void viewpanel::registerPointcloudRviz()
 	pointcloud_fmcw->subProp("Topic")->setValue( pointcloud_topic.c_str() );
 	pointcloud_fmcw->subProp("Style")->setValue("Spheres");
 	pointcloud_fmcw->subProp("Size (Pixels)")->setValue("3");
-	pointcloud_fmcw->subProp("Size (m)")->setValue("0.015");
+	pointcloud_fmcw->subProp("Size (m)")->setValue(point_size);
 
 	//pointcloud_fmcw->subProp("Decay Time")->setValue((float)DetectionMemoryTime / 1000);
 
@@ -1330,7 +1330,17 @@ void viewpanel::CreatMotorWindow()
 	motorWorkModeCombo->addItem(QString("phase-lock"));
 
 	motorSerialCombo->addItem(QString("/dev/pts/3"));
+
+	motorIDCombo = new QComboBox(this);
+	//motorIDCombo->setEditable(true);
+	motorIDCombo->addItem(QString("0"));
+	motorIDCombo->addItem(QString("1"));
+	motorIDCombo->addItem(QString("2"));
+	motorIDCombo->addItem(QString("3"));
+	motorIDCombo->setCurrentIndex(1);
+
 	motorConnectPortLine = new QLineEdit(this);
+	motorConnectPortLine->setText(motor_port_);
 	motorWorkModeAngleSetLine = new QLineEdit(this);
 	motorWorkModeSpeedSetLine = new QLineEdit(this);
 	motorWorkModeLocSetLine = new QLineEdit(this);
@@ -1343,6 +1353,8 @@ void viewpanel::CreatMotorWindow()
 	motorShowCycleSetLine = new QLineEdit(this);
 
 	QLabel* tcpPortLabel = new QLabel("TCP Port:" );
+	QLabel* motor_id = new QLabel("Motor ID:" );
+
 	QLabel* serialLabel = new QLabel("Serial Device:" );
 
 	QLabel* workModeLabel = new QLabel("Work Mode:" );
@@ -1374,7 +1386,10 @@ void viewpanel::CreatMotorWindow()
 	motorControlBoxLayout->addWidget(motorSerialCombo, 1, 1, Qt::AlignLeft);
 	motorControlBoxLayout->addWidget(motorConnectBtnTcp, 0, 2, Qt::AlignLeft);
 	motorControlBoxLayout->addWidget(motorConnectBtnSerial, 1, 2, Qt::AlignLeft);
-	motorControlBoxLayout->addWidget(motorSwitchBtn, 2, 2, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motorSwitchBtn, 1, 4, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motor_id, 0, 3, Qt::AlignRight);
+	motorControlBoxLayout->addWidget(motorIDCombo, 0, 4, Qt::AlignLeft);
+
 
 	QGroupBox* workModeBox = new QGroupBox(tr("Work Mode:"));
 	QGridLayout* workModeBoxLayout = new QGridLayout ;
@@ -1388,7 +1403,7 @@ void viewpanel::CreatMotorWindow()
 	workModeBoxLayout->addWidget(motorWorkModeLocSetLine, 0, 7, Qt::AlignLeft | Qt::AlignTop);
 	workModeBoxLayout->addWidget(motorWorkModeSetBtn, 0, 8, Qt::AlignLeft | Qt::AlignTop);
 	workModeBox->setLayout(workModeBoxLayout);
-	motorControlBoxLayout->addWidget(workModeBox, 0, 3, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(workModeBox, 0, 5, Qt::AlignLeft);
 
 
 	QGroupBox* pidBox = new QGroupBox(tr("PID:"));
@@ -1410,7 +1425,7 @@ void viewpanel::CreatMotorWindow()
 	pidBoxLayout->addWidget(motorPidDSetLine, 0, 7, Qt::AlignLeft | Qt::AlignTop);
 	pidBoxLayout->addWidget(motorPidSetBtn, 0, 8, Qt::AlignLeft | Qt::AlignTop);
 	pidBox->setLayout(pidBoxLayout);
-	motorControlBoxLayout->addWidget(pidBox, 1, 3, Qt::AlignLeft | Qt::AlignTop);
+	motorControlBoxLayout->addWidget(pidBox, 1, 5, Qt::AlignLeft | Qt::AlignTop);
 
 	QGroupBox* showSetBox = new QGroupBox;
 	QGridLayout*showSetBoxLayout = new QGridLayout ;
@@ -1418,12 +1433,14 @@ void viewpanel::CreatMotorWindow()
 	showSetBoxLayout->addWidget(motorShowCycleSetLine, 0, 1, Qt::AlignLeft | Qt::AlignTop);
 	showSetBoxLayout->addWidget(motorShowCycleSetBtn, 0, 2, Qt::AlignLeft | Qt::AlignTop);
 	showSetBox->setLayout(showSetBoxLayout);
-	motorControlBoxLayout->addWidget(showSetBox, 2, 3, Qt::AlignLeft | Qt::AlignTop);
+	motorControlBoxLayout->addWidget(showSetBox, 2, 5, Qt::AlignLeft | Qt::AlignTop);
 	
 	motorControlBoxLayout->setColumnStretch(0, 1);
 	motorControlBoxLayout->setColumnStretch(1, 1);
-	motorControlBoxLayout->setColumnStretch(2, 3);
-	motorControlBoxLayout->setColumnStretch(3, 10);
+	motorControlBoxLayout->setColumnStretch(2, 1);
+	motorControlBoxLayout->setColumnStretch(3, 1);
+	motorControlBoxLayout->setColumnStretch(4, 1);
+	motorControlBoxLayout->setColumnStretch(5, 10);
 
 	motorControlBox->setLayout(motorControlBoxLayout);
 
@@ -1753,7 +1770,7 @@ void viewpanel::CreatConnect()
     timer_state->start(300);
     //connect(timer_state, SIGNAL(timeout()), this, SLOT(recvSerialInfo(void)));
 
-#if 0	
+#if 1	
     QTimer* test_show_item  = new QTimer(this);
     connect(test_show_item, SIGNAL(timeout()), this, SLOT(sendItemsInfoTest(void)));
 	test_show_item->start(100);
@@ -2100,7 +2117,6 @@ void viewpanel::CreatUIWindow()
 	mainLayout->addWidget ( ctrlDock, 0, 0);
 	mainLayout->addWidget ( render_panel_, 1, 0, 5, 5);
 	mainLayout->addWidget ( selection_panel_, 1, 0, 5, 1, Qt::AlignLeft);
-
 	multiWidget->setLayout(mainLayout);
 	this->addTab(multiWidget,  "Lidar Ui Mainwindow");
 }
@@ -2991,7 +3007,7 @@ void viewpanel::sendItemsInfoTest()
 	memset(&motorMsgSend, 0, sizeof(motorItemsShowMsg));
 	motorMsgSend.header.mHead = 0xaa55;
 	motorMsgSend.header.cmd = MOTOR_ITEMS_INFO;
-	motorMsgSend.header.motor_index = 0;
+	motorMsgSend.header.motor_index = motorIDCombo->currentText().toInt();
 	motorMsgSend.header.dataLen = sizeof(ItemData) * ITEMS_NUM;
 	for(int i = 0; i < ITEMS_NUM; i++){
 		motorMsgSend.data[i].item_id = i;
@@ -3103,7 +3119,7 @@ int viewpanel::checkMotorConnected()
 {
 	if(!ifConnectedMotorSerial && !ifConnectedMotorTcp){
 		QMessageBox msgBox;
-		msgBox.setText("please connect to the motor serial device firstly!");
+		msgBox.setText("please connect to the motor device firstly!");
 		msgBox.exec();
 		return -1;
 	} 
@@ -3116,6 +3132,7 @@ void viewpanel::sendMotorPidCmd()
 	if(checkMotorConnected()) return;
 	motorMsgPidSet_.header.cmd = motorCmdType::MOTOR_PID_SET;
 	motorMsgPidSet_.header.dataLen = 0x10;
+	motorMsgPidSet_.header.motor_index = motorIDCombo->currentText().toInt();
 	motorMsgPidSet_.tailer.count = 0x01;
 	motorMsgPidSet_.cycle = motorPidCycleSetLine->text().toDouble();
 	motorMsgPidSet_.p = motorPidPSetLine->text().toDouble();
@@ -3130,8 +3147,9 @@ void viewpanel::sendMotorPidCmd()
 	(motorMsgWorkMode_.location & 0xff) + (motorMsgWorkMode_.location >> 8) + \
 	motorMsgWorkMode_.mode + motorMsgWorkMode_.count;
 #endif
-	int ret = m_serialPort->write((const char *)&motorMsgPidSet_,sizeof(motorMsgPidSet_));
-	ROS_INFO("MOTOR_WORKMODE_SET m_serialPort->write is %d", ret);
+	if(ifConnectedMotorSerial){
+		sendSerialBytes((uint8_t *)&motorMsgPidSet_, sizeof(motorMsgPidSet_));
+	}
 }
 
 void viewpanel::sendMotorWorkModeCmd()
@@ -3140,6 +3158,7 @@ void viewpanel::sendMotorWorkModeCmd()
 	motorMsgWorkMode_.header.cmd = motorCmdType::MOTOR_WORKMODE_SET;
 	motorMsgWorkMode_.header.dataLen = 0x07;
 	motorMsgWorkMode_.tailer.count = 0x01;
+	motorMsgWorkMode_.header.motor_index = motorIDCombo->currentText().toInt();
 	motorMsgWorkMode_.speed = motorWorkModeSpeedSetLine->text().toInt();
 	motorMsgWorkMode_.angle = motorWorkModeAngleSetLine->text().toInt();
 	motorMsgWorkMode_.location = motorWorkModeLocSetLine->text().toInt();
@@ -3156,12 +3175,15 @@ void viewpanel::sendMotorWorkModeCmd()
 	}
 	motorMsgWorkMode_.mode = mode;
 	motorMsgWorkMode_.tailer.crc = motorMsgWorkMode_.header.cmd + motorMsgWorkMode_.header.dataLen + \
-	(motorMsgWorkMode_.speed & 0xff) + (motorMsgWorkMode_.speed >> 8) + \
-	(motorMsgWorkMode_.angle & 0xff) + (motorMsgWorkMode_.angle >> 8) + \
-	(motorMsgWorkMode_.location & 0xff) + (motorMsgWorkMode_.location >> 8) + \
-	motorMsgWorkMode_.mode + motorMsgWorkMode_.tailer.count;
-	int ret = m_serialPort->write((const char *)&motorMsgWorkMode_,sizeof(motorMsgWorkMode_));
-	ROS_INFO("MOTOR_WORKMODE_SET m_serialPort->write is %d", ret);
+									motorMsgWorkMode_.header.motor_index + \
+									(motorMsgWorkMode_.speed & 0xff) + (motorMsgWorkMode_.speed >> 8) + \
+									(motorMsgWorkMode_.angle & 0xff) + (motorMsgWorkMode_.angle >> 8) + \
+									(motorMsgWorkMode_.location & 0xff) + (motorMsgWorkMode_.location >> 8) + \
+									motorMsgWorkMode_.mode + motorMsgWorkMode_.tailer.count;
+
+	if(ifConnectedMotorSerial){
+		sendSerialBytes((uint8_t *)&motorMsgWorkMode_, sizeof(motorMsgWorkMode_));
+	}
 }
 
 void viewpanel::sendMotorDisplayCycleCmd()
@@ -3170,12 +3192,14 @@ void viewpanel::sendMotorDisplayCycleCmd()
 	motorMsgShowCycle_.header.cmd = motorCmdType::MOTOR_SHOW_CYCLE_SET;
 	motorMsgShowCycle_.header.dataLen = 0x02;
 	motorMsgShowCycle_.data = motorShowCycleSetLine->text().toInt();
+	motorMsgShowCycle_.header.motor_index = motorIDCombo->currentText().toInt();
 	motorMsgShowCycle_.tailer.count = 0x01;
 	motorMsgShowCycle_.tailer.crc = motorMsgShowCycle_.header.cmd + motorMsgShowCycle_.header.dataLen +\
-	(motorMsgShowCycle_.data & 0xff) + (motorMsgShowCycle_.data >> 8) + \
-	 motorMsgShowCycle_.tailer.count;
-	int ret = m_serialPort->write((const char *)&motorMsgShowCycle_,sizeof(motorMsgShowCycle_));
-	ROS_INFO("MOTOR_SHOW_CYCLE_SET m_serialPort->write is %d", ret);
+									motorMsgShowCycle_.header.motor_index + (motorMsgShowCycle_.data & 0xff) + \
+									(motorMsgShowCycle_.data >> 8) + motorMsgShowCycle_.tailer.count;
+	if(ifConnectedMotorSerial){
+		sendSerialBytes((uint8_t *)&motorMsgShowCycle_, sizeof(motorMsgShowCycle_));
+	}
 }
 
 void viewpanel::readMotorShowItems()
@@ -3184,9 +3208,12 @@ void viewpanel::readMotorShowItems()
 	motorMsgSend_.header.cmd = motorCmdType::MOTOR_SHOW_ITEMS_READ;
 	motorMsgSend_.header.dataLen = 0x00;
 	motorMsgSend_.tailer.count = 0x01;
-	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
-	int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
-	ROS_INFO("MOTOR_SHOW_ITEMS_READ m_serialPort->write is %d", ret);
+	motorMsgSend_.header.motor_index = motorIDCombo->currentText().toInt();
+	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + + motorMsgSend_.header.motor_index + \
+								motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
+	if(ifConnectedMotorSerial){
+		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
+	}
 }
 void viewpanel::motorItemsShow(int index)
 {
@@ -3200,9 +3227,12 @@ void viewpanel::readMotorWorkMode()
 	motorMsgSend_.header.cmd = motorCmdType::MOTOR_WORKMODE_READ;
 	motorMsgSend_.header.dataLen = 0x00;
 	motorMsgSend_.tailer.count = 0x01;
-	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
-	int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
-	ROS_INFO("MOTOR_WORKMODE_READ m_serialPort->write is %d", ret);
+	motorMsgSend_.header.motor_index = motorIDCombo->currentText().toInt();
+	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + + motorMsgSend_.header.motor_index + \
+								motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
+	if(ifConnectedMotorSerial){
+		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
+	}
 }
 
 void viewpanel::readMotorPid()
@@ -3211,9 +3241,12 @@ void viewpanel::readMotorPid()
 	motorMsgSend_.header.cmd = motorCmdType::MOTOR_PID_READ;
 	motorMsgSend_.header.dataLen = 0x00;
 	motorMsgSend_.tailer.count = 0x01;
-	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
-	int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
-	ROS_INFO("m_serialPort->write is %d", ret);
+	motorMsgSend_.header.motor_index = motorIDCombo->currentText().toInt();
+	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + \ 
+								motorMsgSend_.tailer.count + motorIDCombo->currentText().toInt();
+	if(ifConnectedMotorSerial){
+		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
+	}	
 }
 void viewpanel::sendSerialBytes(const uint8_t *begin, int size)
 {
@@ -3235,7 +3268,7 @@ void viewpanel::sendMotorOpenCmd()
 		if(checkMotorConnected()) return;
 		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_OPEN;
 		motorMsgSend1_.header.dataLen = 0x01;
-		motorMsgSend1_.header.motor_index = 0x01;
+		motorMsgSend1_.header.motor_index = motorIDCombo->currentText().toInt();
 		motorMsgSend1_.header.mHead = 0xaa55;
 		motorMsgSend1_.data = 0x01;
 		motorMsgSend1_.tailer.count = 0x01;
@@ -3249,6 +3282,7 @@ void viewpanel::sendMotorOpenCmd()
 		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_OPEN;
 		motorMsgSend1_.header.mHead = 0xaa55;
 		motorMsgSend1_.header.dataLen = 0x01;
+		motorMsgSend1_.header.motor_index = motorIDCombo->currentText().toInt();
 		motorMsgSend1_.data = 0x00;
 		motorMsgSend1_.tailer.count = 0x01;
 		motorMsgSend1_.tailer.crc = motorMsgSend1_.header.cmd + motorMsgSend1_.header.dataLen +  motorMsgSend1_.data + \
@@ -3272,7 +3306,7 @@ void viewpanel::sendMotorConnectCmdM()
 		startMotorTask(); 		
 #if 1
 		motorMsgSend_.header.cmd = motorCmdType::MOTOR_CONNECT;
-		motorMsgSend_.header.motor_index = 0x01;
+		motorMsgSend_.header.motor_index = motorIDCombo->currentText().toInt();
 		motorMsgSend_.header.dataLen = 0x00;
 		motorMsgSend_.tailer.count = 0x01;	
 		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.motor_index + \
@@ -3289,19 +3323,23 @@ void viewpanel::sendMotorConnectCmdM()
 		motorConnectBtnTcp->setText("&Disconnect");
 		motorConnectBtnSerial->setEnabled(false);
 	}else{
+		motorMsgSend_.header.cmd = motorCmdType::MOTOR_DISCONNECT;
+		motorMsgSend_.header.dataLen = 0x00;
+		motorMsgSend_.header.motor_index = motorIDCombo->currentText().toInt();
+		motorMsgSend_.tailer.count = 0x01;
+		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.motor_index + \
+									motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
+		if(::write(motor_ctrl_sock, &motorMsgSend_, sizeof(motorMsgSend_)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("send Motor ConnectCmdMsg failed!");
+			msgBox.exec();
+			return;
+		}	
 		ifConnectedMotorTcp = false;
 		::close(motor_ctrl_sock);
 		motorConnectBtnTcp->setStyleSheet("color: black");
 		motorConnectBtnTcp->setText("&Tcp Connect");
 		motorConnectBtnSerial->setEnabled(true);
-#if 0
-		motorMsgSend_.header.cmd = motorCmdType::MOTOR_DISCONNECT;
-		motorMsgSend_.header.dataLen = 0x00;
-		motorMsgSend_.tailer.count = 0x01;
-		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
-		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
-		ROS_INFO("MOTOR_DISCONNECT write is %d", ret);
-#endif
 	}
 }
 
@@ -3316,7 +3354,7 @@ void viewpanel::sendMotorConnectCmd()
 		} 
 
 		motorMsgSend_.header.cmd = motorCmdType::MOTOR_CONNECT;
-		motorMsgSend_.header.motor_index = 0x01;
+		motorMsgSend_.header.motor_index = motorIDCombo->currentText().toInt();
 		motorMsgSend_.header.dataLen = 0x00;
 		motorMsgSend_.tailer.count = 0x01;
 		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.motor_index + \
@@ -3324,16 +3362,12 @@ void viewpanel::sendMotorConnectCmd()
 		motorMsgSend_.tailer.crc = 0x03;
 		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
 		ifConnectedMotorSerial = true;
-#if 0
-		//int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
-		//ROS_INFO("MOTOR_CONNECT write is %d", ret);	
-#endif
 		motorConnectBtnSerial->setStyleSheet("color: green");
 		motorConnectBtnSerial->setText("&Disconnect");
 		motorConnectBtnTcp->setEnabled(false);
 	}else{
 		motorMsgSend_.header.cmd = motorCmdType::MOTOR_DISCONNECT;
-		motorMsgSend_.header.motor_index = 0x01;
+		motorMsgSend_.header.motor_index = motorIDCombo->currentText().toInt();
 		motorMsgSend_.header.dataLen = 0x00;
 		motorMsgSend_.tailer.count = 0x01;
 		motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.motor_index + \
@@ -3344,10 +3378,6 @@ void viewpanel::sendMotorConnectCmd()
 		motorConnectBtnSerial->setStyleSheet("color: black");
 		motorConnectBtnSerial->setText("&Serial Connect");
 		motorConnectBtnTcp->setEnabled(true);
-#if 0
-		int ret = m_serialPort->write((const char *)&motorMsgSend_,sizeof(motorMsgSend_));
-		ROS_INFO("MOTOR_DISCONNECT write is %d", ret);
-#endif
 	}
 }
 
@@ -4288,6 +4318,7 @@ void viewpanel::load_settings()
 	rightAngle_offset = settings.value("right angle","125.0").toDouble();
 	power_offset_ = settings.value("Power Offset","0.0").toString();
 	save_folder_ = settings.value("Save Folder",".").toString();
+	motor_port_ = settings.value("TCP Motor Port","5001").toString();
 }
 
 
@@ -4420,6 +4451,8 @@ void viewpanel::save_settings(void )
 
 	settings.setValue("Power Offset", power_Offset_edit->text());
 	settings.setValue("Save Folder", save_folder_);
+	settings.setValue("TCP Motor Port", motorConnectPortLine->text());
+
 	for(int i = 0; i < 4; i++){
 		settings.setValue("Reg Addr " + QString::number(i), regAddr_line[i]->text());
 		settings.setValue("Reg Value " + QString::number(i), regVal_line[i]->text());

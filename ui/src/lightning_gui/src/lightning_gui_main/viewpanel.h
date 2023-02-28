@@ -328,6 +328,8 @@ private:
 	QString lidar_UDP_port_;
 	QString lidar_UDP_PC_port_;
 	QString lidar_ip_;
+	QString motor_port_;
+
 	QString m_reg_addr_[4];
 	QString m_reg_value_[4];
 
@@ -426,6 +428,7 @@ private:
 
 	QComboBox* motorWorkModeCombo;
 	QComboBox* motorSerialCombo;
+	QComboBox* motorIDCombo;
 
 
 	QPushButton*  motorConnectBtnTcp;
