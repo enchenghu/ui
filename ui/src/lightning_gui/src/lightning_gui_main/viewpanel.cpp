@@ -313,6 +313,96 @@ void viewpanel::init_queue()
 	//simulateADCData();
 }
 
+void viewpanel::loadAlgFile(void){
+	loadLidarFile_  =  QFileDialog::getOpenFileName(
+											viewpanel::Instance(),
+											"Choose register config file",
+											QDir::currentPath(),
+											"register config files (*.csv)",0,QFileDialog::DontUseNativeDialog);	
+										
+	qDebug() << "loadLidarFile_ is " << loadLidarFile_;
+    std::ifstream csv_data(loadLidarFile_.toStdString(), std::ios::in);
+    std::string line;
+
+    if (!csv_data.is_open())
+    {
+        std::cout << "Error: opening file fail" << std::endl;
+        std::exit(1);
+    }
+    std::istringstream sin;         //将整行字符串line读入到字符串istringstream中
+    std::vector<std::string> words; //声明一个字符串向量
+    std::string word;
+	wordsVal.clear();
+	wordsAddr.clear();
+
+    // 读取标题行
+    std::getline(csv_data, line);
+	bool readNext = false;
+    // 读取数据
+    while (std::getline(csv_data, line))
+    {
+        sin.clear();
+        sin.str(line);
+        words.clear();
+        while (std::getline(sin, word, ',')) //将字符串流sin中的字符读到field字符串中，以逗号为分隔符
+        {
+            //words.push_back(word); //将每一格中的数据逐个push
+			if(readNext) {
+				std::cout << word << std::endl;
+				readNext = false;
+				wordsVal.push_back(word);
+			}
+			std::string temp;
+			temp.assign(word, 0, 3);
+			if(temp == "A00") {
+				std::cout << word << " ";
+				readNext = true;
+				wordsAddr.push_back(word);
+			}
+            // std::cout << atol(word.c_str());
+        }
+        std::cout << std::endl;
+        // do something。。。
+    }
+    csv_data.close();
+
+#if 1
+	for(int i = 0; i < wordsAddr.size(); i++){
+		std::string strAddr = wordsAddr[i];
+		std::string strValue = wordsVal[i];
+		std::cout << "strAddr: " << strAddr << " strValue: "  << strValue << std::endl;
+		//unsigned int x;
+		std::stringstream ss;
+		ss << std::hex << strAddr;
+		ss >> cmdMsg_.mCommandVal[0];
+		std::stringstream tt;
+		tt << std::hex << strValue;
+		tt >> cmdMsg_.mCommandVal[1];
+
+		if(cmdMsg_.mCommandVal[0] >= 0xffffffff || cmdMsg_.mCommandVal[0] < 0x0 ||
+		cmdMsg_.mCommandVal[1] >= 0xffffffff || cmdMsg_.mCommandVal[1] < 0x0 ){
+			QMessageBox msgBox;
+			msgBox.setText("error!!register addr or value is Invalid!");
+			msgBox.exec();
+			return;		
+		}
+		//cmdMsg_.mCommandVal[1] = strValue.toInt();
+		cmdMsg_.mHead.usCommand = commandType::REG_WRITE;
+		std::cout << "cmdMsg_.regAddr is " << cmdMsg_.mCommandVal[0] << " cmdMsg_.regVal " << cmdMsg_.mCommandVal[1] << std::endl;
+		if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("config register failed!");
+			msgBox.exec();
+			return;
+		}
+	}
+	QMessageBox msgBox;
+	msgBox.setText("write register success!");
+	msgBox.exec();
+
+#endif
+}
+
 void viewpanel::loadLidarFile(void){
 
 	setLoadFileType();
@@ -1724,6 +1814,7 @@ void viewpanel::CreatConnect()
 
 	connect(pcBWBtn, SIGNAL(clicked()), this, SLOT( pcShowBW( void )));
 	connect(pcRecordBtn, SIGNAL(clicked()), this, SLOT( pcRecord( void )));
+	connect(loadAlgBtn, SIGNAL(clicked()), this, SLOT( loadAlgFile( void )));
 
 	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
@@ -1919,6 +2010,7 @@ void viewpanel::CreatUIWindow()
 		regBtnRead[i] = new QPushButton("&Read", this);
 		setReadOnlyLineEdit(regRead_line[i]);
 	}
+	loadAlgBtn = new QPushButton("&Load Register Config", this);
 
 	adcRead0_line = new QLineEdit;
 	adcRead1_line = new QLineEdit;
@@ -1981,7 +2073,7 @@ void viewpanel::CreatUIWindow()
 		controls_layout->addWidget( regRead_line[i], i, 12, Qt::AlignLeft);	
 		controls_layout->addWidget( regBtnRead[i], i, 13, Qt::AlignLeft);	
 	}
-
+	controls_layout->addWidget( loadAlgBtn, 4, 13, Qt::AlignLeft);	
 	//controls_layout->addWidget( settingADCSavebutton, 4, 2, Qt::AlignLeft);
 
 	QLabel* rotate_label = new QLabel( "rotate angle" );

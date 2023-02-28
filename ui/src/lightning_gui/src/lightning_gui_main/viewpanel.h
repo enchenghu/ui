@@ -166,6 +166,8 @@ private Q_SLOTS:
 	void showSpeedometer( QGridLayout * layout);
 	void showTurnRate( QGridLayout * layout);
 	void loadLidarFile();
+	void loadAlgFile();
+
 	void setSaveFolder();
 	void udpConnect();
 
@@ -488,6 +490,7 @@ private:
 	QPushButton *pcRecordBtn;
 	QPushButton *pcOnceBtn;
 	QPushButton *pcResetBtn;
+	QPushButton *loadAlgBtn;
 
 	QPushButton *regBtnWrite[4];
 	QPushButton *regBtnRead[4];
@@ -536,6 +539,9 @@ private:
 	double distance_bin; 
 	std::string point_size_;
 	std::string cell_size_;
+    std::vector<std::string> wordsAddr; //声明一个字符串向量
+    std::vector<std::string> wordsVal; //声明一个字符串向量
+
 
 };
 
