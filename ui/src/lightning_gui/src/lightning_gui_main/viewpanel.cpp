@@ -395,6 +395,7 @@ void viewpanel::loadAlgFile(void){
 			msgBox.exec();
 			return;
 		}
+		usleep(1000);
 	}
 	QMessageBox msgBox;
 	msgBox.setText("write register success!");
