@@ -1876,7 +1876,7 @@ void viewpanel::CreatConnect()
     timer_state->start(300);
     //connect(timer_state, SIGNAL(timeout()), this, SLOT(recvSerialInfo(void)));
 
-#if 1	
+#if 0	
     QTimer* test_show_item  = new QTimer(this);
     connect(test_show_item, SIGNAL(timeout()), this, SLOT(sendItemsInfoTest(void)));
 	test_show_item->start(100);
