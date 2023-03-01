@@ -195,9 +195,9 @@ typedef struct
 typedef struct 
 {
 	MotorMsgHeader header;
-	uint16_t     speed;
-	uint16_t     angle;
-	uint16_t     location;
+	float     speed;
+	float     angle;
+	float     location;
 	uint8_t		mode;
 	MotorMsgTailer 	tailer; 
 } motorWorkModeMsg;

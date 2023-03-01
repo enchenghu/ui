@@ -678,7 +678,17 @@ int main(int argc, char** argv)
     std::chrono::duration<double> elapsed;
     auto start = std::chrono::steady_clock::now();
     float data_float = -8.888;
+    float data_float_test;
     float data_float_out = 6.00;
+    uint8_t data_u8_test[4];
+/*     data_u8_test[0] = data_float & 0xff;
+    data_u8_test[1] = (data_float & 0xff00) >> 8;
+    data_u8_test[2] = (data_float & 0xff0000) >> 16;
+    data_u8_test[3] = (data_float & 0xff000000) >> 24; */
+    memcpy(data_u8_test, &data_float, 4);
+    memcpy(&data_float_test, data_u8_test, 4);
+    std::cout << "data_u8_test is " <<  data_float_test << std::endl;
+
 
     uint8_t data_u8[4];
     FloatToChar(data_float, data_u8, 4);

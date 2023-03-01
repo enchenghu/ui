@@ -213,6 +213,8 @@ private Q_SLOTS:
 	void sendMotorPidCmd();
 	void readMotorPid();
 	void readMotorWorkMode();
+	void readHardVersion();
+	void readSoftVersion();
 	void readMotorShowItems();
 	void motorItemsShow(int);
 	void showADCDataSim();

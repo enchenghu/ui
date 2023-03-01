@@ -116,6 +116,9 @@ static QStringList regValueList = {
 	"0X40001183"
 };
 
+static std::string softVersionName = "motor_xlidar_B_appA_0_3_2022_12_14";
+static std::string hardVersionName = "50120-0126-V0.2_20221115";
+
 //色表构建
 static std::vector<unsigned char> R_V_g = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 											0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
@@ -152,6 +155,13 @@ void FloatToChar(float fNum, unsigned char *strBuf)
 		strBuf[i] = *p;
 		p++;
 	}
+}
+
+uint16_t FloatSum(float data)
+{
+	uint8_t dataU8[4];
+	memcpy(dataU8, &data, 4);
+	return dataU8[0] + dataU8[1] + dataU8[2] + dataU8[3];
 }
 
 bool check_file_exist(const std::string &path) {
@@ -319,7 +329,8 @@ void viewpanel::loadAlgFile(void){
 											"Choose register config file",
 											QDir::currentPath(),
 											"register config files (*.csv)",0,QFileDialog::DontUseNativeDialog);	
-										
+
+	if(loadLidarFile_.isNull()) return; 									
 	qDebug() << "loadLidarFile_ is " << loadLidarFile_;
     std::ifstream csv_data(loadLidarFile_.toStdString(), std::ios::in);
     std::string line;
@@ -1539,10 +1550,10 @@ void viewpanel::CreatMotorWindow()
 	motorCharts->setRowStretch(0, 8);
 	motorCharts->setRowStretch(1, 2);
 
-	QLabel* workModeReadLabel = new QLabel("Motor Work Mode:" );
-	QLabel* displayReadLabel = new QLabel("Valid Display Items:" );
-	QLabel* softReadLabel = new QLabel("Software Version:" );
-	QLabel* hardReadLabel = new QLabel("Hardware Version:" );
+	QLabel* workModeReadLabel = new QLabel("Work Mode:" );
+	QLabel* displayReadLabel = new QLabel("Valid Items:" );
+	QLabel* softReadLabel = new QLabel("SoftVersion:" );
+	QLabel* hardReadLabel = new QLabel("HardVersion:" );
 	QLabel* devLabel = new QLabel("Device Type:" );
 
 	for(int i = 0; i < 4;i++){
@@ -1583,29 +1594,28 @@ void viewpanel::CreatMotorWindow()
 	setReadOnlyLineEdit(motorHardVersionLine);
 
 	stateReadBoxLayout->addWidget(workModeReadLabel, 1, 0, Qt::AlignLeft | Qt::AlignTop);
-	stateReadBoxLayout->addWidget(motorWorkModeReadLine, 1, 1, Qt::AlignLeft | Qt::AlignTop);
+	stateReadBoxLayout->addWidget(motorWorkModeReadLine, 1, 1);
 	stateReadBoxLayout->addWidget(motorWorkModeReadBtn, 1, 2, Qt::AlignLeft | Qt::AlignTop);
 
-
-	stateReadBoxLayout->addWidget(devLabel, 0, 0, Qt::AlignLeft | Qt::AlignTop);
-	stateReadBoxLayout->addWidget(motorDevReadLine, 0, 1, Qt::AlignLeft | Qt::AlignTop);
-	stateReadBoxLayout->addWidget(motorDevReadBtn, 0, 2, Qt::AlignLeft | Qt::AlignTop);
-
 	stateReadBoxLayout->addWidget(softReadLabel, 2, 0, Qt::AlignLeft | Qt::AlignTop);
-	stateReadBoxLayout->addWidget(motorSoftVersionLine, 2, 1, Qt::AlignLeft | Qt::AlignTop);
+	stateReadBoxLayout->addWidget(motorSoftVersionLine, 2, 1);
 	stateReadBoxLayout->addWidget(motorSoftVersionReadBtn, 2, 2, Qt::AlignLeft | Qt::AlignTop);
 
 	stateReadBoxLayout->addWidget(hardReadLabel, 3, 0, Qt::AlignLeft | Qt::AlignTop);
-	stateReadBoxLayout->addWidget(motorHardVersionLine, 3, 1, Qt::AlignLeft | Qt::AlignTop);
+	stateReadBoxLayout->addWidget(motorHardVersionLine, 3, 1);
 	stateReadBoxLayout->addWidget(motorHardVersionReadBtn, 3, 2, Qt::AlignLeft | Qt::AlignTop);
 
 	stateReadBoxLayout->addWidget(displayReadLabel, 4, 0, Qt::AlignLeft | Qt::AlignTop);
-	stateReadBoxLayout->addWidget(motorShowItemsLine, 4, 1, Qt::AlignLeft | Qt::AlignTop);
+	stateReadBoxLayout->addWidget(motorShowItemsLine, 4, 1);
 	stateReadBoxLayout->addWidget(motorShowItemsReadBtn, 4, 2, Qt::AlignLeft | Qt::AlignTop);
+	stateReadBoxLayout->setColumnStretch(0, 1);
+	stateReadBoxLayout->setColumnStretch(1, 5);
+	stateReadBoxLayout->setColumnStretch(2, 1);
+
 
 	stateReadBox->setLayout(stateReadBoxLayout);
 
-	motorStateBoxLayout->addWidget(stateReadBox, 0, 0, Qt::AlignLeft);
+	motorStateBoxLayout->addWidget(stateReadBox, 0, 0);
 
 	motorStateBoxLayout->addWidget(pidReadBox, 1, 0, Qt::AlignLeft);
 
@@ -1834,6 +1844,10 @@ void viewpanel::CreatConnect()
 	connect(motorPidSetBtn, SIGNAL(clicked()), this, SLOT( sendMotorPidCmd( void )));
 	connect(motorChartSingleBtn, SIGNAL(clicked()), this, SLOT( singleMotor( void )));
 	connect(motorChartResetBtn, SIGNAL(clicked()), this, SLOT( resetMotor( void )));
+
+	connect(motorSoftVersionReadBtn, SIGNAL(clicked()), this, SLOT( readSoftVersion( void )));
+	connect(motorHardVersionReadBtn, SIGNAL(clicked()), this, SLOT( readHardVersion( void )));
+
 	
 	QSignalMapper * motorItemsMapper = new QSignalMapper(this);
 	for(int i = 0; i < checkShowV.size(); i++) {
@@ -2011,7 +2025,7 @@ void viewpanel::CreatUIWindow()
 		regBtnRead[i] = new QPushButton("&Read", this);
 		setReadOnlyLineEdit(regRead_line[i]);
 	}
-	loadAlgBtn = new QPushButton("&Load Register Config", this);
+	loadAlgBtn = new QPushButton("&Load Config", this);
 
 	adcRead0_line = new QLineEdit;
 	adcRead1_line = new QLineEdit;
@@ -3004,6 +3018,32 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 			msgBox.exec();
 		}
 		break;
+	case MOTOR_SOFT_VERSION_READ_RET:
+		{
+			QString showName;
+			for(int i = 0; i < datalen; i++){
+				showName = showName + QString(ptr[5 + i]);
+			}
+			motorSoftVersionLine->setText(showName);
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_SOFT_VERSION_READ successfully!");
+			msgBox.exec();
+		}
+		break;
+
+	case MOTOR_HARD_VERSION_READ_RET:
+		{
+			QString showName;
+			for(int i = 0; i < datalen; i++){
+				showName = showName + QString(ptr[5 + i]);
+			}
+			motorHardVersionLine->setText(showName);
+			QMessageBox msgBox;
+			msgBox.setText("MOTOR MOTOR_HARD_VERSION_READ successfully!");
+			msgBox.exec();
+		}
+		break;
+
 	case MOTOR_WORKMODE_SET_RET:
 		if(ptr[5] == 0xFF){
 			QMessageBox msgBox;
@@ -3068,27 +3108,35 @@ void viewpanel::recvSerialInfo()
 	QByteArray hexData = info.toHex();
 	qDebug() << "current recvSerialInfo is " << hexData;
 	uint8_t* ptr = (uint8_t*)info.data();
+	uint8_t* ptr_all;
 	if(ptr[0] != 0x55 || ptr[1] != 0xaa){
 		if(motorBuffAll.isEmpty()){
 			return;
 		} else {
 			motorBuffAll.append(info);
-			uint8_t* ptr_all = (uint8_t*)motorBuffAll.data();
+			ptr_all = (uint8_t*)motorBuffAll.data();
 			QByteArray hexData = motorBuffAll.toHex();
 			qDebug() << "will process motorBuffAll : " << hexData;
 			parseMotorInfo(ptr_all);
 			motorBuffAll.clear();
 		}		
 	} else {
-		if(motorBuffAll.isEmpty()){
+		if(ptr[3] == MOTOR_ITEMS_INFO){
+			if(motorBuffAll.isEmpty()){
+				motorBuffAll = info;
+				return;
+			}
+			QByteArray hexData = motorBuffAll.toHex();
+			qDebug() << "will process motorBuffAll : " << hexData;
+			ptr_all = (uint8_t*)motorBuffAll.data();
+			parseMotorInfo(ptr_all);
 			motorBuffAll = info;
-			return;
+		} else {
+			QByteArray hexData = info.toHex();
+			qDebug() << "will process info : " << hexData;
+			ptr_all = (uint8_t*)info.data();
+			parseMotorInfo(ptr_all);			
 		}
-		QByteArray hexData = motorBuffAll.toHex();
-		qDebug() << "will process motorBuffAll : " << hexData;
-		uint8_t* ptr_all = (uint8_t*)motorBuffAll.data();
-		parseMotorInfo(ptr_all);
-		motorBuffAll = info;
 	}
 }
 
@@ -3123,7 +3171,7 @@ void viewpanel::recvSerialInfoTest()
 	uint8_t* ptr = (uint8_t*)info.data();
 	int ret;
 	float dataPid[4] = {6.666, 7.777, 8.888, 9.999};
-	uint8_t cmd_id = 0;//ptr[3];
+	uint8_t cmd_id = ptr[3];
 
 	switch (cmd_id)
 	{
@@ -3142,6 +3190,38 @@ void viewpanel::recvSerialInfoTest()
 		motorMsgSend1_.data = 0xff;
 		ret = m_serialPort_test->write((const char *)&motorMsgSend1_,sizeof(motorMsgSend1_));
 		ROS_INFO("disconnect motor ok, ret is %d", ret);
+		break;
+	case MOTOR_SOFT_VERSION_READ:
+		{
+			uint8_t data[softVersionName.size() + sizeof(MotorMsgHeader) + sizeof(MotorMsgTailer)];
+			MotorMsgHeader	header;
+			MotorMsgTailer tailer;
+			header.mHead = 0xaa55;
+			header.cmd = MOTOR_SOFT_VERSION_READ_RET;
+			header.dataLen = softVersionName.size();
+			header.motor_index = 0x01;
+			memcpy(data, &header, sizeof(header));
+			memcpy(data + sizeof(header), softVersionName.c_str(),softVersionName.size());
+			memcpy(data + sizeof(header) + softVersionName.size(), &tailer, sizeof(tailer));
+			ret = m_serialPort_test->write((const char *)data, softVersionName.size() + sizeof(MotorMsgHeader) + sizeof(MotorMsgTailer));
+			//m_serialPort_test->flush();
+			//ROS_INFO("disconnect motor ok, ret is %d", ret);
+		}
+		break;
+	case MOTOR_HARD_VERSION_READ:
+		{
+			uint8_t data[hardVersionName.size() + sizeof(MotorMsgHeader) + sizeof(MotorMsgTailer)];
+			MotorMsgHeader	header;
+			MotorMsgTailer tailer;
+			header.mHead = 0xaa55;
+			header.cmd = MOTOR_HARD_VERSION_READ_RET;
+			header.dataLen = hardVersionName.size();
+			header.motor_index = 0x01;
+			memcpy(data, &header, sizeof(header));
+			memcpy(data + sizeof(header), hardVersionName.c_str(),hardVersionName.size());
+			memcpy(data + sizeof(header) + hardVersionName.size(), &tailer, sizeof(tailer));
+			ret = m_serialPort_test->write((const char *)data, hardVersionName.size() + sizeof(MotorMsgHeader) + sizeof(MotorMsgTailer));		
+		}
 		break;
 	case MOTOR_OPEN:
 		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_OPEN_RET;
@@ -3231,14 +3311,11 @@ void viewpanel::sendMotorPidCmd()
 	motorMsgPidSet_.p = motorPidPSetLine->text().toDouble();
 	motorMsgPidSet_.i = motorPidISetLine->text().toDouble();
 	motorMsgPidSet_.d = motorPidDSetLine->text().toDouble();
-	motorMsgPidSet_.tailer.crc = 0;
-
-#if 0
-	motorMsgPidSet_.crc = motorMsgPidSet_.cmd + motorMsgPidSet_.dataLen + \
-	(motorMsgWorkMode_.speed & 0xff) + (motorMsgWorkMode_.speed >> 8) + \
-	(motorMsgWorkMode_.angle & 0xff) + (motorMsgWorkMode_.angle >> 8) + \
-	(motorMsgWorkMode_.location & 0xff) + (motorMsgWorkMode_.location >> 8) + \
-	motorMsgWorkMode_.mode + motorMsgWorkMode_.count;
+#if 1
+	motorMsgPidSet_.tailer.crc = motorMsgPidSet_.header.cmd + motorMsgPidSet_.header.dataLen + \
+	motorMsgPidSet_.header.motor_index + motorMsgPidSet_.tailer.count + \
+	FloatSum(motorMsgPidSet_.cycle) + FloatSum(motorMsgPidSet_.p) + \
+	FloatSum(motorMsgPidSet_.i) + FloatSum(motorMsgPidSet_.d);
 #endif
 	if(ifConnectedMotorSerial){
 		sendSerialBytes((uint8_t *)&motorMsgPidSet_, sizeof(motorMsgPidSet_));
@@ -3252,9 +3329,9 @@ void viewpanel::sendMotorWorkModeCmd()
 	motorMsgWorkMode_.header.dataLen = 0x07;
 	motorMsgWorkMode_.tailer.count = 0x01;
 	motorMsgWorkMode_.header.motor_index = motorIDCombo->currentText().toInt();
-	motorMsgWorkMode_.speed = motorWorkModeSpeedSetLine->text().toInt();
-	motorMsgWorkMode_.angle = motorWorkModeAngleSetLine->text().toInt();
-	motorMsgWorkMode_.location = motorWorkModeLocSetLine->text().toInt();
+	motorMsgWorkMode_.speed = motorWorkModeSpeedSetLine->text().toDouble();
+	motorMsgWorkMode_.angle = motorWorkModeAngleSetLine->text().toDouble();
+	motorMsgWorkMode_.location = motorWorkModeLocSetLine->text().toDouble();
 	QString modeName = motorWorkModeCombo->currentText();
 	uint16_t mode = 0;
 	if(modeName == "location"){
@@ -3268,10 +3345,8 @@ void viewpanel::sendMotorWorkModeCmd()
 	}
 	motorMsgWorkMode_.mode = mode;
 	motorMsgWorkMode_.tailer.crc = motorMsgWorkMode_.header.cmd + motorMsgWorkMode_.header.dataLen + \
-									motorMsgWorkMode_.header.motor_index + \
-									(motorMsgWorkMode_.speed & 0xff) + (motorMsgWorkMode_.speed >> 8) + \
-									(motorMsgWorkMode_.angle & 0xff) + (motorMsgWorkMode_.angle >> 8) + \
-									(motorMsgWorkMode_.location & 0xff) + (motorMsgWorkMode_.location >> 8) + \
+									motorMsgWorkMode_.header.motor_index + FloatSum(motorMsgWorkMode_.angle) + \
+									FloatSum(motorMsgWorkMode_.speed) + FloatSum(motorMsgWorkMode_.location) + \
 									motorMsgWorkMode_.mode + motorMsgWorkMode_.tailer.count;
 
 	if(ifConnectedMotorSerial){
@@ -3328,6 +3403,33 @@ void viewpanel::readMotorWorkMode()
 	}
 }
 
+void viewpanel::readSoftVersion()
+{
+	if(checkMotorConnected()) return;
+	motorMsgSend_.header.cmd = motorCmdType::MOTOR_SOFT_VERSION_READ;
+	motorMsgSend_.header.dataLen = 0x00;
+	motorMsgSend_.tailer.count = 0x01;
+	motorMsgSend_.header.motor_index = motorIDCombo->currentText().toInt();
+	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + + motorMsgSend_.header.motor_index + \
+								motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
+	if(ifConnectedMotorSerial){
+		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
+	}
+}
+void viewpanel::readHardVersion()
+{
+	if(checkMotorConnected()) return;
+	motorMsgSend_.header.cmd = motorCmdType::MOTOR_HARD_VERSION_READ;
+	motorMsgSend_.header.dataLen = 0x00;
+	motorMsgSend_.tailer.count = 0x01;
+	motorMsgSend_.header.motor_index = motorIDCombo->currentText().toInt();
+	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + + motorMsgSend_.header.motor_index + \
+								motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
+	if(ifConnectedMotorSerial){
+		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
+	}
+}
+
 void viewpanel::readMotorPid()
 {
 	if(checkMotorConnected()) return;
@@ -3336,7 +3438,7 @@ void viewpanel::readMotorPid()
 	motorMsgSend_.tailer.count = 0x01;
 	motorMsgSend_.header.motor_index = motorIDCombo->currentText().toInt();
 	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + \ 
-								motorMsgSend_.tailer.count + motorIDCombo->currentText().toInt();
+								motorMsgSend_.tailer.count + motorMsgSend_.header.motor_index;
 	if(ifConnectedMotorSerial){
 		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
 	}	
