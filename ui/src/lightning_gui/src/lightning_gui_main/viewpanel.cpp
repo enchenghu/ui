@@ -1578,7 +1578,7 @@ void viewpanel::CreatMotorWindow()
 
 	motorWorkModeReadLine =  new QLineEdit(this);
 	motorShowItemsLine =  new QLineEdit(this);
-	motorDevReadLine = new QLineEdit(this);
+	//motorDevReadLine = new QLineEdit(this);
 	motorSoftVersionLine = new QLineEdit(this);
 	motorHardVersionLine = new QLineEdit(this);
 
@@ -1589,7 +1589,7 @@ void viewpanel::CreatMotorWindow()
 	motorShowItemsReadBtn = new QPushButton("&Read");
 	setReadOnlyLineEdit(motorWorkModeReadLine);
 	setReadOnlyLineEdit(motorShowItemsLine);
-	setReadOnlyLineEdit(motorDevReadLine);
+	//setReadOnlyLineEdit(motorDevReadLine);
 	setReadOnlyLineEdit(motorSoftVersionLine);
 	setReadOnlyLineEdit(motorHardVersionLine);
 
@@ -1832,9 +1832,9 @@ void viewpanel::CreatConnect()
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
 	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
 
+#if 1
 	connect(motorConnectBtnTcp, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmdM( void )));
 	connect(motorConnectBtnSerial, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
-
 	connect(motorSwitchBtn, SIGNAL(clicked()), this, SLOT( sendMotorOpenCmd( void )));
 	connect(motorPidReadBtn, SIGNAL(clicked()), this, SLOT( readMotorPid( void )));
 	connect(motorWorkModeReadBtn, SIGNAL(clicked()), this, SLOT( readMotorWorkMode( void )));
@@ -1844,17 +1844,18 @@ void viewpanel::CreatConnect()
 	connect(motorPidSetBtn, SIGNAL(clicked()), this, SLOT( sendMotorPidCmd( void )));
 	connect(motorChartSingleBtn, SIGNAL(clicked()), this, SLOT( singleMotor( void )));
 	connect(motorChartResetBtn, SIGNAL(clicked()), this, SLOT( resetMotor( void )));
-
 	connect(motorSoftVersionReadBtn, SIGNAL(clicked()), this, SLOT( readSoftVersion( void )));
 	connect(motorHardVersionReadBtn, SIGNAL(clicked()), this, SLOT( readHardVersion( void )));
+#endif
 
-	
 	QSignalMapper * motorItemsMapper = new QSignalMapper(this);
 	for(int i = 0; i < checkShowV.size(); i++) {
 		connect(checkShowV[i], SIGNAL(clicked(bool)), motorItemsMapper, SLOT(map()));//这个map(）是QSignalMapper类的槽函数，不需要我们定义
 		motorItemsMapper->setMapping(checkShowV[i], i);//这个i就是我们传给槽函数的值，可以是字符串，其他等等。
 	}
 	connect(motorItemsMapper, SIGNAL(mapped(int)), this, SLOT(motorItemsShow(int)));
+
+
 
 	connect(errorLogText,SIGNAL(textChanged()),SLOT(slotTextTcpChanged()));
     timer_  = new QTimer(this);
