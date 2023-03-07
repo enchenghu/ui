@@ -66,7 +66,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/common/transforms.h>
 #include <sensor_msgs/PointCloud2.h>
-
+#include "flidar_stat.h"
 #include "plot_tracer.h"
 #include <fstream>
 #include <sstream>
@@ -243,6 +243,7 @@ private:
 	void CreatUIWindow();
 	void CreatADCWindow();
 	void CreatMotorWindow();
+	void CreatStateDetectWindow();
 	void CreatCtlPanel();
 	int lidarConnect();
 	int motorConnect();
@@ -450,6 +451,10 @@ private:
 	QPushButton*  motorChartResetBtn;
 	QPushButton*  motorChartSingleBtn;
 	QStringList   m_serialPortName;
+
+	std::vector<QLineEdit*> edfaStateLinesV;
+	std::vector<QLineEdit*> edfaWarnLinesV;
+	std::vector<QLineEdit*> edfaDeviceInfoLinesV;
 	
 	QPushButton*  saveBtn;
 	QLabel* devLabel0_state;

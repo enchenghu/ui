@@ -582,11 +582,8 @@ void radar_stop_transmit()
 /* Main function */
 int main(int argc, char **argv)
 {
-	pthread_t playback_thread_id;
-	int ret;
 	ros::init(argc, argv, "lidar_gui");
 	ros::Time::init();
-	ros::NodeHandlePtr pLidarNodeHandle = boost::make_shared<ros::NodeHandle>();
 #if 1
 	QApplication app(argc, argv);
 	QCoreApplication::setOrganizationName("FMCW Lidar");

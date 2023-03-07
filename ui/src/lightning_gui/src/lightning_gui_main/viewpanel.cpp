@@ -253,6 +253,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	CreatDebugWindow();
 	CreatADCWindow();
 	CreatMotorWindow();
+	CreatStateDetectWindow();
 	CreatConnect();
 
 	registerPointcloudRviz();
@@ -1638,7 +1639,62 @@ void viewpanel::CreatMotorWindow()
 	this->addTab(multiWidget_new,  "Motor Debug Mainwindow");
 }
 
+void viewpanel::CreatStateDetectWindow()
+{
+	QTabWidget* stateDetectTab = new QTabWidget();
 
+	QWidget* multiWidget0 = new QWidget();
+	QGridLayout* showLayout0 = new QGridLayout() ;
+
+	QGroupBox* edfaBox = new QGroupBox(tr("EDFA:"));
+	QGridLayout* edfaBoxLayout = new QGridLayout ;
+
+	QGroupBox* basicBox = new QGroupBox(tr("基本信息:"));
+	QGridLayout* basicBoxLayout = new QGridLayout ;
+	basicBox->setLayout(basicBoxLayout);
+	edfaBoxLayout->addWidget(basicBox, 0, 0, Qt::AlignLeft | Qt::AlignTop);
+
+	QGroupBox* stateBox = new QGroupBox(tr("状态信息:"));
+	QGridLayout* stateBoxLayout = new QGridLayout ;
+	stateBox->setLayout(stateBoxLayout);
+	edfaBoxLayout->addWidget(stateBox, 1, 0, Qt::AlignLeft | Qt::AlignTop);
+
+	QGroupBox* warnBox = new QGroupBox(tr("报警信息:"));
+	QGridLayout* warnBoxLayout = new QGridLayout ;
+	warnBox->setLayout(warnBoxLayout);
+	edfaBoxLayout->addWidget(warnBox, 2, 0, Qt::AlignLeft | Qt::AlignTop);
+
+	edfaBox->setLayout(edfaBoxLayout);
+
+	showLayout0->addWidget(edfaBox, 0, 0, Qt::AlignLeft);
+
+
+	multiWidget0->setLayout(showLayout0);
+	stateDetectTab->addTab(multiWidget0,  "光电系统");
+
+	QWidget* multiWidget1 = new QWidget();
+	QGridLayout* showLayout1 = new QGridLayout() ;
+	multiWidget0->setLayout(showLayout1);
+	stateDetectTab->addTab(multiWidget1,  "电机系统");
+
+	QWidget* multiWidget2 = new QWidget();
+	QGridLayout* showLayout2 = new QGridLayout() ;
+	multiWidget2->setLayout(showLayout2);
+	stateDetectTab->addTab(multiWidget2,  "硬件系统");
+
+	QWidget* multiWidget3 = new QWidget();
+	QGridLayout* showLayout3 = new QGridLayout() ;
+	multiWidget2->setLayout(showLayout3);
+	stateDetectTab->addTab(multiWidget3,  "接口外设");
+
+	QWidget* multiWidget4 = new QWidget();
+	QGridLayout* showLayout4 = new QGridLayout() ;
+	multiWidget2->setLayout(showLayout4);
+	stateDetectTab->addTab(multiWidget4,  "软件系统");
+
+	this->addTab(stateDetectTab,  "State Detect Window");
+
+}
 
 void viewpanel::CreatADCWindow()
 {
@@ -3939,7 +3995,8 @@ void viewpanel::pcDataProc()
 		if(strColor == "range")
 			index_rgb = distance_m / color_base * R_V_g.size();
 		else if(strColor == "intensity")
-			index_rgb = (intensity_m - indensity_min) / (indensity_max - indensity_min) * R_V_g.size();
+			//index_rgb = (intensity_m - indensity_min) / (indensity_max - indensity_min) * R_V_g.size();
+			index_rgb = (intensity_m) / (color_base) * R_V_g.size();
 		else if(strColor == "speed"){
 			uint8_t r, g, b = 0;
 			if(speed_m < 0 && speed_m < - 0.4){

@@ -555,7 +555,7 @@ void* udp_pc_msg_send_once(void* )
                 sendMsg.UDP_PC_payload[j].pcmDistance = mv_g[i * 100 + j].pcmDistance;
                 sendMsg.UDP_PC_payload[j].pcmSpeed = mv_g[i * 100 + j].pcmSpeed;
                 sendMsg.UDP_PC_payload[j].pcmVertical = mv_g[i * 100 + j].pcmVertical;
-                sendMsg.UDP_PC_payload[j].pcmHorizontal = 0;//mv_g[i * 100 + j].pcmHorizontal;
+                sendMsg.UDP_PC_payload[j].pcmHorizontal = mv_g[i * 100 + j].pcmHorizontal;
 
             }
 #endif
