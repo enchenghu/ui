@@ -214,6 +214,11 @@ typedef struct
 	uint8_t     data[128];
 } motorMaxBuff;
 
+typedef struct 
+{
+	uint8_t     data[128];
+} stateMaxBuff;
+
 #pragma pack()     // pack() 结束
 
 typedef struct 

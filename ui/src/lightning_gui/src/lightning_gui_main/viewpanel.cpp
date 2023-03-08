@@ -223,7 +223,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_ORI),\
 	power_offset(0.0), distance_offset(0.0),ifConnectedMotorSerial(false), ifConnectedMotorTcp(false),\
 	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
-	ifStarted(false),saveadc_(false), oneFramePure(false)
+	ifStarted(false),saveadc_(false), oneFramePure(false), ifConnectedStateTcp(false)
 {
 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
@@ -299,6 +299,9 @@ void viewpanel::init_queue()
     udpPcMsg_done_buf_queue.setParam("udpPcMsg_done_buf_queue", MAX_BUFF_LEN); 
 	motorMsg_free_buf_queue.setParam("motorMsg_free_buf_queue", MAX_BUFF_LEN);
 	motorMsg_done_buf_queue.setParam("motorMsg_done_buf_queue", MAX_BUFF_LEN);
+	stateMsg_free_buf_queue.setParam("stateMsg_free_buf_queue", MAX_BUFF_LEN);
+	stateMsg_done_buf_queue.setParam("stateMsg_done_buf_queue", MAX_BUFF_LEN);
+
 
     for (int loop = 0; loop < 4; loop++) {
         fftMsg *fbuf0 = &fftBuff[loop];
@@ -306,11 +309,13 @@ void viewpanel::init_queue()
         udp_ADC_FFT_Msg *fbuf2 = &udpFABuff[loop];
         udpPcMsgOneFrame *fbuf3 = &udpPCBuff[loop];
 		motorMaxBuff *fbuf4 = &motorBuff[loop];
+		stateMaxBuff *fbuf5 = &stateBuff[loop];
         fftMsg_free_buf_queue.put(fbuf0);
         adcMsg_free_buf_queue.put(fbuf1);
         udpMsg_free_buf_queue.put(fbuf2);
         udpPcMsg_free_buf_queue.put(fbuf3);
 		motorMsg_free_buf_queue.put(fbuf4);
+		stateMsg_free_buf_queue.put(fbuf5);
     }
 	vertical_bin = 1 / 256.0; 
 	speed_bin = 1 / 128.0; 
@@ -548,7 +553,7 @@ void viewpanel::startControl(void){
 
 void viewpanel::connectControl(void){
 	if(!ifStarted){
-		if(lidarConnect() < 0){
+		if(lidarConnect() < 0 || stateConnect() < 0){
 			QMessageBox msgBox;
 			msgBox.setText("connect to the lidar failed!");
 			msgBox.exec();
@@ -557,11 +562,13 @@ void viewpanel::connectControl(void){
 			lidar_connect_button->setStyleSheet("color: green");
 			lidar_connect_button->setText("&Disconnect");
 			ifStarted = true;
+			startStateDectTask();
 		}
 	}else {
 		lidar_connect_button->setStyleSheet("color: black");
 		lidar_connect_button->setText("&Connect");
 		ifStarted = false;
+		ifConnectedStateTcp = false;
 		::close(ctrl_sock);
 	}
 }
@@ -646,6 +653,50 @@ void viewpanel::recvMotorInfoloop()
 		//parseMotorInfo(recvBuffBody);
 		//ROS_INFO("====finish parse motor info ");
 	}
+}
+
+void viewpanel::recvStateInfoloop()
+{
+	uint8_t stateInfoHead[9]; //motor id + cmd + datalen
+	int ret;
+	uint16_t 	mHead; //0xaa55
+	int dataLen = 0;
+	//ret = ::send(motor_ctrl_sock, &dataLen, sizeof(int), 0);
+	//printf("send motorMsg , ret is %d!\n", ret);
+	ROS_INFO("====enter recvStateInfoloop ");
+	//ifConnected = true;
+	while(!terminating){
+		if(!ifConnectedStateTcp) break;
+		memset(&mHead, 0, 2);
+		memset(stateInfoHead, 0, 9);
+		ret = ::recv(state_ctrl_sock, &mHead, 2, MSG_WAITALL);
+		if (ret <= 0){
+			printf("read state timeout!\n");
+			continue;
+		} 
+		if(mHead != 0xaa55) continue;;
+		ROS_INFO("====recv state info ");
+		ret = ::recv(state_ctrl_sock, stateInfoHead, 9, MSG_WAITALL);
+		if (ret <= 0){
+			printf("read state timeout!\n");
+			continue;
+		} 
+		dataLen = stateInfoHead[8] + 1; // + count + crc
+		ROS_INFO("====recv state dataLen %d ", dataLen);
+		stateMaxBuff *ptr_msg = nullptr;
+		if(stateMsg_free_buf_queue.get(ptr_msg)) continue;
+		ret = ::recv(state_ctrl_sock, ptr_msg->data + 11, dataLen, MSG_WAITALL);
+		if (ret <= 0){
+			printf("read state timeout!\n");
+			continue;
+		} 
+		memcpy(ptr_msg->data, &mHead, 2);
+		memcpy(ptr_msg->data + 2, stateInfoHead, 9);
+		stateMsg_done_buf_queue.put(ptr_msg);
+		ROS_INFO("====send state msg ");
+		//parseMotorInfo(recvBuffBody);
+	}
+	ROS_INFO("====finish recvStateInfoloop ");
 }
 
 
@@ -1956,8 +2007,8 @@ void viewpanel::CreatConnect()
 
     QTimer* timer_state  = new QTimer(this);
     connect(timer_state, SIGNAL(timeout()), this, SLOT(updateState(void)));
-    connect(timer_state, SIGNAL(timeout()), this, SLOT(printErrorLog(void)));
-    timer_state->start(300);
+    //connect(timer_state, SIGNAL(timeout()), this, SLOT(printErrorLog(void)));
+    timer_state->start(20);
     //connect(timer_state, SIGNAL(timeout()), this, SLOT(recvSerialInfo(void)));
 
 #if 0	
@@ -2758,6 +2809,14 @@ void viewpanel::TaskFuncMotorRecv(void *arg){
     }
 }
 
+void viewpanel::TaskFuncStateRecv(void *arg){
+    viewpanel *pSave = (viewpanel *)arg;
+	std::cout << "enter TaskFuncStateRecv" << std::endl;
+    if (pSave && pSave->TaskFuncStateRecv) {
+        pSave->recvStateInfoloop();
+    }
+}
+
 void viewpanel::start_save_task()
 {
 
@@ -2796,12 +2855,6 @@ void viewpanel::saveDataThead()
 
 void viewpanel::pcOneFramePure()
 {
-	if(udpPCStop_){
-		QMessageBox msgBox;
-		msgBox.setText("pointCloud udp is not connected!");
-		msgBox.exec();
-		return;		
-	}	
 	if(oneFramePure){
 		pcProcBtn->setStyleSheet("color: black");
 		pcProcBtn->setText("&OneFramePure");	
@@ -2999,9 +3052,52 @@ void viewpanel::updateFFTdata() {
 #endif
 
 }
+void viewpanel::procEdfaInfo(uint8_t* data, uint8_t cmd_id)
+{
+	if(cmd_id == sm_mCmd_base){
+		flidar_sm_EDFA_base_st baseInfo;
+		memcpy(&baseInfo, data, LEN_SM_EDFA_BASE);
+		
+	} else if(cmd_id == sm_mCmd_stat){
+		flidar_sm_EDFA_stat_st stateInfo;
+		memcpy(&stateInfo, data, LEN_SM_EDFA_STAT);
+		edfaStateLinesV[0]->setText(QString::number(stateInfo.lhtSrc));
+		edfaStateLinesV[1]->setText(QString::number(stateInfo.powerIn));
+		edfaStateLinesV[2]->setText(QString::number(stateInfo.powerOut));
+		edfaStateLinesV[3]->setText(QString::number(stateInfo.mduTemp / 100.0));
+		edfaStateLinesV[4]->setText(QString::number(stateInfo.pump1thTemp / 100.0));
+		edfaStateLinesV[5]->setText(QString::number(stateInfo.pump1thCurr));
+		edfaStateLinesV[6]->setText(QString::number(stateInfo.pump2thCurr));
+
+	} else if(cmd_id == sm_mCmd_warn){
+		flidar_sm_EDFA_warn_st warnInfo;
+		memcpy(&warnInfo, data, LEN_SM_EDFA_WARN);
+	}
+}
+
 
 void viewpanel::updateState()
 {
+	if(!stateMsg_done_buf_queue.empty()){
+		stateMaxBuff* ptr_msg = nullptr;
+		stateMsg_done_buf_queue.get(ptr_msg);
+		//uint8_t* pdata = ptr_msg->data + 11;
+		uint8_t devID = ptr_msg->data[8];
+		uint8_t devCmd = ptr_msg->data[9];
+		switch (devID)
+		{
+		case sm_mCode_EDFA:
+			/* code */
+			procEdfaInfo(ptr_msg->data + 11, devCmd);
+			break;
+		
+		default:
+			break;
+		}
+		stateMsg_free_buf_queue.put(ptr_msg);
+	}
+
+#if 0
 	static bool update = true;
 	if(update){
 		setLED(devLabel0_state, 1);
@@ -3013,7 +3109,8 @@ void viewpanel::updateState()
 		setLED(devLabel1_state, 0);	
 		setLED(devLabel2_state, 0);		
 		update = true;
-	}	
+	}
+#endif	
 }
 
 
@@ -3811,7 +3908,8 @@ void viewpanel::udpConnect() {
 	}
 }
 
-void viewpanel::startPcTask() {
+void viewpanel::startPcTask() 
+{
 	vx_task_set_default_create_params(&bst_params);
 	bst_params.app_var = this;
 	bst_params.task_mode = 0;
@@ -3825,7 +3923,8 @@ void viewpanel::startPcTask() {
 	vx_task_create(&bst_task[4], &bst_params); 
 }
 
-void viewpanel::startMotorTask() {
+void viewpanel::startMotorTask() 
+{
 	vx_task_set_default_create_params(&bst_params);
 	bst_params.app_var = this;
 	bst_params.task_mode = 0;
@@ -3833,6 +3932,14 @@ void viewpanel::startMotorTask() {
 	vx_task_create(&bst_task[5], &bst_params);  
 }
 
+void viewpanel::startStateDectTask() 
+{
+	vx_task_set_default_create_params(&bst_params);
+	bst_params.app_var = this;
+	bst_params.task_mode = 0;
+	bst_params.task_main = TaskFuncStateRecv;
+	vx_task_create(&bst_task[6], &bst_params);  
+}
 void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 {
 	if(!pmsg) return;
@@ -4544,6 +4651,48 @@ int viewpanel::motorConnect()
 		return -2; /* Completely fail only if first radar didn't connect */
 	}
 	ifConnectedMotorTcp  = true;
+	//fcntl(ctrl_sock, F_SETFL, O_NONBLOCK); /* Set the socket to non blocking mode */
+	return 0;
+}
+
+int viewpanel::stateConnect()
+{
+	int one = 1;
+	lidar_ip = ip_edit->text().toStdString();
+	state_port = 5002;
+	ROS_INFO("lidar_ip is %s, state_port is %d", lidar_ip.c_str(), state_port);
+	struct sockaddr_in ctrl_serv_addr;
+	if ((state_ctrl_sock=socket(AF_INET, SOCK_STREAM, 0))==-1){
+		ROS_DEBUG("ERROR: Could not create socket!");
+		return -1;
+	}
+	int nRecvBuf=320 * 1024;//设置为32K
+	setsockopt(state_ctrl_sock, SOL_SOCKET,SO_RCVBUF,(const char*)&nRecvBuf,sizeof(int));
+
+	int nSendBuf=320 * 1024;//设置为32K
+	setsockopt(state_ctrl_sock, SOL_SOCKET, SO_SNDBUF,(const char*)&nSendBuf,sizeof(int));
+	setsockopt(state_ctrl_sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+
+
+#if 1
+	struct timeval timeout_send = {2, 0};
+	setsockopt(state_ctrl_sock, SOL_SOCKET, SO_SNDTIMEO, &timeout_send, sizeof(timeout_send)); //send timeout
+
+	struct timeval timeout_recv = {5, 0};
+	setsockopt(state_ctrl_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout_recv, sizeof(timeout_recv)); //recv timeout
+
+#endif
+	memset(&ctrl_serv_addr, 0, sizeof(ctrl_serv_addr));
+	ctrl_serv_addr.sin_family = AF_INET;
+	ctrl_serv_addr.sin_addr.s_addr = inet_addr(lidar_ip.c_str());
+	ctrl_serv_addr.sin_port = htons(state_port);
+
+	if(::connect(state_ctrl_sock, (struct sockaddr*)&ctrl_serv_addr, sizeof(ctrl_serv_addr))<0)
+	{
+		ROS_INFO("Failed to connect to lidar_ip %s port: %d", lidar_ip.c_str(), state_port);
+		return -2; /* Completely fail only if first radar didn't connect */
+	}
+	ifConnectedStateTcp  = true;
 	//fcntl(ctrl_sock, F_SETFL, O_NONBLOCK); /* Set the socket to non blocking mode */
 	return 0;
 }

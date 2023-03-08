@@ -45,6 +45,43 @@ typedef enum
 	POINTCLOUD_DISPLAY_START,
 	POINTCLOUD_DISPLAY_STOP
 }commandType;
+
+typedef enum {
+    /* 硬件系统 */
+    sm_mCode_SYS   = 0xA1,     // SYS（版本/时钟）
+    sm_mCode_POW   = 0xA2,     // POW（电源）
+    sm_mCode_CPU   = 0xA3,     // CPU
+    sm_mCode_FPGA  = 0xA4,     // FPGA
+    sm_mCode_DDR   = 0xA5,     // DDR
+    sm_mCode_eMMC  = 0xA6,     // eMMC
+    
+    /* 接口外设 */
+    sm_mCode_SD    = 0xB1,     // SD卡
+    sm_mCode_ETH   = 0xB2,     // ETH（以太网）
+    sm_mCode_UART  = 0xB3,     // UART（串口）
+    sm_mCode_ADDA  = 0xB4,     // ADDA（采样系统）
+
+    /* 光电系统 */
+    sm_mCode_NLL   = 0xC1,     // NLL（窄带宽激光器）
+    sm_mCode_PHA   = 0xC2,     // PHA（相位调制器）
+    sm_mCode_FILT  = 0xC3,     // FILT（光纤滤波器）
+    sm_mCode_EDFA  = 0xC4,     // EDFA 激光放大器
+
+    /* 电机系统 */
+    sm_mCode_POLY  = 0xD1,     // Polygon电机
+    sm_mCode_GALV  = 0xD2,     // Galvo电机
+
+    /* 软件系统 */
+    sm_mCode_PROG  = 0xE1,     // PROG（进程）
+    sm_mCode_THRD  = 0xE2,     // PROG（进程）
+} flidar_sm_moduleCode;
+
+typedef enum {
+    sm_mCmd_base    = 0xF1,     // 基本信息
+    sm_mCmd_stat    = 0xF2,     // 状态信息
+    sm_mCmd_warn    = 0xF3,     // 报警信息
+} flidar_sm_moduleCmd;
+
 uint8_t *encode_cali_data = nullptr;
 long file_size_g = 0;
 typedef struct API_Header
@@ -115,6 +152,34 @@ typedef struct {
     UDP_PC_head_st  UDP_PC_head;                        // head：24字节
     PC_pointMeta_st UDP_PC_payload[100];   // Payload：1400字节 = 14 * 100
 } UDP_PC_package_st;    // 1424字节
+
+typedef struct {
+    uint16_t frameHead;     // 起始头：0xAA 0x55
+    uint32_t timeStamp;     // 时间戳：高22位:秒，低10位:ms
+    uint8_t  validPeriod;   // 消息有效期（单位：100ms）
+    uint8_t  countToken;    // 消息帧计数（每次+1）
+    uint8_t  moduleCode;    // 模块代码
+    uint8_t  moduleCmd;     // 模块指令
+    uint8_t  dataLen;       // dataBody 长度
+} flidar_sm_msgFrame_st;
+
+typedef struct {
+    uint8_t  lhtSrc;        // 光源状态：0:光源关 1:光源开
+    uint16_t powerIn;       // 输入功率（uW）
+    uint16_t powerOut;      // 输出功率（mW）
+    uint16_t mduTemp;       // 模块温度：(val ÷ 100) ℃
+    uint16_t pump1thTemp;   // 第一个泵浦温度：(val ÷ 100) ℃
+    uint16_t pump1thCurr;   // 第一个泵浦电流（mA）
+    uint16_t pump2thCurr;   // 第二个泵浦电流（mA）
+} flidar_sm_EDFA_stat_st;
+
+typedef struct {
+    flidar_sm_msgFrame_st  header;                        // head：24字节
+    flidar_sm_EDFA_stat_st load;   // Payload：1400字节 = 14 * 100
+    uint8_t crc;
+} stateMsg; 
+
+#pragma pack()
 
 pcData_t g_msg;
 UDP_PC_package_st g_msg_pc;
@@ -236,12 +301,46 @@ typedef struct
 } motorItemsShowMsg;
 #pragma pack()     // pack() 结束
 
-
+#define state 1
 void motorSockerInit();
 
 void *motor_msg_sender(void *)
 {
     motorSockerInit();
+
+#if state
+    stateMsg stateMsg_;
+    int counter = 0;
+    stateMsg_.header.frameHead = 0xaa55;
+    stateMsg_.header.moduleCode = sm_mCode_EDFA;
+    stateMsg_.header.moduleCmd = sm_mCmd_stat;
+    stateMsg_.header.dataLen = sizeof(flidar_sm_EDFA_stat_st);
+
+
+    int sum = 0;
+
+    while(1){
+        //memset(motorMsg.data, 0, motorMsg.header.dataLen);
+        //int n = recv(motorSocketFd_, &sum, sizeof(int), MSG_WAITALL); 
+        //printf("recv motorMsg , ret is %d!\n", n);
+        stateMsg_.load.lhtSrc = sum;
+        stateMsg_.load.powerIn = sum + 1;
+        stateMsg_.load.powerOut = sum + 2;
+        stateMsg_.load.mduTemp = sum + 3;
+        stateMsg_.load.pump1thTemp = sum + 4;
+        stateMsg_.load.pump1thCurr = sum + 5;
+        stateMsg_.load.pump2thCurr = sum + 6;
+        sum++;
+        int ret = write(motorSocketFd_, &stateMsg_, sizeof(stateMsg_));
+        printf("send stateMsg_ , ret is %d!\n", ret);
+        if(ret < 0)
+        {
+            counter++;
+            if(counter > 8) break;
+        }
+        usleep(1000*1000);
+    }
+#else
     motorItemsShowMsg motorMsg;
     int counter = 0;
     motorMsg.header.mHead = 0xaa55;
@@ -269,6 +368,7 @@ void *motor_msg_sender(void *)
         }
         usleep(500*1000);
     }
+#endif
 
 }
 
@@ -360,7 +460,7 @@ void motorSockerInit(void)
     memset(&servaddr, 0, sizeof(servaddr)); 
     servaddr.sin_family = AF_INET; 
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);             
-    servaddr.sin_port = htons(5001); 
+    servaddr.sin_port = htons(5002); 
     long long index_0 = 0;
     if( bind(motorSocketFd_, (struct sockaddr*)&servaddr, sizeof(servaddr)) == -1)
     { 
@@ -709,6 +809,11 @@ int main(int argc, char** argv)
     struct sockaddr_in servaddr; 
     char buff[4096]; int n; 
 #if 1
+    pthread_t motor_send;
+    //pthread_t motor_init;
+    //pthread_create(&motor_init, NULL, motorSockerInit, NULL);
+    pthread_create(&motor_send, NULL, motor_msg_sender, NULL);
+
     pcSockerInit();
     if( (listenfd = socket(AF_INET, SOCK_STREAM, 0)) == -1 )
     { 
@@ -773,10 +878,7 @@ int main(int argc, char** argv)
         std::cout << "myNode :" << myNode << std::endl;
     }
 
-    pthread_t motor_send;
-    //pthread_t motor_init;
-    //pthread_create(&motor_init, NULL, motorSockerInit, NULL);
-    pthread_create(&motor_send, NULL, motor_msg_sender, NULL);
+
     //pthread_join(motor_send, NULL);
 
 #if 1

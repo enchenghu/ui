@@ -25,7 +25,7 @@
 #include "flidar_socket.h" */
 
 static std::vector<std::string> edfaDevName = {"硬件版本号", "软件版本号"};
-static std::vector<std::string> edfaStateName = {"光源状态", "输入功率", "输出功率", "模块温度", "第一个泵浦温度", "第一个泵浦电流", "第二个泵浦电流"};
+static std::vector<std::string> edfaStateName = {"光源状态", "输入功率/uW", "输出功率/mW", "模块温度/℃", "第一个泵浦温度/℃", "第一个泵浦电流/mA", "第二个泵浦电流/mA"};
 static std::vector<std::string> edfaWarnName = {"模块温度", "种子激光器温度", "输入功率", "泵浦温度","泵浦功率", "种子激光器功率", "保存数据"};
 
 #pragma pack(1)     // 1字节对齐

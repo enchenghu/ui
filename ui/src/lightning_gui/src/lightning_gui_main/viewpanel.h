@@ -229,6 +229,7 @@ protected:
     static void TaskFuncPCRecv(void *arg);
     static void TaskFuncPCParse(void *arg);
     static void TaskFuncMotorRecv(void *arg);
+	static void TaskFuncStateRecv(void *arg);
 
 
 private:
@@ -237,6 +238,8 @@ private:
 	void udpRecvPCOnce();
 	int udpRecvPCConnect();
 	void recvMotorInfoloop();
+	void recvStateInfoloop();
+	void procEdfaInfo(uint8_t* data, uint8_t cmd_id);
 
 	void sendSerialBytes(const uint8_t *begin, int size);
 	void udpParseLoop();
@@ -248,6 +251,8 @@ private:
 	void CreatCtlPanel();
 	int lidarConnect();
 	int motorConnect();
+	int stateConnect();
+
 	int motorSerialConnect();
 	int motorSerialConnectTest();
 	int serialClose(QSerialPort* );
@@ -262,6 +267,7 @@ private:
 	void registerPointcloudRviz();
 	void startPcTask();
 	void startMotorTask();
+	void startStateDectTask();
 
 
 	void CreatConnect();
@@ -294,6 +300,7 @@ private:
 	void saveData();
 	int ctrl_sock;
 	int motor_ctrl_sock;
+	int state_ctrl_sock;
 	int udpRecvSocketFd_;
 	int udpRecvPCSocketFd_;
 
@@ -308,6 +315,7 @@ private:
 	int lidar_UDP_pc_port;
 
 	int motor_port;
+	int state_port;
 	QSerialPort *m_serialPort;
 	QSerialPort *m_serialPort_test;
 	bool m_serialPort_test_open;
@@ -469,6 +477,8 @@ private:
 	udpPcMsgOneFrame udpPCBuff[MAX_BUFF_LEN];
 	udpPcMsgOneFrame360 udpPCBuff_last;
 	motorMaxBuff motorBuff[MAX_BUFF_LEN];
+	stateMaxBuff stateBuff[MAX_BUFF_LEN];
+
 
 	bstMsgQueue<fftMsg*> fftMsg_free_buf_queue;
 	bstMsgQueue<fftMsg*> fftMsg_done_buf_queue;
@@ -480,12 +490,16 @@ private:
 	bstMsgQueue<udpPcMsgOneFrame*> udpPcMsg_done_buf_queue;
 	bstMsgQueue<motorMaxBuff*> motorMsg_free_buf_queue;
 	bstMsgQueue<motorMaxBuff*> motorMsg_done_buf_queue;
-	
+	bstMsgQueue<stateMaxBuff*> stateMsg_free_buf_queue;
+	bstMsgQueue<stateMaxBuff*> stateMsg_done_buf_queue;
+
 	std::string loadFileType_;
 	QString  loadLidarFile_;
 	bool ifConnected;
 	bool ifStarted;
 	bool ifConnectedMotorTcp;
+	bool ifConnectedStateTcp;
+
 	bool ifConnectedMotorSerial;
 	bool ifOpenMotor;
 
