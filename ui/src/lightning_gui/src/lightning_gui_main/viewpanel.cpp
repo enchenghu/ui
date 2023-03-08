@@ -223,7 +223,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_ORI),\
 	power_offset(0.0), distance_offset(0.0),ifConnectedMotorSerial(false), ifConnectedMotorTcp(false),\
 	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
-	ifStarted(false),saveadc_(false)
+	ifStarted(false),saveadc_(false), oneFramePure(false)
 {
 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
@@ -1047,7 +1047,7 @@ void viewpanel::registerPointcloudRviz()
 	manager_ = new rviz::VisualizationManager( render_panel_ );
 
 	//render_panel_->setBackgroundColor( Ogre::ColourValue(238,238,236,0.3));
-	render_panel_->setBackgroundColor(Ogre::ColourValue(238,238,236,0.3));
+	render_panel_->setBackgroundColor(Ogre::ColourValue(0,0,0,0.3));
 
 	render_panel_->initialize( manager_->getSceneManager(), manager_ );
 	selection_panel_->initialize( manager_ );
@@ -1651,18 +1651,43 @@ void viewpanel::CreatStateDetectWindow()
 
 	QGroupBox* basicBox = new QGroupBox(tr("基本信息:"));
 	QGridLayout* basicBoxLayout = new QGridLayout ;
+	for(int i = 0; i < edfaDevName.size(); i++){
+		edfaDeviceInfoLinesV.push_back(new QLineEdit);
+		setReadOnlyLineEdit(edfaDeviceInfoLinesV[i]);
+		QLabel* temp = new QLabel(edfaDevName[i].c_str());
+		basicBoxLayout->addWidget(temp, i, 0, Qt::AlignRight | Qt::AlignTop);
+		basicBoxLayout->addWidget(edfaDeviceInfoLinesV[i], i, 1, Qt::AlignLeft | Qt::AlignTop);
+	}
 	basicBox->setLayout(basicBoxLayout);
-	edfaBoxLayout->addWidget(basicBox, 0, 0, Qt::AlignLeft | Qt::AlignTop);
+	edfaBoxLayout->addWidget(basicBox, 0, 0);
 
 	QGroupBox* stateBox = new QGroupBox(tr("状态信息:"));
 	QGridLayout* stateBoxLayout = new QGridLayout ;
+	for(int i = 0; i < edfaStateName.size(); i++){
+		edfaStateLinesV.push_back(new QLineEdit);
+		setReadOnlyLineEdit(edfaStateLinesV[i]);
+		QLabel* temp = new QLabel(edfaStateName[i].c_str());
+		stateBoxLayout->addWidget(temp, i, 0, Qt::AlignRight | Qt::AlignTop);
+		stateBoxLayout->addWidget(edfaStateLinesV[i], i, 1, Qt::AlignLeft | Qt::AlignTop);
+	}
 	stateBox->setLayout(stateBoxLayout);
-	edfaBoxLayout->addWidget(stateBox, 1, 0, Qt::AlignLeft | Qt::AlignTop);
+	edfaBoxLayout->addWidget(stateBox, 1, 0);
 
 	QGroupBox* warnBox = new QGroupBox(tr("报警信息:"));
 	QGridLayout* warnBoxLayout = new QGridLayout ;
+	for(int i = 0; i < edfaWarnName.size(); i++){
+		edfaWarnLEDV.push_back(new QLabel);
+		setLED(edfaWarnLEDV[i], 0);
+		QLabel* temp = new QLabel(edfaWarnName[i].c_str());
+		warnBoxLayout->addWidget(temp, i, 0, Qt::AlignRight | Qt::AlignTop);
+		warnBoxLayout->addWidget(edfaWarnLEDV[i], i, 1, Qt::AlignLeft | Qt::AlignTop);
+	}
 	warnBox->setLayout(warnBoxLayout);
-	edfaBoxLayout->addWidget(warnBox, 2, 0, Qt::AlignLeft | Qt::AlignTop);
+	edfaBoxLayout->addWidget(warnBox, 2, 0);
+
+	edfaBoxLayout->setRowStretch(0, 1);
+	edfaBoxLayout->setRowStretch(1, 4);
+	edfaBoxLayout->setRowStretch(2, 4);
 
 	edfaBox->setLayout(edfaBoxLayout);
 
@@ -1881,6 +1906,8 @@ void viewpanel::CreatConnect()
 
 	connect(pcBWBtn, SIGNAL(clicked()), this, SLOT( pcShowBW( void )));
 	connect(pcRecordBtn, SIGNAL(clicked()), this, SLOT( pcRecord( void )));
+	connect(pcProcBtn, SIGNAL(clicked()), this, SLOT( pcOneFramePure( void )));
+
 	connect(loadAlgBtn, SIGNAL(clicked()), this, SLOT( loadAlgFile( void )));
 
 	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
@@ -2022,6 +2049,7 @@ void viewpanel::CreatUIWindow()
 	pcResetBtn = new QPushButton("&PC Contin", this);
 	pcBWBtn = new QPushButton("&Bg Color", this);
 	pcRecordBtn = new QPushButton("&PointCloud Record", this);
+	pcProcBtn = new QPushButton("&OneFramePure", this);
 
 	//lidar_stop_button = new QPushButton("Stop", this);
 	//lidarIdCombo =  new QComboBox;
@@ -2186,6 +2214,7 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( pcResetBtn, 2, 15, Qt::AlignRight);	
 	controls_layout->addWidget( saveBtn, 3, 15, Qt::AlignRight);
 	controls_layout->addWidget( pcBWBtn, 4, 15, Qt::AlignRight);	
+	controls_layout->addWidget( pcProcBtn, 4, 18, Qt::AlignRight);
 	controls_layout->addWidget( pcRecordBtn, 4, 19, Qt::AlignRight);
 
 	controls_layout->addWidget( point_size_label, 0, 16, Qt::AlignRight);
@@ -2765,6 +2794,25 @@ void viewpanel::saveDataThead()
 #endif
 }
 
+void viewpanel::pcOneFramePure()
+{
+	if(udpPCStop_){
+		QMessageBox msgBox;
+		msgBox.setText("pointCloud udp is not connected!");
+		msgBox.exec();
+		return;		
+	}	
+	if(oneFramePure){
+		pcProcBtn->setStyleSheet("color: black");
+		pcProcBtn->setText("&OneFramePure");	
+		oneFramePure = false;	
+	} else {
+		pcProcBtn->setStyleSheet("color: green");
+		pcProcBtn->setText("&OneFrame360");	
+		oneFramePure = true;			
+	}
+
+}
 void viewpanel::pcRecord(){
 	if(udpPCStop_){
 		QMessageBox msgBox;
@@ -2808,12 +2856,12 @@ void viewpanel::pcRecord(){
 
 void viewpanel::pcShowBW(){
 	static bool showBlack = true;
-	if(!showBlack){
+	if(showBlack){
 		render_panel_->setBackgroundColor(Ogre::ColourValue(238,238,236,0.3));
-		showBlack = true;
+		showBlack = false;
 	}else{
 		render_panel_->setBackgroundColor(Ogre::ColourValue(0,0,0,0.3));
-		showBlack = false;		
+		showBlack = true;		
 	}
 }
 
@@ -3835,8 +3883,9 @@ void viewpanel::pcDataProc()
 	bool begin_save = false;
 	bool one_frame_360 = false;
 	double horizontal_last = 0.0;
+	bool oneFramePure_ = oneFramePure;
 #if 1
-	if(udpPCBuff_last.pcDataOneFrame.empty()){
+	if(udpPCBuff_last.pcDataOneFrame.empty() && !oneFramePure){
 		pcFrameSize = pmsg->pcDataOneFrame.size(); 
 		udpPCBuff_last.frameCounterLast = pmsg->pcDataOneFrame[0].UDP_PC_head.uphFrameCounter;
 		for(int j = 0; j < pcFrameSize; j++)
@@ -3854,42 +3903,47 @@ void viewpanel::pcDataProc()
 	pcFrameSize = udpPCBuff_last.pcDataOneFrame.size();
 	udpPcMsgOneFrame360 oneFrame360;
 	oneFrame360.pcDataOneFrame.clear();
-	oneFrame360.frameCounterLast = udpPCBuff_last.frameCounterLast;
-	for(int j = 0; j < pcFrameSize; j++)
-	{
-		horizontal_m = udpPCBuff_last.pcDataOneFrame[j].pcmHorizontal * horizontal_bin;
-		if(horizontal_m > 360.0) horizontal_m -= 360.0;
-		if(horizontal_m >= 0.0 && horizontal_m < 1.0) {
-			begin_save = true;
-		}
-		if(!begin_save) continue;
-		oneFrame360.pcDataOneFrame.push_back(udpPCBuff_last.pcDataOneFrame[j]);
-		oneFrame360.frameCounter.push_back(udpPCBuff_last.frameCounter[j]);
+	if(!oneFramePure_){
+		oneFrame360.frameCounterLast = udpPCBuff_last.frameCounterLast;
+		for(int j = 0; j < pcFrameSize; j++)
+		{
+			horizontal_m = udpPCBuff_last.pcDataOneFrame[j].pcmHorizontal * horizontal_bin;
+			if(horizontal_m > 360.0) horizontal_m -= 360.0;
+			if(horizontal_m >= 0.0 && horizontal_m < 1.0) {
+				begin_save = true;
+			}
+			if(!begin_save) continue;
+			oneFrame360.pcDataOneFrame.push_back(udpPCBuff_last.pcDataOneFrame[j]);
+			oneFrame360.frameCounter.push_back(udpPCBuff_last.frameCounter[j]);
 
-		if(begin_save && horizontal_m > 359.5 && horizontal_m < 360.0){
-			std::cout << "warnning, one_frame_360 is done in udpPCBuff_last" << horizontal_m << std::endl;
-			one_frame_360 = true;
-			break;
+			if(begin_save && horizontal_m > 359.5 && horizontal_m < 360.0){
+				std::cout << "warnning, one_frame_360 is done in udpPCBuff_last" << horizontal_m << std::endl;
+				one_frame_360 = true;
+				break;
+			}
 		}
-	}
-	//frame_index++;
+		if(oneFrame360.pcDataOneFrame.empty()){
+			std::cout << "=============oneFrame360.pcDataOneFrame is empty, can't find 0 , frame index is " << udpPCBuff_last.frameCounter[0]<< std::endl;
+		}
 
-	if(oneFrame360.pcDataOneFrame.empty()){
-		std::cout << "=============oneFrame360.pcDataOneFrame is empty, can't find 0 , frame index is " << udpPCBuff_last.frameCounter[0]<< std::endl;
+		begin_save = false;
+		oneFrame360.frameCounterCur = pmsg->pcDataOneFrame[0].UDP_PC_head.uphFrameCounter;
+		if(!oneFrame360.pcDataOneFrame.empty())horizontal_last = oneFrame360.pcDataOneFrame[oneFrame360.pcDataOneFrame.size() - 1].pcmHorizontal * horizontal_bin;
+		if(horizontal_last > 360.0) horizontal_last -= 360.0; 
 	}
+	pcFrameSize = pmsg->pcDataOneFrame.size();
 	udpPCBuff_last.pcDataOneFrame.clear();
 	udpPCBuff_last.frameCounter.clear();
-	begin_save = false;
-	pcFrameSize = pmsg->pcDataOneFrame.size();
-	oneFrame360.frameCounterCur = pmsg->pcDataOneFrame[0].UDP_PC_head.uphFrameCounter;
- 	//auto last =  oneFrame360.pcDataOneFrame.end() - 1;
-	if(!oneFrame360.pcDataOneFrame.empty())horizontal_last = oneFrame360.pcDataOneFrame[oneFrame360.pcDataOneFrame.size() - 1].pcmHorizontal * horizontal_bin;
-	if(horizontal_last > 360.0) horizontal_last -= 360.0; 
 	bool find_flag = true;
 	if(!one_frame_360){
 		for(int j = 0; j < pcFrameSize; j++)
 		{
 			for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){	
+				if(oneFramePure_) {
+					oneFrame360.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
+					oneFrame360.frameCounter.push_back(pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter);
+					continue;
+				}
 				horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
 				if(horizontal_m > 360.0) horizontal_m -= 360.0;
 				if((horizontal_last > horizontal_m) && find_flag) {

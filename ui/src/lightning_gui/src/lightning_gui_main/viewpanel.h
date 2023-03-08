@@ -185,6 +185,7 @@ private Q_SLOTS:
 
 	void pcShowBW();
 	void pcRecord();
+	void pcOneFramePure();
 	void updateFFTdata();
 	void updateADCdata();
 	void updateMotorChart();
@@ -453,7 +454,7 @@ private:
 	QStringList   m_serialPortName;
 
 	std::vector<QLineEdit*> edfaStateLinesV;
-	std::vector<QLineEdit*> edfaWarnLinesV;
+	std::vector<QLabel*> edfaWarnLEDV;
 	std::vector<QLineEdit*> edfaDeviceInfoLinesV;
 	
 	QPushButton*  saveBtn;
@@ -490,11 +491,13 @@ private:
 
 	showModel ifShowdB_;
 	bool ifSave;
+	bool oneFramePure;
 	QPushButton *lidar_connect_button;
 	QPushButton *setSaveBtn;
 	QPushButton *pcSwitchBtn;
 	QPushButton *pcBWBtn;
 	QPushButton *pcRecordBtn;
+	QPushButton *pcProcBtn;
 	QPushButton *pcOnceBtn;
 	QPushButton *pcResetBtn;
 	QPushButton *loadAlgBtn;
