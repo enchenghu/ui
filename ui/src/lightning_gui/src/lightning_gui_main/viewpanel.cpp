@@ -3086,40 +3086,46 @@ void viewpanel::procEdfaInfo(uint8_t* data, uint8_t cmd_id)
 			setLED(edfaWarnLEDV[0], 2);
 		}
 
-		if(warnInfo.w_seedTemp  > 127){
+		if(warnInfo.w_mduTemp  > 127){
 			setLED(edfaWarnLEDV[1], 1);
+		} else {
+			setLED(edfaWarnLEDV[1 +0], 2);
+		}
+
+		if(warnInfo.w_seedTemp  > 127){
+			setLED(edfaWarnLEDV[1 +1], 1);
 		}else {
-			setLED(edfaWarnLEDV[1], 2);
+			setLED(edfaWarnLEDV[1 +1], 2);
 		}
 
 		if(warnInfo.w_powerIn  > 127){
-			setLED(edfaWarnLEDV[2], 1);
+			setLED(edfaWarnLEDV[1 +2], 1);
 		}else {
-			setLED(edfaWarnLEDV[2], 2);
+			setLED(edfaWarnLEDV[1 +2], 2);
 		}
 
 		if(warnInfo.w_pumpTemp  > 127){
-			setLED(edfaWarnLEDV[3], 1);
+			setLED(edfaWarnLEDV[1 +3], 1);
 		}else {
-			setLED(edfaWarnLEDV[3], 2);
+			setLED(edfaWarnLEDV[1 +3], 2);
 		}
 
 		if(warnInfo.w_pumpPower  > 127){
-			setLED(edfaWarnLEDV[4], 1);
+			setLED(edfaWarnLEDV[1 +4], 1);
 		}else {
-			setLED(edfaWarnLEDV[4], 2);
+			setLED(edfaWarnLEDV[1 +4], 2);
 		}
 
 		if(warnInfo.w_seedPower  > 127){
-			setLED(edfaWarnLEDV[5], 1);
+			setLED(edfaWarnLEDV[1 +5], 1);
 		}else {
-			setLED(edfaWarnLEDV[5], 2);
+			setLED(edfaWarnLEDV[1 +5], 2);
 		}	
 
 		if(warnInfo.w_saveData  > 127){
-			setLED(edfaWarnLEDV[6], 1);
+			setLED(edfaWarnLEDV[1 +6], 1);
 		}else {
-			setLED(edfaWarnLEDV[6], 2);
+			setLED(edfaWarnLEDV[1 +6], 2);
 		}		
 	}
 }
@@ -3577,7 +3583,7 @@ void viewpanel::sendMotorWorkModeCmd()
 {
 	if(checkMotorConnected()) return;
 	motorMsgWorkMode_.header.cmd = motorCmdType::MOTOR_WORKMODE_SET;
-	motorMsgWorkMode_.header.dataLen = 0x07;
+	motorMsgWorkMode_.header.dataLen = 0x0D;
 	motorMsgWorkMode_.tailer.count = 0x01;
 	motorMsgWorkMode_.header.motor_index = motorIDCombo->currentText().toInt();
 	motorMsgWorkMode_.speed = motorWorkModeSpeedSetLine->text().toDouble();
@@ -4588,7 +4594,7 @@ int viewpanel::motorSerialConnectTest()
 
 	//设置串口名字 假设我们上面已经成功获取到了 并且使用第一个
 	//QString serialDevName = motorSerialCombo->currentText();
-	m_serialPort_test->setPortName(QString("/dev/pts/4"));
+	m_serialPort_test->setPortName(QString("/dev/pts/0"));
 
 	if(!m_serialPort_test->open(QIODevice::ReadWrite))//用ReadWrite 的模式尝试打开串口
 	{
