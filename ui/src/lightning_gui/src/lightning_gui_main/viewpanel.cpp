@@ -563,6 +563,9 @@ void viewpanel::connectControl(void){
 			lidar_connect_button->setText("&Disconnect");
 			ifStarted = true;
 			startStateDectTask();
+			for(int i = 0; i < edfaWarnLEDV.size(); i++){
+				setLED(edfaWarnLEDV[i], 2);
+			}
 		}
 	}else {
 		lidar_connect_button->setStyleSheet("color: black");
@@ -3057,6 +3060,11 @@ void viewpanel::procEdfaInfo(uint8_t* data, uint8_t cmd_id)
 	if(cmd_id == sm_mCmd_base){
 		flidar_sm_EDFA_base_st baseInfo;
 		memcpy(&baseInfo, data, LEN_SM_EDFA_BASE);
+		QString vstr = QString("v") + QString::number(baseInfo.hardVer[0]) +  QString(".") +  QString::number(baseInfo.hardVer[1]);
+		edfaDeviceInfoLinesV[0]->setText(vstr);
+		QString vstr_s = QString("v") + QString::number(baseInfo.softVer[0]) +  QString(".") +  QString::number(baseInfo.softVer[1]) \
+		+  QString::number(baseInfo.softVer[2]);
+		edfaDeviceInfoLinesV[1]->setText(vstr_s);
 		
 	} else if(cmd_id == sm_mCmd_stat){
 		flidar_sm_EDFA_stat_st stateInfo;
@@ -3072,6 +3080,47 @@ void viewpanel::procEdfaInfo(uint8_t* data, uint8_t cmd_id)
 	} else if(cmd_id == sm_mCmd_warn){
 		flidar_sm_EDFA_warn_st warnInfo;
 		memcpy(&warnInfo, data, LEN_SM_EDFA_WARN);
+		if(warnInfo.w_mduTemp  > 127){
+			setLED(edfaWarnLEDV[0], 1);
+		} else {
+			setLED(edfaWarnLEDV[0], 2);
+		}
+
+		if(warnInfo.w_seedTemp  > 127){
+			setLED(edfaWarnLEDV[1], 1);
+		}else {
+			setLED(edfaWarnLEDV[1], 2);
+		}
+
+		if(warnInfo.w_powerIn  > 127){
+			setLED(edfaWarnLEDV[2], 1);
+		}else {
+			setLED(edfaWarnLEDV[2], 2);
+		}
+
+		if(warnInfo.w_pumpTemp  > 127){
+			setLED(edfaWarnLEDV[3], 1);
+		}else {
+			setLED(edfaWarnLEDV[3], 2);
+		}
+
+		if(warnInfo.w_pumpPower  > 127){
+			setLED(edfaWarnLEDV[4], 1);
+		}else {
+			setLED(edfaWarnLEDV[4], 2);
+		}
+
+		if(warnInfo.w_seedPower  > 127){
+			setLED(edfaWarnLEDV[5], 1);
+		}else {
+			setLED(edfaWarnLEDV[5], 2);
+		}	
+
+		if(warnInfo.w_saveData  > 127){
+			setLED(edfaWarnLEDV[6], 1);
+		}else {
+			setLED(edfaWarnLEDV[6], 2);
+		}		
 	}
 }
 
