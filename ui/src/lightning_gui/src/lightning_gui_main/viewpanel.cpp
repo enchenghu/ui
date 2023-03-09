@@ -677,7 +677,7 @@ void viewpanel::recvStateInfoloop()
 			printf("read state timeout!\n");
 			continue;
 		} 
-		if(mHead != 0xaa55) continue;;
+		if(mHead != 0x55aa) continue;;
 		ROS_INFO("====recv state info ");
 		ret = ::recv(state_ctrl_sock, stateInfoHead, 9, MSG_WAITALL);
 		if (ret <= 0){
