@@ -336,7 +336,7 @@ void *motor_msg_sender(void *)
         if(ret < 0)
         {
             counter++;
-            if(counter > 8) break;
+            if(counter > 3) break;
         }
         usleep(1000*1000);
     }

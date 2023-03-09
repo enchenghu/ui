@@ -38,6 +38,7 @@ private Q_SLOTS:
     void CtrlPanel_Control();
     void PcPanel_Control();
 	void RecRvizPointcloudControl();
+	void fullScreen();
 
 	void SetTestDescription( void );
 

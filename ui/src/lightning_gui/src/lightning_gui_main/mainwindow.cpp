@@ -329,8 +329,21 @@ void MainWindow::createActions()
 	showPcPanelAct->setCheckable(true);
 	showPcPanelAct->setChecked(true);
 	connect(showPcPanelAct, SIGNAL(triggered()), this, SLOT(PcPanel_Control()));
+
+	QShortcut  *shortcut= new QShortcut(QKeySequence(tr("ctrl+a")), this);
+	connect(shortcut, SIGNAL(activated()), this,SLOT(fullScreen()));
 #endif
 
+}
+
+void MainWindow::fullScreen()
+{
+	static bool showAll = false;
+	viewPanel->ctrlShowWindows(showAll);
+	viewPanel->ctrlPcPanel(showAll);
+	showCtrlDockAct->setChecked(showAll);
+	showPcPanelAct->setChecked(showAll);
+	showAll = !showAll;
 }
 
 void MainWindow::createMenus()
