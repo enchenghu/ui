@@ -174,10 +174,27 @@ typedef struct {
 } flidar_sm_EDFA_stat_st;
 
 typedef struct {
+    uint8_t w_offLine;
+    uint8_t w_mduTemp;      // 模块温度异常         // Bit[7]：1:异常 0:正常；Bit[6~0]: 异常次数
+    uint8_t w_seedTemp;     // 种子激光器温度异常
+    uint8_t w_powerIn;      // 输入功率异常
+    uint8_t w_pumpTemp;     // 泵浦温度异常
+    uint8_t w_pumpPower;    // 泵浦功率异常
+    uint8_t w_seedPower;    // 种子激光器功率异常
+    uint8_t w_saveData;     // 保存数据出错
+} flidar_sm_EDFA_warn_st;
+
+typedef struct {
     flidar_sm_msgFrame_st  header;                        // head：24字节
     flidar_sm_EDFA_stat_st load;   // Payload：1400字节 = 14 * 100
     uint8_t crc;
 } stateMsg; 
+
+typedef struct {
+    flidar_sm_msgFrame_st  header;                        // head：24字节
+    flidar_sm_EDFA_warn_st load;   // Payload：1400字节 = 14 * 100
+    uint8_t crc;
+} warnMsg; 
 
 #pragma pack()
 
@@ -310,12 +327,18 @@ void *motor_msg_sender(void *)
 
 #if state
     stateMsg stateMsg_;
+    warnMsg warnMsg_;
     int counter = 0;
-    stateMsg_.header.frameHead = 0xaa55;
+    stateMsg_.header.frameHead = 0x55aa;
     stateMsg_.header.moduleCode = sm_mCode_EDFA;
     stateMsg_.header.moduleCmd = sm_mCmd_stat;
     stateMsg_.header.dataLen = sizeof(flidar_sm_EDFA_stat_st);
 
+
+    warnMsg_.header.frameHead = 0x55aa;
+    warnMsg_.header.moduleCode = sm_mCode_EDFA;
+    warnMsg_.header.moduleCmd = sm_mCmd_warn;
+    warnMsg_.header.dataLen = sizeof(flidar_sm_EDFA_stat_st);
 
     int sum = 0;
 
@@ -323,16 +346,27 @@ void *motor_msg_sender(void *)
         //memset(motorMsg.data, 0, motorMsg.header.dataLen);
         //int n = recv(motorSocketFd_, &sum, sizeof(int), MSG_WAITALL); 
         //printf("recv motorMsg , ret is %d!\n", n);
-        stateMsg_.load.lhtSrc = sum;
+/*         stateMsg_.load.lhtSrc = sum;
         stateMsg_.load.powerIn = sum + 1;
         stateMsg_.load.powerOut = sum + 2;
         stateMsg_.load.mduTemp = sum + 3;
         stateMsg_.load.pump1thTemp = sum + 4;
         stateMsg_.load.pump1thCurr = sum + 5;
-        stateMsg_.load.pump2thCurr = sum + 6;
+        stateMsg_.load.pump2thCurr = sum + 6; */
+    
+
+        warnMsg_.load.w_offLine = 128;
+        warnMsg_.load.w_mduTemp = 127;
+        warnMsg_.load.w_seedTemp = 128;
+        warnMsg_.load.w_powerIn = 127;
+        warnMsg_.load.w_pumpTemp = 128;
+        warnMsg_.load.w_pumpPower = 127;
+        warnMsg_.load.w_seedPower = 128;
+        warnMsg_.load.w_saveData = 127;
+
         sum++;
-        int ret = write(motorSocketFd_, &stateMsg_, sizeof(stateMsg_));
-        printf("send stateMsg_ , ret is %d!\n", ret);
+        int ret = write(motorSocketFd_, &warnMsg_, sizeof(warnMsg_));
+        printf("send warnMsg_ , ret is %d!\n", ret);
         if(ret < 0)
         {
             counter++;

@@ -3080,7 +3080,7 @@ void viewpanel::procEdfaInfo(uint8_t* data, uint8_t cmd_id)
 	} else if(cmd_id == sm_mCmd_warn){
 		flidar_sm_EDFA_warn_st warnInfo;
 		memcpy(&warnInfo, data, LEN_SM_EDFA_WARN);
-		if(warnInfo.w_mduTemp  > 127){
+		if(warnInfo.w_offLine  > 127){
 			setLED(edfaWarnLEDV[0], 1);
 		} else {
 			setLED(edfaWarnLEDV[0], 2);
