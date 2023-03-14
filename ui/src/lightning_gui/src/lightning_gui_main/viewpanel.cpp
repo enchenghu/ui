@@ -559,7 +559,7 @@ void viewpanel::connectControl(void){
 			msgBox.exec();
 		}else {
 			//configRegLidar();
-			lidar_connect_button->setStyleSheet("color: green");
+			lidar_connect_button->setStyleSheet("QPushButton{background-color:rgba(127, 255, 0, 100);}");
 			lidar_connect_button->setText("&Disconnect");
 			ifStarted = true;
 			startStateDectTask();
@@ -568,7 +568,7 @@ void viewpanel::connectControl(void){
 			}
 		}
 	}else {
-		lidar_connect_button->setStyleSheet("color: black");
+		lidar_connect_button->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}");
 		lidar_connect_button->setText("&Connect");
 		ifStarted = false;
 		ifConnectedStateTcp = false;
@@ -610,9 +610,6 @@ void viewpanel::configPower(void){
 		msgBox.exec();
 		return;
 	}
-	QMessageBox msgBox;
-	msgBox.setText("config power success!");
-	msgBox.exec();
 }
 
 void viewpanel::recvMotorInfoloop()
@@ -740,10 +737,6 @@ void viewpanel::readPower(void){
 			}
 		}
 	}
-	QMessageBox msgBox;
-	msgBox.setText("read power success!");
-	msgBox.exec();
-	return;	
 }
 
 void viewpanel::configCFAR(void){
@@ -798,9 +791,6 @@ void viewpanel::readCFAR(void){
 			}
 		}
 	}
-	QMessageBox msgBox;
-	msgBox.setText("read CFAR success!");
-	msgBox.exec();
 }
 
 void viewpanel::config3DFT(void){
@@ -813,9 +803,6 @@ void viewpanel::config3DFT(void){
 		msgBox.exec();
 		return;
 	}
-	QMessageBox msgBox;
-	msgBox.setText("config 3DFT success!");
-	msgBox.exec();
 }
 
 void viewpanel::read3DFT(void){
@@ -855,9 +842,6 @@ void viewpanel::read3DFT(void){
 			}
 		}
 	}
-	QMessageBox msgBox;
-	msgBox.setText("read 3DFT success!");
-	msgBox.exec();
 }
 
 void viewpanel::configDiff(void){
@@ -870,9 +854,6 @@ void viewpanel::configDiff(void){
 		msgBox.exec();
 		return;
 	}
-	QMessageBox msgBox;
-	msgBox.setText("config Diff success!");
-	msgBox.exec();
 }
 
 int viewpanel::configRegLidar(void)
@@ -929,9 +910,6 @@ void viewpanel::configReg(int index){
 		msgBox.exec();
 		return;
 	}
-	QMessageBox msgBox;
-	msgBox.setText("write register success!");
-	msgBox.exec();
 }
 double viewpanel::fft2dBm(double x){
 	double inputV = x / pow(2, 17);
@@ -971,7 +949,6 @@ void viewpanel::readReg(int index){
 	ss >> cmdMsg_.mCommandVal[0];
 
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
-		regBtnRead[index]->setStyleSheet("color: black");	
 		QMessageBox msgBox;
 		msgBox.setText("read Reg failed!");
 		msgBox.exec();
@@ -1007,9 +984,6 @@ void viewpanel::readReg(int index){
 			}
 		}
 	}
-	QMessageBox msgBox;
-	msgBox.setText("read Reg success!");
-	msgBox.exec();
 }
 
 void viewpanel::readDiff(void){
@@ -2059,6 +2033,7 @@ void viewpanel::CreatUIWindow()
 	QLabel* saveDatalabel = new QLabel( "Select" );
 	QComboBox*saveDataCombo = new QComboBox;
 	saveBtn = new QPushButton("Save PC", this);
+	setButtonStyle(saveBtn);
 	saveDataCombo->addItem(tr("point cloud "));
 	saveDataCombo->addItem(tr("data stream 1"));
 	saveDataCombo->addItem(tr("data stream 2"));
@@ -2096,15 +2071,24 @@ void viewpanel::CreatUIWindow()
     connect( loadDataCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( setLoadFileType( void )));
 	connect( loadBtn, SIGNAL( clicked()), this, SLOT( loadLidarFile( void )));
 	lidar_connect_button = new QPushButton("&Connect", this);
+	setButtonStyle(lidar_connect_button);
 	//lidar_disconnect_button = new QPushButton("Disconnect", this);
 	setSaveBtn = new QPushButton("&Set save folder", this);
+	setButtonStyle(setSaveBtn);
 	pcSwitchBtn = new QPushButton("&Start PC", this);
+	setButtonStyle(pcSwitchBtn);
 	pcOnceBtn = new QPushButton("&PC Single", this);
+	setButtonStyle(pcOnceBtn);
 	pcResetBtn = new QPushButton("&PC Contin", this);
+	setButtonStyle(pcResetBtn);
 	pcBWBtn = new QPushButton("&Bg Color", this);
+	pcBWBtn->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}"
+	//"QPushButton:hover{background-color:rgba(0, 255, 0, 100);border:2px solid black;border-radius:10px;}"
+	"QPushButton:pressed{background-color:rgba(127, 255, 0, 100);}");
 	pcRecordBtn = new QPushButton("&PointCloud Record", this);
+	setButtonStyle(pcRecordBtn);
 	pcProcBtn = new QPushButton("&OneFramePure", this);
-
+	setButtonStyle(pcProcBtn);
 	//lidar_stop_button = new QPushButton("Stop", this);
 	//lidarIdCombo =  new QComboBox;
 
@@ -2161,11 +2145,13 @@ void viewpanel::CreatUIWindow()
 		regVal_line[i]->setText(m_reg_value_[i]);
 		regRead_line[i] = new QLineEdit;
 		regBtnWrite[i] = new QPushButton("&Write", this);
+		setButtonStyle(regBtnWrite[i]);
 		regBtnRead[i] = new QPushButton("&Read", this);
+		setButtonStyle(regBtnRead[i]);
 		setReadOnlyLineEdit(regRead_line[i]);
 	}
 	loadAlgBtn = new QPushButton("&Load Config", this);
-
+	setButtonStyle(loadAlgBtn);
 	adcRead0_line = new QLineEdit;
 	adcRead1_line = new QLineEdit;
 	setReadOnlyLineEdit(adcRead0_line);
@@ -2214,8 +2200,10 @@ void viewpanel::CreatUIWindow()
 		ctlReadLine_.emplace_back(new QLineEdit);
 		setReadOnlyLineEdit(ctlReadLine_[i]);
 		controls_layout->addWidget( ctlWriteBtn_[i], i, 4, Qt::AlignLeft);	
+		setButtonStyle(ctlWriteBtn_[i]);
 		controls_layout->addWidget( ctlReadLine_[i], i, 5, Qt::AlignLeft);			
-		controls_layout->addWidget( ctlReadBtn_[i], i, 6, Qt::AlignLeft);			
+		controls_layout->addWidget( ctlReadBtn_[i], i, 6, Qt::AlignLeft);	
+		setButtonStyle(ctlReadBtn_[i]);
 	}
 	controls_layout->addWidget( regAddr_label, 0, 7, Qt::AlignRight);
 	controls_layout->addWidget( regVal_label, 0, 9, Qt::AlignRight);	
@@ -2694,6 +2682,14 @@ void viewpanel::saveData(){
 // 该函数将label控件变成一个圆形指示灯，需要指定颜色color以及直径size
 // color 0:grey 1:red 2:green 3:yellow
 // size  单位是像素
+
+void viewpanel::setButtonStyle(QPushButton* btn)
+{
+	if(!btn) return;
+	btn->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}"
+	//"QPushButton:hover{background-color:rgba(0, 255, 0, 100);border:2px solid black;border-radius:10px;}"
+	"QPushButton:pressed{background-color:rgba(127, 255, 0, 100);}");
+}
 void viewpanel::setLEDColor(QLabel* label, int color)
 {
     QString background = "background-color:";
@@ -2859,11 +2855,11 @@ void viewpanel::saveDataThead()
 void viewpanel::pcOneFramePure()
 {
 	if(oneFramePure){
-		pcProcBtn->setStyleSheet("color: black");
+		pcProcBtn->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}");
 		pcProcBtn->setText("&OneFramePure");	
 		oneFramePure = false;	
 	} else {
-		pcProcBtn->setStyleSheet("color: green");
+		pcProcBtn->setStyleSheet("QPushButton{background-color:rgba(127, 255, 0, 100);}");
 		pcProcBtn->setText("&OneFrame360");	
 		oneFramePure = true;			
 	}
@@ -2951,7 +2947,7 @@ void viewpanel::udpPcClose(){
 		msgBox.exec();
 		return;
 	}
-	pcSwitchBtn->setStyleSheet("color: black");
+	pcSwitchBtn->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}");
 	pcSwitchBtn->setText("&Start PC");
 }
 
@@ -3911,7 +3907,7 @@ void viewpanel::udpPcConnect() {
 #if 1	
 		startPcTask();
 #endif
-		pcSwitchBtn->setStyleSheet("color: green");
+		pcSwitchBtn->setStyleSheet("QPushButton{background-color:rgba(127, 255, 0, 100);}");
 		pcSwitchBtn->setText("&Close PC");
 	}else{
 		udpPcClose();

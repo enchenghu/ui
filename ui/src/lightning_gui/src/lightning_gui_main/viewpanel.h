@@ -281,6 +281,7 @@ private:
 
 	void setLED(QLabel* label, int color);
 	void setLEDColor(QLabel* label, int color);
+	void setButtonStyle(QPushButton* btn);
 	std::string tohex(uint32_t a);
 	double fft2dBm(double x);
 	void load_settings();
