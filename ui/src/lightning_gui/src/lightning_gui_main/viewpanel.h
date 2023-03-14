@@ -240,6 +240,7 @@ private:
 	void recvMotorInfoloop();
 	void recvStateInfoloop();
 	void procEdfaInfo(uint8_t* data, uint8_t cmd_id);
+	void procNllInfo(uint8_t* data, uint8_t cmd_id);
 
 	void sendSerialBytes(const uint8_t *begin, int size);
 	void udpParseLoop();

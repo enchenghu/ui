@@ -1771,7 +1771,7 @@ void viewpanel::CreatStateDetectWindow()
 	multiWidget2->setLayout(showLayout4);
 	stateDetectTab->addTab(multiWidget4,  "软件系统");
 
-	this->addTab(stateDetectTab,  "State Detect Window");
+	this->addTab(stateDetectTab,  "System Monitor");
 
 }
 
@@ -3080,55 +3080,43 @@ void viewpanel::procEdfaInfo(uint8_t* data, uint8_t cmd_id)
 	} else if(cmd_id == sm_mCmd_warn){
 		flidar_sm_EDFA_warn_st warnInfo;
 		memcpy(&warnInfo, data, LEN_SM_EDFA_WARN);
-		if(warnInfo.w_offLine  > 127){
-			setLED(edfaWarnLEDV[0], 1);
-		} else {
-			setLED(edfaWarnLEDV[0], 2);
+		uint8_t* ptr_o  = (uint8_t*)&warnInfo;
+		for(int i = 0; i < sizeof(flidar_sm_EDFA_warn_st); i++) {
+			if(*(ptr_o + i)  > 127){
+				setLED(edfaWarnLEDV[i], 1);
+			} else {
+				setLED(edfaWarnLEDV[i], 2);
+			}
 		}
-
-		if(warnInfo.w_mduTemp  > 127){
-			setLED(edfaWarnLEDV[1], 1);
-		} else {
-			setLED(edfaWarnLEDV[1 +0], 2);
-		}
-
-		if(warnInfo.w_seedTemp  > 127){
-			setLED(edfaWarnLEDV[1 +1], 1);
-		}else {
-			setLED(edfaWarnLEDV[1 +1], 2);
-		}
-
-		if(warnInfo.w_powerIn  > 127){
-			setLED(edfaWarnLEDV[1 +2], 1);
-		}else {
-			setLED(edfaWarnLEDV[1 +2], 2);
-		}
-
-		if(warnInfo.w_pumpTemp  > 127){
-			setLED(edfaWarnLEDV[1 +3], 1);
-		}else {
-			setLED(edfaWarnLEDV[1 +3], 2);
-		}
-
-		if(warnInfo.w_pumpPower  > 127){
-			setLED(edfaWarnLEDV[1 +4], 1);
-		}else {
-			setLED(edfaWarnLEDV[1 +4], 2);
-		}
-
-		if(warnInfo.w_seedPower  > 127){
-			setLED(edfaWarnLEDV[1 +5], 1);
-		}else {
-			setLED(edfaWarnLEDV[1 +5], 2);
-		}	
-
-		if(warnInfo.w_saveData  > 127){
-			setLED(edfaWarnLEDV[1 +6], 1);
-		}else {
-			setLED(edfaWarnLEDV[1 +6], 2);
-		}		
 	}
 }
+
+
+void viewpanel::procNllInfo(uint8_t* data, uint8_t cmd_id)
+{
+	if(cmd_id == sm_mCmd_base){
+/* 		flidar_sm_EDFA_base_st baseInfo;
+		memcpy(&baseInfo, data, LEN_SM_EDFA_BASE);
+		QString vstr = QString("v") + QString::number(baseInfo.hardVer[0]) +  QString(".") +  QString::number(baseInfo.hardVer[1]);
+		edfaDeviceInfoLinesV[0]->setText(vstr);
+		QString vstr_s = QString("v") + QString::number(baseInfo.softVer[0]) +  QString(".") +  QString::number(baseInfo.softVer[1]) \
+		+  QString::number(baseInfo.softVer[2]);
+		edfaDeviceInfoLinesV[1]->setText(vstr_s); */
+	} else if(cmd_id == sm_mCmd_stat){
+/* 		flidar_sm_EDFA_stat_st stateInfo;
+		memcpy(&stateInfo, data, LEN_SM_EDFA_STAT);
+		edfaStateLinesV[0]->setText(QString::number(stateInfo.lhtSrc));
+		edfaStateLinesV[1]->setText(QString::number(stateInfo.powerIn));
+		edfaStateLinesV[2]->setText(QString::number(stateInfo.powerOut));
+		edfaStateLinesV[3]->setText(QString::number(stateInfo.mduTemp / 100.0));
+		edfaStateLinesV[4]->setText(QString::number(stateInfo.pump1thTemp / 100.0));
+		edfaStateLinesV[5]->setText(QString::number(stateInfo.pump1thCurr));
+		edfaStateLinesV[6]->setText(QString::number(stateInfo.pump2thCurr)); */
+	} else if(cmd_id == sm_mCmd_warn){
+	
+	}
+}
+
 
 
 void viewpanel::updateState()

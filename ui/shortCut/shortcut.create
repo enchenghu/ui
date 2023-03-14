@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# $ xprop | grep WM_CLASS
+# WM_CLASS(STRING) = "lightning_gui", "FMCW Lidar ROS GUI"
+
 # create flidar_ui.desktop
 echo "[Desktop Entry]
 Encoding=UTF-8
@@ -8,12 +11,13 @@ Icon=${PWD}/flidar_ui.icon
 Exec=bash ${PWD}/flidar_ui.boot
 Type=Application
 Terminal=true
-StartupNotify=true" > flidar_ui.desktop
+StartupNotify=true
+StartupWMClass=lightning_gui" > flidar_ui.desktop
 chmod 777 flidar_ui.desktop
 
 # create flidar_ui.desktop link
-sudo rm -f /usr/share/applications/fluid.desktop
-sudo ln -s ${PWD}/flidar_ui.desktop /usr/share/applications/fluid.desktop
+sudo rm -f /usr/share/applications/flidar_ui.desktop
+sudo ln -s ${PWD}/flidar_ui.desktop /usr/share/applications/flidar_ui.desktop
 
 # create flidar.boot
 echo "#!/bin/bash
@@ -25,4 +29,3 @@ chmod 777 flidar_ui.boot
 
 # reboot
 sudo reboot
-
