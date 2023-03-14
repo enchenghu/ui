@@ -749,9 +749,6 @@ void viewpanel::configCFAR(void){
 		msgBox.exec();
 		return;
 	}
-	QMessageBox msgBox;
-	msgBox.setText("config CFAR success!");
-	msgBox.exec();
 }
 
 void viewpanel::readCFAR(void){
@@ -1024,9 +1021,6 @@ void viewpanel::readDiff(void){
 			}
 		}
 	}
-	QMessageBox msgBox;
-	msgBox.setText("read diff success!");
-	msgBox.exec();
 }
 
 void viewpanel::printView(  )
