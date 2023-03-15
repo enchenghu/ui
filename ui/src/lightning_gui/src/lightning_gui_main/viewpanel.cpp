@@ -245,9 +245,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	speed_min = 0.0;
 	speed_max = 0.0;
 
-	power_index = {0, 12, 20, 70, 290, 346, 347, 
-				   397, 415, 500, 510, 560, 625, 1000, 
-				   1130, 1450, 1580, 1600, 3000, 20000};
+	power_index = {0, 12, 1600, 3000, 20000};
 	load_settings();
 	CreatUIWindow();
 	CreatDebugWindow();
@@ -602,7 +600,7 @@ void viewpanel::configPower(void){
 		msgBox.exec();
 		return;		
 	}
-	cmdMsg_.mCommandVal[0] = str.toInt();
+	cmdMsg_.mCommandVal[0] = (uint32_t)(str.toDouble() * 10);
 	cmdMsg_.mHead.usCommand = commandType::POWER_WRITE;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
@@ -1893,16 +1891,16 @@ void viewpanel::CreatConnect()
 {
 	connect(lidar_connect_button, SIGNAL(clicked()), this, SLOT( connectControl( void )));
 	connect(ctlWriteBtn_[0], SIGNAL(clicked()), this, SLOT( configPower( void )));
-	connect(ctlWriteBtn_[1], SIGNAL(clicked()), this, SLOT( configCFAR( void )));
+/* 	connect(ctlWriteBtn_[1], SIGNAL(clicked()), this, SLOT( configCFAR( void )));
 	connect(ctlWriteBtn_[2], SIGNAL(clicked()), this, SLOT( config3DFT( void )));
-	connect(ctlWriteBtn_[3], SIGNAL(clicked()), this, SLOT( configDiff( void )));
+	connect(ctlWriteBtn_[3], SIGNAL(clicked()), this, SLOT( configDiff( void ))); */
 	connect(saveBtn, SIGNAL(clicked()), this, SLOT( saveDataThead( void )));
 	connect(setSaveBtn, SIGNAL(clicked()), this, SLOT( setSaveFolder( void )));
 	connect(settingADCSavebutton, SIGNAL(clicked()), this, SLOT( udpConnect( void )));
 	connect(ctlReadBtn_[0], SIGNAL(clicked()), this, SLOT( readPower( void )));
-	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
+/* 	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
 	connect(ctlReadBtn_[2], SIGNAL(clicked()), this, SLOT( read3DFT( void )));
-	connect(ctlReadBtn_[3], SIGNAL(clicked()), this, SLOT( readDiff( void )));
+	connect(ctlReadBtn_[3], SIGNAL(clicked()), this, SLOT( readDiff( void ))); */
     connect( axes_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configAxesSize( void )));
     connect( cell_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configCellSize( void )));
     connect( point_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configPointSize( void )));
@@ -2168,9 +2166,9 @@ void viewpanel::CreatUIWindow()
 	}
 
 	for (int i = 0; i < power_index.size(); i++){
-		PowerCombo->addItem(QString::number(power_index[i]));
+		PowerCombo->addItem(QString::number(power_index[i] / 10.0));
 	}
-	PowerCombo->setCurrentIndex(18);
+	PowerCombo->setCurrentIndex(0);
 
 	m3DFTCombo->addItem(tr("0"));
 	m3DFTCombo->addItem(tr("1"));
@@ -2179,24 +2177,29 @@ void viewpanel::CreatUIWindow()
 	DiffCombo->addItem(tr("1"));
 
 	controls_layout->addWidget( Power_label, 0, 2, Qt::AlignRight);	
-	controls_layout->addWidget( CFAR_label, 1, 2, Qt::AlignRight);			
+	//Power_label->setFixedSize(100,30);
+	Power_label->setFont(QFont("微软雅黑", 12));
+/* 	controls_layout->addWidget( CFAR_label, 1, 2, Qt::AlignRight);			
 	controls_layout->addWidget( m3DFT_label, 2, 2, Qt::AlignRight);			
-	controls_layout->addWidget( diff_label, 3, 2, Qt::AlignRight);	
+	controls_layout->addWidget( diff_label, 3, 2, Qt::AlignRight);	 */
 
 	controls_layout->addWidget( PowerCombo, 0, 3, Qt::AlignLeft);	
-	controls_layout->addWidget( CFARCombo, 1, 3, Qt::AlignLeft);			
+	PowerCombo->setFixedSize(100,30);
+/* 	controls_layout->addWidget( CFARCombo, 1, 3, Qt::AlignLeft);			
 	controls_layout->addWidget( m3DFTCombo, 2, 3, Qt::AlignLeft);			
 	controls_layout->addWidget( DiffCombo, 3, 3, Qt::AlignLeft);	
-
-	for(int i = 0; i < 4; i++){
+ */
+	for(int i = 0; i < 1; i++){
 		ctlWriteBtn_.emplace_back(new QPushButton("&Cfg", this));
 		ctlReadBtn_.emplace_back(new QPushButton("&Read", this));
 		ctlReadLine_.emplace_back(new QLineEdit);
 		setReadOnlyLineEdit(ctlReadLine_[i]);
 		controls_layout->addWidget( ctlWriteBtn_[i], i, 4, Qt::AlignLeft);	
+		ctlWriteBtn_[i]->setFixedSize(100,30);
 		setButtonStyle(ctlWriteBtn_[i]);
 		controls_layout->addWidget( ctlReadLine_[i], i, 5, Qt::AlignLeft);			
 		controls_layout->addWidget( ctlReadBtn_[i], i, 6, Qt::AlignLeft);	
+		ctlReadBtn_[i]->setFixedSize(100,30);
 		setButtonStyle(ctlReadBtn_[i]);
 	}
 	controls_layout->addWidget( regAddr_label, 0, 7, Qt::AlignRight);
