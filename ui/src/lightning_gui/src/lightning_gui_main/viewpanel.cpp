@@ -2857,7 +2857,7 @@ void viewpanel::pcOneFramePure()
 		oneFramePure = false;	
 	} else {
 		pcProcBtn->setStyleSheet("QPushButton{background-color:rgba(127, 255, 0, 100);}");
-		pcProcBtn->setText("&OneFrame360");	
+		pcProcBtn->setText("&OneFrame  360");	
 		oneFramePure = true;			
 	}
 
@@ -3558,6 +3558,15 @@ void viewpanel::sendMotorPidCmd()
 	if(ifConnectedMotorSerial){
 		sendSerialBytes((uint8_t *)&motorMsgPidSet_, sizeof(motorMsgPidSet_));
 	}
+	if(ifConnectedMotorTcp){
+		if(::write(motor_ctrl_sock, &motorMsgPidSet_, sizeof(motorMsgPidSet_)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("sendMotorPidCmd failed!");
+			msgBox.exec();
+			return;
+		}	
+		ROS_INFO("sendMotorPidCmd ok");	
+	}
 }
 
 void viewpanel::sendMotorWorkModeCmd()
@@ -3590,6 +3599,16 @@ void viewpanel::sendMotorWorkModeCmd()
 	if(ifConnectedMotorSerial){
 		sendSerialBytes((uint8_t *)&motorMsgWorkMode_, sizeof(motorMsgWorkMode_));
 	}
+
+	if(ifConnectedMotorTcp){
+		if(::write(motor_ctrl_sock, &motorMsgWorkMode_, sizeof(motorMsgWorkMode_)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("sendMotorWorkModeCmdg failed!");
+			msgBox.exec();
+			return;
+		}	
+		ROS_INFO("sendMotorWorkModeCmd ok");	
+	}
 }
 
 void viewpanel::sendMotorDisplayCycleCmd()
@@ -3606,6 +3625,15 @@ void viewpanel::sendMotorDisplayCycleCmd()
 	if(ifConnectedMotorSerial){
 		sendSerialBytes((uint8_t *)&motorMsgShowCycle_, sizeof(motorMsgShowCycle_));
 	}
+	if(ifConnectedMotorTcp){
+		if(::write(motor_ctrl_sock, &motorMsgShowCycle_, sizeof(motorMsgShowCycle_)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("sendMotorDisplayCycleCmd failed!");
+			msgBox.exec();
+			return;
+		}	
+		ROS_INFO("sendMotorDisplayCycleCmd ok");	
+	}
 }
 
 void viewpanel::readMotorShowItems()
@@ -3619,6 +3647,15 @@ void viewpanel::readMotorShowItems()
 								motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
 	if(ifConnectedMotorSerial){
 		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
+	}
+	if(ifConnectedMotorTcp){
+		if(::write(motor_ctrl_sock, &motorMsgSend_, sizeof(motorMsgSend_)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("readMotorShowItems failed!");
+			msgBox.exec();
+			return;
+		}	
+		ROS_INFO("readMotorShowItems ok");	
 	}
 }
 void viewpanel::motorItemsShow(int index)
@@ -3639,6 +3676,15 @@ void viewpanel::readMotorWorkMode()
 	if(ifConnectedMotorSerial){
 		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
 	}
+	if(ifConnectedMotorTcp){
+		if(::write(motor_ctrl_sock, &motorMsgSend_, sizeof(motorMsgSend_)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("readMotorWorkMode failed!");
+			msgBox.exec();
+			return;
+		}	
+		ROS_INFO("readMotorWorkMode ok");	
+	}
 }
 
 void viewpanel::readSoftVersion()
@@ -3653,6 +3699,15 @@ void viewpanel::readSoftVersion()
 	if(ifConnectedMotorSerial){
 		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
 	}
+	if(ifConnectedMotorTcp){
+		if(::write(motor_ctrl_sock, &motorMsgSend_, sizeof(motorMsgSend_)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("readSoftVersion failed!");
+			msgBox.exec();
+			return;
+		}	
+		ROS_INFO("readSoftVersion ok");	
+	}
 }
 void viewpanel::readHardVersion()
 {
@@ -3665,6 +3720,15 @@ void viewpanel::readHardVersion()
 								motorMsgSend_.header.dataLen + motorMsgSend_.tailer.count;
 	if(ifConnectedMotorSerial){
 		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
+	}
+	if(ifConnectedMotorTcp){
+		if(::write(motor_ctrl_sock, &motorMsgSend_, sizeof(motorMsgSend_)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("readHardVersion failed!");
+			msgBox.exec();
+			return;
+		}	
+		ROS_INFO("readHardVersion ok");	
 	}
 }
 
@@ -3680,7 +3744,17 @@ void viewpanel::readMotorPid()
 	if(ifConnectedMotorSerial){
 		sendSerialBytes((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
 	}	
+	if(ifConnectedMotorTcp){
+		if(::write(motor_ctrl_sock, &motorMsgSend_, sizeof(motorMsgSend_)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("readMotorPid failed!");
+			msgBox.exec();
+			return;
+		}	
+		ROS_INFO("readMotorPid ok");	
+	}
 }
+
 void viewpanel::sendSerialBytes(const uint8_t *begin, int size)
 {
 	int count = 0;
@@ -3707,10 +3781,6 @@ void viewpanel::sendMotorOpenCmd()
 		motorMsgSend1_.tailer.count = 0x01;
 		motorMsgSend1_.tailer.crc = motorMsgSend1_.header.cmd + motorMsgSend1_.header.dataLen +  motorMsgSend1_.data + \
 									motorMsgSend1_.header.motor_index + motorMsgSend1_.tailer.count;
-
-		if(ifConnectedMotorSerial){
-			sendSerialBytes((uint8_t *)&motorMsgSend1_, sizeof(motorMsgSend1_));
-		}	
 	}else{
 		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_OPEN;
 		motorMsgSend1_.header.mHead = 0xaa55;
@@ -3720,9 +3790,19 @@ void viewpanel::sendMotorOpenCmd()
 		motorMsgSend1_.tailer.count = 0x01;
 		motorMsgSend1_.tailer.crc = motorMsgSend1_.header.cmd + motorMsgSend1_.header.dataLen +  motorMsgSend1_.data + \
 									motorMsgSend1_.header.motor_index + motorMsgSend1_.tailer.count;
-		if(ifConnectedMotorSerial){
-			sendSerialBytes((uint8_t *)&motorMsgSend1_, sizeof(motorMsgSend1_));
-		}
+	}
+
+	if(ifConnectedMotorSerial){
+		sendSerialBytes((uint8_t *)&motorMsgSend1_, sizeof(motorMsgSend1_));
+	}
+	if(ifConnectedMotorTcp){
+		if(::write(motor_ctrl_sock, &motorMsgSend1_, sizeof(motorMsgSend1_)) < 0){
+			QMessageBox msgBox;
+			msgBox.setText("sendMotorOpenCmd failed!");
+			msgBox.exec();
+			return;
+		}	
+		ROS_INFO("sendMotorOpenCmd ok");	
 	}
 }
 
