@@ -1897,7 +1897,7 @@ void viewpanel::CreatConnect()
 	connect(saveBtn, SIGNAL(clicked()), this, SLOT( saveDataThead( void )));
 	connect(setSaveBtn, SIGNAL(clicked()), this, SLOT( setSaveFolder( void )));
 	connect(settingADCSavebutton, SIGNAL(clicked()), this, SLOT( udpConnect( void )));
-	connect(ctlReadBtn_[0], SIGNAL(clicked()), this, SLOT( readPower( void )));
+	//connect(ctlReadBtn_[0], SIGNAL(clicked()), this, SLOT( readPower( void )));
 /* 	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
 	connect(ctlReadBtn_[2], SIGNAL(clicked()), this, SLOT( read3DFT( void )));
 	connect(ctlReadBtn_[3], SIGNAL(clicked()), this, SLOT( readDiff( void ))); */
@@ -2191,17 +2191,24 @@ void viewpanel::CreatUIWindow()
  */
 	for(int i = 0; i < 1; i++){
 		ctlWriteBtn_.emplace_back(new QPushButton("&Cfg", this));
-		ctlReadBtn_.emplace_back(new QPushButton("&Read", this));
+/* 		ctlReadBtn_.emplace_back(new QPushButton("&Read", this));
 		ctlReadLine_.emplace_back(new QLineEdit);
-		setReadOnlyLineEdit(ctlReadLine_[i]);
+		setReadOnlyLineEdit(ctlReadLine_[i]); */
 		controls_layout->addWidget( ctlWriteBtn_[i], i, 4, Qt::AlignLeft);	
 		ctlWriteBtn_[i]->setFixedSize(100,30);
 		setButtonStyle(ctlWriteBtn_[i]);
-		controls_layout->addWidget( ctlReadLine_[i], i, 5, Qt::AlignLeft);			
+/* 		controls_layout->addWidget( ctlReadLine_[i], i, 5, Qt::AlignLeft);			
 		controls_layout->addWidget( ctlReadBtn_[i], i, 6, Qt::AlignLeft);	
 		ctlReadBtn_[i]->setFixedSize(100,30);
-		setButtonStyle(ctlReadBtn_[i]);
+		setButtonStyle(ctlReadBtn_[i]); */
 	}
+	for(int i = 0; i < 2; i++){
+		ctlReadLine_.emplace_back(new QLineEdit);
+		setReadOnlyLineEdit(ctlReadLine_[i]); 
+		controls_layout->addWidget( new QLabel(edfaStateName[1 + i].c_str()), i, 5, Qt::AlignRight);			
+		controls_layout->addWidget( ctlReadLine_[i], i, 6, Qt::AlignLeft);	
+	}
+
 	controls_layout->addWidget( regAddr_label, 0, 7, Qt::AlignRight);
 	controls_layout->addWidget( regVal_label, 0, 9, Qt::AlignRight);	
 
@@ -3066,7 +3073,11 @@ void viewpanel::procEdfaInfo(uint8_t* data, uint8_t cmd_id)
 		memcpy(&stateInfo, data, LEN_SM_EDFA_STAT);
 		edfaStateLinesV[0]->setText(QString::number(stateInfo.lhtSrc));
 		edfaStateLinesV[1]->setText(QString::number(stateInfo.powerIn));
+		ctlReadLine_[0]->setText(QString::number(stateInfo.powerIn));
+
 		edfaStateLinesV[2]->setText(QString::number(stateInfo.powerOut));
+		ctlReadLine_[1]->setText(QString::number(stateInfo.powerOut));
+
 		edfaStateLinesV[3]->setText(QString::number(stateInfo.mduTemp / 100.0));
 		edfaStateLinesV[4]->setText(QString::number(stateInfo.pump1thTemp / 100.0));
 		edfaStateLinesV[5]->setText(QString::number(stateInfo.pump1thCurr));
