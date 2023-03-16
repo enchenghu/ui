@@ -2065,7 +2065,9 @@ void viewpanel::CreatUIWindow()
 	lidar_connect_button = new QPushButton("&Connect", this);
 	setButtonStyle(lidar_connect_button);
 	//lidar_disconnect_button = new QPushButton("Disconnect", this);
-	setSaveBtn = new QPushButton("&Set save folder", this);
+	setSaveBtn = new QPushButton("&save folder", this);
+	setSaveBtn->setFixedSize(70,25);
+	setSaveBtn->setFont(QFont("微软雅黑", 10.5));
 	setButtonStyle(setSaveBtn);
 	pcSwitchBtn = new QPushButton("&Start PC", this);
 	setButtonStyle(pcSwitchBtn);
@@ -2091,9 +2093,13 @@ void viewpanel::CreatUIWindow()
 	QLabel* pcPort_label = new QLabel( "PointCloud port" );
 
 	ip_edit =  new QLineEdit();
+	ip_edit->setFixedSize(70,25);
 	port_edit =  new QLineEdit();
+	port_edit->setFixedSize(70,25);
 	udp_pc_port_edit =  new QLineEdit();
+	udp_pc_port_edit->setFixedSize(70,25);
 	udp_port_edit =  new QLineEdit();
+	udp_port_edit->setFixedSize(70,25);
 
 	distance_Offset_edit = new QLineEdit();
 
@@ -2178,13 +2184,14 @@ void viewpanel::CreatUIWindow()
 
 	controls_layout->addWidget( Power_label, 0, 2, Qt::AlignRight);	
 	//Power_label->setFixedSize(100,30);
-	Power_label->setFont(QFont("微软雅黑", 12));
+	Power_label->setFont(QFont("微软雅黑", 10.5));
+	Power_label->setFixedSize(70,25);
 /* 	controls_layout->addWidget( CFAR_label, 1, 2, Qt::AlignRight);			
 	controls_layout->addWidget( m3DFT_label, 2, 2, Qt::AlignRight);			
 	controls_layout->addWidget( diff_label, 3, 2, Qt::AlignRight);	 */
 
 	controls_layout->addWidget( PowerCombo, 0, 3, Qt::AlignLeft);	
-	PowerCombo->setFixedSize(100,30);
+	PowerCombo->setFixedSize(70,25);
 /* 	controls_layout->addWidget( CFARCombo, 1, 3, Qt::AlignLeft);			
 	controls_layout->addWidget( m3DFTCombo, 2, 3, Qt::AlignLeft);			
 	controls_layout->addWidget( DiffCombo, 3, 3, Qt::AlignLeft);	
@@ -2195,7 +2202,7 @@ void viewpanel::CreatUIWindow()
 		ctlReadLine_.emplace_back(new QLineEdit);
 		setReadOnlyLineEdit(ctlReadLine_[i]); */
 		controls_layout->addWidget( ctlWriteBtn_[i], i, 4, Qt::AlignLeft);	
-		ctlWriteBtn_[i]->setFixedSize(100,30);
+		ctlWriteBtn_[i]->setFixedSize(70,30);
 		setButtonStyle(ctlWriteBtn_[i]);
 /* 		controls_layout->addWidget( ctlReadLine_[i], i, 5, Qt::AlignLeft);			
 		controls_layout->addWidget( ctlReadBtn_[i], i, 6, Qt::AlignLeft);	
@@ -2205,6 +2212,7 @@ void viewpanel::CreatUIWindow()
 	for(int i = 0; i < 2; i++){
 		ctlReadLine_.emplace_back(new QLineEdit);
 		setReadOnlyLineEdit(ctlReadLine_[i]); 
+		ctlReadLine_[i]->setFixedSize(70,30);
 		controls_layout->addWidget( new QLabel(edfaStateName[1 + i].c_str()), i, 5, Qt::AlignRight);			
 		controls_layout->addWidget( ctlReadLine_[i], i, 6, Qt::AlignLeft);	
 	}
