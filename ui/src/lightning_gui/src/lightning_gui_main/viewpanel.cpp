@@ -1656,7 +1656,7 @@ void viewpanel::CreatMotorWindow()
 	main_show->addLayout(motorDebugLayout, 0, 1);
 
 	multiWidget_new->setLayout(main_show);
-	this->addTab(multiWidget_new,  "Motor Debug Mainwindow");
+	this->addTab(multiWidget_new,  "Motor Debug");
 }
 
 void viewpanel::CreatStateDetectWindow()
@@ -1791,7 +1791,7 @@ void viewpanel::CreatADCWindow()
 	main_show->addLayout(adcSettingLayout, 0, 1);
 
 	multiWidget_new->setLayout(main_show);
-	this->addTab(multiWidget_new,  "ADC Debug Mainwindow");
+	this->addTab(multiWidget_new,  "ADC Debug");
 }
 
 
@@ -1883,7 +1883,7 @@ void viewpanel::CreatDebugWindow()
 
 	multiWidget_new->setLayout(main_show);
 
-	this->addTab(multiWidget_new,  "FFT Debug Mainwindow");
+	this->addTab(multiWidget_new,  "FFT Debug");
 
 }
 
@@ -2350,7 +2350,7 @@ void viewpanel::CreatUIWindow()
 	mainLayout->addWidget ( render_panel_, 1, 0, 5, 5);
 	mainLayout->addWidget ( selection_panel_, 1, 0, 5, 1, Qt::AlignLeft);
 	multiWidget->setLayout(mainLayout);
-	this->addTab(multiWidget,  "Lidar Ui Mainwindow");
+	this->addTab(multiWidget,  "Lidar Control");
 }
 
 void viewpanel::setSaveFolder()
