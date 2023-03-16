@@ -724,7 +724,7 @@ void viewpanel::readPower(void){
 			continue;
 		} else {
 			if (cmdMsg.mHead.usCommand == commandType::POWER_READ){
-				double power = cmdMsg.mCommandVal[0] / 100.0;
+				double power = cmdMsg.mCommandVal[0] / 10.0;
 				ctlReadLine_[0]->setText(QString::number(power));
 				break;
 			} else {
@@ -2880,7 +2880,8 @@ void viewpanel::pcRecord(){
 		cmd = "rosbag record -o " + pcRecordPath + pointcloud_topic + node_name;
 		int ret = system(cmd.c_str());
 		recording = true;
-		pcRecordBtn->setStyleSheet("color: red");
+		//pcRecordBtn->setStyleSheet("color: red");
+		pcRecordBtn->setStyleSheet("QPushButton{background-color:rgba(255, 0, 0, 100);}");
 		pcRecordBtn->setText("&Recording");
 	} else {
 		ros::V_string v_nodes;
@@ -2898,7 +2899,8 @@ void viewpanel::pcRecord(){
 			return;
 		}
 		recording = false;
-		pcRecordBtn->setStyleSheet("color: black");
+		//pcRecordBtn->setStyleSheet("color: black");
+		pcRecordBtn->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}");
 		pcRecordBtn->setText("&PointCloud Record");
 	}
 }
