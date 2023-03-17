@@ -642,6 +642,7 @@ void viewpanel::recvMotorInfoloop()
 		ret = ::recv(motor_ctrl_sock, ptr_msg->data + 5, dataLen, MSG_WAITALL);
 		if (ret <= 0){
 			printf("read MotorInfo timeout!\n");
+			motorMsg_free_buf_queue.put(ptr_msg);
 			continue;
 		} 
 		memcpy(ptr_msg->data, &mHead, 2);
@@ -2347,8 +2348,27 @@ void viewpanel::CreatUIWindow()
 	for(int i = 1; i < 2;i++)
 		controls->setColumnStretch(i,2);
 #endif
+
 	ctrlDockWidget->setLayout(controls);
+/* 	QString pic_name = "/home/encheng/data/autox.jpg";
+	QPalette pa(ctrlDockWidget->palette()); 
+ 	QImage img = QImage(pic_name);
+    img = img.scaled(ctrlDockWidget->size());
+    QBrush *pic = new QBrush(img);
+    pa.setBrush(QPalette::Window,*pic); */
+
+/* 	QPixmap pixmap = QPixmap("/home/encheng/data/2.JPG").scaled(ctrlDock->size());//定义一个QPixmap图片变量，选择要显示的背景图所在的路径，scaled表示控制背景图进行缩放为窗体的大小
+	QPalette palette(ctrlDock->palette()); //定义一个QPalette图刷工具的变量，然后在当下窗口里面使用调色板
+	palette.setBrush(QPalette::Window,QBrush(pixmap));//使用画刷setBrush去画这个图片
+	ctrlDock->setPalette(palette);	//画完就在当下窗体显示
+	ctrlDock->setAutoFillBackground(true); */
+
 	ctrlDock->setWidget(ctrlDockWidget);
+
+/* 	QPalette pal =ctrlDock->palette();
+	pal.setBrush(QPalette::Background,QBrush(QPixmap("/home/encheng/data/autox.jpg")));
+	ctrlDock->setPalette(pal);
+	ctrlDock->setAutoFillBackground(true); */
 
 #if 0
 	QWidget* stateWidget = new QWidget();
