@@ -245,7 +245,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	speed_min = 0.0;
 	speed_max = 0.0;
 
-	power_index = {0, 12, 1600, 3000, 20000};
+	power_index = {0, 12, 1600, 3000, 5000, 10000, 20000};
 	load_settings();
 	CreatUIWindow();
 	CreatDebugWindow();
@@ -2087,9 +2087,9 @@ void viewpanel::CreatUIWindow()
 	//lidar_stop_button = new QPushButton("Stop", this);
 	//lidarIdCombo =  new QComboBox;
 
-	QLabel* lidar_IP_label = new QLabel( "IP addr" );
-	QLabel* lidar_port_label = new QLabel( "TCP Port" );
-	QLabel* lidar_udp_port_label = new QLabel( "UDP Port" );
+	QLabel* lidar_IP_label = new QLabel( "Lidar IP addr" );
+	QLabel* lidar_port_label = new QLabel( "Lidar Ctrl Port" );
+	QLabel* lidar_udp_port_label = new QLabel( "FFT-ADC Port" );
 	QLabel* distanceOffset_label = new QLabel( "distance Offset" );
 	QLabel* pcPort_label = new QLabel( "PointCloud port" );
 

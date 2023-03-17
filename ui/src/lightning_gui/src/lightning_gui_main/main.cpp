@@ -552,8 +552,8 @@ int main(int argc, char **argv)
 	ros::Time::init();
 #if 1
 	QApplication app(argc, argv);
-	QCoreApplication::setOrganizationName("FMCW Lidar");
-	QCoreApplication::setApplicationName("FMCW Lidar ROS GUI");
+	QCoreApplication::setOrganizationName("Lightning Lidar");
+	QCoreApplication::setApplicationName("Lightning Lidar ROS GUI");
 	QCoreApplication::setApplicationVersion(QT_VERSION_STR);
 	QCommandLineParser parser;
 	parser.setApplicationDescription(QCoreApplication::applicationName());
