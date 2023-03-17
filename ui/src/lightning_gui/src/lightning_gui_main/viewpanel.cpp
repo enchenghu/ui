@@ -2079,7 +2079,8 @@ void viewpanel::CreatUIWindow()
 	pcBWBtn->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}"
 	//"QPushButton:hover{background-color:rgba(0, 255, 0, 100);border:2px solid black;border-radius:10px;}"
 	"QPushButton:pressed{background-color:rgba(127, 255, 0, 100);}");
-	pcRecordBtn = new QPushButton("&PointCloud Record", this);
+	pcRecordBtn = new QPushButton("&Record", this);
+	pcRecordBtn->setFixedSize(70,25);
 	setButtonStyle(pcRecordBtn);
 	pcProcBtn = new QPushButton("&OneFramePure", this);
 	setButtonStyle(pcProcBtn);
@@ -2102,6 +2103,7 @@ void viewpanel::CreatUIWindow()
 	udp_port_edit->setFixedSize(70,25);
 
 	distance_Offset_edit = new QLineEdit();
+	distance_Offset_edit->setFixedSize(70,25);
 
 	ip_edit->setPlaceholderText("input ip addr");
 	ip_edit->setText(lidar_ip_);
@@ -2160,6 +2162,7 @@ void viewpanel::CreatUIWindow()
 	m3DFTCombo = new QComboBox;
 	PowerCombo = new QComboBox;
 	colorCombo = new QComboBox;
+	colorCombo->setFixedSize(90,25);
 	colorCombo->addItem(tr("range"));
 	colorCombo->addItem(tr("intensity"));
 	colorCombo->addItem(tr("speed"));
@@ -2185,7 +2188,6 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( Power_label, 0, 2, Qt::AlignRight);	
 	//Power_label->setFixedSize(100,30);
 	Power_label->setFont(QFont("微软雅黑", 10.5));
-	Power_label->setFixedSize(70,25);
 /* 	controls_layout->addWidget( CFAR_label, 1, 2, Qt::AlignRight);			
 	controls_layout->addWidget( m3DFT_label, 2, 2, Qt::AlignRight);			
 	controls_layout->addWidget( diff_label, 3, 2, Qt::AlignRight);	 */
@@ -2209,11 +2211,12 @@ void viewpanel::CreatUIWindow()
 		ctlReadBtn_[i]->setFixedSize(100,30);
 		setButtonStyle(ctlReadBtn_[i]); */
 	}
-	for(int i = 0; i < 2; i++){
+	for(int i = 0; i < 4; i++){
 		ctlReadLine_.emplace_back(new QLineEdit);
 		setReadOnlyLineEdit(ctlReadLine_[i]); 
-		ctlReadLine_[i]->setFixedSize(70,30);
-		controls_layout->addWidget( new QLabel(edfaStateName[1 + i].c_str()), i, 5, Qt::AlignRight);			
+		ctlReadLine_[i]->setFixedSize(70,25);
+		QString name = QString("EDFA ") + QString(edfaStateName[i].c_str());
+		controls_layout->addWidget( new QLabel(name), i, 5, Qt::AlignLeft);			
 		controls_layout->addWidget( ctlReadLine_[i], i, 6, Qt::AlignLeft);	
 	}
 
@@ -2232,29 +2235,35 @@ void viewpanel::CreatUIWindow()
 
 	QLabel* rotate_label = new QLabel( "rotate angle" );
 	rotate_angle_edit = new QLineEdit;
+	rotate_angle_edit->setFixedSize(70,25);
 	rotate_angle_edit->setText(QString::number(rotation_offset));
 	QLabel* left_label = new QLabel( "left angle" );
 	left_angle_edit = new QLineEdit;
+	left_angle_edit->setFixedSize(70,25);
 	left_angle_edit->setText(QString::number(leftAngle_offset));
 	QLabel* right_label = new QLabel( "right angle" );
 	right_angle_edit = new QLineEdit;
+	right_angle_edit->setFixedSize(70,25);
+	right_angle_edit->setText(QString::number(rightAngle_offset));
 	QLabel* color_base_label = new QLabel( "color base" );
 	color_base_edit = new QLineEdit;
+	color_base_edit->setFixedSize(70,25);
 	color_base_edit->setText(QString::number(color_base));
 	QLabel* point_size_label = new QLabel( "point size" );
 	point_size_edit = new QLineEdit;
+	point_size_edit->setFixedSize(70,25);
 	point_size_edit->setText(QString::number(point_size));
 	QLabel* cell_size_label = new QLabel( "cell size" );
 	cell_size_edit = new QLineEdit;
+	cell_size_edit->setFixedSize(70,25);
 	cell_size_edit->setText(QString::number(cell_size));
 
 	QLabel* axes_size_label = new QLabel( "axes size" );
 	axes_size_edit = new QLineEdit;
+	axes_size_edit->setFixedSize(70,25);
 	axes_size_edit->setText(QString::number(axes_size));
 
 	QLabel* color_by_label = new QLabel( "color by" );
-	right_angle_edit->setText(QString::number(rightAngle_offset));
-
 	//QFrame* hframe = new QFrame(this);
 	QFrame* vframe = new QFrame(this);
 	//hframe->setFrameShape(QFrame::HLine);      // 设置水平方向
@@ -2268,8 +2277,6 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( pcResetBtn, 2, 15, Qt::AlignRight);	
 	controls_layout->addWidget( saveBtn, 3, 15, Qt::AlignRight);
 	controls_layout->addWidget( pcBWBtn, 4, 15, Qt::AlignRight);	
-	controls_layout->addWidget( pcProcBtn, 4, 18, Qt::AlignRight);
-	controls_layout->addWidget( pcRecordBtn, 4, 19, Qt::AlignRight);
 
 	controls_layout->addWidget( point_size_label, 0, 16, Qt::AlignRight);
 	controls_layout->addWidget( point_size_edit, 0, 17, Qt::AlignLeft);	
@@ -2281,7 +2288,9 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( axes_size_edit, 3, 17, Qt::AlignLeft);	
 	controls_layout->addWidget( color_by_label, 4, 16, Qt::AlignRight);	
 	controls_layout->addWidget( colorCombo, 4, 17, Qt::AlignLeft);		
-	
+
+	controls_layout->addWidget( pcProcBtn, 4, 18, Qt::AlignRight);
+	controls_layout->addWidget( pcRecordBtn, 4, 19, Qt::AlignRight);
 	controls_layout->addWidget( distanceOffset_label, 0, 18, Qt::AlignRight);
 	controls_layout->addWidget( distance_Offset_edit, 0, 19, Qt::AlignLeft);	
 	controls_layout->addWidget( rotate_label, 1, 18, Qt::AlignRight);
@@ -3080,13 +3089,13 @@ void viewpanel::procEdfaInfo(uint8_t* data, uint8_t cmd_id)
 		flidar_sm_EDFA_stat_st stateInfo;
 		memcpy(&stateInfo, data, LEN_SM_EDFA_STAT);
 		edfaStateLinesV[0]->setText(QString::number(stateInfo.lhtSrc));
-		edfaStateLinesV[1]->setText(QString::number(stateInfo.powerIn));
 		ctlReadLine_[0]->setText(QString::number(stateInfo.powerIn));
-
+		edfaStateLinesV[1]->setText(QString::number(stateInfo.powerIn));
+		ctlReadLine_[1]->setText(QString::number(stateInfo.powerIn));
 		edfaStateLinesV[2]->setText(QString::number(stateInfo.powerOut));
-		ctlReadLine_[1]->setText(QString::number(stateInfo.powerOut));
-
+		ctlReadLine_[2]->setText(QString::number(stateInfo.powerOut));
 		edfaStateLinesV[3]->setText(QString::number(stateInfo.mduTemp / 100.0));
+		ctlReadLine_[3]->setText(QString::number(stateInfo.powerOut));
 		edfaStateLinesV[4]->setText(QString::number(stateInfo.pump1thTemp / 100.0));
 		edfaStateLinesV[5]->setText(QString::number(stateInfo.pump1thCurr));
 		edfaStateLinesV[6]->setText(QString::number(stateInfo.pump2thCurr));
