@@ -2908,9 +2908,8 @@ void viewpanel::pcOneFramePure()
 }
 void viewpanel::pcRecord(){
 	if(udpPCStop_){
-		QMessageBox msgBox;
-		msgBox.setText("pointCloud udp is not connected!");
-		msgBox.exec();
+		QMessageBox::warning(0, "提示", "pointCloud is stop, please start it",
+                          QMessageBox::Ok | QMessageBox::Default, 	0);
 		return;		
 	}
 	static bool recording = false;
@@ -2920,7 +2919,7 @@ void viewpanel::pcRecord(){
 		std::string node_name = " __name:=fmcw_record_node &";
 		pcRecordPath = save_folder_.toStdString() + "/pointCloud_record" +".bag";
 		std::string pointcloud_topic = " /fmcw/rviz/pointcloud";
-		ROS_INFO("pcRecordPath is %s \n", pcRecordPath.c_str());
+		ROS_INFO("pcRecordPath is %s", pcRecordPath.c_str());
 		cmd = "rosbag record -o " + pcRecordPath + pointcloud_topic + node_name;
 		int ret = system(cmd.c_str());
 		recording = true;
@@ -3284,9 +3283,6 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 				int index = 4 * i + 5;
 				motorPidReadLine[i]->setText(QString::number( UnsignedChar4ToFloat(&(ptr[index])) ,'f',3));
 			}	
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_PID_READ successfully!");
-			msgBox.exec();	
 		}else {
 			QMessageBox msgBox;
 			msgBox.setText("MOTOR MOTOR_PID_READ failed!");
@@ -3301,9 +3297,6 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 				showName = showName + QString::number(ptr[5 + i]) +  QString(" ");
 			}
 			motorShowItemsLine->setText(showName);
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_PID_READ successfully!");
-			msgBox.exec();
 		}
 		break;
 	case MOTOR_SOFT_VERSION_READ_RET:
@@ -3313,9 +3306,6 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 				showName = showName + QString(ptr[5 + i]);
 			}
 			motorSoftVersionLine->setText(showName);
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_SOFT_VERSION_READ successfully!");
-			msgBox.exec();
 		}
 		break;
 
@@ -3326,30 +3316,27 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 				showName = showName + QString(ptr[5 + i]);
 			}
 			motorHardVersionLine->setText(showName);
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_HARD_VERSION_READ successfully!");
-			msgBox.exec();
 		}
 		break;
 
 	case MOTOR_WORKMODE_SET_RET:
-		if(ptr[5] == 0xFF){
+		if(ptr[5] != 0xFF){
 			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_WORKMODE_SET successfully!");
+			msgBox.setText("MOTOR MOTOR_WORKMODE_SET failed!");
 			msgBox.exec();
 		}
 		break;
 	case MOTOR_SHOW_CYCLE_SET_RET:
-		if(ptr[5] == 0xFF){
+		if(ptr[5] != 0xFF){
 			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_SHOW_CYCLE_SET successfully!");
+			msgBox.setText("MOTOR MOTOR_SHOW_CYCLE_SET failed!");
 			msgBox.exec();
 		}
 		break;
 	case MOTOR_PID_SET_RET:
-		if(ptr[5] == 0xFF){
+		if(ptr[5] != 0xFF){
 			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_PID_SET_RET successfully!");
+			msgBox.setText("MOTOR MOTOR_PID_SET_RET failed!");
 			msgBox.exec();
 		} else if(ptr[5] == 0x7F) {
 			QMessageBox msgBox;
@@ -3369,11 +3356,6 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 			msgBox.setText("MOTOR MOTOR_PID_READ failed!");
 			msgBox.exec();	
 			return;				
-		}
-		{
-			QMessageBox msgBox;
-			msgBox.setText("MOTOR MOTOR_PID_READ successfully!");
-			msgBox.exec();	
 		}
 		break;
 	case MOTOR_ITEMS_INFO:
@@ -4710,7 +4692,7 @@ int viewpanel::motorSerialConnectTest()
 
 	if(!m_serialPort_test->open(QIODevice::ReadWrite))//用ReadWrite 的模式尝试打开串口
 	{
-		qDebug()<< nameSerialTest <<"open failed!";
+		ROS_INFO(L_RED"open %s serial device failed"NONE_COLOR, nameSerialTest.toStdString().c_str());
 		return -1;
 	}
 	//打开成功
@@ -4827,7 +4809,7 @@ int viewpanel::stateConnect()
 	int one = 1;
 	lidar_ip = ip_edit->text().toStdString();
 	state_port = 5002;
-	ROS_INFO("lidar_ip is %s, state_port is %d", lidar_ip.c_str(), state_port);
+	ROS_INFO(L_GREEN"lidar_ip is %s, state_port is %d"NONE_COLOR, lidar_ip.c_str(), state_port);
 	struct sockaddr_in ctrl_serv_addr;
 	if ((state_ctrl_sock=socket(AF_INET, SOCK_STREAM, 0))==-1){
 		ROS_DEBUG("ERROR: Could not create socket!");
@@ -4873,8 +4855,7 @@ int viewpanel::lidarConnect()
 
 	lidar_ip = ip_edit->text().toStdString();
 	lidar_ctrl_port = port_edit->text().toInt();
-	ROS_INFO("lidar_ip is %s, lidar_ctrl_port is %d", lidar_ip.c_str(), lidar_ctrl_port);
-
+	ROS_INFO(L_GREEN"lidar_ip is %s, lidar_ctrl_port is %d"NONE_COLOR, lidar_ip.c_str(), lidar_ctrl_port);
 
 	struct sockaddr_in ctrl_serv_addr;
 	struct sockaddr_in data_serv_addr;
@@ -5055,7 +5036,7 @@ void viewpanel:: motorInfoShow(uint8_t *ptr, int datalen)
 
 void viewpanel::save_settings(void )
 {
-	ROS_INFO("enter save_settings");
+	ROS_INFO(L_GREEN"enter save_settings"NONE_COLOR);
 	QSettings settings(QCoreApplication::organizationName(),
 		QCoreApplication::applicationName());
 	settings.setValue("IP Addr", ip_edit->text());
