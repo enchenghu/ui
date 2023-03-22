@@ -113,7 +113,7 @@ static QStringList regValueList = {
 	"0xFFFF00B4",
 	"0x0A6CFC8F",
 	"0x91EC0001",
-	"0X40001183"
+	"0x40001183"
 };
 
 static std::string softVersionName = "motor_xlidar_B_appA_0_3_2022_12_14";
@@ -1457,6 +1457,7 @@ void viewpanel::CreatMotorWindow()
 
 	motorIDCombo = new QComboBox(this);
 	//motorIDCombo->setEditable(true);
+	motorIDCombo->setFixedSize(70, 25);
 	motorIDCombo->addItem(QString("0"));
 	motorIDCombo->addItem(QString("1"));
 	motorIDCombo->addItem(QString("2"));
@@ -1583,19 +1584,29 @@ void viewpanel::CreatMotorWindow()
 		setReadOnlyLineEdit(motorPidReadLine[i]);
 	}
 	QLabel* pidCLabelR = new QLabel("Cycle:" );
+	pidCLabelR->setFixedSize(70,25);
+
 	QLabel* pidPLabelR = new QLabel("P:" );
+	pidPLabelR->setFixedSize(70,25);
+
 	QLabel* pidILabelR = new QLabel("I:" );
+	pidILabelR->setFixedSize(70,25);
+
 	QLabel* pidDLabelR = new QLabel("D:" );
-	pidReadBoxLayout->addWidget(pidCLabelR, 0, 0, Qt::AlignLeft | Qt::AlignTop);
-	pidReadBoxLayout->addWidget(pidPLabelR, 1, 0, Qt::AlignLeft | Qt::AlignTop);
-	pidReadBoxLayout->addWidget(pidILabelR, 2, 0, Qt::AlignLeft | Qt::AlignTop);
-	pidReadBoxLayout->addWidget(pidDLabelR, 3, 0, Qt::AlignLeft | Qt::AlignTop);
+	pidDLabelR->setFixedSize(70,25);
+
+	pidReadBoxLayout->addWidget(pidCLabelR, 0, 0, Qt::AlignRight );
+	pidReadBoxLayout->addWidget(pidPLabelR, 1, 0, Qt::AlignRight );
+	pidReadBoxLayout->addWidget(pidILabelR, 2, 0, Qt::AlignRight );
+	pidReadBoxLayout->addWidget(pidDLabelR, 3, 0, Qt::AlignRight );
 
 	for(int i = 0; i < 4;i++){
 		pidReadBoxLayout->addWidget(motorPidReadLine[i], i, 1, Qt::AlignLeft | Qt::AlignTop);
 	}
 	motorPidReadBtn = new QPushButton("&Read");
 	pidReadBoxLayout->addWidget(motorPidReadBtn, 4, 1, Qt::AlignLeft | Qt::AlignTop);
+	pidReadBoxLayout->setColumnStretch(0, 1);
+	pidReadBoxLayout->setColumnStretch(1, 4);
 	pidReadBox->setLayout(pidReadBoxLayout);
 
 	motorWorkModeReadLine =  new QLineEdit(this);
@@ -1637,9 +1648,9 @@ void viewpanel::CreatMotorWindow()
 
 	stateReadBox->setLayout(stateReadBoxLayout);
 
-	motorStateBoxLayout->addWidget(stateReadBox, 0, 0);
+	motorStateBoxLayout->addWidget(stateReadBox, 0, 0, Qt::AlignTop);
 
-	motorStateBoxLayout->addWidget(pidReadBox, 1, 0, Qt::AlignLeft);
+	motorStateBoxLayout->addWidget(pidReadBox, 1, 0, Qt::AlignTop);
 
 	motorStateBox->setLayout(motorStateBoxLayout);
 
@@ -2246,7 +2257,7 @@ void viewpanel::CreatUIWindow()
 	right_angle_edit = new QLineEdit;
 	right_angle_edit->setFixedSize(70,25);
 	right_angle_edit->setText(QString::number(rightAngle_offset));
-	QLabel* color_base_label = new QLabel( "color base" );
+	QLabel* color_base_label = new QLabel( "color interval" );
 	color_base_edit = new QLineEdit;
 	color_base_edit->setFixedSize(70,25);
 	color_base_edit->setText(QString::number(color_base));
