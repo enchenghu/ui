@@ -37,6 +37,7 @@ private Q_SLOTS:
 	void convertRosbag();
     void CtrlPanel_Control();
     void PcPanel_Control();
+    void resetViews();
 	void RecRvizPointcloudControl();
 	void fullScreen();
 

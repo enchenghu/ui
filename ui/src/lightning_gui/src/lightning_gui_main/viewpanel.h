@@ -148,6 +148,7 @@ public Q_SLOTS:
 	void readReg(int);
 	void ctrlShowWindows(bool);
 	void ctrlPcPanel(bool);
+	void resetViews(void);
 
 
 private Q_SLOTS:

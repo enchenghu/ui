@@ -1037,10 +1037,6 @@ void viewpanel::setView( view_vals_t &view_vals )
 	manager_->getViewManager()->getCurrent()->subProp("Yaw")->setValue(view_vals.yaw);
 	manager_->getViewManager()->getCurrent()->subProp("Pitch")->setValue(view_vals.pitch);
 	manager_->getViewManager()->getCurrent()->subProp("Focal Point")->setValue(view_vals.focal_point);
-	marker_text_size = 1;
-#if ONlY_SHOW_UI
-	update_basic_markers();
-#endif
 }
 
 void viewpanel::closeEvent(QCloseEvent *event)
@@ -1146,6 +1142,16 @@ void viewpanel::ctrlPcPanel(bool show)
 {
 	selection_panel_->setVisible(show);
 }
+void viewpanel::resetViews()
+{
+	view_vals_t view_vals;
+	view_vals.distance = 10;
+	view_vals.yaw = 1.56;
+	view_vals.pitch = 0.33;
+	view_vals.focal_point="0;0;0";
+	setView(view_vals);
+}
+
 
 void viewpanel::register_pointcloud_displays(int radar_id)
 {
@@ -4006,6 +4012,8 @@ void viewpanel::startPcUdpOnce() {
 
 void viewpanel::startPcUdpContinuous() {
 	udpPCContinu_ = true;
+	//QVariant focal_point = {"0;0;0"};
+	//manager_->getViewManager()->getCurrent()->subProp("Focal Point")->setValue("0;0;0");
 }
 
 void viewpanel::udpPcConnect() {

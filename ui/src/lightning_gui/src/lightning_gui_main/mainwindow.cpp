@@ -250,6 +250,10 @@ void MainWindow::PcPanel_Control( void )
 {
 	viewPanel->ctrlPcPanel(showPcPanelAct->isChecked());
 }
+void MainWindow::resetViews( void )
+{
+	viewPanel->resetViews();
+}
 
 void MainWindow::RecRvizPointcloudControl( void )
 {
@@ -332,6 +336,9 @@ void MainWindow::createActions()
 
 	QShortcut  *shortcut= new QShortcut(QKeySequence(tr("ctrl+a")), this);
 	connect(shortcut, SIGNAL(activated()), this,SLOT(fullScreen()));
+
+	QShortcut  *shortcut_r= new QShortcut(QKeySequence(tr("ctrl+r")), this);
+	connect(shortcut_r, SIGNAL(activated()), this,SLOT(resetViews()));
 #endif
 
 }
