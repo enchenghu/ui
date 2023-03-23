@@ -220,7 +220,7 @@ uint8_t * LoadDat(const char *cali_file_path)
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
-	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_ORI),\
+	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_DB),\
 	power_offset(0.0), distance_offset(0.0),ifConnectedMotorSerial(false), ifConnectedMotorTcp(false),\
 	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
 	ifStarted(false),saveadc_(false), oneFramePure(false), ifConnectedStateTcp(false)
@@ -576,12 +576,12 @@ void viewpanel::connectControl(void){
 
 void viewpanel::showdBFFT(void){
 	if(ifShowdB_ == FFT_ORI){
-		mFFTShowdBBtn->setStyleSheet("color: green");
+		mFFTShowdBBtn->setStyleSheet("color: black");
 		mFFTShowdBBtn->setText("&Show ori");
 		ifShowdB_ = FFT_DB;
 		power_offset = power_Offset_edit->text().toDouble();
 	}else if(ifShowdB_ == FFT_DB){
-		mFFTShowdBBtn->setStyleSheet("color: black");
+		mFFTShowdBBtn->setStyleSheet("color: green");
 		mFFTShowdBBtn->setText("&Show dB");
 		ifShowdB_ = FFT_ORI;
 	}
@@ -1795,7 +1795,9 @@ void viewpanel::CreatADCWindow()
 	QGroupBox* adcSettingBox = new QGroupBox(tr("ADC control:"));
 	QGridLayout* adcSettingBoxLayout = new QGridLayout ;
 	singelADCBtn_ = new QPushButton("&Single");
-	resetADCBtn_ = new QPushButton("&Continue");
+	singelADCBtn_->setFixedSize(100, 25);
+	resetADCBtn_ = new QPushButton("&Reset");
+	resetADCBtn_->setFixedSize(100, 25);
 	
 	adcSettingBoxLayout->addWidget(singelADCBtn_, 0, 0);//, Qt::AlignTop);
 	adcSettingBoxLayout->addWidget(resetADCBtn_, 0, 1);//, Qt::AlignTop);
@@ -1828,8 +1830,8 @@ void viewpanel::CreatDebugWindow()
     label_OSC_0->Add_Line_Data(0, 100);
     label_OSC_0->View_Chart(1000);
 #endif
-	pFFTchart[0] = new ChartLighting(this);
-	pFFTchart[1] = new ChartLighting(this);
+	pFFTchart[0] = new ChartLighting(this, FFT_DB);
+	pFFTchart[1] = new ChartLighting(this, FFT_DB);
 	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, 8192, 0, 256 * 4096), 0 , 0);
 	chartADCBox->setLayout(chartADCLayout);
 #if 0
@@ -1850,49 +1852,50 @@ void viewpanel::CreatDebugWindow()
 	charts->addWidget(ChartLightingBox);
 
 	QHBoxLayout* configs = new QHBoxLayout ;
-	QGroupBox *addrConfigsBox = new QGroupBox(tr("Configs:"));
-	QGroupBox *settingBox = new QGroupBox(tr("Settings:"));
-	QGroupBox *addrBox = new QGroupBox(tr("addr config:"));
-	QGroupBox *settingADCBox = new QGroupBox(tr("FFT control:"));
-	QGroupBox *settingFFTBox = new QGroupBox(tr("FFT:"));
+	QGroupBox *addrConfigsBox = new QGroupBox(tr("Settings:"));
+	//QGroupBox *settingBox = new QGroupBox(tr("Settings:"));
+/* 	QGroupBox *settingADCBox = new QGroupBox(tr("FFT control:"));
+	QGroupBox *settingFFTBox = new QGroupBox(tr("FFT:")); */
 
-	QVBoxLayout* addrConfigLayout = new QVBoxLayout;
-	QVBoxLayout* settingLayout = new QVBoxLayout;
-	QGridLayout* settingADCLayout = new QGridLayout;
-	QGridLayout* settingFFTLayout = new QGridLayout;
+	QGridLayout* addrConfigLayout = new QGridLayout;
+	QGridLayout* settingLayout = new QGridLayout;
+/* 	QGridLayout* settingADCLayout = new QGridLayout;
+	QGridLayout* settingFFTLayout = new QGridLayout; */
 
 	QPushButton * writeAddrbutton = new QPushButton("&Write");
 	QPushButton * readAddrbutton = new QPushButton("&Read");
-	mFFTShowdBBtn = new QPushButton("&Show dB");
+	mFFTShowdBBtn = new QPushButton("&Show Ori");
 
-	QPushButton * settingFFTSavebutton = new QPushButton("&Save");
-	QPushButton * settingFFTConfigbutton = new QPushButton("&Config");
+/* 	QPushButton * settingFFTSavebutton = new QPushButton("&Save");
+	QPushButton * settingFFTConfigbutton = new QPushButton("&Config"); */
 	singelFFTBtn_ = new QPushButton("&Single");
-	resetFFTBtn_ = new QPushButton("&Continue");
+	singelFFTBtn_->setFixedSize(100, 25);
+
+	resetFFTBtn_ = new QPushButton("&Reset");
+	resetFFTBtn_->setFixedSize(100, 25);
+
 
 	QLabel* power_Offset_label = new QLabel("Power Offset/dB" );
 	power_Offset_edit = new QLineEdit();	
 	power_Offset_edit->setText(power_offset_);
 
 	settingADCSavebutton = new QPushButton("&Start FFT-ADC");
-	settingADCLayout->addWidget(settingADCSavebutton, 0, 0);
 
-	settingADCLayout->addWidget(power_Offset_label, 1, 0);
-	settingADCLayout->addWidget(power_Offset_edit, 1, 1);
+	addrConfigLayout->addWidget(settingADCSavebutton, 0, 0);
+	addrConfigLayout->addWidget(power_Offset_label, 2, 0);
+	addrConfigLayout->addWidget(power_Offset_edit, 2, 1);
+	addrConfigLayout->addWidget(mFFTShowdBBtn, 0, 1);
+	addrConfigLayout->addWidget(resetFFTBtn_, 1, 1);
+	addrConfigLayout->addWidget(singelFFTBtn_, 1, 0);
 
-	settingADCLayout->addWidget(mFFTShowdBBtn, 2, 0);
-	settingADCLayout->addWidget(resetFFTBtn_, 2, 1);
-	settingADCLayout->addWidget(singelFFTBtn_, 3, 0);
-
-	settingADCBox->setLayout(settingADCLayout);
+/* 	settingADCBox->setLayout(settingADCLayout);
 	settingFFTLayout->addWidget(settingFFTSavebutton, 0, 0);
 	settingFFTLayout->addWidget(settingFFTConfigbutton, 0, 1);
-	settingFFTBox->setLayout(settingFFTLayout);
-
-	settingLayout->addWidget(settingADCBox);
-	settingLayout->addWidget(settingFFTBox);
-	settingBox->setLayout(settingLayout);
-	addrConfigLayout->addWidget(settingBox);
+	settingFFTBox->setLayout(settingFFTLayout); */
+	//settingLayout->addWidget(settingADCBox);
+	//settingLayout->addWidget(settingFFTBox);
+	//settingBox->setLayout(settingLayout);
+	//addrConfigLayout->addWidget(settingBox);
 	addrConfigsBox->setLayout(addrConfigLayout);
 
 	configs->addWidget(addrConfigsBox);
