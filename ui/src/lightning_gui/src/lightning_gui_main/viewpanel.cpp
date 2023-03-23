@@ -2543,8 +2543,10 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 	pfft->dataFFTdB_0.clear();
 	pfft->dataFFTdB_1.clear();
 	for(int i = 0; i < data.size(); i++) {
-		index += 1;
-		if(index < 5)
+		//index += 1;
+		int flag = index / 4;
+		cur_data += data[i] << (8 * (index - (flag * 4)));
+/* 		if(index < 5)
 			cur_data += data[i] << (8 * (index - 1));
 		else if (index < 9)
 			cur_data += data[i] << (8 * (index - 5));
@@ -2559,9 +2561,8 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 		else if (index < 29)
 			cur_data += data[i] << (8 * (index - 25));
 		else if (index < 33)
-			cur_data += data[i] << (8 * (index - 29));
-
-		if(index % 4 == 0 && index < 33){
+			cur_data += data[i] << (8 * (index - 29)); */
+		if(index % 4 == 3){
 			if(i < data.size() / 2){
 				pfft->dataFFT_0.append(cur_data);
 				pfft->dataFFTdB_0.append(fft2dBm(cur_data) + power_offset_);
@@ -2571,8 +2572,10 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 			}
 			cur_data = 0;
 		}
-		if(index == 32) index = 0;
-
+		if(index == 31) 
+			index = 0;
+		else 
+			index += 1;
 	}
 	fftMsg_done_buf_queue.put(pfft);
 	//ROS_INFO("fftMsg send finished");  //打印自己发送的信息
@@ -4652,7 +4655,7 @@ void viewpanel::udpRecvLoop(){
 				 << ", last_frame_index is " << last_frame_index << std::endl;	
 				break;
 			}
-			if(i < UDP_TIMES_PER_FRAME / 2) {
+			if(i < UDP_TIMES_PER_FRAME) {
 				for(int j = 0; j < 16; j++){
 					fftDataV.insert(fftDataV.end(), g_udpMsg.pcUdpData + 32 + 64 * j, g_udpMsg.pcUdpData + 64 * (j + 1));
 					adcDataV.insert(adcDataV.end(), g_udpMsg.pcUdpData + 64 * j, g_udpMsg.pcUdpData + 64 * j + 32);

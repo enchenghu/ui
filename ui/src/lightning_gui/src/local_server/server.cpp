@@ -821,7 +821,8 @@ int main(int argc, char** argv)
     data_u8_test[3] = (data_float & 0xff000000) >> 24; */
     memcpy(data_u8_test, &data_float, 4);
     memcpy(&data_float_test, data_u8_test, 4);
-    std::cout << "data_u8_test is " <<  data_float_test << std::endl;
+    int flag = 7 / 4;
+    std::cout << "test data is " <<  flag << std::endl;
 
 
     uint8_t data_u8[4];
