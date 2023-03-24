@@ -1776,7 +1776,7 @@ void viewpanel::CreatADCWindow()
 #endif
 	pADCchart[0] = new ChartLighting(this, ADC_ORI);
 	pADCchart[1] = new ChartLighting(this, ADC_ORI);
-	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, 8192, -32768, 32768), 0 , 0);
+	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, 8192 * 1.5, -32768, 32768), 0 , 0);
 	chartADCBox0->setLayout(chartADCLayout0);
 #if 0
     OSC_chart *label_OSC_1 = new OSC_chart(this);
@@ -1784,7 +1784,7 @@ void viewpanel::CreatADCWindow()
     label_OSC_1->Add_Line_Data(0, 100);
     //label_OSC_1->View_Chart(10000);
 #endif
-	chartADCLayout1->addWidget(pADCchart[1]->setChart(0, 8192, -32768, 32768), 0, 0);
+	chartADCLayout1->addWidget(pADCchart[1]->setChart(0, 8192 * 1.5, -32768, 32768), 0, 0);
 	chartADCBox1->setLayout(chartADCLayout1);
 
 	QVBoxLayout* adcCharts= new QVBoxLayout ;
@@ -1832,7 +1832,7 @@ void viewpanel::CreatDebugWindow()
 #endif
 	pFFTchart[0] = new ChartLighting(this, FFT_DB);
 	pFFTchart[1] = new ChartLighting(this, FFT_DB);
-	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, 8192, 0, 256 * 4096), 0 , 0);
+	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, 8192 * 1.5, 0, 256 * 4096), 0 , 0);
 	chartADCBox->setLayout(chartADCLayout);
 #if 0
     OSC_chart *label_OSC_1 = new OSC_chart(this);
@@ -1840,7 +1840,7 @@ void viewpanel::CreatDebugWindow()
     label_OSC_1->Add_Line_Data(0, 100);
     //label_OSC_1->View_Chart(10000);
 #endif
-	if(pFFTchart[1]) ChartLightingLayout->addWidget(pFFTchart[1]->setChart(-8191, 0, 0, 256 * 4096), 0, 0);
+	if(pFFTchart[1]) ChartLightingLayout->addWidget(pFFTchart[1]->setChart(-8192 * 1.5 + 1, 0, 0, 256 * 4096), 0, 0);
 	ChartLightingBox->setLayout(ChartLightingLayout);
 
 	QGridLayout* main_show= new QGridLayout ;
