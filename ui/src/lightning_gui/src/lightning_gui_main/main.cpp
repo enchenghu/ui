@@ -553,7 +553,7 @@ int main(int argc, char **argv)
 #if 1
 	QApplication app(argc, argv);
 	QCoreApplication::setOrganizationName("Lightning Lidar");
-	QCoreApplication::setApplicationName("Lightning Lidar ROS GUI");
+	QCoreApplication::setApplicationName("Lightning V0.2 Lidar ROS GUI");
 	QCoreApplication::setApplicationVersion(QT_VERSION_STR);
 	QCommandLineParser parser;
 	parser.setApplicationDescription(QCoreApplication::applicationName());
