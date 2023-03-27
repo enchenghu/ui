@@ -67,6 +67,8 @@
 
 namespace fmcw_types
 {
+static std::vector<double> fov_vertical = {2.32, 1.99, 1.66, 1.33, 0.99, 0.66, 0.33, 0, -0.33, -0.66, -0.99, -1.33, -1.66, -1.99, -2.32, -2.65};
+
 typedef struct 
 {
 	uint32_t indensity_0 = 0;
@@ -300,8 +302,8 @@ typedef struct {
     uint32_t pcmIndensity;  // 功率
     uint32_t pcmDistance;   // 距离（单位：米）   // 实际值：÷65536
     int16_t  pcmSpeed;      // 速度（单位：米/s） // 实际值：÷128(1bit-signed, 8bit-integer, 7bit-decimal-fraction)  // 正数:远离 负数:靠近
-    uint16_t pcmVertical;   // 俯仰角（单位：°）  // 实际值：÷256  // 数据0实际上是-2.5°
-    uint16_t pcmHorizontal; // 水平角（单位：°）  // 实际值：*360/32000*2  // 0° ~ 359°
+    uint16_t pcmVerticalIndex;   // 俯仰角（单位：°）  // 实际值：look Up table
+    uint16_t pcmHorizontal; // 水平角（单位：°）  // 实际值：*360/65536  // 0° ~ 359°
 }PC_pointMeta_st;   // 14Bytes
 
 

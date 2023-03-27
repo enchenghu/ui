@@ -279,10 +279,10 @@ void viewpanel::init_queue()
 	x_FFT_1.clear();
 	x_adc0.clear();
 	x_adc1.clear();
-	for(int i = 0; i< 8192;i++) 
+	for(int i = 0; i< 12288;i++) 
 	{
 		x_FFT.append(i);
-		x_FFT_1.append(-8191 + i);
+		x_FFT_1.append(-12287 + i);
 		x_adc0.append(i);
 		x_adc1.append(i);
 	}
@@ -317,7 +317,7 @@ void viewpanel::init_queue()
     }
 	vertical_bin = 1 / 256.0; 
 	speed_bin = 1 / 128.0; 
-	horizontal_bin = 360.0 / 32000.0 * 2; 
+	horizontal_bin = 360.0 / 65536.0; 
 	distance_bin = 1 / 65536.0; 
 	vertical_offset = -2.5;
 	udpPCBuff_last.pcDataOneFrame.clear();
@@ -2659,13 +2659,18 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 		}
 
 		if(index == 12){
-			vAngle = cur_data / 256.0 - 2.5; //vertical
+			int vindex = cur_data;
+			if(vindex < 16 && vindex >= 0)	
+				vAngle = fov_vertical[vindex];
+			else
+				vAngle = 666.666;
+			//vAngle = cur_data / 256.0 - 2.5; //vertical
 			csvfile << vAngle << ",";	
 			cur_data = 0;
 		}
 
 		if(index == 14){
-			hAngle = cur_data * 720.0 / 32000.0; //horizontal
+			hAngle = cur_data * 360.0 / 65536.0; //horizontal
 			if(hAngle > 360.0) hAngle -= 360.0;
 			csvfile << hAngle << "\n";	
 			cur_data = 0;
@@ -4308,7 +4313,7 @@ void viewpanel::pcDataProc()
 		realSize++;
 		speed_m = oneFrame360.pcDataOneFrame[j].pcmSpeed * speed_bin;
 		distance_m = oneFrame360.pcDataOneFrame[j].pcmDistance * distance_bin - distance_offset;
-		vertical_m = oneFrame360.pcDataOneFrame[j].pcmVertical * vertical_bin + vertical_offset;
+		vertical_m = fov_vertical[oneFrame360.pcDataOneFrame[j].pcmVerticalIndex];
 		intensity_m = oneFrame360.pcDataOneFrame[j].pcmIndensity;
 		if(udpPCSingle_) {
 			csvfile << oneFrame360.pcDataOneFrame[j].pcmIndensity << "," << distance_m << "," << speed_m << "," \
