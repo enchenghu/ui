@@ -181,10 +181,10 @@ void ChartLighting::showTracer(QMouseEvent* event)
     //由原来的x，y分别显示改为x，y显示在一起，xy单位直接在setText中设置好
     plotTracer->updatePosition(x, y);
     double real_X;
-    if(showType_ == ADC_ORI)
-        real_X = x;
+    if(showType_ == FFT_DB)
+        real_X = x * 0.6;
     else
-        real_X = x * 0.4;
+        real_X = x;
     plotTracer->setText(QString::number(real_X, 'f', 2), QString::number(y, 'f', 2));//x轴取整数，y轴保留两位小数
     pCustomPlot->replot();
 }
