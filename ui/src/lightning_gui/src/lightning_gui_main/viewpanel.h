@@ -532,7 +532,7 @@ private:
 	std::vector<QPushButton* > ctlWriteBtn_;
 	std::vector<QPushButton* > ctlReadBtn_;
 	std::vector<QLineEdit* > ctlReadLine_;
-	std::vector<double> power_index;
+	std::vector<int> power_index;
 	vx_task bst_task[BST_MAX_TASK_NUM];
 	vx_task_create_params_t bst_params;
 	std::shared_ptr<fmcw_types::fmcwPoints> fmcwPointsData_;

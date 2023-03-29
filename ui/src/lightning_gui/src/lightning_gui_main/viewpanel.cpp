@@ -245,7 +245,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	speed_min = 0.0;
 	speed_max = 0.0;
 
-	power_index = {0, 12, 1600, 3000, 5000, 10000, 20000};
+	power_index = {0, 1, 2, 3, 4, 5, 10, 50, 100, 200, 500, 1000, 2000};
 	load_settings();
 	CreatUIWindow();
 	CreatDebugWindow();
@@ -600,7 +600,8 @@ void viewpanel::configPower(void){
 		msgBox.exec();
 		return;		
 	}
-	cmdMsg_.mCommandVal[0] = (uint32_t)(str.toDouble() * 10);
+	cmdMsg_.mCommandVal[0] = (uint32_t)(str.toInt());
+	if(cmdMsg_.mCommandVal[0] > 2000) cmdMsg_.mCommandVal[0] = 2000;
 	cmdMsg_.mHead.usCommand = commandType::POWER_WRITE;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
@@ -1884,7 +1885,7 @@ void viewpanel::CreatDebugWindow()
 	addrConfigLayout->addWidget(settingADCSavebutton, 0, 0);
 	addrConfigLayout->addWidget(power_Offset_label, 2, 0);
 	addrConfigLayout->addWidget(power_Offset_edit, 2, 1);
-	addrConfigLayout->addWidget(mFFTShowdBBtn, 0, 1);
+	addrConfigLayout->addWidget(mFFTShowdBBtn, 3, 0);
 	addrConfigLayout->addWidget(resetFFTBtn_, 1, 1);
 	addrConfigLayout->addWidget(singelFFTBtn_, 1, 0);
 
@@ -2196,7 +2197,7 @@ void viewpanel::CreatUIWindow()
 	}
 
 	for (int i = 0; i < power_index.size(); i++){
-		PowerCombo->addItem(QString::number(power_index[i] / 10.0));
+		PowerCombo->addItem(QString::number(power_index[i]));
 	}
 	PowerCombo->setCurrentIndex(0);
 

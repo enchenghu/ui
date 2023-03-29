@@ -277,7 +277,7 @@ void MainWindow::RecRvizPointcloudControl( void )
 void MainWindow::about()
 {
 	QMessageBox::about(this, tr("Program Info"),
-	tr("<b>Autox</b> Lightning ROS GUI v0.2"));
+	tr("<b>Autox</b> Lightning v0.3 ROS GUI"));
 }
 
 void MainWindow::quit( void )
