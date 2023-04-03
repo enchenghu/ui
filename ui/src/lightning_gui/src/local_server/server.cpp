@@ -81,7 +81,55 @@ typedef enum {
     sm_mCmd_stat    = 0xF2,     // 状态信息
     sm_mCmd_warn    = 0xF3,     // 报警信息
 } flidar_sm_moduleCmd;
+typedef enum
+{
+    MOTOR_CONNECT = 0x01,
+    MOTOR_CONNECT_RET = 0xA1,
 
+    MOTOR_DISCONNECT = 0x02,
+    MOTOR_DISCONNECT_RET = 0xA2,
+	
+    MOTOR_PID_READ = 0x03,
+    MOTOR_PID_READ_RET = 0xA3,
+
+    MOTOR_PID_SET = 0x0C,
+    MOTOR_PID_SET_RET = 0xAC,
+
+    MOTOR_WORKMODE_READ = 0x06,
+    MOTOR_WORKMODE_READ_RET = 0xA6,
+
+    MOTOR_WORKMODE_SET = 0x0D,
+    MOTOR_WORKMODE_SET_RET = 0xAD,
+
+    MOTOR_SHOW_ITEMS_READ = 0x07,
+    MOTOR_SHOW_ITEMS_READ_RET = 0xA7,
+
+    MOTOR_SHOW_ITEMS_SET,
+    MOTOR_SHOW_ITEMS_SET_RET,
+
+    MOTOR_SOFT_VERSION_READ = 0x08,
+    MOTOR_SOFT_VERSION_READ_RET = 0xA8,
+
+    MOTOR_HARD_VERSION_READ = 0x09,
+    MOTOR_HARD_VERSION_READ_RET = 0xA9,
+
+    MOTOR_DEV_TYPE_READ = 0x0A,
+    MOTOR_DEV_TYPE_READ_RET = 0xAA,
+
+    MOTOR_SHOW_CYCLE_SET = 0x0B,
+    MOTOR_SHOW_CYCLE_SET_RET = 0xAB,
+
+	MOTOR_OPEN = 0x0E,
+	MOTOR_OPEN_RET = 0xAE,
+
+	MOTOR_SHOW_ITEMS_CTRL = 0x0F,
+	MOTOR_SHOW_ITEMS_CTRL_RET = 0xAF,
+
+	MOTOR_ITEMS_INFO = 0xC0,
+	//MOTOR_SHOW_ITEMS_CTRL_RET = 0xAF,
+
+	MOTOR_SHOW_ITEMS_DISPLAY
+}motorCmdType;
 uint8_t *encode_cali_data = nullptr;
 long file_size_g = 0;
 typedef struct API_Header
@@ -292,6 +340,8 @@ int loopsend(int socket, int size, uint8_t* data){
 int udpRecvSocketFd_  = 0;
 int udpPcRecvSocketFd_  = 0;
 int motorSocketFd_  = 0;
+int motorSocketFdl_  = 0;
+#pragma pack(1)    // pack(1): pack之间的数据类型，1字节对齐
 typedef struct 
 {
 	uint16_t 	mHead; 
@@ -316,9 +366,16 @@ typedef struct
 	ItemData data[ITEMS_NUM];
 	MotorMsgTailer 	tailer; 
 } motorItemsShowMsg;
+
+typedef struct 
+{
+	MotorMsgHeader header;
+	MotorMsgTailer 	tailer; 
+} motorMsgRecv;
+
 #pragma pack()     // pack() 结束
 
-#define state 1
+#define state 0
 void motorSockerInit();
 
 void *motor_msg_sender(void *)
@@ -375,18 +432,46 @@ void *motor_msg_sender(void *)
         usleep(1000*1000);
     }
 #else
-    motorItemsShowMsg motorMsg;
-    int counter = 0;
+    motorMsgRecv motorMsg;
+/*     int counter = 0;
     motorMsg.header.mHead = 0xaa55;
     motorMsg.header.motor_index = 0;
     motorMsg.header.cmd = 0xc0;
     motorMsg.header.dataLen = sizeof(ItemData) * ITEMS_NUM;
-    motorMsg.tailer.count = 0;
+    motorMsg.tailer.count = 0; */
     while(1){
-        //memset(motorMsg.data, 0, motorMsg.header.dataLen);
-        int sum = 0;
-        //int n = recv(motorSocketFd_, &sum, sizeof(int), MSG_WAITALL); 
-        //printf("recv motorMsg , ret is %d!\n", n);
+        memset(&motorMsg, 0, sizeof(motorMsg));
+        int n = recv(motorSocketFdl_, &motorMsg, sizeof(motorMsg), MSG_WAITALL); 
+        printf("motor recv len is %d , real is %d \n", n,  sizeof(motorMsgRecv)); 
+        if(n == 0){
+            close(motorSocketFdl_); 
+            motorSocketFdl_ = accept(motorSocketFd_, (struct sockaddr*)NULL, NULL);
+            printf("recv MOTOR continue !\n");
+            continue;
+        }
+        switch (motorMsg.header.cmd)
+        {
+        case MOTOR_CONNECT:
+            /* code */
+            printf("recv MOTOR_CONNECT !\n");
+            break;
+        case MOTOR_PID_READ:
+            /* code */
+            printf("recv MOTOR_PID_READ !\n");
+            break;
+        case MOTOR_HARD_VERSION_READ:
+            /* code */
+            printf("recv MOTOR_HARD_VERSION_READ !\n");
+            break;
+        case MOTOR_SOFT_VERSION_READ:
+            /* code */
+            printf("recv MOTOR_SOFT_VERSION_READ !\n");
+            break;            
+        
+        default:
+            break;
+        }
+/*         printf("recv motorMsg , ret is %d!\n", n);
         for(int i = 0; i < ITEMS_NUM; i++){
             motorMsg.data[i].item_id = i;
             motorMsg.data[i].data = rand() % 100;
@@ -400,7 +485,7 @@ void *motor_msg_sender(void *)
             counter++;
             if(counter > 8) break;
         }
-        usleep(500*1000);
+        usleep(500*1000); */
     }
 #endif
 
@@ -490,11 +575,11 @@ void motorSockerInit(void)
     struct sockaddr_in servaddr; 
     int one = 1;
 	setsockopt(motorSocketFd_, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-    //fcntl(listenfd, F_SETFL, O_NONBLOCK);
+    //fcntl(motorSocketFd_, F_SETFL, O_NONBLOCK);
     memset(&servaddr, 0, sizeof(servaddr)); 
     servaddr.sin_family = AF_INET; 
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);             
-    servaddr.sin_port = htons(5002); 
+    servaddr.sin_port = htons(5001); 
     long long index_0 = 0;
     if( bind(motorSocketFd_, (struct sockaddr*)&servaddr, sizeof(servaddr)) == -1)
     { 
@@ -511,10 +596,10 @@ void motorSockerInit(void)
     int connfd = 0;
     while(1)
     { 
-        if( (motorSocketFd_ = accept(motorSocketFd_, (struct sockaddr*)NULL, NULL)) == -1)
+        if( (motorSocketFdl_ = accept(motorSocketFd_, (struct sockaddr*)NULL, NULL)) == -1)
         { 
             printf("accept socket error: %s(errno: %d)\n",strerror(errno),errno); 
-            usleep(100);
+            usleep(1000*500);
             continue; 
         } else {
             break;
@@ -522,10 +607,10 @@ void motorSockerInit(void)
     }
     printf("======ready receive Motor data======\n"); 
 	int nRecvBuf= 320 * 1024;//设置为32K
-	setsockopt(motorSocketFd_, SOL_SOCKET,SO_RCVBUF,(const char*)&nRecvBuf,sizeof(int));
+	setsockopt(motorSocketFdl_, SOL_SOCKET,SO_RCVBUF,(const char*)&nRecvBuf,sizeof(int));
 
 	int nSendBuf= 320 * 1024;//设置为32K
-	setsockopt(motorSocketFd_, SOL_SOCKET,SO_SNDBUF,(const char*)&nSendBuf,sizeof(int));
+	setsockopt(motorSocketFdl_, SOL_SOCKET,SO_SNDBUF,(const char*)&nSendBuf,sizeof(int));
 
 
 }
@@ -802,6 +887,9 @@ float CharToFloat(unsigned char *strBuf, int nLen)
   return fNum;
 }
 
+void func(int a, int b , int c ,int d){
+    printf("a is %d, b is %d, c is %d, d is %d\n ", a, b, c, d);
+}
 int main(int argc, char** argv) 
 { 
     pthread_t udp_send;
@@ -815,6 +903,8 @@ int main(int argc, char** argv)
     float data_float_test;
     float data_float_out = 6.00;
     uint8_t data_u8_test[4];
+    auto newfun = std::bind(func,  placeholders::_2, 2, 3,  placeholders::_1);
+    newfun(1, 4);
 /*     data_u8_test[0] = data_float & 0xff;
     data_u8_test[1] = (data_float & 0xff00) >> 8;
     data_u8_test[2] = (data_float & 0xff0000) >> 16;

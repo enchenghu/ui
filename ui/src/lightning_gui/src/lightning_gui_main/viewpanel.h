@@ -254,6 +254,7 @@ private:
 	int lidarConnect();
 	int motorConnect();
 	int stateConnect();
+	void sendMotorCmd(const uint8_t *begin, int size);
 
 	int motorSerialConnect();
 	int motorSerialConnectTest();
