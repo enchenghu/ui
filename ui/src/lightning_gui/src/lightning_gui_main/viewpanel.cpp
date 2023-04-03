@@ -3135,13 +3135,13 @@ void viewpanel::procEdfaInfo(uint8_t* data, uint8_t cmd_id)
 		flidar_sm_EDFA_stat_st stateInfo;
 		memcpy(&stateInfo, data, LEN_SM_EDFA_STAT);
 		edfaStateLinesV[0]->setText(QString::number(stateInfo.lhtSrc));
-		ctlReadLine_[0]->setText(QString::number(stateInfo.powerIn));
+		ctlReadLine_[0]->setText(QString::number(stateInfo.lhtSrc));
 		edfaStateLinesV[1]->setText(QString::number(stateInfo.powerIn));
 		ctlReadLine_[1]->setText(QString::number(stateInfo.powerIn));
 		edfaStateLinesV[2]->setText(QString::number(stateInfo.powerOut));
 		ctlReadLine_[2]->setText(QString::number(stateInfo.powerOut));
 		edfaStateLinesV[3]->setText(QString::number(stateInfo.mduTemp / 100.0));
-		ctlReadLine_[3]->setText(QString::number(stateInfo.powerOut));
+		ctlReadLine_[3]->setText(QString::number(stateInfo.mduTemp / 100.0));
 		edfaStateLinesV[4]->setText(QString::number(stateInfo.pump1thTemp / 100.0));
 		edfaStateLinesV[5]->setText(QString::number(stateInfo.pump1thCurr));
 		edfaStateLinesV[6]->setText(QString::number(stateInfo.pump2thCurr));
