@@ -424,13 +424,14 @@ private:
 	QLineEdit* adcRead0_line;
 	QLineEdit* adcRead1_line;
 
-	QLineEdit* motorPidReadLine[4];
+	QLineEdit* motorPidReadLine[5];
 
-	QLineEdit* motorPidSetLine;
-	QLineEdit* motorPidCycleSetLine;
+	QLineEdit* motorPidCSetLine;
 	QLineEdit* motorPidPSetLine;
 	QLineEdit* motorPidISetLine;
 	QLineEdit* motorPidDSetLine;
+	QLineEdit* motorPidMaxLine;
+
 
 	QLineEdit* motorWorkModeReadLine;
 	QLineEdit* motorWorkModeAngleSetLine;
@@ -447,7 +448,7 @@ private:
 	QComboBox* motorWorkModeCombo;
 	QComboBox* motorSerialCombo;
 	QComboBox* motorIDCombo;
-
+	QComboBox* motorPidReadCombo;
 
 	QPushButton*  motorConnectBtnTcp;
 	QPushButton*  motorConnectBtnSerial;

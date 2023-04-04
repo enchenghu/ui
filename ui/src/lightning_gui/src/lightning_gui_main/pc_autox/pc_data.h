@@ -29,7 +29,7 @@
 #define UDP_PC_SIZE_SINGLE_V01 100
 
 #define BUFF_LEN 1024
-#define ITEMS_NUM 3
+#define ITEMS_NUM 5
 
 #define MAX_BUFF_LEN 8
 
@@ -198,17 +198,19 @@ typedef struct
 typedef struct 
 {
 	MotorMsgHeader header;
-	uint8_t     data[16];
+	uint8_t     data[20];
 	MotorMsgTailer 	tailer; 
 } motorPidMsg;
 
 typedef struct 
 {
 	MotorMsgHeader header;
-	float       cycle;
-	float       p;
-	float       i;
-	float       d;
+	uint8_t mode;
+	float p;
+	float i;
+	float d;
+	float cycle;
+	float maxVal;
 	MotorMsgTailer 	tailer; 
 } motorPidSetMsg;
 

@@ -30,7 +30,7 @@ public:
     void setLabelPen(const QPen &pen);
     void updatePosition(double xValue, double yValue);
  
-protected:
+//protected:
     void setVisible(bool visible);
 protected:
     QCustomPlot *plot ;	     //传入实例化的QcustomPlot

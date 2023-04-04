@@ -2,19 +2,17 @@
 #include <fstream>
 
 extern QStringList motorDataString;
-ChartLighting::ChartLighting(QWidget* parent, showModel type): QWidget(parent), showType_(type), \
-rescale_(true), contineFlag_(true), singleShow_(false)
+ChartLighting::ChartLighting(QWidget* parent, showModel type, uint16_t graphNum): QWidget(parent), showType_(type), \
+rescale_(true), contineFlag_(true), singleShow_(false), graph_num(graphNum)
 {
 	pCustomPlot = new QCustomPlot(parent);
     //pCustomPlot->setOpenGl(true); 
-    uint8_t graph_num = 1;
-    if(type == MOTOR_ORI)
-    {
-        graph_num = MOTOR_ITEMS_NUM;
-    }
     for(int i = 0; i < graph_num; i++){
         pCustomPlot->addGraph();
+        plotTracer[i] = new myTracer(pCustomPlot, pCustomPlot->graph(i), TracerType::DataTracer, showType_);
+        if(showType_ != MOTOR_ORI)setGraphShow(i, true);
     }
+	connect(pCustomPlot, &QCustomPlot::mouseMove, this, &ChartLighting::showTracer);
     this->hide(); 
 	//添加一条曲线
 }
@@ -28,6 +26,7 @@ void ChartLighting::setXChart(int xmin, int xmax)
 void ChartLighting::setGraphShow(uint8_t index_graph, bool show)
 {
     pCustomPlot->graph(index_graph)->setVisible(show);//曲线颜色设置
+    plotTracer[index_graph]->setVisible(show);
 }
 
 void ChartLighting::setGraph(uint8_t index_graph)
@@ -49,13 +48,11 @@ QCustomPlot* ChartLighting::setChart(int xmin, int xmax, int ymin, int ymax){
 	//x轴名字
 	//pCustomPlot->xAxis->setLabel("X");
 	//Y轴名字
-	pCustomPlot->yAxis->setLabel("Y");
+	//pCustomPlot->yAxis->setLabel("Y");
 	//设置大小
 	//pCustomPlot->resize(ui->label->width(),ui->label->height());
 	pCustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 	//pCustomPlot->xAxis->setNumberPrecision(1);
-	plotTracer = new myTracer(pCustomPlot, pCustomPlot->graph(0), TracerType::DataTracer, showType_);
-	connect(pCustomPlot, &QCustomPlot::mouseMove, this, &ChartLighting::showTracer);
 	pCustomPlot->replot();
     return pCustomPlot;
 }
@@ -141,51 +138,46 @@ void ChartLighting::showTracer(QMouseEvent* event)
     double x = pCustomPlot->xAxis->pixelToCoord(event->pos().x());
     double y = 0;
     QSharedPointer<QCPGraphDataContainer> tmpContainer;
-    tmpContainer = pCustomPlot->graph(0)->data();
-    int low = 0, high = tmpContainer->size();
-    while(high > low)
-    {
-        int middle = (low + high) / 2;
-        if(x < tmpContainer->constBegin()->mainKey() ||
-                x > (tmpContainer->constEnd()-1)->mainKey())
-            break;
+    for(int i = 0; i < graph_num; i++){
 
-        if(x == (tmpContainer->constBegin() + middle)->mainKey())
+        tmpContainer = pCustomPlot->graph(i)->data();
+        int low = 0, high = tmpContainer->size();
+        while(high > low)
         {
-            y = (tmpContainer->constBegin() + middle)->mainValue();
-            break;
+            int middle = (low + high) / 2;
+            if(x < tmpContainer->constBegin()->mainKey() ||
+                    x > (tmpContainer->constEnd()-1)->mainKey())
+                break;
+
+            if(x == (tmpContainer->constBegin() + middle)->mainKey())
+            {
+                y = (tmpContainer->constBegin() + middle)->mainValue();
+                break;
+            }
+            if(x > (tmpContainer->constBegin() + middle)->mainKey())
+            {
+                low = middle;
+            }
+            else if(x < (tmpContainer->constBegin() + middle)->mainKey())
+            {
+                high = middle;
+            }
+            if(high - low <= 1)
+            {   //差值计算所在位置数据
+                y = (tmpContainer->constBegin()+low)->mainValue() + ( (x - (tmpContainer->constBegin() + low)->mainKey()) *
+                    ((tmpContainer->constBegin()+high)->mainValue() - (tmpContainer->constBegin()+low)->mainValue()) ) /
+                    ((tmpContainer->constBegin()+high)->mainKey() - (tmpContainer->constBegin()+low)->mainKey());
+                break;
+            }
         }
-        if(x > (tmpContainer->constBegin() + middle)->mainKey())
-        {
-            low = middle;
-        }
-        else if(x < (tmpContainer->constBegin() + middle)->mainKey())
-        {
-            high = middle;
-        }
-        if(high - low <= 1)
-        {   //差值计算所在位置数据
-            y = (tmpContainer->constBegin()+low)->mainValue() + ( (x - (tmpContainer->constBegin() + low)->mainKey()) *
-                ((tmpContainer->constBegin()+high)->mainValue() - (tmpContainer->constBegin()+low)->mainValue()) ) /
-                ((tmpContainer->constBegin()+high)->mainKey() - (tmpContainer->constBegin()+low)->mainKey());
-            break;
-        }
+        plotTracer[i]->updatePosition(x, y);
+        double real_X;
+        if(showType_ == FFT_DB)
+            real_X = x * 0.6;
+        else
+            real_X = x;
+        plotTracer[i]->setText(QString::number(real_X, 'f', 2), QString::number(y, 'f', 2));//x轴取整数，y轴保留两位小数
     }
-    //qDebug()<<"y="<<y;
-    //显示x轴的鼠标动态坐标
-    //m_TraserX->updatePosition(x, 0);
-    //m_TraserX->setText(QString::number(x, 'f', 0));
-    //显示y轴的鼠标动态坐标，缺点无法定位xy所以无法附加单位，附加单位仍需继续修改setText传参
-    //m_TracerY->updatePosition(x, y);
-    //m_TracerY->setText(QString::number(y, 'f', 2));
-    //由原来的x，y分别显示改为x，y显示在一起，xy单位直接在setText中设置好
-    plotTracer->updatePosition(x, y);
-    double real_X;
-    if(showType_ == FFT_DB)
-        real_X = x * 0.6;
-    else
-        real_X = x;
-    plotTracer->setText(QString::number(real_X, 'f', 2), QString::number(y, 'f', 2));//x轴取整数，y轴保留两位小数
     pCustomPlot->replot();
 }
 

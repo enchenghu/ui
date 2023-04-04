@@ -24,11 +24,16 @@ class ChartLighting : public QWidget
 {
     Q_OBJECT
     QCustomPlot *pCustomPlot;
-	myTracer* plotTracer;
+	myTracer* plotTracer[MOTOR_ITEMS_NUM];
     QTimer* timer_;
 public:
-    ChartLighting(QWidget* parent = nullptr, showModel type = FFT_ORI);
-    ~ChartLighting(){}
+    explicit ChartLighting(QWidget* parent = nullptr, showModel type = FFT_ORI, uint16_t graphNum = 1);
+    virtual ~ChartLighting(){
+        delete pCustomPlot;
+        delete timer_;
+        delete []plotTracer;
+        delete []pgraph_motor;
+    }
     //void setData(const QVector<double> &x, const QVector<double> &y);
     void setData(const QVector<double> &x, const QVector<double> &y, uint8_t index_graph = 0);
 
@@ -48,6 +53,7 @@ private:
     bool singleShow_;
     bool contineFlag_;
     QCPGraph* pgraph_motor[MOTOR_ITEMS_NUM];
+    uint16_t graph_num;
 };
 #endif // CHART_H
 

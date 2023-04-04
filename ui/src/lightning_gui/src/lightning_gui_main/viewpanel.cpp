@@ -1413,9 +1413,7 @@ void viewpanel::CreatMotorWindow()
 
 	chartChooseBox->setLayout(chartChooseBoxLayout);
 
-	pMotorchart = new ChartLighting(this, MOTOR_ORI);
-	//pMotorchart->setShowType(MOTOR_ORI);
-
+	pMotorchart = new ChartLighting(this, MOTOR_ORI, checkShowV.size());
 	chartMotorBoxLayout->addWidget(pMotorchart->setChart(0, 200, -220, 220), 0 , 0);
 	chartMotorBoxLayout->addWidget(chartChooseBox, 0 , 1);
 	
@@ -1443,10 +1441,17 @@ void viewpanel::CreatMotorWindow()
 
 	motorSwitchBtn = new QPushButton("&Open");
 	motorWorkModeSetBtn = new QPushButton("&Set");
-	motorPidSetBtn = new QPushButton("&Set");
+	motorPidSetBtn = new QPushButton("&Write");
 	motorShowCycleSetBtn = new QPushButton("&Set");
 	motorWorkModeCombo  = new QComboBox(this);
 	motorSerialCombo = new QComboBox(this);
+
+	motorPidReadCombo = new QComboBox(this);
+	motorPidReadCombo->addItem(QString("current"));
+	motorPidReadCombo->addItem(QString("speed"));
+	motorPidReadCombo->addItem(QString("position"));
+	motorPidReadCombo->addItem(QString("timer"));
+
 	motorSerialCombo->setEditable(true);
 	foreach(const QSerialPortInfo &info,QSerialPortInfo::availablePorts())
 	{
@@ -1475,7 +1480,8 @@ void viewpanel::CreatMotorWindow()
 	motorWorkModeSpeedSetLine = new QLineEdit(this);
 	motorWorkModeLocSetLine = new QLineEdit(this);
 
-	motorPidCycleSetLine = new QLineEdit(this);
+	motorPidMaxLine = new QLineEdit(this);
+	motorPidCSetLine = new QLineEdit(this);
 	motorPidPSetLine = new QLineEdit(this);
 	motorPidISetLine = new QLineEdit(this);
 	motorPidDSetLine = new QLineEdit(this);
@@ -1545,7 +1551,7 @@ void viewpanel::CreatMotorWindow()
 	QGroupBox* stateReadBox = new QGroupBox();
 	QGridLayout* stateReadBoxLayout = new QGridLayout ;
 
-	pidBoxLayout->addWidget(pidCLabel, 0, 0, Qt::AlignLeft | Qt::AlignTop);
+/* 	pidBoxLayout->addWidget(pidCLabel, 0, 0, Qt::AlignLeft | Qt::AlignTop);
 	pidBoxLayout->addWidget(motorPidCycleSetLine, 0, 1, Qt::AlignLeft | Qt::AlignTop);
 	pidBoxLayout->addWidget(pidPLabel, 0, 2, Qt::AlignLeft | Qt::AlignTop);
 	pidBoxLayout->addWidget(motorPidPSetLine, 0, 3, Qt::AlignLeft | Qt::AlignTop);
@@ -1553,9 +1559,9 @@ void viewpanel::CreatMotorWindow()
 	pidBoxLayout->addWidget(motorPidISetLine, 0, 5, Qt::AlignLeft | Qt::AlignTop);
 	pidBoxLayout->addWidget(pidDLabel, 0, 6, Qt::AlignLeft | Qt::AlignTop);
 	pidBoxLayout->addWidget(motorPidDSetLine, 0, 7, Qt::AlignLeft | Qt::AlignTop);
-	pidBoxLayout->addWidget(motorPidSetBtn, 0, 8, Qt::AlignLeft | Qt::AlignTop);
-	pidBox->setLayout(pidBoxLayout);
-	motorControlBoxLayout->addWidget(pidBox, 1, 5, Qt::AlignLeft | Qt::AlignTop);
+	pidBoxLayout->addWidget(motorPidSetBtn, 0, 8, Qt::AlignLeft | Qt::AlignTop); */
+	//pidBox->setLayout(pidBoxLayout);
+	//motorControlBoxLayout->addWidget(pidBox, 1, 5, Qt::AlignLeft | Qt::AlignTop);
 
 	QGroupBox* showSetBox = new QGroupBox;
 	QGridLayout*showSetBoxLayout = new QGridLayout ;
@@ -1563,7 +1569,7 @@ void viewpanel::CreatMotorWindow()
 	showSetBoxLayout->addWidget(motorShowCycleSetLine, 0, 1, Qt::AlignLeft | Qt::AlignTop);
 	showSetBoxLayout->addWidget(motorShowCycleSetBtn, 0, 2, Qt::AlignLeft | Qt::AlignTop);
 	showSetBox->setLayout(showSetBoxLayout);
-	motorControlBoxLayout->addWidget(showSetBox, 2, 5, Qt::AlignLeft | Qt::AlignTop);
+	motorControlBoxLayout->addWidget(showSetBox, 1, 5, Qt::AlignLeft | Qt::AlignTop);
 	
 	motorControlBoxLayout->setColumnStretch(0, 1);
 	motorControlBoxLayout->setColumnStretch(1, 1);
@@ -1584,34 +1590,52 @@ void viewpanel::CreatMotorWindow()
 	QLabel* hardReadLabel = new QLabel("HardVersion:" );
 	QLabel* devLabel = new QLabel("Device Type:" );
 
-	for(int i = 0; i < 4;i++){
-		motorPidReadLine[i] =  new QLineEdit(this);
+	for(int i = 0; i < 5;i++){
+		motorPidReadLine[i] =  new QLineEdit();
 		setReadOnlyLineEdit(motorPidReadLine[i]);
+		//motorPidReadLine[i]->setFixedSize(140, 25);
 	}
+	motorPidReadCombo->setFixedSize(100, 25);
 	QLabel* pidCLabelR = new QLabel("Cycle:" );
-	pidCLabelR->setFixedSize(70,25);
-
+	//pidCLabelR->setFixedSize(70, 25);
 	QLabel* pidPLabelR = new QLabel("P:" );
-	pidPLabelR->setFixedSize(70,25);
-
+	//pidPLabelR->setFixedSize(40, 25);
 	QLabel* pidILabelR = new QLabel("I:" );
-	pidILabelR->setFixedSize(70,25);
-
+	//pidILabelR->setFixedSize(40, 25);
 	QLabel* pidDLabelR = new QLabel("D:" );
-	pidDLabelR->setFixedSize(70,25);
+	//pidDLabelR->setFixedSize(40, 25);
 
-	pidReadBoxLayout->addWidget(pidCLabelR, 0, 0, Qt::AlignRight );
+	pidReadBoxLayout->addWidget(new QLabel("mode:" ), 0, 0, Qt::AlignRight );
+	pidReadBoxLayout->addWidget(motorPidReadCombo, 0, 1, Qt::AlignLeft );
+
+
 	pidReadBoxLayout->addWidget(pidPLabelR, 1, 0, Qt::AlignRight );
 	pidReadBoxLayout->addWidget(pidILabelR, 2, 0, Qt::AlignRight );
 	pidReadBoxLayout->addWidget(pidDLabelR, 3, 0, Qt::AlignRight );
+	pidReadBoxLayout->addWidget(pidCLabelR, 4, 0, Qt::AlignRight );
+	pidReadBoxLayout->addWidget(new QLabel("max value:" ), 5, 0, Qt::AlignRight );
 
-	for(int i = 0; i < 4;i++){
-		pidReadBoxLayout->addWidget(motorPidReadLine[i], i, 1, Qt::AlignLeft | Qt::AlignTop);
+
+	for(int i = 0; i < 5;i++){
+		pidReadBoxLayout->addWidget(motorPidReadLine[i], i + 1, 1, Qt::AlignLeft | Qt::AlignTop);
 	}
+
+	pidReadBoxLayout->addWidget(motorPidPSetLine, 1, 2, Qt::AlignLeft | Qt::AlignTop);
+	pidReadBoxLayout->addWidget(motorPidISetLine, 2, 2, Qt::AlignLeft | Qt::AlignTop);
+	pidReadBoxLayout->addWidget(motorPidDSetLine, 3, 2, Qt::AlignLeft | Qt::AlignTop);
+	pidReadBoxLayout->addWidget(motorPidMaxLine, 5, 2, Qt::AlignLeft | Qt::AlignTop);
+	pidReadBoxLayout->addWidget(motorPidCSetLine, 4, 2, Qt::AlignLeft | Qt::AlignTop);
+
 	motorPidReadBtn = new QPushButton("&Read");
-	pidReadBoxLayout->addWidget(motorPidReadBtn, 4, 1, Qt::AlignLeft | Qt::AlignTop);
+	//motorPidReadBtn->setFixedSize(120, 25);
+	pidReadBoxLayout->addWidget(motorPidReadBtn, 6, 1, Qt::AlignLeft | Qt::AlignTop);
+	pidReadBoxLayout->addWidget(motorPidSetBtn, 6, 2, Qt::AlignLeft | Qt::AlignTop);
+
+	
 	pidReadBoxLayout->setColumnStretch(0, 1);
 	pidReadBoxLayout->setColumnStretch(1, 4);
+	pidReadBoxLayout->setColumnStretch(2, 4);
+
 	pidReadBox->setLayout(pidReadBoxLayout);
 
 	motorWorkModeReadLine =  new QLineEdit(this);
@@ -3254,8 +3278,8 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 	uint8_t motor_id = ptr[2];
 	uint8_t cmd_id = ptr[3];
 	int datalen = ptr[4];
-	std::cout << " msg datalen is " << datalen << std::endl;
-	printf("motor_id is %d, cmd_id is %d\n", motor_id, cmd_id);
+/* 	std::cout << " msg datalen is " << datalen << std::endl;
+	printf("motor_id is %d, cmd_id is %d\n", motor_id, cmd_id); */
 
 	switch (cmd_id)
 	{
@@ -3305,8 +3329,8 @@ void viewpanel::parseMotorInfo(uint8_t* ptr)
 		}	
 		break;	
 	case MOTOR_PID_READ_RET:
-		if(datalen == 16){
-			for(int i = 0; i < 4; i++){
+		if(datalen == 20){
+			for(int i = 0; i < 5; i++){
 				int index = 4 * i + 5;
 				motorPidReadLine[i]->setText(QString::number( UnsignedChar4ToFloat(&(ptr[index])) ,'f',3));
 			}	
@@ -3403,7 +3427,7 @@ void viewpanel::recvSerialInfo()
 		return;
 	}
 	QByteArray hexData = info.toHex();
-	qDebug() << "current recvSerialInfo is " << hexData;
+	//qDebug() << "current recvSerialInfo is " << hexData;
 	uint8_t* ptr = (uint8_t*)info.data();
 	uint8_t* ptr_all;
 	if(ptr[0] != 0x55 || ptr[1] != 0xaa){
@@ -3452,7 +3476,7 @@ void viewpanel::sendItemsInfoTest()
 		motorMsgSend.data[i].data = qrand() % 200;
 	}
 	int ret = m_serialPort_test->write((const char *)&motorMsgSend,sizeof(motorMsgSend));
-	ROS_INFO("sendItemsInfoTest send bytes are %d", ret);	
+	//ROS_INFO("sendItemsInfoTest send bytes are %d", ret);	
 	//while ()
 }
 void viewpanel::recvSerialInfoTest()
@@ -3467,7 +3491,7 @@ void viewpanel::recvSerialInfoTest()
 	//qDebug() << "info recvSerialInfoTest is " << hexData;
 	uint8_t* ptr = (uint8_t*)info.data();
 	int ret;
-	float dataPid[4] = {6.666, 7.777, 8.888, 9.999};
+	float dataPid[5] = {5.555, 6.666, 7.777, 8.888, 9.999};
 	uint8_t cmd_id = ptr[3];
 
 	switch (cmd_id)
@@ -3542,9 +3566,9 @@ void viewpanel::recvSerialInfoTest()
 		ROS_INFO("MOTOR_WORKMODE_SET ok, ret is %d", ret);
 		break;	
 	case MOTOR_PID_SET:
-		for(int i = 0; i < 4; i++){
-			int index = 4 * (i+1);
-			motorPidReadLine[i]->setText(QString::number( UnsignedChar4ToFloat(&(ptr[index])) ,'f',3));
+		for(int i = 0; i < 5; i++){
+			int index = 4 * i;
+			motorPidReadLine[i]->setText(QString::number( UnsignedChar4ToFloat(&(ptr[6 + index])) ,'f',3));
 		}	
 		motorMsgSend1_.header.cmd = motorCmdType::MOTOR_PID_SET_RET;
 		motorMsgSend1_.header.dataLen = 0x01;
@@ -3572,8 +3596,8 @@ void viewpanel::recvSerialInfoTest()
 		break;	
 	case MOTOR_PID_READ:
 		motorMsgPid_.header.cmd = motorCmdType::MOTOR_PID_READ_RET;
-		motorMsgPid_.header.dataLen = 0x10;
-		for(int i = 0; i < 4; i++){
+		motorMsgPid_.header.dataLen = 20;
+		for(int i = 0; i < 5; i++){
 			int index = 4 * ( i );
 			FloatToChar(dataPid[i], &(motorMsgPid_.data[index]));
 		}
@@ -3601,19 +3625,39 @@ void viewpanel::sendMotorPidCmd()
 {
 	if(checkMotorConnected()) return;
 	motorMsgPidSet_.header.cmd = motorCmdType::MOTOR_PID_SET;
-	motorMsgPidSet_.header.dataLen = 0x10;
+	motorMsgPidSet_.header.dataLen = 21;
 	motorMsgPidSet_.header.motor_index = motorIDCombo->currentText().toInt();
 	motorMsgPidSet_.tailer.count = 0x01;
-	motorMsgPidSet_.cycle = motorPidCycleSetLine->text().toDouble();
+	motorMsgPidSet_.cycle = motorPidCSetLine->text().toDouble();
+	motorMsgPidSet_.maxVal = motorPidMaxLine->text().toDouble();
 	motorMsgPidSet_.p = motorPidPSetLine->text().toDouble();
 	motorMsgPidSet_.i = motorPidISetLine->text().toDouble();
 	motorMsgPidSet_.d = motorPidDSetLine->text().toDouble();
-#if 1
+
+	QString modeName = motorPidReadCombo->currentText();
+	uint8_t mode = 0;
+	if(modeName == "current"){
+		mode = 0;
+		ROS_INFO(L_GREEN"MODE IS current"NONE_COLOR);		
+	} else if(modeName == "speed"){
+		mode = 1;
+		ROS_INFO(L_GREEN"MODE IS speed"NONE_COLOR);
+	} else if(modeName == "position"){
+		mode = 2;
+		ROS_INFO(L_GREEN"MODE IS position"NONE_COLOR);
+	} else if(modeName == "timer"){
+		mode = 3;
+		ROS_INFO(L_GREEN"MODE IS timer"NONE_COLOR);
+	} else {
+		ROS_INFO(L_RED"MODE IS invaild"NONE_COLOR);
+		return;
+	}
+	motorMsgPidSet_.mode = mode;
 	motorMsgPidSet_.tailer.crc = motorMsgPidSet_.header.cmd + motorMsgPidSet_.header.dataLen + \
 	motorMsgPidSet_.header.motor_index + motorMsgPidSet_.tailer.count + \
 	FloatSum(motorMsgPidSet_.cycle) + FloatSum(motorMsgPidSet_.p) + \
-	FloatSum(motorMsgPidSet_.i) + FloatSum(motorMsgPidSet_.d);
-#endif
+	FloatSum(motorMsgPidSet_.i) + FloatSum(motorMsgPidSet_.d) + FloatSum(motorMsgPidSet_.maxVal) + motorMsgPidSet_.mode;
+
 	sendMotorCmd((uint8_t *)&motorMsgPidSet_, sizeof(motorMsgPidSet_));
 }
 
@@ -3717,14 +3761,34 @@ void viewpanel::readHardVersion()
 void viewpanel::readMotorPid()
 {
 	if(checkMotorConnected()) return;
-	motorMsgSend_.header.cmd = motorCmdType::MOTOR_PID_READ;
-	motorMsgSend_.header.dataLen = 0x00;
-	motorMsgSend_.tailer.count = 0x01;
-	motorMsgSend_.header.motor_index = motorIDCombo->currentText().toInt();
-	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen + \ 
-								motorMsgSend_.tailer.count + motorMsgSend_.header.motor_index;
+	motorMsgSend1_.header.cmd = motorCmdType::MOTOR_PID_READ;
+	//motorMsgSend1_.data = motorPidReadCombo;
+	QString modeName = motorPidReadCombo->currentText();
+	uint8_t mode = 0;
+	if(modeName == "current"){
+		mode = 0;
+		ROS_INFO(L_GREEN"MODE IS current"NONE_COLOR);		
+	} else if(modeName == "speed"){
+		mode = 1;
+		ROS_INFO(L_GREEN"MODE IS speed"NONE_COLOR);
+	} else if(modeName == "position"){
+		mode = 2;
+		ROS_INFO(L_GREEN"MODE IS position"NONE_COLOR);
+	} else if(modeName == "timer"){
+		mode = 3;
+		ROS_INFO(L_GREEN"MODE IS timer"NONE_COLOR);
+	} else {
+		ROS_INFO(L_RED"MODE IS invaild"NONE_COLOR);
+		return;
+	}
+	motorMsgSend1_.data = mode;
+	motorMsgSend1_.header.dataLen = 0x01;
+	motorMsgSend1_.tailer.count = 0x01;
+	motorMsgSend1_.header.motor_index = motorIDCombo->currentText().toInt();
+	motorMsgSend1_.tailer.crc = motorMsgSend1_.header.cmd + motorMsgSend1_.header.dataLen + motorMsgSend1_.data + \
+								motorMsgSend1_.tailer.count + motorMsgSend1_.header.motor_index;
 							
-	sendMotorCmd((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
+	sendMotorCmd((uint8_t *)&motorMsgSend1_, sizeof(motorMsgSend1_));
 }
 
 void viewpanel::sendSerialBytes(const uint8_t *begin, int size)
@@ -4627,7 +4691,7 @@ int viewpanel::motorSerialConnectTest()
 
 	//设置串口名字 假设我们上面已经成功获取到了 并且使用第一个
 	//QString serialDevName = motorSerialCombo->currentText();
-	QString nameSerialTest = QString("/dev/pts/666");
+	QString nameSerialTest = QString("/dev/pts/2");
 	m_serialPort_test->setPortName(nameSerialTest);
 
 	if(!m_serialPort_test->open(QIODevice::ReadWrite))//用ReadWrite 的模式尝试打开串口
@@ -4948,6 +5012,7 @@ void viewpanel:: motorInfoShow(uint8_t *ptr, int datalen)
 		if(frame_index == 0) {
 			setCheckBoxUnvaild(checkShowV[item_index], true);
 			checkShowV[item_index]->setChecked(true);
+			pMotorchart->setGraphShow(item_index, true);
 		}
 		if(item_index > MOTOR_ITEMS_NUM - 1) {
 			ROS_INFO("error!!! item_index > MOTOR_ITEMS_NUM - 1, item_index is %d", item_index);

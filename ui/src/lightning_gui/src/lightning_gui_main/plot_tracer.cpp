@@ -3,7 +3,7 @@
 myTracer::myTracer(QCustomPlot *_plot, QCPGraph *_graph, TracerType _type, showModel showtype) : plot(_plot),
     graph(_graph),
     type(_type),
-    visible(false),
+    visible(true),
     showType_(showtype)
  
 {
@@ -128,11 +128,11 @@ void myTracer::setVisible(bool visible)
  
 void myTracer::updatePosition(double xValue, double yValue)
 {
-    if (!visible)
+/*     if (!visible)
     {
         setVisible(true);
         visible = true;
-    }
+    } */
     if (yValue > plot->yAxis->range().upper)
         yValue = plot->yAxis->range().upper;
     switch (type) {
