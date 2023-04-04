@@ -561,6 +561,7 @@ void viewpanel::connectControl(void){
 			lidar_connect_button->setText("&Disconnect");
 			ifStarted = true;
 			startStateDectTask();
+			fftChannelChange(); 
 			for(int i = 0; i < edfaWarnLEDV.size(); i++){
 				setLED(edfaWarnLEDV[i], 2);
 			}
@@ -4052,7 +4053,6 @@ void viewpanel::fftChannelChange()
 }
 
 void viewpanel::udpConnect() {
-	fftChannelChange(); 
 	if(!udpPCStop_) udpPcClose();
 	if(udpStop_){
 		commandMsg cmdMsg;
@@ -4933,7 +4933,7 @@ void viewpanel::load_settings()
 	QSettings settings(QCoreApplication::organizationName(),
 		QCoreApplication::applicationName());
 
-	lidar_ip_ = settings.value("IP Addr","127.0.0.1").toString();
+	lidar_ip_ = settings.value("IP Addr","10.20.30.40").toString();
 	for(int i = 0; i < 4; i++){
 		m_reg_addr_[i] = settings.value("Reg Addr " + QString::number(i), regAddrList[i]).toString();
 		m_reg_value_[i] = settings.value("Reg Value " + QString::number(i), regValueList[i]).toString();

@@ -579,7 +579,7 @@ void motorSockerInit(void)
     memset(&servaddr, 0, sizeof(servaddr)); 
     servaddr.sin_family = AF_INET; 
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);             
-    servaddr.sin_port = htons(5001); 
+    servaddr.sin_port = htons(5002); 
     long long index_0 = 0;
     if( bind(motorSocketFd_, (struct sockaddr*)&servaddr, sizeof(servaddr)) == -1)
     { 
