@@ -171,6 +171,7 @@ private Q_SLOTS:
 
 	void setSaveFolder();
 	void udpConnect();
+	void fftChannelChange();
 
 	void udpPcConnect();
 	void startPcUdpOnce();
@@ -525,6 +526,8 @@ private:
 	QPushButton *regBtnRead[4];
 	QPushButton * settingADCSavebutton;
 	QPushButton * settingADCConfigbutton;
+	QComboBox* fftChCombo;
+
 	QPushButton * singelFFTBtn_;
 	QPushButton * resetFFTBtn_;
 	QPushButton * singelADCBtn_;

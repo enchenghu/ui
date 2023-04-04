@@ -92,11 +92,12 @@ typedef enum {
     DFT3_READ                   = 8 ,   // 读取DFT3
     DIFF_READ                   = 9 ,   // 读取DIFF
     REG_READ                    = 10,   // 读REG
-    FFT_ADC_READ_START          = 11,   // 读FFT_ADC值（开始）
-    FFT_ADC_READ_STOP           = 12,   // 读FFT_ADC值（停止）
-    POINTCLOUD_TCP_READ         = 13,   // TCP读点云数据（400000个点）
-    POINTCLOUD_UDP_START        = 14,   // UDP读点云数据（开始）
-    POINTCLOUD_UDP_STOP         = 15   // UDP读点云数据（停止）
+    FFT_ADC_READ_SETCH          = 11,   // 读FFT_ADC值（开始）
+    FFT_ADC_READ_START,             // 读FFT_ADC值（开始）
+    FFT_ADC_READ_STOP,              // 读FFT_ADC值（停止）
+    POINTCLOUD_TCP_READ,            // TCP读点云数据（400000个点）
+    POINTCLOUD_UDP_START,          // UDP读点云数据（开始）
+    POINTCLOUD_UDP_STOP          // UDP读点云数据（停止）
 } commandType;
 
 typedef enum{

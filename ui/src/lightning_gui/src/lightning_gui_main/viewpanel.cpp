@@ -1903,8 +1903,13 @@ void viewpanel::CreatDebugWindow()
 	power_Offset_edit->setText(power_offset_);
 
 	settingADCSavebutton = new QPushButton("&Start FFT-ADC");
-
+	fftChCombo = new QComboBox();
+	fftChCombo->addItem(tr("0"));
+	fftChCombo->addItem(tr("1"));
+	fftChCombo->addItem(tr("2"));
+	fftChCombo->addItem(tr("3"));
 	addrConfigLayout->addWidget(settingADCSavebutton, 0, 0);
+	addrConfigLayout->addWidget(fftChCombo, 0, 1);
 	addrConfigLayout->addWidget(power_Offset_label, 2, 0);
 	addrConfigLayout->addWidget(power_Offset_edit, 2, 1);
 	addrConfigLayout->addWidget(mFFTShowdBBtn, 3, 0);
@@ -1941,6 +1946,8 @@ void viewpanel::CreatConnect()
 	connect(saveBtn, SIGNAL(clicked()), this, SLOT( saveDataThead( void )));
 	connect(setSaveBtn, SIGNAL(clicked()), this, SLOT( setSaveFolder( void )));
 	connect(settingADCSavebutton, SIGNAL(clicked()), this, SLOT( udpConnect( void )));
+	connect( fftChCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( fftChannelChange( void )));
+
 	//connect(ctlReadBtn_[0], SIGNAL(clicked()), this, SLOT( readPower( void )));
 /* 	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
 	connect(ctlReadBtn_[2], SIGNAL(clicked()), this, SLOT( read3DFT( void )));
@@ -4026,8 +4033,26 @@ void viewpanel::udpPcConnect() {
 		udpPcClose();
 	}
 }
+void viewpanel::fftChannelChange() 
+{
+	if(!udpPCStop_) udpPcClose();
+	if(!udpStop_) udpClose();
+	usleep(100 * 1000);
+	commandMsg cmdMsg;
+	memset(&cmdMsg, 0, sizeof(commandMsg));
+	cmdMsg.mHead.usCommand = commandType::FFT_ADC_READ_SETCH;
+	cmdMsg.mCommandVal[0] = fftChCombo->currentText().toInt();
+	if(::write(ctrl_sock, &cmdMsg, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("fftChannelChange failed!");
+		msgBox.exec();
+		return;
+	}	
+	usleep(100 * 1000);
+}
 
 void viewpanel::udpConnect() {
+	fftChannelChange(); 
 	if(!udpPCStop_) udpPcClose();
 	if(udpStop_){
 		commandMsg cmdMsg;
