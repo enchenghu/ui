@@ -173,7 +173,7 @@ void ChartLighting::showTracer(QMouseEvent* event)
         plotTracer[i]->updatePosition(x, y);
         double real_X;
         if(showType_ == FFT_DB)
-            real_X = x * 0.6;
+            real_X = x * 0.4;
         else
             real_X = x;
         plotTracer[i]->setText(QString::number(real_X, 'f', 2), QString::number(y, 'f', 2));//x轴取整数，y轴保留两位小数

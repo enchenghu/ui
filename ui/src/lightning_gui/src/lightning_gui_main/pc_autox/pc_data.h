@@ -30,6 +30,8 @@
 
 #define BUFF_LEN 1024
 #define ITEMS_NUM 5
+#define FFT_ADC_LENGTH 12288
+
 
 #define MAX_BUFF_LEN 8
 

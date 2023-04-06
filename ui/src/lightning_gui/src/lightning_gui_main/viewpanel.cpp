@@ -1800,7 +1800,7 @@ void viewpanel::CreatADCWindow()
 #endif
 	pADCchart[0] = new ChartLighting(this, ADC_ORI);
 	pADCchart[1] = new ChartLighting(this, ADC_ORI);
-	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, 8192 * 1.5, -32768, 32768), 0 , 0);
+	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, FFT_ADC_LENGTH, -32768, 32768), 0 , 0);
 	chartADCBox0->setLayout(chartADCLayout0);
 #if 0
     OSC_chart *label_OSC_1 = new OSC_chart(this);
@@ -1808,7 +1808,7 @@ void viewpanel::CreatADCWindow()
     label_OSC_1->Add_Line_Data(0, 100);
     //label_OSC_1->View_Chart(10000);
 #endif
-	chartADCLayout1->addWidget(pADCchart[1]->setChart(0, 8192 * 1.5, -32768, 32768), 0, 0);
+	chartADCLayout1->addWidget(pADCchart[1]->setChart(0, FFT_ADC_LENGTH, -32768, 32768), 0, 0);
 	chartADCBox1->setLayout(chartADCLayout1);
 
 	QVBoxLayout* adcCharts= new QVBoxLayout ;
@@ -1856,7 +1856,7 @@ void viewpanel::CreatDebugWindow()
 #endif
 	pFFTchart[0] = new ChartLighting(this, FFT_DB);
 	pFFTchart[1] = new ChartLighting(this, FFT_DB);
-	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, 8192 * 1.5, 0, 256 * 4096), 0 , 0);
+	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, FFT_ADC_LENGTH, 0, 256 * 4096), 0 , 0);
 	chartADCBox->setLayout(chartADCLayout);
 #if 0
     OSC_chart *label_OSC_1 = new OSC_chart(this);
@@ -1864,7 +1864,7 @@ void viewpanel::CreatDebugWindow()
     label_OSC_1->Add_Line_Data(0, 100);
     //label_OSC_1->View_Chart(10000);
 #endif
-	if(pFFTchart[1]) ChartLightingLayout->addWidget(pFFTchart[1]->setChart(-8192 * 1.5 + 1, 0, 0, 256 * 4096), 0, 0);
+	if(pFFTchart[1]) ChartLightingLayout->addWidget(pFFTchart[1]->setChart( 1 - FFT_ADC_LENGTH, 0, 0, 256 * 4096), 0, 0);
 	ChartLightingBox->setLayout(ChartLightingLayout);
 
 	QGridLayout* main_show= new QGridLayout ;
@@ -2574,25 +2574,8 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 	pfft->dataFFTdB_0.clear();
 	pfft->dataFFTdB_1.clear();
 	for(int i = 0; i < data.size(); i++) {
-		//index += 1;
 		int flag = index / 4;
 		cur_data += data[i] << (8 * (index - (flag * 4)));
-/* 		if(index < 5)
-			cur_data += data[i] << (8 * (index - 1));
-		else if (index < 9)
-			cur_data += data[i] << (8 * (index - 5));
-		else if (index < 13)
-			cur_data += data[i] << (8 * (index - 9));
-		else if (index < 17)
-			cur_data += data[i] << (8 * (index - 13));
-		else if (index < 21)
-			cur_data += data[i] << (8 * (index - 17));
-		else if (index < 25)
-			cur_data += data[i] << (8 * (index - 21));
-		else if (index < 29)
-			cur_data += data[i] << (8 * (index - 25));
-		else if (index < 33)
-			cur_data += data[i] << (8 * (index - 29)); */
 		if(index % 4 == 3){
 			if(i < data.size() / 2){
 				pfft->dataFFT_0.append(cur_data);
@@ -2609,7 +2592,6 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 			index += 1;
 	}
 	fftMsg_done_buf_queue.put(pfft);
-	//ROS_INFO("fftMsg send finished");  //打印自己发送的信息
 }
 
 void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
@@ -3116,7 +3098,7 @@ void viewpanel::updateFFTdata() {
 	y_FFT_1.clear();
 	QVector<double> y_FFT_dB;
 	QVector<double> y_FFT_1_dB;
-	for(int i = 0; i< 8192; i++) 
+	for(int i = 0; i< FFT_ADC_LENGTH; i++) 
 	{
 		double tmp = qrand() % 100000;
 		double tmp_log = 10 * log10(tmp);
@@ -3953,15 +3935,15 @@ void viewpanel::updateADCdata() {
 	static long long frame_index = 0;
 	x_adc0.clear();
 	x_adc1.clear();
-	for(int i = 0; i< 8192; i++) {
-		x_adc0.append(i + 8192 * frame_index);
+	for(int i = 0; i< FFT_ADC_LENGTH; i++) {
+		x_adc0.append(i + FFT_ADC_LENGTH * frame_index);
 	}
 	x_adc1 = x_adc0;
 
 #if DEBUG_UI	
 	y_adc0.clear();
 	y_adc1.clear();
-	for(int i = 0; i< 8192; i++) {
+	for(int i = 0; i< FFT_ADC_LENGTH; i++) {
 		double tmp = qrand() % 10000;
 		y_adc0.append(tmp);
 		y_adc1.append(tmp);
@@ -3978,8 +3960,6 @@ void viewpanel::updateADCdata() {
 		ROS_INFO("adcMsg update");  
 	}
 #endif
-	//pADCchart[0]->setXChart(8192 * frame_index, 8192 * frame_index + 8191);
-	//pADCchart[1]->setXChart(8192 * frame_index, 8192 * frame_index + 8191);
 	frame_index++;
 }
 
