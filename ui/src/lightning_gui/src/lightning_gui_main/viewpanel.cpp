@@ -1441,6 +1441,7 @@ void viewpanel::CreatMotorWindow()
 	motorConnectBtnSerial = new QPushButton("&Serial Connect");
 
 	motorSwitchBtn = new QPushButton("&Open");
+	motorResetBtn = new QPushButton("&reset");
 	motorWorkModeSetBtn = new QPushButton("&Set");
 	motorPidSetBtn = new QPushButton("&Write");
 	motorShowCycleSetBtn = new QPushButton("&Set");
@@ -1523,7 +1524,8 @@ void viewpanel::CreatMotorWindow()
 	motorControlBoxLayout->addWidget(motorSerialCombo, 1, 1, Qt::AlignLeft);
 	motorControlBoxLayout->addWidget(motorConnectBtnTcp, 0, 2, Qt::AlignLeft);
 	motorControlBoxLayout->addWidget(motorConnectBtnSerial, 1, 2, Qt::AlignLeft);
-	motorControlBoxLayout->addWidget(motorSwitchBtn, 1, 4, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motorSwitchBtn, 1, 3, Qt::AlignLeft);
+	motorControlBoxLayout->addWidget(motorResetBtn, 1, 4, Qt::AlignLeft);
 	motorControlBoxLayout->addWidget(motor_id, 0, 3, Qt::AlignRight);
 	motorControlBoxLayout->addWidget(motorIDCombo, 0, 4, Qt::AlignLeft);
 
@@ -1991,6 +1993,7 @@ void viewpanel::CreatConnect()
 	connect(motorConnectBtnTcp, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmdM( void )));
 	connect(motorConnectBtnSerial, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
 	connect(motorSwitchBtn, SIGNAL(clicked()), this, SLOT( sendMotorOpenCmd( void )));
+	connect(motorResetBtn, SIGNAL(clicked()), this, SLOT( sendMotorReset( void )));
 	connect(motorPidReadBtn, SIGNAL(clicked()), this, SLOT( readMotorPid( void )));
 	connect(motorWorkModeReadBtn, SIGNAL(clicked()), this, SLOT( readMotorWorkMode( void )));
 	connect(motorShowItemsReadBtn, SIGNAL(clicked()), this, SLOT( readMotorShowItems( void )));
@@ -3617,6 +3620,7 @@ void viewpanel::sendMotorPidCmd()
 	motorMsgPidSet_.header.cmd = motorCmdType::MOTOR_PID_SET;
 	motorMsgPidSet_.header.dataLen = 21;
 	motorMsgPidSet_.header.motor_index = motorIDCombo->currentText().toInt();
+	motorMsgPidSet_.header.mHead = 0xaa55;
 	motorMsgPidSet_.tailer.count = 0x01;
 	motorMsgPidSet_.cycle = motorPidCSetLine->text().toDouble();
 	motorMsgPidSet_.maxVal = motorPidMaxLine->text().toDouble();
@@ -3789,7 +3793,8 @@ void viewpanel::sendSerialBytes(const uint8_t *begin, int size)
 		int ret = m_serialPort->write((const char *)begin + i,1);
 		m_serialPort->flush();
 		count += ret;
-		usleep(20 * 1000);
+		usleep(20 * 1000);		
+		qDebug("%x",begin[i]);
 	}
 	ROS_INFO("m_serialPort write bytes are %d, required bytes are %d", count, size);		
 }
@@ -3820,16 +3825,27 @@ void viewpanel::sendMotorOpenCmd()
 	motorMsgSend1_.header.motor_index = motorIDCombo->currentText().toInt();
 	motorMsgSend1_.header.mHead = 0xaa55;
 	motorMsgSend1_.tailer.count = 0x01;
-	motorMsgSend1_.tailer.crc = motorMsgSend1_.header.cmd + motorMsgSend1_.header.dataLen +  motorMsgSend1_.data + \
-								motorMsgSend1_.header.motor_index + motorMsgSend1_.tailer.count;
 	if(!ifOpenMotor){
 		motorMsgSend1_.data = 0x01;
 	}else{
 		motorMsgSend1_.data = 0x00;
 	}
+	motorMsgSend1_.tailer.crc = motorMsgSend1_.header.cmd + motorMsgSend1_.header.dataLen +  motorMsgSend1_.data + \
+							motorMsgSend1_.header.motor_index + motorMsgSend1_.tailer.count;
 	sendMotorCmd((uint8_t *)&motorMsgSend1_, sizeof(motorMsgSend1_));
 }
-
+void viewpanel::sendMotorReset()
+{
+	if(checkMotorConnected()) return;
+	motorMsgSend_.header.cmd = motorCmdType::MOTOR_SYSTEM_RESET;
+	motorMsgSend_.header.dataLen = 0x00;
+	motorMsgSend_.header.motor_index = motorIDCombo->currentText().toInt();
+	motorMsgSend_.header.mHead = 0xaa55;
+	motorMsgSend_.tailer.count = 0x01;
+	motorMsgSend_.tailer.crc = motorMsgSend_.header.cmd + motorMsgSend_.header.dataLen  + \
+							motorMsgSend_.header.motor_index + motorMsgSend_.tailer.count;
+	sendMotorCmd((uint8_t *)&motorMsgSend_, sizeof(motorMsgSend_));
+}
 
 void viewpanel::sendMotorConnectCmdM()
 {
