@@ -4030,6 +4030,7 @@ void viewpanel::fftChannelChange()
 		return;
 	}	
 	usleep(100 * 1000);
+	udpConnect();
 }
 
 void viewpanel::udpConnect() {
