@@ -4713,7 +4713,7 @@ int viewpanel::motorSerialConnectTest()
 
 	//设置串口名字 假设我们上面已经成功获取到了 并且使用第一个
 	//QString serialDevName = motorSerialCombo->currentText();
-	QString nameSerialTest = QString("/dev/pts/2");
+	QString nameSerialTest = QString("/dev/pts/666");
 	m_serialPort_test->setPortName(nameSerialTest);
 
 	if(!m_serialPort_test->open(QIODevice::ReadWrite))//用ReadWrite 的模式尝试打开串口
