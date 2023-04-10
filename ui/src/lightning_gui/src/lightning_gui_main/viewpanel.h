@@ -385,6 +385,7 @@ class viewpanel : public QTabWidget {
   QComboBox* PowerCombo;
   QComboBox* DiffCombo;
   QComboBox* colorCombo;
+  QComboBox* savePCCombo;
   QLineEdit* ip_edit;
   QLineEdit* port_edit;
   QLineEdit* udp_port_edit;

@@ -1951,23 +1951,13 @@ void viewpanel::CreatConnect()
 {
 	connect(lidar_connect_button, SIGNAL(clicked()), this, SLOT( connectControl( void )));
 	connect(ctlWriteBtn_[0], SIGNAL(clicked()), this, SLOT( configPower( void )));
-/* 	connect(ctlWriteBtn_[1], SIGNAL(clicked()), this, SLOT( configCFAR( void )));
-	connect(ctlWriteBtn_[2], SIGNAL(clicked()), this, SLOT( config3DFT( void )));
-	connect(ctlWriteBtn_[3], SIGNAL(clicked()), this, SLOT( configDiff( void ))); */
 	connect(saveBtn, SIGNAL(clicked()), this, SLOT( saveDataThead( void )));
 	connect(setSaveBtn, SIGNAL(clicked()), this, SLOT( setSaveFolder( void )));
 	connect(settingADCSavebutton, SIGNAL(clicked()), this, SLOT( udpConnect( void )));
 	connect( fftChCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( fftChannelChange( void )));
-
-	//connect(ctlReadBtn_[0], SIGNAL(clicked()), this, SLOT( readPower( void )));
-/* 	connect(ctlReadBtn_[1], SIGNAL(clicked()), this, SLOT( readCFAR( void )));
-	connect(ctlReadBtn_[2], SIGNAL(clicked()), this, SLOT( read3DFT( void )));
-	connect(ctlReadBtn_[3], SIGNAL(clicked()), this, SLOT( readDiff( void ))); */
     connect( axes_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configAxesSize( void )));
     connect( cell_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configCellSize( void )));
     connect( point_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configPointSize( void )));
-
-
 	QSignalMapper * configMapper;
 	QSignalMapper * readMapper;
 	configMapper = new QSignalMapper(this);
@@ -1980,23 +1970,18 @@ void viewpanel::CreatConnect()
 	}
 	connect(configMapper, SIGNAL(mapped(int)), this, SLOT(configReg(int)));
 	connect(readMapper, SIGNAL(mapped(int)), this, SLOT(readReg(int)));
-
 	connect(mFFTShowdBBtn, SIGNAL(clicked()), this, SLOT( showdBFFT( void )));
 	connect(pcSwitchBtn, SIGNAL(clicked()), this, SLOT( udpPcConnect( void )));
 	connect(pcOnceBtn, SIGNAL(clicked()), this, SLOT( startPcUdpOnce( void )));
 	connect(pcResetBtn, SIGNAL(clicked()), this, SLOT( startPcUdpContinuous( void )));
-
 	connect(pcBWBtn, SIGNAL(clicked()), this, SLOT( pcShowBW( void )));
 	connect(pcRecordBtn, SIGNAL(clicked()), this, SLOT( pcRecord( void )));
 	connect(pcProcBtn, SIGNAL(clicked()), this, SLOT( pcOneFramePure( void )));
-
 	connect(loadAlgBtn, SIGNAL(clicked()), this, SLOT( loadAlgFile( void )));
-
 	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
 	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
-
 #if 1
 	connect(motorConnectBtnTcp, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmdM( void )));
 	connect(motorConnectBtnSerial, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
@@ -2013,36 +1998,28 @@ void viewpanel::CreatConnect()
 	connect(motorSoftVersionReadBtn, SIGNAL(clicked()), this, SLOT( readSoftVersion( void )));
 	connect(motorHardVersionReadBtn, SIGNAL(clicked()), this, SLOT( readHardVersion( void )));
 #endif
-
 	QSignalMapper * motorItemsMapper = new QSignalMapper(this);
 	for(int i = 0; i < checkShowV.size(); i++) {
-		connect(checkShowV[i], SIGNAL(clicked(bool)), motorItemsMapper, SLOT(map()));//这个map(）是QSignalMapper类的槽函数，不需要我们定义
-		motorItemsMapper->setMapping(checkShowV[i], i);//这个i就是我们传给槽函数的值，可以是字符串，其他等等。
+		connect(checkShowV[i], SIGNAL(clicked(bool)), motorItemsMapper, SLOT(map()));
+		motorItemsMapper->setMapping(checkShowV[i], i);
 	}
 	connect(motorItemsMapper, SIGNAL(mapped(int)), this, SLOT(motorItemsShow(int)));
-
-
-
 	connect(errorLogText,SIGNAL(textChanged()),SLOT(slotTextTcpChanged()));
     timer_  = new QTimer(this);
     connect(timer_, SIGNAL(timeout()), this, SLOT(updateFFTdata(void)));
     timer_->start(10);
-
     //timer_->setInterval(50);
     //QTimer* timer_adc_test  = new QTimer(this);
     //connect(timer_adc_test, SIGNAL(timeout()), this, SLOT(showADCDataSim(void)));
     //timer_adc_test->start(100);
-
     timer_adc  = new QTimer(this);
     connect(timer_adc, SIGNAL(timeout()), this, SLOT(updateADCdata(void)));
     timer_adc->start(10);
-
     QTimer* timer_state  = new QTimer(this);
     connect(timer_state, SIGNAL(timeout()), this, SLOT(updateState(void)));
     //connect(timer_state, SIGNAL(timeout()), this, SLOT(printErrorLog(void)));
     timer_state->start(20);
     //connect(timer_state, SIGNAL(timeout()), this, SLOT(recvSerialInfo(void)));
-
 #if 0	
     QTimer* test_show_item  = new QTimer(this);
     connect(test_show_item, SIGNAL(timeout()), this, SLOT(sendItemsInfoTest(void)));
@@ -2225,6 +2202,10 @@ void viewpanel::CreatUIWindow()
 	m3DFTCombo = new QComboBox;
 	PowerCombo = new QComboBox;
 	colorCombo = new QComboBox;
+	savePCCombo = new QComboBox;
+	for (int i = 1; i < 5; i++){
+		savePCCombo->addItem(QString::number(i));
+	}
 	colorCombo->setFixedSize(90,25);
 	colorCombo->addItem(tr("range"));
 	colorCombo->addItem(tr("intensity"));
@@ -2338,8 +2319,8 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( pcSwitchBtn, 0, 15, Qt::AlignRight);	
 	controls_layout->addWidget( pcOnceBtn, 1, 15, Qt::AlignRight);	
 	controls_layout->addWidget( pcResetBtn, 2, 15, Qt::AlignRight);	
-	controls_layout->addWidget( saveBtn, 3, 15, Qt::AlignRight);
-	controls_layout->addWidget( pcBWBtn, 4, 15, Qt::AlignRight);	
+	controls_layout->addWidget( saveBtn, 1, 2, Qt::AlignRight);
+	controls_layout->addWidget( pcBWBtn, 3, 15, Qt::AlignRight);	
 
 	controls_layout->addWidget( point_size_label, 0, 16, Qt::AlignRight);
 	controls_layout->addWidget( point_size_edit, 0, 17, Qt::AlignLeft);	
@@ -2351,6 +2332,9 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( axes_size_edit, 3, 17, Qt::AlignLeft);	
 	controls_layout->addWidget( color_by_label, 4, 16, Qt::AlignRight);	
 	controls_layout->addWidget( colorCombo, 4, 17, Qt::AlignLeft);		
+
+	controls_layout->addWidget( savePCCombo, 1, 3, Qt::AlignLeft);	
+	savePCCombo->setFixedSize(70, 25);	
 
 	controls_layout->addWidget( pcProcBtn, 4, 18, Qt::AlignRight);
 	controls_layout->addWidget( pcRecordBtn, 4, 19, Qt::AlignRight);
@@ -2629,14 +2613,15 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	ptminfo->tm_year + 1900, ptminfo->tm_mon + 1, ptminfo->tm_mday,
 	ptminfo->tm_hour, ptminfo->tm_min, ptminfo->tm_sec);
 #if 1
+	int chanID = savePCCombo->currentText().toInt();
 	std::string csvPath;
-	csvPath = save_folder_.toStdString() + "/data_convert_" + 
-	std::to_string(ptminfo->tm_year + 1900) + 
-	"-" + std::to_string(ptminfo->tm_mon + 1) +
-	"-" + std::to_string(ptminfo->tm_mday) +
-	"-" + std::to_string(ptminfo->tm_hour) +
-	"-" + std::to_string(ptminfo->tm_min) +
-	"-" + std::to_string(ptminfo->tm_sec) +
+	csvPath = save_folder_.toStdString() + "/data_convert_Channel" + std::to_string(chanID)  + "_" + \
+	std::to_string(ptminfo->tm_year + 1900) + \
+	"-" + std::to_string(ptminfo->tm_mon + 1) + \
+	"-" + std::to_string(ptminfo->tm_mday) + \
+	"-" + std::to_string(ptminfo->tm_hour) + \
+	"-" + std::to_string(ptminfo->tm_min) + \
+	"-" + std::to_string(ptminfo->tm_sec) + \
 	+".csv";
 	ROS_INFO("csvPath is %s \n", csvPath.c_str());
 	std::ofstream csvfile; 
@@ -2649,7 +2634,8 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 
 	int index = 0;
 	csvfile << "intensity" << "," << "distance(m)" << "," 
-	<< "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)" << "\n";	
+	<< "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)" << "\n";
+	int dataPointID = 1;	
 	for(int i = 0; i < data.size(); i++) {
 		index += 1;
 		if(index < 5)
@@ -2665,11 +2651,11 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 
 		if(index == 4 || index == 8){
 			if(index == 4) {
-				csvfile << cur_data << ",";	//intensity
+				if(dataPointID % 4 == chanID) csvfile << cur_data << ",";	//intensity
 			}
 			else{
 				distance = cur_data / 65536.0 - distance_offset; //distance
-				csvfile << distance << ",";	
+				if(dataPointID % 4 == chanID) csvfile << distance << ",";	
 			}
 			cur_data = 0;
 		}
@@ -2678,7 +2664,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 			if(cur_data > SIGN_LIMIT_NUM)
 				cur_data -= SIGN_OFFSET_NUM;
 			speed = cur_data / 128.0;
-			csvfile << speed << ",";	 // speed
+			if(dataPointID % 4 == chanID) csvfile << speed << ",";	 // speed
 			cur_data = 0;
 		}
 
@@ -2689,19 +2675,20 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 			else
 				vAngle = 666.666;
 			//vAngle = cur_data / 256.0 - 2.5; //vertical
-			csvfile << vAngle << ",";	
+			if(dataPointID % 4 == chanID) csvfile << vAngle << ",";	
 			cur_data = 0;
 		}
 
 		if(index == 14){
 			hAngle = cur_data * 360.0 / 65536.0; //horizontal
 			if(hAngle > 360.0) hAngle -= 360.0;
-			csvfile << hAngle << "\n";	
+			if(dataPointID % 4 == chanID) csvfile << hAngle << "\n";	
 			cur_data = 0;
 		}
 
 		if(index == 16){
 			index = 0;
+			dataPointID  += 1;
 		}
 	}
 	csvfile.close();
