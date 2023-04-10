@@ -561,7 +561,16 @@ void viewpanel::connectControl(void){
 			lidar_connect_button->setText("&Disconnect");
 			ifStarted = true;
 			startStateDectTask();
-			fftChannelChange(); 
+			commandMsg cmdMsg;
+			memset(&cmdMsg, 0, sizeof(commandMsg));
+			cmdMsg.mHead.usCommand = commandType::FFT_ADC_READ_SETCH;
+			cmdMsg.mCommandVal[0] = fftChCombo->currentText().toInt() - 1;
+			if(::write(ctrl_sock, &cmdMsg, sizeof(commandMsg)) < 0){
+				QMessageBox msgBox;
+				msgBox.setText("fftChannelChange failed!");
+				msgBox.exec();
+				return;
+			}
 			for(int i = 0; i < edfaWarnLEDV.size(); i++){
 				setLED(edfaWarnLEDV[i], 2);
 			}
@@ -1907,10 +1916,10 @@ void viewpanel::CreatDebugWindow()
 
 	settingADCSavebutton = new QPushButton("&Start FFT-ADC");
 	fftChCombo = new QComboBox();
-	fftChCombo->addItem(tr("0"));
 	fftChCombo->addItem(tr("1"));
 	fftChCombo->addItem(tr("2"));
 	fftChCombo->addItem(tr("3"));
+	fftChCombo->addItem(tr("4"));
 	addrConfigLayout->addWidget(settingADCSavebutton, 0, 0);
 	addrConfigLayout->addWidget(fftChCombo, 0, 1);
 	addrConfigLayout->addWidget(power_Offset_label, 2, 0);
@@ -4038,7 +4047,7 @@ void viewpanel::fftChannelChange()
 	commandMsg cmdMsg;
 	memset(&cmdMsg, 0, sizeof(commandMsg));
 	cmdMsg.mHead.usCommand = commandType::FFT_ADC_READ_SETCH;
-	cmdMsg.mCommandVal[0] = fftChCombo->currentText().toInt();
+	cmdMsg.mCommandVal[0] = fftChCombo->currentText().toInt() - 1;
 	if(::write(ctrl_sock, &cmdMsg, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
 		msgBox.setText("fftChannelChange failed!");
