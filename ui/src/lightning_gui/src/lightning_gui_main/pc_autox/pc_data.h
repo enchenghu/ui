@@ -69,7 +69,18 @@
 
 namespace fmcw_types
 {
-static std::vector<double> fov_vertical = {2.32, 1.99, 1.66, 1.33, 0.99, 0.66, 0.33, 0, -0.33, -0.66, -0.99, -1.33, -1.66, -1.99, -2.32, -2.65};
+static std::vector<double> fov_vertical = {2.32, 1.99, 1.66, 1.33, 0.99, 0.66, 0.33, \ 
+										0, -0.33, -0.66, -0.99, -1.33, -1.66, -1.99, -2.32, -2.65};
+
+typedef enum {
+	TASK_DEFAULT = 0, 
+	TASK_FFT_ADC_DATA_RECV, 
+	TASK_FFT_ADC_DATA_PARSE, 
+	TASK_POINTCLOUD_DATA_RECV, 
+	TASK_POINTCLOUD_DATA_PARSE, 
+	TASK_MOTOR_DATA_RECV, 
+	TASK_SYSTEM_DATA_RECV
+}LIGHTNING_TASK_ID;
 
 typedef struct 
 {

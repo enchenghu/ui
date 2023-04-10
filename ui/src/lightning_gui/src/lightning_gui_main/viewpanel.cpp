@@ -2769,7 +2769,6 @@ void viewpanel::saveData(){
 		msgBox.exec();
 	}
 	ifSave = false;
-	//vx_task_delete(&bst_task[0]);
 }
 
 // 该函数将label控件变成一个圆形指示灯，需要指定颜色color以及直径size
@@ -3021,8 +3020,8 @@ void viewpanel::udpClose(){
 	}
 	::close(udpRecvSocketFd_);
 	udpStop_ = true;
-	vx_task_delete(&bst_task[1]);
-	vx_task_delete(&bst_task[2]);
+	vx_task_delete(&bst_task[TASK_FFT_ADC_DATA_RECV]);
+	vx_task_delete(&bst_task[TASK_FFT_ADC_DATA_PARSE]);
 	settingADCSavebutton->setStyleSheet("color: black");
 	settingADCSavebutton->setText("&Start FFT-ADC");
 }
@@ -3030,8 +3029,8 @@ void viewpanel::udpClose(){
 void viewpanel::udpPcClose(){
 	::close(udpRecvPCSocketFd_);
 	udpPCStop_ = true;
-	vx_task_delete(&bst_task[3]);
-	vx_task_delete(&bst_task[4]);
+	vx_task_delete(&bst_task[TASK_POINTCLOUD_DATA_RECV]);
+	vx_task_delete(&bst_task[TASK_POINTCLOUD_DATA_PARSE]);
 	commandMsg cmdMsg;
 	memset(&cmdMsg, 0, sizeof(commandMsg));
 	cmdMsg.mHead.usCommand = commandType::POINTCLOUD_UDP_STOP;
@@ -4073,13 +4072,13 @@ void viewpanel::udpConnect() {
 		bst_params.app_var = this;
 		bst_params.task_mode = 0;
 		bst_params.task_main = TaskFuncUdpRecv;
-		vx_task_create(&bst_task[1], &bst_params);  
+		vx_task_create(&bst_task[TASK_FFT_ADC_DATA_RECV], &bst_params);  
 
 		vx_task_set_default_create_params(&bst_params);
 		bst_params.app_var = this;
 		bst_params.task_mode = 0;
 		bst_params.task_main = TaskFuncUdpParse;
-		vx_task_create(&bst_task[2], &bst_params);  
+		vx_task_create(&bst_task[TASK_FFT_ADC_DATA_PARSE], &bst_params);  
 		settingADCSavebutton->setStyleSheet("color: green");
 		settingADCSavebutton->setText("&Stop FFT-ADC");
 	}else{
@@ -4096,13 +4095,13 @@ void viewpanel::startPcTask()
 	bst_params.app_var = this;
 	bst_params.task_mode = 0;
 	bst_params.task_main = TaskFuncPCRecv;
-	vx_task_create(&bst_task[3], &bst_params);  
+	vx_task_create(&bst_task[TASK_POINTCLOUD_DATA_RECV], &bst_params);  
 
 	vx_task_set_default_create_params(&bst_params);
 	bst_params.app_var = this;
 	bst_params.task_mode = 0;
 	bst_params.task_main = TaskFuncPCParse;
-	vx_task_create(&bst_task[4], &bst_params); 
+	vx_task_create(&bst_task[TASK_POINTCLOUD_DATA_PARSE], &bst_params); 
 }
 
 void viewpanel::startMotorTask() 
@@ -4111,7 +4110,7 @@ void viewpanel::startMotorTask()
 	bst_params.app_var = this;
 	bst_params.task_mode = 0;
 	bst_params.task_main = TaskFuncMotorRecv;
-	vx_task_create(&bst_task[5], &bst_params);  
+	vx_task_create(&bst_task[TASK_MOTOR_DATA_RECV], &bst_params);  
 }
 
 void viewpanel::startStateDectTask() 
@@ -4120,7 +4119,7 @@ void viewpanel::startStateDectTask()
 	bst_params.app_var = this;
 	bst_params.task_mode = 0;
 	bst_params.task_main = TaskFuncStateRecv;
-	vx_task_create(&bst_task[6], &bst_params);  
+	vx_task_create(&bst_task[TASK_SYSTEM_DATA_RECV], &bst_params);  
 }
 void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 {
