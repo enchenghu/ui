@@ -1916,10 +1916,9 @@ void viewpanel::CreatDebugWindow()
 
 	settingADCSavebutton = new QPushButton("&Start FFT-ADC");
 	fftChCombo = new QComboBox();
-	fftChCombo->addItem(tr("1"));
-	fftChCombo->addItem(tr("2"));
-	fftChCombo->addItem(tr("3"));
-	fftChCombo->addItem(tr("4"));
+	for (int i = 1; i < 5; i++){
+		fftChCombo->addItem(QString::number(i));
+	}
 	addrConfigLayout->addWidget(settingADCSavebutton, 0, 0);
 	addrConfigLayout->addWidget(fftChCombo, 0, 1);
 	addrConfigLayout->addWidget(power_Offset_label, 2, 0);
