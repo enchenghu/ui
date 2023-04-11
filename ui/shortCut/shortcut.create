@@ -28,7 +28,8 @@ sudo ln -s ${PWD}/flidar_ui.desktop /usr/share/applications/flidar_ui.desktop
 # create flidar_ui.boot
 echo "#!/bin/bash
 cd ${PWD}/../" > flidar_ui.boot
-echo 'mkdir log -p
+echo ' rm -rf log/*
+mkdir log -p
 nowTime=$(date "+%Y%m%d_%H%M%S")
 if [ -z $1 ] || [ $1 != "noping" ]; then
   ./start.sh | tee log/flidar.${nowTime}.log
