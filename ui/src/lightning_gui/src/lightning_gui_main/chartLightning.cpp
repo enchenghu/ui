@@ -1,7 +1,9 @@
 #include "chartLightning.h"
 #include <fstream>
-
+#include <QtAlgorithms>
 extern QStringList motorDataString;
+//std::mutex ChartLighting::rescale_mutex;
+
 ChartLighting::ChartLighting(QWidget* parent, showModel type, uint16_t graphNum): QWidget(parent), showType_(type), \
 rescale_(true), contineFlag_(true), singleShow_(false), graph_num(graphNum)
 {
@@ -77,6 +79,7 @@ void ChartLighting::setContineFlag(bool t)
 
 void ChartLighting::setData(const QVector<double> &x, const QVector<double> &y, uint8_t index_graph)
 {
+    static showModel lastType = FFT_DB;
     if(singleShow_ || contineFlag_) {
         if(showType_ == FFT_ORI || showType_ == FFT_DB){
             pCustomPlot->graph(index_graph)->setData(x, y);
@@ -91,7 +94,11 @@ void ChartLighting::setData(const QVector<double> &x, const QVector<double> &y, 
             if(x[x.size() - 1] > 100) pCustomPlot->xAxis->setRange(x[x.size() - 1] - 200, x[x.size() - 1]);
         }   
     }
-
+/*     if(lastType != showType_) {
+        std::cout << "last is " << lastType << "showType_ is " << showType_ << std::endl;
+        pCustomPlot->rescaleAxes(true);
+    }
+    lastType = showType_; */
     if(singleShow_) {
         singleShow_  = false;
         if(showType_ == ADC_ORI){
@@ -126,9 +133,15 @@ void ChartLighting::setData(const QVector<double> &x, const QVector<double> &y, 
     else if(showType_ == FFT_DB)
         pCustomPlot->yAxis->setLabel("amplitude/dB");        
 
+    static int index = 0;
     if(rescale_) {
+        //rescale_mutex.lock();
         pCustomPlot->rescaleAxes(true);
         rescale_ = false;
+        QVector test = y;
+        qSort(test.begin(), test.end());
+        std::cout << "============vector max is " << test[test.size() - 1] << " vector min is " << test[0] << std::endl;
+        //rescale_mutex.unlock();
     }
     pCustomPlot->replot(QCustomPlot::rpQueuedReplot);
 }
@@ -172,7 +185,7 @@ void ChartLighting::showTracer(QMouseEvent* event)
         }
         plotTracer[i]->updatePosition(x, y);
         double real_X;
-        if(showType_ == FFT_DB)
+        if(showType_ == FFT_DB || showType_ == FFT_ORI)
             real_X = x * 0.4;
         else
             real_X = x;

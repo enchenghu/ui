@@ -271,7 +271,7 @@ class viewpanel : public QTabWidget {
   void setLEDColor(QLabel* label, int color);
   void setButtonStyle(QPushButton* btn);
   std::string tohex(uint32_t a);
-  double fft2dBm(double x);
+  inline double fft2dBm(double x);
   void load_settings();
   void save_settings();
   void init_pubs(void);
@@ -312,6 +312,7 @@ class viewpanel : public QTabWidget {
 
   double distance_offset;
   double power_offset;
+  double power_min;
   double rotation_offset;
   double leftAngle_offset;
   double rightAngle_offset;
@@ -338,6 +339,7 @@ class viewpanel : public QTabWidget {
 
   QString distance_offset_;
   QString power_offset_;
+  QString power_min_;
   UDP_PC_package_st pcDataRaw_;
   std::vector<UDP_PC_package_st> pcDataOneFrame_;
 
@@ -402,6 +404,7 @@ class viewpanel : public QTabWidget {
   QLineEdit* axes_size_edit;
 
   QLineEdit* power_Offset_edit;
+  QLineEdit* power_Min_edit;
   QString save_folder_;
   QLineEdit* regAddr_line[4];
   QLineEdit* regVal_line[4];

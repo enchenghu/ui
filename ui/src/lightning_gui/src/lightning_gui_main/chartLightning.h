@@ -15,6 +15,7 @@
 #include <QGridLayout>
 #include "pc_data.h"
 #include <vector>
+#include <mutex>
 QT_CHARTS_USE_NAMESPACE
 
 static QVector<QColor> colotList = {{0,255,255}, {0,255,0}, {0,0,255}, {255,0,0},{255,0,255}, \
@@ -54,6 +55,7 @@ private:
     bool contineFlag_;
     QCPGraph* pgraph_motor[MOTOR_ITEMS_NUM];
     uint16_t graph_num;
+    std::mutex rescale_mutex;
 };
 #endif // CHART_H
 

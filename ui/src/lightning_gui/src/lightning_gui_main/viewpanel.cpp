@@ -918,9 +918,10 @@ void viewpanel::configReg(int index){
 		return;
 	}
 }
-double viewpanel::fft2dBm(double x){
+inline double viewpanel::fft2dBm(double x){
 	double inputV = x / pow(2, 17);
 	double res = 10 * log10(pow(inputV, 2) / 100) - 1.1;
+	if (res < -power_min) res = -power_min;
 	return res; 
 }
 
@@ -1867,7 +1868,7 @@ void viewpanel::CreatDebugWindow()
 #endif
 	pFFTchart[0] = new ChartLighting(this, FFT_DB);
 	pFFTchart[1] = new ChartLighting(this, FFT_DB);
-	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, FFT_ADC_LENGTH, 0, 256 * 4096), 0 , 0);
+	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, FFT_ADC_LENGTH, -200, 200), 0 , 0);
 	chartADCBox->setLayout(chartADCLayout);
 #if 0
     OSC_chart *label_OSC_1 = new OSC_chart(this);
@@ -1875,7 +1876,7 @@ void viewpanel::CreatDebugWindow()
     label_OSC_1->Add_Line_Data(0, 100);
     //label_OSC_1->View_Chart(10000);
 #endif
-	if(pFFTchart[1]) ChartLightingLayout->addWidget(pFFTchart[1]->setChart( 1 - FFT_ADC_LENGTH, 0, 0, 256 * 4096), 0, 0);
+	if(pFFTchart[1]) ChartLightingLayout->addWidget(pFFTchart[1]->setChart( 1 - FFT_ADC_LENGTH, 0, -200, 200), 0, 0);
 	ChartLightingBox->setLayout(ChartLightingLayout);
 
 	QGridLayout* main_show= new QGridLayout ;
@@ -1912,7 +1913,10 @@ void viewpanel::CreatDebugWindow()
 
 	QLabel* power_Offset_label = new QLabel("Power Offset/dB" );
 	power_Offset_edit = new QLineEdit();	
+	QLabel* power_Min_label = new QLabel("Power Min/dB" );
+	power_Min_edit = new QLineEdit();
 	power_Offset_edit->setText(power_offset_);
+	power_Min_edit->setText(power_min_);
 
 	settingADCSavebutton = new QPushButton("&Start FFT-ADC");
 	fftChCombo = new QComboBox();
@@ -1923,7 +1927,9 @@ void viewpanel::CreatDebugWindow()
 	addrConfigLayout->addWidget(fftChCombo, 0, 1);
 	addrConfigLayout->addWidget(power_Offset_label, 2, 0);
 	addrConfigLayout->addWidget(power_Offset_edit, 2, 1);
-	addrConfigLayout->addWidget(mFFTShowdBBtn, 3, 0);
+	addrConfigLayout->addWidget(power_Min_label, 3, 0);
+	addrConfigLayout->addWidget(power_Min_edit, 3, 1);
+	addrConfigLayout->addWidget(mFFTShowdBBtn, 4, 0);
 	addrConfigLayout->addWidget(resetFFTBtn_, 1, 1);
 	addrConfigLayout->addWidget(singelFFTBtn_, 1, 0);
 
@@ -2007,7 +2013,7 @@ void viewpanel::CreatConnect()
 	connect(errorLogText,SIGNAL(textChanged()),SLOT(slotTextTcpChanged()));
     timer_  = new QTimer(this);
     connect(timer_, SIGNAL(timeout()), this, SLOT(updateFFTdata(void)));
-    timer_->start(10);
+    timer_->start(100);
     //timer_->setInterval(50);
     //QTimer* timer_adc_test  = new QTimer(this);
     //connect(timer_adc_test, SIGNAL(timeout()), this, SLOT(showADCDataSim(void)));
@@ -2568,6 +2574,7 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 	pfft->dataFFT_1.clear();
 	pfft->dataFFTdB_0.clear();
 	pfft->dataFFTdB_1.clear();
+	power_min = power_Min_edit->text().toDouble();
 	for(int i = 0; i < data.size(); i++) {
 		int flag = index / 4;
 		cur_data += data[i] << (8 * (index - (flag * 4)));
@@ -3095,10 +3102,13 @@ void viewpanel::updateFFTdata() {
 	y_FFT_1.clear();
 	QVector<double> y_FFT_dB;
 	QVector<double> y_FFT_1_dB;
+	y_FFT_dB.clear();
+	y_FFT_1_dB.clear();
+	power_min = power_Min_edit->text().toDouble();
 	for(int i = 0; i< FFT_ADC_LENGTH; i++) 
 	{
 		double tmp = qrand() % 100000;
-		double tmp_log = 10 * log10(tmp);
+		double tmp_log = fft2dBm(tmp);
 		y_FFT.append(tmp);
 		y_FFT_dB.append(tmp_log);
 		y_FFT_1.append(tmp);
@@ -3950,7 +3960,7 @@ void viewpanel::updateADCdata() {
 	}
 	x_adc1 = x_adc0;
 
-#if DEBUG_UI	
+#if 0	
 	y_adc0.clear();
 	y_adc1.clear();
 	for(int i = 0; i< FFT_ADC_LENGTH; i++) {
@@ -4941,6 +4951,7 @@ void viewpanel::load_settings()
 	axes_size = settings.value("axes size","0.1").toDouble();
 	rightAngle_offset = settings.value("right angle","125.0").toDouble();
 	power_offset_ = settings.value("Power Offset","0.0").toString();
+	power_min_ = settings.value("Power Min","120.0").toString();
 	save_folder_ = settings.value("Save Folder",".").toString();
 	motor_port_ = settings.value("TCP Motor Port","5001").toString();
 }
@@ -5075,6 +5086,7 @@ void viewpanel::save_settings(void )
 	settings.setValue("axes size", axes_size_edit->text());
 
 	settings.setValue("Power Offset", power_Offset_edit->text());
+	settings.setValue("Power Min", power_Min_edit->text());
 	settings.setValue("Save Folder", save_folder_);
 	settings.setValue("TCP Motor Port", motorConnectPortLine->text());
 
