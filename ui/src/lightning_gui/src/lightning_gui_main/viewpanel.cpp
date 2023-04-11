@@ -580,6 +580,8 @@ void viewpanel::connectControl(void){
 		lidar_connect_button->setText("&Connect");
 		ifStarted = false;
 		ifConnectedStateTcp = false;
+		if(!udpStop_) udpClose();
+		if(!udpPCStop_) udpPcClose();
 		::close(ctrl_sock);
 	}
 }
