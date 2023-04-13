@@ -17,14 +17,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
-//#include <phidget22.h>
 #include <mutex>
 #include <chrono>
 #include <thread>
 #include <algorithm>
-
-
-/* for rosbag record/play */
 #include <iostream>
 #include <rosbag/bag.h>
 #include <rosbag/view.h>

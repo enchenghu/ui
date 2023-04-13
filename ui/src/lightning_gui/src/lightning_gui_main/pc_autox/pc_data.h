@@ -22,23 +22,16 @@
 #include <QtCore/QStack>
 #include <QtCore/QCache>
 #include <QtCore/QMargins>
-#define MAX_RADARS 10
 #define TCP_PC_SIZE_SINGLE 128000
 #define UDP_PC_SIZE_SINGLE 1024
-
 #define UDP_PC_SIZE_SINGLE_V01 100
-
 #define BUFF_LEN 1024
 #define ITEMS_NUM 5
 #define FFT_ADC_LENGTH 12288
-
-
 #define MAX_BUFF_LEN 8
-
 #define TCP_TIMES_PER_FRAME 200
 #define UDP_TIMES_PER_FRAME 192
 #define MOTOR_ITEMS_NUM 10
-
 #define UDP_PC_TIMES_PER_FRAME 800
 #define BST_MAX_TASK_NUM		(16)
 #define PI_FMCW 3.14159265

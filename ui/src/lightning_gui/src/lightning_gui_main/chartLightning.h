@@ -6,7 +6,6 @@
 #include <QSplineSeries>
 #include <QHBoxLayout>
 #include <QValueAxis>
-#include "fft_chartview.h"
 #include "qcustomplot.h"
 #include <QTimer>
 #include <unistd.h>

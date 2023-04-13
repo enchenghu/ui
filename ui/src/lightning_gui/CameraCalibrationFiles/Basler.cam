@@ -1,6 +1,0 @@
-# intrinsic BASLER IS 1920x1200 -- 1200 IS CURRENTLY NOT SUPPORTED FOR RADAR/CAMERA FUSION
-1196.51486,0,962.794827
-0,1201.27233,552.184109
-0,0,1
-#translation -- location of image center wrt antenna center [right, up, depth] (in meters)
-0,0.08,0.02

@@ -2,7 +2,6 @@
 
 #include "mainwindow.h"
 #include "viewpanel.h"
-#include "common.hpp"
 #include <std_msgs/UInt8MultiArray.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
@@ -31,19 +30,12 @@
 
 using namespace std;
 
-extern int rosbag_playing;
-extern int unity_playing;
-extern int terminating;
-
-extern FILE * unity_bin_file;
-
+int terminating;
 viewpanel* viewPanel;
 QString playback_file;
 
 
 QString save_folder = ".";
-
-extern QString TestDescriptionString;
 
 
 void MainWindow::find_serial_ports()
@@ -166,7 +158,6 @@ void MainWindow::open( void )
 		sprintf(rqt_bag_launch_command,"roslaunch autox_ui lightning_rqt_bag.launch bag:=%c%c%s%c%c&",
 			'"','\047',(char *)playback_file.toStdString().c_str(),'\047','"');
 		ROS_DEBUG("launch playback menu control: %s",rqt_bag_launch_command);
-		unity_playing = 0;
 		/* wait for rqt_bag to start displaying a wait cursor */
 		QApplication::setOverrideCursor(Qt::WaitCursor);
 		int ret = system(rqt_bag_launch_command);
@@ -174,8 +165,6 @@ void MainWindow::open( void )
 		QApplication::restoreOverrideCursor();
 	} else if (playback_file.toStdString().find(".bin") != std::string::npos)
 	{
-		unity_bin_file = fopen(playback_file.toStdString().c_str(), "rb");
-		unity_playing = 1;
 	}
 }
 
@@ -284,7 +273,6 @@ void MainWindow::quit( void )
 {
     writeSettings();
 	int ret = system("pkill -f rqt_bag");
-	//radar_quit();
 }
 
 void MainWindow::createActions()
@@ -415,14 +403,6 @@ void MainWindow::setCurrentFile(const QString &fileName)
 
 void MainWindow::SetTestDescription( void )
 {
-	QString text = TestDescriptionString;
-	QInputDialog *TestDescriptionDialog = new QInputDialog(this);
-	TestDescriptionDialog->setLabelText(tr("Test Description:"));
-	TestDescriptionDialog->setWindowTitle(tr("Enter Test Drive Description"));
-	TestDescriptionDialog->setTextValue(text);
-	TestDescriptionDialog->resize(400,100);
-	TestDescriptionDialog->move(QApplication::desktop()->screen()->rect().center() - TestDescriptionDialog->rect().center());
-	if(TestDescriptionDialog->exec() == QDialog::Accepted)
-		TestDescriptionString = TestDescriptionDialog->textValue();
+
 }
 

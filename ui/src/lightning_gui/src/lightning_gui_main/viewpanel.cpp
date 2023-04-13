@@ -2,7 +2,6 @@
 #include "geometry_msgs/PolygonStamped.h"
 #include "geometry_msgs/Point32.h"
 #include "mainwindow.h"
-
 #include "sensor_msgs/CompressedImage.h"
 #include "sensor_msgs/Image.h"
 #include <image_transport/image_transport.h>
@@ -18,18 +17,11 @@
 #include "std_msgs/Float32.h"
 #include "std_msgs/Float32MultiArray.h"
 #include <std_msgs/UInt8.h>
-#include "arbe_msgs/arbeBookmarkMsg.h"
-#include "arbe_msgs/arbeSlamMsg.h"
-#include "arbe_msgs/arbeRdInclination.h"
-#include "arbe_msgs/arbeFusionClasses.h"
-#include "common.hpp"
 #include "Utils.h"
 #include "rqt_gauges/my_plugin.h"
 #include "rqt_gauges/qcgaugewidget.h"
-//#include "ctkrangeslider.h"
 #include "viewpanel.h"
 #include <vector>
-//#define ENABLE_MESH_DISPLAY
 
 #define CTRL_SOCKET 0
 #define DEFAULT_AZIMUTH_BIN 0
@@ -37,58 +29,8 @@
 #define SIGN_LIMIT_NUM 32767
 #define SIGN_OFFSET_NUM 65536
 
-static pcData_t g_msg;
-static udpMsg g_udpMsg;
-extern void radar_quit();
-extern void rosbag_stop_recording();
 
 extern int terminating;
-extern std::string ColoringType;
-extern std::string RangeType;
-extern std::string mode;
-
-extern float MinDoppler;
-extern float MaxDoppler;
-extern int rosbag_recording;
-extern int grid_cell_size;
-extern float MinHeight;
-extern float MaxHeight;
-int DetectionMemoryTime = 0;
-extern int marker_text_size;
-
-QDockWidget *dock;
-QDockWidget *dock_param;
-
-QLabel* min_height_label;
-QLabel* max_height_label;
-QLabel* cc_min_label;
-QLabel* cc_max_label;
-QLabel* cc_label;
-QLabel* mm_doppler_min_label;
-QLabel* mm_doppler_max_label;
-QLabel* mm_doppler_label;
-
-QPushButton *record_button;
-QPushButton *screen_record_button;
-QPushButton *radar_pause_button;
-QcGaugeWidget* SpeedometerWidget;
-static bool radarIdCombo_ready = false;
-static int connected_radars = 0;
-
-bool screen_recording = 0;
-bool radar_playing = 0;
-bool pointcloud_topic_initialized[MAX_RADARS] = {};
-
-QcGaugeWidget * mSpeedGauge;
-QcNeedleItem *mSpeedNeedle;
-QcNeedleItem *mGpsSpeedNeedle;
-
-QcGaugeWidget * mTurnRateGauge;
-QcNeedleItem *mTurnRateNeedle;
-QcNeedleItem *mImuTurnRateNeedle;
-static float intrinsic_mat[3][3] = {{1526.97,0,934.05},
-									{0,1533.03,537.37},
-									{0,0,1}};
 
 QStringList motorDataString = {
 	"speed",
@@ -450,101 +392,10 @@ void viewpanel::loadLidarFile(void){
 	}	
 }
 
-void viewpanel::setMinDoppler( int min_doppler_slider_value )
-{
-	MinDoppler = min_doppler_slider_value / 10.0;
-	mm_doppler_min_label->setText( QString::number( MinDoppler ,'f',1) );
-}
-
-void viewpanel::setMaxDoppler( int max_doppler_slider_value )
-{
-	MaxDoppler = max_doppler_slider_value / 10.0;
-	mm_doppler_max_label->setText( QString::number( MaxDoppler ,'f',1) );
-}
-
-void viewpanel::setMinColorCoding( int min_slider_value )
-{
-	Color_Coding_Min_Max::Instance()->set_min(ColoringType,min_slider_value/10.0);
-	float cc_min, cc_max;
-	Color_Coding_Min_Max::Instance()->get_values(ColoringType,cc_min, cc_max);
-	cc_min_label->setText( QString::number( cc_min ,'f',1) );
-#if ONLY_SHOW_UI
-	pubGUIcontrols();
-#endif
-}
-
-void viewpanel::setMaxColorCoding( int max_slider_value )
-{
-	Color_Coding_Min_Max::Instance()->set_max(ColoringType,max_slider_value/10.0);
-	float cc_min, cc_max;
-	Color_Coding_Min_Max::Instance()->get_values(ColoringType,cc_min, cc_max);
-	cc_max_label->setText( QString::number( cc_max ,'f',1) );
-
-#if ONLY_SHOW_UI
-	pubGUIcontrols();
-#endif
-
-}
-
-void viewpanel::setMinHeight( int min_height_slider_value )
-{
-	MinHeight = min_height_slider_value/100;
-	min_height_label->setText( "Min Height ("+QString::number( (float)min_height_slider_value / 100,'f',2 )+")" );
-}
-
-void viewpanel::setMaxHeight( int max_height_slider_value )
-{
-	MaxHeight = max_height_slider_value/100;
-	max_height_label->setText( "Max Height ("+QString::number( (float)max_height_slider_value / 100,'f',2 )+")" );
-}
-
-
-
-
 void viewpanel::setLoadFileType( void ){
 	QString str = loadDataCombo->currentText();
 	loadFileType_.assign(str.toStdString());
 }
-
-void viewpanel::screen_record( void )
-{
-	int ret;
-
-	if ( screen_recording == 0)
-	{
-		ROS_DEBUG("start screen recording.");
-		ret = system("roslaunch arbe_phoenix_radar_driver screen_record.launch&");
-		screen_record_button->setStyleSheet("color: red");
-		screen_record_button->setText("R&ecording Screen");
-		screen_recording = 1;
-	} else {
-		ROS_DEBUG("stop screen recording.");
-		ret = system("rosnode kill screen_grab screen_recorder");
-		screen_record_button->setStyleSheet("color: black");
-		screen_record_button->setText("Screen R&ecord");
-		screen_recording = 0;
-	}
-}
-
-
-void viewpanel::recording_control( void )
-{
-	if (rosbag_recording == 0)
-	{
-		if (rosbag_recording == 1)
-		{
-		record_button->setStyleSheet("color: red");
-		record_button->setText("Rec&ording");
-	}
-	}
-	else
-	{
-		record_button->setStyleSheet("color: black");
-		record_button->setText("Rec&ord");
-	}
-}
-
-
 
 void viewpanel::startControl(void){
 }
@@ -1066,7 +917,6 @@ void viewpanel::closeEvent(QCloseEvent *event)
 	if(answer == QMessageBox::Yes){
 		event->accept();
 		close();
-		radar_quit();
 	}
 	else
 		event->ignore();
@@ -1091,7 +941,7 @@ void viewpanel::registerPointcloudRviz()
 	//grid_->cc( "Alpha" )->setValue( "0.5" );
 	grid_->subProp( "Line Style" )->setValue( "Lines" );
 	grid_->subProp( "Plane" )->setValue( "XY" );
-	grid_->subProp( "Cell Size" )->setValue( grid_cell_size ); 
+	grid_->subProp( "Cell Size" )->setValue(10); 
 	grid_->subProp( "Plane Cell Count" )->setValue( "1000" );
 	grid_->subProp( "Offset" )->setValue( "X: -100 Y: 0 Z: 0" );
 	grid_->subProp( "Reference Frame" )->setValue( "<Fixed Frame>" );
@@ -1105,11 +955,9 @@ void viewpanel::registerPointcloudRviz()
 
 	//Car_ = manager_->createDisplay( "rviz/Marker", "Marker", true );
 	//ROS_ASSERT( Car_ != NULL );
-	//Car_->subProp("Marker Topic")->setValue("/arbe/rviz/car_marker");
 
 	FloatingText_ = manager_->createDisplay( "rviz/Marker", "Marker", true );
 	ROS_ASSERT( FloatingText_ != NULL );
-	FloatingText_->subProp("Marker Topic")->setValue("/arbe/rviz/floatingText_marker");
 
 	Axes_ = manager_->createDisplay( "rviz/Axes", "Axes", true );
 	ROS_ASSERT( Axes_ != NULL );
@@ -1133,9 +981,6 @@ void viewpanel::registerPointcloudRviz()
 	pointcloud_fmcw->subProp("Style")->setValue("Spheres");
 	pointcloud_fmcw->subProp("Size (Pixels)")->setValue("3");
 	pointcloud_fmcw->subProp("Size (m)")->setValue(point_size);
-
-	//pointcloud_fmcw->subProp("Decay Time")->setValue((float)DetectionMemoryTime / 1000);
-
 #if 1
 	pointcloud_fmcw->subProp("Color Transformer")->setValue("RGB8");
 	pointcloud_fmcw->subProp("Invert Rainbow")->setValue("false");
@@ -1162,232 +1007,6 @@ void viewpanel::resetViews()
 	view_vals.pitch = 0.33;
 	view_vals.focal_point="0;0;0";
 	setView(view_vals);
-}
-
-
-void viewpanel::register_pointcloud_displays(int radar_id)
-{
-
-	if ( ( pointcloud_topic_initialized[radar_id] != true ))
-	{
-		std::string pointcloud_topic = "/arbe/rviz/pointcloud_"+std::to_string(radar_id);
-		std::string stationary_pointcloud_topic = "/arbe/rviz/stationary_pointcloud_"+std::to_string(radar_id);
-		ROS_INFO("Registering new pointcloud topic: %s",pointcloud_topic.c_str());	
-		ROS_INFO("Registering new pointcloud topic: %s",stationary_pointcloud_topic.c_str());
-
-		pointcloud_[radar_id] = manager_->createDisplay( "rviz/PointCloud2", "PointCloud2", true );
-		pointcloud_[radar_id]->subProp("Topic")->setValue( pointcloud_topic.c_str() );
-		pointcloud_[radar_id]->subProp("Style")->setValue("Spheres");
-		pointcloud_[radar_id]->subProp("Size (Pixels)")->setValue("3");
-		pointcloud_[radar_id]->subProp("Size (m)")->setValue("0.3");
-		pointcloud_[radar_id]->subProp("Decay Time")->setValue((float)DetectionMemoryTime / 1000);
-		pointcloud_[radar_id]->subProp("Color Transformer")->setValue("RGB8");
-		pointcloud_[radar_id]->subProp("Invert Rainbow")->setValue("false");
-		pointcloud_[radar_id]->subProp("Position Transformer")->setValue("XYZ");
-		pointcloud_[radar_id]->subProp("Use Fixed Frame")->setValue("true");
-		pointcloud_[radar_id]->subProp( "Axis" )->setValue( "Z" );
-
-
-		stationary_pointcloud_[radar_id] = manager_->createDisplay( "rviz/PointCloud2", "PointCloud2", true );
-		stationary_pointcloud_[radar_id]->subProp("Topic")->setValue( stationary_pointcloud_topic.c_str() );
-		stationary_pointcloud_[radar_id]->subProp("Style")->setValue("Spheres");
-		stationary_pointcloud_[radar_id]->subProp("Size (Pixels)")->setValue("3");
-		stationary_pointcloud_[radar_id]->subProp("Size (m)")->setValue("0.3");
-	//	stationary_pointcloud_[radar_id]->subProp("Decay Time")->setValue((float)15500 / 1000);
-		stationary_pointcloud_[radar_id]->subProp("Color Transformer")->setValue("RGB8");
-		stationary_pointcloud_[radar_id]->subProp("Invert Rainbow")->setValue("false");
-		stationary_pointcloud_[radar_id]->subProp("Position Transformer")->setValue("XYZ");
-		stationary_pointcloud_[radar_id]->subProp("Use Fixed Frame")->setValue("true");
-		stationary_pointcloud_[radar_id]->subProp( "Axis" )->setValue( "Z" );
-		pointcloud_topic_initialized[radar_id] = true;
-//		num_of_radars++;
-	}	
-}
-
-
-void viewpanel::init_pubs( void )
-{
-	ros::NodeHandlePtr node_ptr = boost::make_shared<ros::NodeHandle>();
-
-	//arbe_gui_commands_pub = node_ptr->advertise<std_msgs::String>("arbe/settings/gui_commands", 1);
-
-	fmcw_pcl_pub = node_ptr->advertise<sensor_msgs::PointCloud2>("/arbe/rviz/pointcloud_", 1);
-
-}
-
-void viewpanel::showSpeedometer( QGridLayout * layout) //QHBoxLayout* layout) //void )
-
-{
-	const QSize mSpeedGauge_size = QSize(150, 150);
-
-	mSpeedGauge = new QcGaugeWidget;
-	//this will add side color to gauge
-	QcBackgroundItem *bkg1 = mSpeedGauge->addBackground(92);
-	bkg1->clearrColors();
-	bkg1->addColor(0.1,Qt::black);
-	bkg1->addColor(1.0,Qt::white);
-	QcBackgroundItem *bkg2 = mSpeedGauge->addBackground(88);
-	bkg2->clearrColors();
-	//this two line below will set background color of gauge
-	bkg2->addColor(0.1,Qt::gray);
-	bkg2->addColor(1.0,Qt::darkGray);
-
-	mSpeedGauge->addArc(55);
-	QcDegreesItem *degs = mSpeedGauge->addDegrees(65);
-	degs->setValueRange(0,160);
-	degs->setStep(20);
-
-	//this will add color red-green color band
-	/*QPair<QColor,float> pair;
-	pair.first = Qt::red;
-	pair.second = 100;
-*/
-	QPair<QColor,float> pair;
-	QList<QPair<QColor, float> > colors;
-	colors.clear();
-
-	pair.first = Qt::green;
-	pair.second = 10;
-	colors.append(pair);
-
-	pair.first = Qt::darkGreen;
-	pair.second = 75;
-	colors.append(pair);
-
-	pair.first = Qt::red;
-	pair.second = 100;
-	colors.append(pair);
-
-	QcColorBand * band = mSpeedGauge->addColorBand(50);
-	band->setColors(colors);
-	//	band->setDgereeRange(155,212);
-//	setMaxDegree(120);//->
-//	band->setMinDegree(90);
-//	band->setColors(colors);
-
-	// add value rage
-	QcValuesItem *vals = mSpeedGauge->addValues(80);
-	vals->setValueRange(0, 160);
-	vals->setStep(20);
-//	mSpeedGauge->addValues(80)->setValueRange(0, 160);
-
-	//set gauge title
-	mSpeedGauge->addLabel(70)->setText("Km/h");
-	QcLabelItem *lab = mSpeedGauge->addLabel(40);
-	lab->setText("0");
-	mSpeedNeedle = mSpeedGauge->addNeedle(60);
-	//add lable
-	mSpeedNeedle->setLabel(lab);
-	// set needle color
-	mSpeedNeedle->setColor(Qt::white);
-	//add range for your gauge => it should be just like the gauge range
-	mSpeedNeedle->setValueRange(0,160);
-	mSpeedGauge->addBackground(7);
-	//add some shadow like glass
-	mSpeedGauge->addGlass(88);
-	mSpeedNeedle->setCurrentValue(0);
-
-	mGpsSpeedNeedle = mSpeedGauge->addNeedle(60);
-	//add lable
-	// set needle color
-	mGpsSpeedNeedle->setColor(Qt::blue);
-	mGpsSpeedNeedle->setNeedle(QcNeedleItem::NeedleType::AttitudeMeterNeedle);
-
-	//add range for your gauge => it should be just like the gauge range
-	mGpsSpeedNeedle->setValueRange(0,160);
-	//add some shadow like glass
-	mGpsSpeedNeedle->setCurrentValue(160);
-
-
-
-	//add this to your vertical layout
-	layout->addWidget(mSpeedGauge,4,0,1,1);//layout->setProperty()
-	mSpeedGauge->setFixedSize(mSpeedGauge_size);
-}
-
-void viewpanel::showTurnRate( QGridLayout * layout) //QHBoxLayout* layout) //void )
-
-{
-	const QSize mTurnRateGauge_size = QSize(150, 150);
-
-	mTurnRateGauge = new QcGaugeWidget;
-	//this will add side color to gauge
-	QcBackgroundItem *bkg1 = mTurnRateGauge->addBackground(92);
-	bkg1->clearrColors();
-	bkg1->addColor(0.1,Qt::black);
-	bkg1->addColor(1.0,Qt::white);
-	QcBackgroundItem *bkg2 = mTurnRateGauge->addBackground(88);
-	bkg2->clearrColors();
-	//this two line below will set background color of gauge
-	bkg2->addColor(0.1,Qt::gray);
-	bkg2->addColor(1.0,Qt::darkGray);
-
-	mTurnRateGauge->addArc(55);
-	QcDegreesItem *degs = mTurnRateGauge->addDegrees(65);
-	degs->setValueRange(-135,135);
-	degs->setStep(45);
-
-	//this will add color red-green color band
-	/*QPair<QColor,float> pair;
-	pair.first = Qt::red;
-	pair.second = 100;
-*/
-	QPair<QColor,float> pair;
-	QList<QPair<QColor, float> > colors;
-	colors.clear();
-
-	pair.first = Qt::red;
-	pair.second = 100.0/3;
-	colors.append(pair);
-
-	pair.first = Qt::green;
-	pair.second = 200.0/3;
-	colors.append(pair);
-
-	pair.first = Qt::red;
-	pair.second = 100.0;
-	colors.append(pair);
-
-	QcColorBand * band = mTurnRateGauge->addColorBand(50);
-	band->setColors(colors);
-
-	// add value rage
-	QcValuesItem *vals = mTurnRateGauge->addValues(80);
-	vals->setValueRange(-135,135);
-	vals->setStep(45);
-//	mTurnRateGauge->addValues(80)->setValueRange(0, 160);
-
-	//set gauge title
-	mTurnRateGauge->addLabel(70)->setText("deg/s");
-	QcLabelItem *lab = mTurnRateGauge->addLabel(40);
-	lab->setText("0");
-	mTurnRateNeedle = mTurnRateGauge->addNeedle(60);
-	//add lable
-	mTurnRateNeedle->setLabel(lab);
-	// set needle color
-    mTurnRateNeedle->setColor(Qt::red);
-	//add range for your gauge => it should be just like the gauge range
-	mTurnRateNeedle->setValueRange(-135,135);
-	mTurnRateGauge->addBackground(7);
-	//add some shadow like glass
-	mTurnRateGauge->addGlass(88);
-	mTurnRateNeedle->setCurrentValue(0);
-	//add this to your vertical layout
-
-	mImuTurnRateNeedle = mTurnRateGauge->addNeedle(60);
-	//add lable
-	// set needle color
-	mImuTurnRateNeedle->setColor(Qt::blue);
-	mImuTurnRateNeedle->setNeedle(QcNeedleItem::NeedleType::AttitudeMeterNeedle);
-
-	//add range for your gauge => it should be just like the gauge range
-	mImuTurnRateNeedle->setValueRange(-135,135);
-	//add some shadow like glass
-	mImuTurnRateNeedle->setCurrentValue(0);
-
-
-	layout->addWidget(mTurnRateGauge,3,0,1,1);//layout->setProperty()
-	mTurnRateGauge->setFixedSize(mTurnRateGauge_size);
 }
 
 viewpanel* viewpanel::m_pInstance = NULL;
@@ -4475,10 +4094,7 @@ void viewpanel::udpRecvPCOnce()
 	ifLost  = false;
 	for(int i = 0; i < UDP_PC_TIMES_PER_FRAME; i++){
 		memset(&pcDataRaw_, 0, sizeof(pcDataRaw_));
-		//printf("ready recv udp msg!\n");
 		ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcDataRaw_), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
-		//printf("recv udp msg! receive byte is %d, g_udpMsg: %c %c %c %c %c\n", ret, g_udpMsg.pcUdpData[11], \
-		//g_udpMsg.pcUdpData[13], g_udpMsg.pcUdpData[15], g_udpMsg.pcUdpData[17], g_udpMsg.pcUdpData[19]);
 		if(ret <= 0){
 			if(udpPCStop_) {
 				printf("pc raw udp  quit!\n"); 
@@ -4540,8 +4156,6 @@ void viewpanel::udpRecvPCLoop()
 			memset(&pcDataRaw_, 0, sizeof(pcDataRaw_));
 			//printf("ready recv udp msg!\n");
 			ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcDataRaw_), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
-			//printf("recv udp msg! receive byte is %d, g_udpMsg: %c %c %c %c %c\n", ret, g_udpMsg.pcUdpData[11], \
-			//g_udpMsg.pcUdpData[13], g_udpMsg.pcUdpData[15], g_udpMsg.pcUdpData[17], g_udpMsg.pcUdpData[19]);
 			if(ret <= 0){
 				if(udpPCStop_) {
 					printf("pc raw udp  quit!\n"); 
@@ -4635,8 +4249,6 @@ void viewpanel::udpRecvLoop(){
 			memset(&g_udpMsg, 0, sizeof(g_udpMsg));
 			//printf("ready recv udp msg!\n");
 			ret = recvfrom(udpRecvSocketFd_, &g_udpMsg, sizeof(g_udpMsg), MSG_WAITALL, (struct sockaddr*)&src, &len);  //接收来自server的信息
-			//printf("recv udp msg! receive byte is %d, g_udpMsg: %c %c %c %c %c\n", ret, g_udpMsg.pcUdpData[11], \
-			//g_udpMsg.pcUdpData[13], g_udpMsg.pcUdpData[15], g_udpMsg.pcUdpData[17], g_udpMsg.pcUdpData[19]);
 			if(ret <= 0){
 				if(udpStop_) {
 					printf("fftMsg udp  quit!\n"); 

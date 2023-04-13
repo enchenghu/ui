@@ -186,10 +186,7 @@ add_executable(lightning_gui
 src/lightning_gui_main/main.cpp
 src/lightning_gui_main/mainwindow.cpp
 src/lightning_gui_main/viewpanel.cpp
-src/lightning_gui_main/common.cpp
-src/lightning_gui_main/osc_chart.cpp
 src/lightning_gui_main/chartLightning.cpp
-src/lightning_gui_main/fft_chartview.cpp
 src/lightning_gui_main/qcustomplot.cpp
 src/lightning_gui_main/plot_tracer.cpp
 )

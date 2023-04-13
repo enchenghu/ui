@@ -2,8 +2,6 @@
 #ifndef viewpanel_H
 #define viewpanel_H
 
-#include <arbe_msgs/arbeGUIsettings.h>
-#include <arbe_msgs/arbeNewPcMsg.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <pc_data.h>
@@ -56,7 +54,6 @@
 #include "bst_msg_queue.h"
 #include "chartLightning.h"
 #include "flidar_stat.h"
-#include "osc_chart.h"
 #include "plot_tracer.h"
 #include "qcustomplot.h"
 #include "rviz/display.h"
@@ -98,19 +95,6 @@ typedef struct view_vals_t {
   QVariant focal_point;
 } view_vals_t;
 
-typedef struct gui_controls_t {
-  int mode_index;
-  int range_index;
-  int threshold3d;
-  int threshold4d;
-  int DynamicAzimuth;
-  int DynamicElevation;
-  bool isNtc3dOn;
-  bool isNtc4dOn;
-  bool isCfar3dOn;
-  bool isCfar4dOn;
-  bool isPhaseEnabled;
-} gui_controls_t;
 
 class viewpanel : public QTabWidget {
   Q_OBJECT
@@ -120,7 +104,6 @@ class viewpanel : public QTabWidget {
   void setView(view_vals_t& view_vals);
   void printView();
   static viewpanel* Instance();
-  void register_pointcloud_displays(int radar_num);
 
  public Q_SLOTS:
   void startControl(void);
@@ -142,19 +125,9 @@ class viewpanel : public QTabWidget {
 
  private Q_SLOTS:
   void setLoadFileType(void);
-  void screen_record(void);
-  void setMinDoppler(int min_doppler_slider_value);
-  void setMaxDoppler(int max_doppler_slider_value);
-  void setMinColorCoding(int min_slider_value);
-  void setMaxColorCoding(int max_slider_value);
-  void setMinHeight(int min_height_slider_value);
-  void setMaxHeight(int max_height_slider_value);
-  void recording_control(void);
   void closeEvent(QCloseEvent* event);
   void start_save_task();
   void saveDataThead();
-  void showSpeedometer(QGridLayout* layout);
-  void showTurnRate(QGridLayout* layout);
   void loadLidarFile();
   void loadAlgFile();
 
@@ -297,6 +270,8 @@ class viewpanel : public QTabWidget {
   std::string lidar_ip;
   std::string reg_addr_;
   std::string reg_value_;
+	pcData_t g_msg;
+	udpMsg g_udpMsg;
 
   QByteArray motorBuffAll;
 
@@ -349,15 +324,11 @@ class viewpanel : public QTabWidget {
   rviz::ToolManager* tool_panel_;
 
   rviz::Display* grid_;
-  rviz::Display* stationary_pointcloud_[MAX_RADARS];
-  rviz::Display* fs_polygon_display_[MAX_RADARS] = {};
-  rviz::Display* pointcloud_[MAX_RADARS] = {};
+
   rviz::Display* pointcloud_fmcw;
 
-  rviz::Display* SlamArray_[MAX_RADARS] = {};
   rviz::Display* Car_;
   rviz::Display* FloatingText_;
-  rviz::Display* Camera_[MAX_RADARS];
   rviz::Display* FreeSpace_;
   rviz::Display* Imu_;
   rviz::Display* Axes_;
@@ -371,7 +342,6 @@ class viewpanel : public QTabWidget {
 
   sensor_msgs::PointCloud2 output;
 
-  QGridLayout* mainRadarLayout;
   static viewpanel* m_pInstance;
   commandMsg cmdMsg_;
   std::map<int, std::string> motorItemMap;
