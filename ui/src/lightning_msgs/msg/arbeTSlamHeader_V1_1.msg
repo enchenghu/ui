@@ -1,9 +1,0 @@
-uint32 unTimeLsb
-uint32 unTimeMsb
-uint16 frame_counter
-uint16 packet_counter
-uint8  last_packet
-uint8  format
-arbeTSlamMetadata  meta_data
-uint16 header_crc
-uint16 payload_crc

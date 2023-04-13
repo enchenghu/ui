@@ -1,2 +1,0 @@
-arbeNewPcMsg pc
-bool[] valid

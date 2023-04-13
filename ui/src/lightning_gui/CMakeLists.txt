@@ -20,7 +20,6 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   sensor_msgs
   rqt_gauges
-  arbe_msgs
 )
 
 catkin_package()

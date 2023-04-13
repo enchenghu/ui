@@ -1,4 +1,0 @@
-std_msgs/Header RosHeader
-arbePcFrameHeader PcHeader
-arbePcMetadata PcMetadata
-arbePcBins Points

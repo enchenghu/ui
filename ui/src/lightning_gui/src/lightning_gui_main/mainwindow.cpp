@@ -4,11 +4,8 @@
 #include <std_msgs/UInt8MultiArray.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
-#include <arbe_msgs/arbeSlamMsg.h>
-#include "arbe_msgs/arbeNewPcMsg.h"
 #include <geometry_msgs/TwistWithCovarianceStamped.h>
 #include <sensor_msgs/Imu.h>
-#include <arbe_msgs/arbeBoolWithTime.h>
 #include <fcntl.h>
 #include <termios.h>
 
