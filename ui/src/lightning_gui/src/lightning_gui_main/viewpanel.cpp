@@ -948,7 +948,6 @@ void viewpanel::registerPointcloudRviz()
 
 	manager_->getViewManager()->setCurrentViewControllerType("rviz/XYOrbit");
 	manager_->getViewManager()->getCurrent()->subProp("Invert Z Axis")->setValue("false");
-	follower_view_ = false;
 
 	/* Create the radar pointcloud fixed frame. */
 	manager_->setFixedFrame("image_lidar");
@@ -2523,10 +2522,6 @@ void viewpanel::TaskFuncStateRecv(void *arg){
     }
 }
 
-void viewpanel::start_save_task()
-{
-
-}
 void viewpanel::saveDataThead()
 {
 	if(!ifStarted){

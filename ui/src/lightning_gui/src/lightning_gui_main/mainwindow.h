@@ -3,7 +3,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#define ONLY_SHOW_UI 0
 #include <QMainWindow>
 #include <QtWidgets>
 #include <QProgressDialog>
@@ -11,13 +10,7 @@
 #include <std_msgs/Float32.h>
 #include <std_msgs/String.h>
 #include <QInputDialog>
-
-
-class QAction;
-class QMenu;
-class QPlainTextEdit;
-class QListWidget;
-class QStackedWidget;
+#include "viewpanel.h"
 
 class MainWindow : public QMainWindow
 {
@@ -51,7 +44,8 @@ private:
 	void setCurrentFile(const QString &fileName);
 	void find_serial_ports();
 	void find_video_devices();
-
+	viewpanel* viewPanel;
+	QString playback_file;
 	QPlainTextEdit *textEdit;
 	QString curFile;
 	QMenu *fileMenu;

@@ -126,26 +126,20 @@ class viewpanel : public QTabWidget {
  private Q_SLOTS:
   void setLoadFileType(void);
   void closeEvent(QCloseEvent* event);
-  void start_save_task();
   void saveDataThead();
   void loadLidarFile();
   void loadAlgFile();
-
   void setSaveFolder();
   void udpConnect();
   void fftChannelChange();
-
   void udpPcConnect();
   void startPcUdpOnce();
   void startPcUdpContinuous();
-
   void udpClose();
   void udpPcClose();
-
   void configAxesSize();
   void configCellSize();
   void configPointSize();
-
   void pcShowBW();
   void pcRecord();
   void pcOneFramePure();
@@ -159,7 +153,6 @@ class viewpanel : public QTabWidget {
   void resetFFT();
   void resetADC();
   void resetMotor();
-
   void updateState();
   void printErrorLog();
   void slotTextTcpChanged();
@@ -167,12 +160,10 @@ class viewpanel : public QTabWidget {
   void parseMotorInfo(uint8_t*);
   void recvSerialInfoTest();
   void sendItemsInfoTest();
-
   void sendMotorConnectCmd();
   void sendMotorConnectCmdM();
   void sendMotorWorkModeCmd();
   void sendMotorDisplayCycleCmd();
-
   void sendMotorOpenCmd();
   void sendMotorReset();
   void sendMotorPidCmd();
@@ -202,7 +193,6 @@ class viewpanel : public QTabWidget {
   void recvStateInfoloop();
   void procEdfaInfo(uint8_t* data, uint8_t cmd_id);
   void procNllInfo(uint8_t* data, uint8_t cmd_id);
-
   void sendSerialBytes(const uint8_t* begin, int size);
   void udpParseLoop();
   void CreatDebugWindow();
@@ -210,12 +200,10 @@ class viewpanel : public QTabWidget {
   void CreatADCWindow();
   void CreatMotorWindow();
   void CreatStateDetectWindow();
-  void CreatCtlPanel();
   int lidarConnect();
   int motorConnect();
   int stateConnect();
   void sendMotorCmd(const uint8_t* begin, int size);
-
   int motorSerialConnect();
   int motorSerialConnectTest();
   int serialClose(QSerialPort*);
@@ -223,7 +211,6 @@ class viewpanel : public QTabWidget {
   int checkMotorConnected();
   int configRegLidar();
   void motorInfoShow(uint8_t* ptr, int datalen);
-
   void pcParseLoop();
   void pcDataProc();
   void pcDataFindMaxMin(udpPcMsgOneFrame*);
@@ -231,15 +218,12 @@ class viewpanel : public QTabWidget {
   void startPcTask();
   void startMotorTask();
   void startStateDectTask();
-
   void CreatConnect();
+  void saveData();
   void Save2filecsv(std::vector<uint8_t>&, bool);
   void parseFFTData(std::vector<uint8_t>& data);
   void parseADCData(std::vector<uint8_t>& data);
   void simulateADCData();
-
-  std::vector<uint8_t> dataSimulateADC;
-
   void setLED(QLabel* label, int color);
   void setLEDColor(QLabel* label, int color);
   void setButtonStyle(QPushButton* btn);
@@ -247,7 +231,6 @@ class viewpanel : public QTabWidget {
   inline double fft2dBm(double x);
   void load_settings();
   void save_settings();
-  void init_pubs(void);
   void init_queue();
   void setReadOnlyLineEdit(QLineEdit* line);
   void setCheckBoxUnvaild(QCheckBox* line, bool);
@@ -260,13 +243,12 @@ class viewpanel : public QTabWidget {
   bool udpPCSingle_;
   bool udpPCContinu_;
   bool saveadc_;
-  void saveData();
   int ctrl_sock;
   int motor_ctrl_sock;
   int state_ctrl_sock;
   int udpRecvSocketFd_;
   int udpRecvPCSocketFd_;
-
+  std::vector<uint8_t> dataSimulateADC;
   std::string lidar_ip;
   std::string reg_addr_;
   std::string reg_value_;
@@ -274,17 +256,14 @@ class viewpanel : public QTabWidget {
 	udpMsg g_udpMsg;
 
   QByteArray motorBuffAll;
-
   int lidar_ctrl_port;
   int lidar_UDP_port;
   int lidar_UDP_pc_port;
-
   int motor_port;
   int state_port;
   QSerialPort* m_serialPort;
   QSerialPort* m_serialPort_test;
   bool m_serialPort_test_open;
-
   double distance_offset;
   double power_offset;
   double power_min;
@@ -295,38 +274,30 @@ class viewpanel : public QTabWidget {
   double point_size;
   double color_base;
   double axes_size;
-
   double distance_min;
   double distance_max;
   double indensity_min;
   double indensity_max;
   double speed_min;
   double speed_max;
-
   QString lidar_ctrl_port_;
   QString lidar_UDP_port_;
   QString lidar_UDP_PC_port_;
   QString lidar_ip_;
   QString motor_port_;
-
   QString m_reg_addr_[4];
   QString m_reg_value_[4];
-
   QString distance_offset_;
   QString power_offset_;
   QString power_min_;
   UDP_PC_package_st pcDataRaw_;
   std::vector<UDP_PC_package_st> pcDataOneFrame_;
-
   rviz::VisualizationManager* manager_;
   rviz::RenderPanel* render_panel_;
   rviz::SelectionPanel* selection_panel_;
   rviz::ToolManager* tool_panel_;
-
   rviz::Display* grid_;
-
   rviz::Display* pointcloud_fmcw;
-
   rviz::Display* Car_;
   rviz::Display* FloatingText_;
   rviz::Display* FreeSpace_;
@@ -335,22 +306,13 @@ class viewpanel : public QTabWidget {
   rviz::Display* MeshDisplay_;
   rviz::Panel* Detections_Info_;
   QCloseEvent* event;
-
   rviz::Display* Speedometer_;
   pcl::PointCloud<FmcwPointXYZRGBGeneric> cloud;
   pcl::PointCloud<FmcwPointXYZRGBGeneric> cloud_360;
-
   sensor_msgs::PointCloud2 output;
-
   static viewpanel* m_pInstance;
   commandMsg cmdMsg_;
   std::map<int, std::string> motorItemMap;
-
-  double display_offset_x_;
-  double display_offset_y_;
-  double display_offset_h_;
-  bool follower_view_;
-  bool recalc_display_offsets;
   QComboBox* loadDataCombo;
   QComboBox* m3DFTCombo;
   QComboBox* CFARCombo;
@@ -361,9 +323,7 @@ class viewpanel : public QTabWidget {
   QLineEdit* ip_edit;
   QLineEdit* port_edit;
   QLineEdit* udp_port_edit;
-
   QLineEdit* udp_pc_port_edit;
-
   QLineEdit* distance_Offset_edit;
   QLineEdit* rotate_angle_edit;
   QLineEdit* left_angle_edit;
@@ -372,7 +332,6 @@ class viewpanel : public QTabWidget {
   QLineEdit* point_size_edit;
   QLineEdit* cell_size_edit;
   QLineEdit* axes_size_edit;
-
   QLineEdit* power_Offset_edit;
   QLineEdit* power_Min_edit;
   QString save_folder_;
@@ -381,32 +340,26 @@ class viewpanel : public QTabWidget {
   QLineEdit* regRead_line[4];
   QLineEdit* adcRead0_line;
   QLineEdit* adcRead1_line;
-
   QLineEdit* motorPidReadLine[5];
-
   QLineEdit* motorPidCSetLine;
   QLineEdit* motorPidPSetLine;
   QLineEdit* motorPidISetLine;
   QLineEdit* motorPidDSetLine;
   QLineEdit* motorPidMaxLine;
-
   QLineEdit* motorWorkModeReadLine;
   QLineEdit* motorWorkModeAngleSetLine;
   QLineEdit* motorWorkModeSpeedSetLine;
   QLineEdit* motorWorkModeLocSetLine;
-
   QLineEdit* motorShowCycleSetLine;
   QLineEdit* motorDevReadLine;
   QLineEdit* motorShowItemsLine;
   QLineEdit* motorSoftVersionLine;
   QLineEdit* motorHardVersionLine;
   QLineEdit* motorConnectPortLine;
-
   QComboBox* motorWorkModeCombo;
   QComboBox* motorSerialCombo;
   QComboBox* motorIDCombo;
   QComboBox* motorPidReadCombo;
-
   QPushButton* motorConnectBtnTcp;
   QPushButton* motorConnectBtnSerial;
   QPushButton* motorSwitchBtn;
@@ -461,10 +414,8 @@ class viewpanel : public QTabWidget {
   bool ifStarted;
   bool ifConnectedMotorTcp;
   bool ifConnectedStateTcp;
-
   bool ifConnectedMotorSerial;
   bool ifOpenMotor;
-
   showModel ifShowdB_;
   bool ifSave;
   bool oneFramePure;
@@ -477,13 +428,11 @@ class viewpanel : public QTabWidget {
   QPushButton* pcOnceBtn;
   QPushButton* pcResetBtn;
   QPushButton* loadAlgBtn;
-
   QPushButton* regBtnWrite[4];
   QPushButton* regBtnRead[4];
   QPushButton* settingADCSavebutton;
   QPushButton* settingADCConfigbutton;
   QComboBox* fftChCombo;
-
   QPushButton* singelFFTBtn_;
   QPushButton* resetFFTBtn_;
   QPushButton* singelADCBtn_;

@@ -160,7 +160,7 @@ catkin_package(CATKIN_DEPENDS
 ## Your package locations should be listed before other locations
 include_directories(
  #include src/arbe_points_publisher/include/
- include src/lightning_gui_main/pc_autox/
+ include src/lightning_types/
  include ${OpenCV_INCLUDE_DIRS}
  include ${catkin_INCLUDE_DIRS}
  include ${PCL_LIBRARY_DIRS}

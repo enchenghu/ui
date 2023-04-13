@@ -1,7 +1,6 @@
 
 
 #include "mainwindow.h"
-#include "viewpanel.h"
 #include <std_msgs/UInt8MultiArray.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
@@ -28,16 +27,8 @@
 #  endif
 #endif
 
-using namespace std;
-
 int terminating;
-viewpanel* viewPanel;
-QString playback_file;
-
-
 QString save_folder = ".";
-
-
 void MainWindow::find_serial_ports()
 {
 	std::vector<std::string> ports;
