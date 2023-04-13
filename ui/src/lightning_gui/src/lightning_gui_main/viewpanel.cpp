@@ -17,7 +17,6 @@
 #include "std_msgs/Float32.h"
 #include "std_msgs/Float32MultiArray.h"
 #include <std_msgs/UInt8.h>
-#include "Utils.h"
 #include "rqt_gauges/my_plugin.h"
 #include "rqt_gauges/qcgaugewidget.h"
 #include "viewpanel.h"

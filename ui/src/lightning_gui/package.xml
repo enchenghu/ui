@@ -7,7 +7,7 @@
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="chenjunchao@todo.todo">chenjunchao</maintainer>
+  <maintainer email="enchenghu@todo.todo">enchenghu</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
@@ -61,13 +61,7 @@
 <build_depend>message_generation</build_depend>
 <exec_depend>message_runtime</exec_depend>
 
- <build_depend>arbe_msgs</build_depend>
- <build_depend>arbe_api_common</build_depend>
   <build_depend>rviz</build_depend>
   <exec_depend>rviz</exec_depend>
 
-  <!-- The export tag contains other, unspecified, tags -->
-  <export>
-      <rviz plugin="${prefix}/plugin_description.xml"/>
-  </export>
 </package>

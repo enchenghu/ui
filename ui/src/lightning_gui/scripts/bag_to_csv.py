@@ -56,7 +56,7 @@ for bagFile in listOfBagFiles:
 
 
 	#get list of topics from the bag
-	listOfTopics = ['/arbe/raw/radar_tx']
+	listOfTopics = ['/raw/radar_tx']
 	for topic, msg, t in bagContents:
 		if topic not in listOfTopics:
 			listOfTopics.append(topic)

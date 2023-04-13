@@ -6,7 +6,6 @@
 #include <QDebug>
 #include <QString>
 #include "mainwindow.h"
-#include "Utils.h"
 #include <iostream>
 #include <fstream>
 #include <sys/ioctl.h>

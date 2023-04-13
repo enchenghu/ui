@@ -1,6 +1,4 @@
-<!--
-  arbe_phoenix_radar_driver Launch 
--->
+
 <launch>
 	####  For GDB add: launch-prefix="gdb -ex run --args" ####
 	<node name="lightning_gui" pkg="autox_ui" type="lightning_gui" output="screen" required="true">

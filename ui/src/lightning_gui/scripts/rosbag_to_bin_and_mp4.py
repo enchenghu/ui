@@ -257,7 +257,7 @@ for files in range(0,len(opt_files)):
 
     unityfilename = bagfile.replace(".bag", ".bin")
     unitybinfile = open(unityfilename, 'w')
-    for topic, msg, t in bag.read_messages(topics=['/arbe_bin_pointcloud','/arbe/raw/radar_tx']):
+    for topic, msg, t in bag.read_messages(topics=['/bin_pointcloud','/raw/radar_tx']):
         unitybinfile.write(msg.data)
 
     unitybinfile.close()

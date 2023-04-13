@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   pcl_ros
   pcl_conversions
-  arbe_api_common
   std_msgs
   image_transport
   cv_bridge
@@ -46,9 +45,6 @@ else()
   set(QT_LIBRARIES Qt5::Widgets)
 endif()
 
-#[[qt5_wrap_cpp(MOC_FILES
-  src/arbe_points_publisher/include/arbe_points_publisher/arbe_points_publisher.hpp
-  )]]
 
 ## I prefer the Qt signals and slots to avoid defining "emit", "slots",
 ## etc because they can conflict with boost signals, so define QT_NO_KEYWORDS here.
@@ -158,7 +154,6 @@ catkin_package(CATKIN_DEPENDS
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
- #include src/arbe_points_publisher/include/
  include src/lightning_types/
  include ${OpenCV_INCLUDE_DIRS}
  include ${catkin_INCLUDE_DIRS}
@@ -194,26 +189,7 @@ add_executable(lightning_server src/local_server/server.cpp)
 target_link_libraries(lightning_server
    ${catkin_LIBRARIES}
  )
-#[[add_executable(arbe_pointcloud_receiver 
-src/arbe_pointcloud_receiver/pointcloud_node.cpp
-)
 
-add_executable(arbe_visualization_engine 
-src/arbe_visualization_engine/visualization_node.cpp
-src/arbe_visualization_engine/Slam_color.cpp
-src/arbe_visualization_engine/Pointcloud_coloring.cpp
-src/arbe_visualization_engine/vis_utils.cpp
-)
-
-add_executable(arbe_slam_can_publisher 
-src/arbe_slam_can_publisher/main.cpp
-)
-## Declare a C++ library
-add_library(arbe_points_publisher
-  src/arbe_points_publisher/src/arbe_points_publisher.cpp
-  ${MOC_FILES}
-)
-]]
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -244,44 +220,11 @@ target_link_libraries(lightning_gui
    ${CXX_FILESYSTEM_LIBRARIES}
  )
 
-#[[add_dependencies(arbe_pointcloud_receiver ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(arbe_pointcloud_receiver
-   ${catkin_LIBRARIES}
-   ${PCL_LIBRARIES}
- )
 
-add_dependencies(arbe_visualization_engine ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(arbe_visualization_engine
-   ${catkin_LIBRARIES}
-   ${PCL_LIBRARIES}
- )
-
-add_dependencies(arbe_points_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(arbe_points_publisher
-   ${catkin_LIBRARIES}
-   ${PCL_LIBRARIES}
- )
-
-add_dependencies(arbe_slam_can_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(arbe_slam_can_publisher
-   ${catkin_LIBRARIES}
-   ${PCL_LIBRARIES}
- )
-]]
 #############
 ## Install ##
 #############
 
-#[[install(TARGETS arbe_points_publisher
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-  )
-
-install(FILES arbe_points_publisher
-  plugin_description.xml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-]]
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
@@ -333,8 +276,8 @@ install(FILES arbe_points_publisher
 set(CMAKE_BUILD_TYPE DEBUG)
 target_compile_definitions(lightning_gui PRIVATE SRC_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\")
 
-set(ARBE_BUILD_TYPE RELEASE)
-IF(ARBE_BUILD_TYPE MATCHES RELEASE)
+set(LIGHTNING_BUILD_TYPE RELEASE)
+IF(LIGHTNING_BUILD_TYPE MATCHES RELEASE)
     set (pscm_cmd "cm")
     set (pscm_status "status")
     set (pscm_arg "--cset")
