@@ -56,7 +56,7 @@ static QStringList regValueList = {
 	"0x91EC0001",
 	"0x40001183"
 };
-
+static std::vector<std::string> cfarAddr = {"A0070060", "A0070064", "A0070068", "A007006C"};
 static std::string softVersionName = "motor_xlidar_B_appA_0_3_2022_12_14";
 static std::string hardVersionName = "50120-0126-V0.2_20221115";
 
@@ -2220,7 +2220,8 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	if(!ifsave) return;
 	//memset(&curPcData, 0, sizeof(curPcData));
 	static long findex = 0;
-#if 1
+	QString str_power = PowerCombo->currentText();
+#if 0
 	std::string datPath;
 	datPath = save_folder_.toStdString() + "/data_test_raw_index" + std::to_string(findex++) +".bin";
 	ROS_INFO("datPath is %s \n", datPath.c_str());
@@ -2240,8 +2241,11 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	ptminfo->tm_hour, ptminfo->tm_min, ptminfo->tm_sec);
 #if 1
 	int chanID = savePCCombo->currentText().toInt();
+	QString strValue = regVal_line[chanID - 1]->text();
 	std::string csvPath;
-	csvPath = save_folder_.toStdString() + "/data_convert_Channel" + std::to_string(chanID)  + "_" + \
+	csvPath = save_folder_.toStdString() + "/SavePC_" + str_power.toStdString() + "mW" + \
+	"_Ch" + std::to_string(chanID)  + "_" + "CFAR_" + \ 
+	cfarAddr[chanID - 1] + "_" +  strValue.toStdString() + "_" + \
 	std::to_string(ptminfo->tm_year + 1900) + \
 	"-" + std::to_string(ptminfo->tm_mon + 1) + \
 	"-" + std::to_string(ptminfo->tm_mday) + \
@@ -2277,11 +2281,11 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 
 		if(index == 4 || index == 8){
 			if(index == 4) {
-				if(dataPointID % 4 == chanID) csvfile << cur_data << ",";	//intensity
+				if(dataPointID % 4 == chanID || dataPointID % 4 == 0) csvfile << cur_data << ",";	//intensity
 			}
 			else{
 				distance = cur_data / 65536.0 - distance_offset; //distance
-				if(dataPointID % 4 == chanID) csvfile << distance << ",";	
+				if(dataPointID % 4 == chanID || dataPointID % 4 == 0) csvfile << distance << ",";	
 			}
 			cur_data = 0;
 		}
@@ -2290,7 +2294,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 			if(cur_data > SIGN_LIMIT_NUM)
 				cur_data -= SIGN_OFFSET_NUM;
 			speed = cur_data / 128.0;
-			if(dataPointID % 4 == chanID) csvfile << speed << ",";	 // speed
+			if(dataPointID % 4 == chanID || dataPointID % 4 == 0) csvfile << speed << ",";	 // speed
 			cur_data = 0;
 		}
 
@@ -2301,14 +2305,14 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 			else
 				vAngle = 666.666;
 			//vAngle = cur_data / 256.0 - 2.5; //vertical
-			if(dataPointID % 4 == chanID) csvfile << vAngle << ",";	
+			if(dataPointID % 4 == chanID || dataPointID % 4 == 0) csvfile << vAngle << ",";	
 			cur_data = 0;
 		}
 
 		if(index == 14){
 			hAngle = cur_data * 360.0 / 65536.0; //horizontal
 			if(hAngle > 360.0) hAngle -= 360.0;
-			if(dataPointID % 4 == chanID) csvfile << hAngle << "\n";	
+			if(dataPointID % 4 == chanID || dataPointID % 4 == 0) csvfile << hAngle << "\n";	
 			cur_data = 0;
 		}
 
