@@ -2279,13 +2279,14 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 		else if (index < 15)
 			cur_data += data[i] << (8 * (index - 13));
 
+		int flag = dataPointID % 4;
 		if(index == 4 || index == 8){
 			if(index == 4) {
-				if(dataPointID % 4 == chanID || dataPointID % 4 == 0) csvfile << cur_data << ",";	//intensity
+				if(flag == chanID || flag == chanID - 4) csvfile << cur_data << ",";	//intensity
 			}
 			else{
 				distance = cur_data / 65536.0 - distance_offset; //distance
-				if(dataPointID % 4 == chanID || dataPointID % 4 == 0) csvfile << distance << ",";	
+				if(flag == chanID || flag == chanID - 4) csvfile << distance << ",";	
 			}
 			cur_data = 0;
 		}
@@ -2294,7 +2295,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 			if(cur_data > SIGN_LIMIT_NUM)
 				cur_data -= SIGN_OFFSET_NUM;
 			speed = cur_data / 128.0;
-			if(dataPointID % 4 == chanID || dataPointID % 4 == 0) csvfile << speed << ",";	 // speed
+			if(flag == chanID || flag == chanID - 4) csvfile << speed << ",";	 // speed
 			cur_data = 0;
 		}
 
@@ -2305,14 +2306,14 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 			else
 				vAngle = 666.666;
 			//vAngle = cur_data / 256.0 - 2.5; //vertical
-			if(dataPointID % 4 == chanID || dataPointID % 4 == 0) csvfile << vAngle << ",";	
+			if(flag == chanID || flag == chanID - 4) csvfile << vAngle << ",";	
 			cur_data = 0;
 		}
 
 		if(index == 14){
 			hAngle = cur_data * 360.0 / 65536.0; //horizontal
 			if(hAngle > 360.0) hAngle -= 360.0;
-			if(dataPointID % 4 == chanID || dataPointID % 4 == 0) csvfile << hAngle << "\n";	
+			if(flag == chanID || flag == chanID - 4) csvfile << hAngle << "\n";	
 			cur_data = 0;
 		}
 
