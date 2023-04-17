@@ -892,6 +892,19 @@ float CharToFloat(unsigned char *strBuf, int nLen)
 void func(int a, int b , int c ,int d){
     printf("a is %d, b is %d, c is %d, d is %d\n ", a, b, c, d);
 }
+
+void testFile()
+{
+	std::ofstream csvfile; 
+	csvfile.open("./testFile.csv", std::ios::out); 
+	csvfile << "intensity" << "," << "distance(m)" << "," << \
+				"speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)"; 
+    for(int i = 0; i < 3; i++){
+        csvfile << "," << "," << "intensity" << "," << "distance(m)" << \ 
+                ","  << "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)"; 
+    }
+	csvfile << "\n";    
+}
 int main(int argc, char** argv) 
 { 
     pthread_t udp_send;
@@ -907,6 +920,7 @@ int main(int argc, char** argv)
     uint8_t data_u8_test[4];
     auto newfun = std::bind(func,  placeholders::_2, 2, 3,  placeholders::_1);
     newfun(1, 4);
+    testFile();
 /*     data_u8_test[0] = data_float & 0xff;
     data_u8_test[1] = (data_float & 0xff00) >> 8;
     data_u8_test[2] = (data_float & 0xff0000) >> 16;

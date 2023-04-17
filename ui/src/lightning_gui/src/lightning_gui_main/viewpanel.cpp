@@ -1828,6 +1828,7 @@ void viewpanel::CreatUIWindow()
 	PowerCombo = new QComboBox;
 	colorCombo = new QComboBox;
 	savePCCombo = new QComboBox;
+	savePCCombo->addItem(QString::number(-1));
 	for (int i = 1; i < 5; i++){
 		savePCCombo->addItem(QString::number(i));
 	}
@@ -2263,9 +2264,17 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	double hAngle;
 
 	int index = 0;
-	csvfile << "intensity" << "," << "distance(m)" << "," 
-	<< "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)" << "\n";
-	int dataPointID = 1;	
+	csvfile << "intensity" << "," << "distance(m)" << "," << \
+				"speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)"; 
+	if(chanID == -1){
+		for(int i = 0; i < 3; i++){
+			csvfile << "," << "," << "intensity" << "," << "distance(m)" << \ 
+					","  << "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)"; 
+		}
+	}
+	csvfile << "\n";
+	int dataPointID = 1;
+	int flag_nl = 0;	
 	for(int i = 0; i < data.size(); i++) {
 		index += 1;
 		if(index < 5)
@@ -2282,11 +2291,11 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 		int flag = dataPointID % 4;
 		if(index == 4 || index == 8){
 			if(index == 4) {
-				if(flag == chanID || flag == chanID - 4) csvfile << cur_data << ",";	//intensity
+				if(flag == chanID || (flag == (chanID - 4)) || chanID == -1) csvfile << cur_data << ",";	//intensity
 			}
 			else{
 				distance = cur_data / 65536.0 - distance_offset; //distance
-				if(flag == chanID || flag == chanID - 4) csvfile << distance << ",";	
+				if(flag == chanID || (flag == (chanID - 4)) || chanID == -1) csvfile << distance << ",";	
 			}
 			cur_data = 0;
 		}
@@ -2295,7 +2304,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 			if(cur_data > SIGN_LIMIT_NUM)
 				cur_data -= SIGN_OFFSET_NUM;
 			speed = cur_data / 128.0;
-			if(flag == chanID || flag == chanID - 4) csvfile << speed << ",";	 // speed
+			if(flag == chanID || (flag == (chanID - 4)) || chanID == -1) csvfile << speed << ",";	 // speed
 			cur_data = 0;
 		}
 
@@ -2306,14 +2315,27 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 			else
 				vAngle = 666.666;
 			//vAngle = cur_data / 256.0 - 2.5; //vertical
-			if(flag == chanID || flag == chanID - 4) csvfile << vAngle << ",";	
+			if(flag == chanID || (flag == (chanID - 4)) || chanID == -1) csvfile << vAngle << ",";	
 			cur_data = 0;
 		}
 
 		if(index == 14){
 			hAngle = cur_data * 360.0 / 65536.0; //horizontal
 			if(hAngle > 360.0) hAngle -= 360.0;
-			if(flag == chanID || flag == chanID - 4) csvfile << hAngle << "\n";	
+			if(flag == chanID || (flag == (chanID - 4)) || chanID == -1) {
+				csvfile << hAngle;	
+				flag_nl++;
+				if((chanID == -1)){
+					if(flag_nl < 4)
+						csvfile << "," << ",";	
+					if(flag_nl == 4){
+						csvfile << "\n";
+						flag_nl = 0;
+					}
+				}else{
+					csvfile << "\n";
+				}
+			}
 			cur_data = 0;
 		}
 
