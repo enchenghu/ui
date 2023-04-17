@@ -2242,18 +2242,30 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	ptminfo->tm_hour, ptminfo->tm_min, ptminfo->tm_sec);
 #if 1
 	int chanID = savePCCombo->currentText().toInt();
-	QString strValue = regVal_line[chanID - 1]->text();
 	std::string csvPath;
-	csvPath = save_folder_.toStdString() + "/SavePC_" + str_power.toStdString() + "mW" + \
-	"_Ch" + std::to_string(chanID)  + "_" + "CFAR_" + \ 
-	cfarAddr[chanID - 1] + "_" +  strValue.toStdString() + "_" + \
-	std::to_string(ptminfo->tm_year + 1900) + \
-	"-" + std::to_string(ptminfo->tm_mon + 1) + \
-	"-" + std::to_string(ptminfo->tm_mday) + \
-	"-" + std::to_string(ptminfo->tm_hour) + \
-	"-" + std::to_string(ptminfo->tm_min) + \
-	"-" + std::to_string(ptminfo->tm_sec) + \
-	+".csv";
+	if(chanID > 0){
+		QString strValue = regVal_line[chanID - 1]->text();
+		csvPath = save_folder_.toStdString() + "/SavePC_" + str_power.toStdString() + "mW" + \
+		"_Ch" + std::to_string(chanID)  + "_" + "CFAR_" + \ 
+		cfarAddr[chanID - 1] + "_" +  strValue.toStdString() + "_" + \
+		std::to_string(ptminfo->tm_year + 1900) + \
+		"-" + std::to_string(ptminfo->tm_mon + 1) + \
+		"-" + std::to_string(ptminfo->tm_mday) + \
+		"-" + std::to_string(ptminfo->tm_hour) + \
+		"-" + std::to_string(ptminfo->tm_min) + \
+		"-" + std::to_string(ptminfo->tm_sec) + \
+		+".csv";
+	} else {
+		csvPath = save_folder_.toStdString() + "/SavePC_" + str_power.toStdString() + "mW" + \
+		"_Ch" + std::to_string(chanID) + "_" + "CFAR_" + \ 
+		std::to_string(ptminfo->tm_year + 1900) + \
+		"-" + std::to_string(ptminfo->tm_mon + 1) + \
+		"-" + std::to_string(ptminfo->tm_mday) + \
+		"-" + std::to_string(ptminfo->tm_hour) + \
+		"-" + std::to_string(ptminfo->tm_min) + \
+		"-" + std::to_string(ptminfo->tm_sec) + \
+		+".csv";		
+	}
 	ROS_INFO("csvPath is %s \n", csvPath.c_str());
 	std::ofstream csvfile; 
 	csvfile.open(csvPath, std::ios::out); 
