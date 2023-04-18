@@ -162,7 +162,7 @@ uint8_t * LoadDat(const char *cali_file_path)
 viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
 	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_DB),\
-	power_offset(0.0), distance_offset(0.0),ifConnectedMotorSerial(false), ifConnectedMotorTcp(false),\
+	power_offset(0.0),ifConnectedMotorSerial(false), ifConnectedMotorTcp(false),\
 	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
 	ifStarted(false),saveadc_(false), oneFramePure(false), ifConnectedStateTcp(false)
 {
@@ -1740,14 +1740,14 @@ void viewpanel::CreatUIWindow()
 	setButtonStyle(pcOnceBtn);
 	pcResetBtn = new QPushButton("&PC Contin", this);
 	setButtonStyle(pcResetBtn);
-	pcBWBtn = new QPushButton("&Bg Color", this);
+	pcBWBtn = new QPushButton("&Bg Color");
 	pcBWBtn->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}"
 	//"QPushButton:hover{background-color:rgba(0, 255, 0, 100);border:2px solid black;border-radius:10px;}"
 	"QPushButton:pressed{background-color:rgba(127, 255, 0, 100);}");
 	pcRecordBtn = new QPushButton("&Record", this);
 	pcRecordBtn->setFixedSize(70,25);
 	setButtonStyle(pcRecordBtn);
-	pcProcBtn = new QPushButton("&OneFramePure", this);
+	pcProcBtn = new QPushButton("&Pure", this);
 	setButtonStyle(pcProcBtn);
 	//lidar_stop_button = new QPushButton("Stop", this);
 	//lidarIdCombo =  new QComboBox;
@@ -1755,7 +1755,11 @@ void viewpanel::CreatUIWindow()
 	QLabel* lidar_IP_label = new QLabel( "Lidar IP addr" );
 	QLabel* lidar_port_label = new QLabel( "Lidar Ctrl Port" );
 	QLabel* lidar_udp_port_label = new QLabel( "FFT-ADC Port" );
-	QLabel* distanceOffset_label = new QLabel( "distance Offset" );
+	QLabel* distanceOffset_label1 = new QLabel( "Ch1 Dist Offset" );
+	QLabel* distanceOffset_label2 = new QLabel( "Ch2 Dist Offset" );
+	QLabel* distanceOffset_label3 = new QLabel( "Ch3 Dist Offset" );
+	QLabel* distanceOffset_label4 = new QLabel( "Ch4 Dist Offset" );
+
 	QLabel* pcPort_label = new QLabel( "PointCloud port" );
 
 	ip_edit =  new QLineEdit();
@@ -1767,8 +1771,12 @@ void viewpanel::CreatUIWindow()
 	udp_port_edit =  new QLineEdit();
 	udp_port_edit->setFixedSize(70,25);
 
-	distance_Offset_edit = new QLineEdit();
-	distance_Offset_edit->setFixedSize(70,25);
+	for(int i = 0; i < 4; i++){
+		distance_Offset_edit[i] = new QLineEdit();
+		distance_Offset_edit[i]->setFixedSize(70,25);
+		distance_Offset_edit[i]->setPlaceholderText("input distance offset ");
+		distance_Offset_edit[i]->setText(distance_offset_[i]);
+	}
 
 	ip_edit->setPlaceholderText("input ip addr");
 	ip_edit->setText(lidar_ip_);
@@ -1778,8 +1786,6 @@ void viewpanel::CreatUIWindow()
 	udp_port_edit->setText(lidar_UDP_port_);
 	udp_pc_port_edit->setPlaceholderText("input udp pc port");
 	udp_pc_port_edit->setText(lidar_UDP_PC_port_);
-	distance_Offset_edit->setPlaceholderText("input distance offset ");
-	distance_Offset_edit->setText(distance_offset_);
 
 	controls_layout->addWidget( lidar_IP_label, 0, 0, Qt::AlignRight);
 	controls_layout->addWidget( ip_edit, 0, 1, Qt::AlignLeft);
@@ -1946,7 +1952,7 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( pcOnceBtn, 1, 15, Qt::AlignRight);	
 	controls_layout->addWidget( pcResetBtn, 2, 15, Qt::AlignRight);	
 	controls_layout->addWidget( saveBtn, 1, 2, Qt::AlignRight);
-	controls_layout->addWidget( pcBWBtn, 3, 15, Qt::AlignRight);	
+	//controls_layout->addWidget( pcBWBtn, 3, 15, Qt::AlignRight);	
 
 	controls_layout->addWidget( point_size_label, 0, 16, Qt::AlignRight);
 	controls_layout->addWidget( point_size_edit, 0, 17, Qt::AlignLeft);	
@@ -1962,16 +1968,21 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( savePCCombo, 1, 3, Qt::AlignLeft);	
 	savePCCombo->setFixedSize(70, 25);	
 
-	controls_layout->addWidget( pcProcBtn, 4, 18, Qt::AlignRight);
-	controls_layout->addWidget( pcRecordBtn, 4, 19, Qt::AlignRight);
-	controls_layout->addWidget( distanceOffset_label, 0, 18, Qt::AlignRight);
-	controls_layout->addWidget( distance_Offset_edit, 0, 19, Qt::AlignLeft);	
-	controls_layout->addWidget( rotate_label, 1, 18, Qt::AlignRight);
-	controls_layout->addWidget( rotate_angle_edit, 1, 19, Qt::AlignLeft);	
-	controls_layout->addWidget( left_label, 2, 18, Qt::AlignRight);
+	controls_layout->addWidget( pcProcBtn, 3, 15, Qt::AlignRight);
+	controls_layout->addWidget( pcRecordBtn, 4, 15, Qt::AlignRight);
+	controls_layout->addWidget( distanceOffset_label1, 0, 18, Qt::AlignRight);
+	controls_layout->addWidget( distanceOffset_label2, 1, 18, Qt::AlignRight);
+	controls_layout->addWidget( distanceOffset_label3, 2, 18, Qt::AlignRight);
+	controls_layout->addWidget( distanceOffset_label4, 3, 18, Qt::AlignRight);
+	for(int i = 0; i < 4; i++)
+		controls_layout->addWidget( distance_Offset_edit[i], i, 19, Qt::AlignLeft);	
+
+	controls_layout->addWidget( rotate_label, 4, 18, Qt::AlignRight);
+	controls_layout->addWidget( rotate_angle_edit, 4, 19, Qt::AlignLeft);	
+/* 	controls_layout->addWidget( left_label, 2, 18, Qt::AlignRight);
 	controls_layout->addWidget( left_angle_edit, 2, 19, Qt::AlignLeft);	
 	controls_layout->addWidget( right_label, 3, 18, Qt::AlignRight);
-	controls_layout->addWidget( right_angle_edit, 3, 19, Qt::AlignLeft);	
+	controls_layout->addWidget( right_angle_edit, 3, 19, Qt::AlignLeft);	 */
 
 	controlsBox->setLayout(controls_layout);
 
@@ -2283,7 +2294,14 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 			csvfile << "," << "," << "intensity" << "," << "distance(m)" << \ 
 					","  << "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)"; 
 		}
+		for(int i = 0; i < 4; i++){
+			distance_offset[i] = distance_Offset_edit[i]->text().toDouble();
+		}
+	} else {
+		distance_offset[chanID - 1] = distance_Offset_edit[chanID - 1]->text().toDouble();
+		std::cout << " distance_offset ch " << chanID - 1 << " is " << distance_offset[chanID - 1] << std::endl;
 	}
+
 	csvfile << "\n";
 	int dataPointID = 1;
 	int flag_nl = 0;	
@@ -2306,7 +2324,8 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 				if(flag == chanID || (flag == (chanID - 4)) || chanID == -1) csvfile << cur_data << ",";	//intensity
 			}
 			else{
-				distance = cur_data / 65536.0 - distance_offset; //distance
+				if(chanID > 0) distance = cur_data / 65536.0 - distance_offset[chanID - 1]; //distance
+				if(chanID < 0) distance = cur_data / 65536.0 - distance_offset[flag_nl]; //distance
 				if(flag == chanID || (flag == (chanID - 4)) || chanID == -1) csvfile << distance << ",";	
 			}
 			cur_data = 0;
@@ -2366,9 +2385,6 @@ void viewpanel::saveData(){
 	int ret = 0;
 	bool ifsave = true;
 	//while(!terminating && ifSave){
-	distance_offset = distance_Offset_edit->text().toDouble();
-	std::cout << " distance_offset is " << distance_offset << std::endl;
-
 	cmdMsg_.mHead.usCommand = commandType::POINTCLOUD_TCP_READ;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
@@ -2596,11 +2612,11 @@ void viewpanel::pcOneFramePure()
 {
 	if(oneFramePure){
 		pcProcBtn->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}");
-		pcProcBtn->setText("&OneFramePure");	
+		pcProcBtn->setText("&Pure");	
 		oneFramePure = false;	
 	} else {
 		pcProcBtn->setStyleSheet("QPushButton{background-color:rgba(127, 255, 0, 100);}");
-		pcProcBtn->setText("&OneFrame  360");	
+		pcProcBtn->setText("&360");	
 		oneFramePure = true;			
 	}
 
@@ -3788,8 +3804,8 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 		{
 			double horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
 			if(horizontal_m > 360.0) horizontal_m -= 360.0;
-			if( horizontal_m < leftAngle_offset && horizontal_m > rightAngle_offset) continue;
-			double distance_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmDistance * distance_bin - distance_offset;
+			//if( horizontal_m < leftAngle_offset && horizontal_m > rightAngle_offset) continue;
+			double distance_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmDistance * distance_bin;// - distance_offset;
 			if( distance_m < 0.0 || distance_m > 101.0) continue;
 			int speed_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmSpeed * speed_bin;
 			if( speed_m < -60.0 || speed_m > 60.0) continue;
@@ -3805,6 +3821,26 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 	std::cout << "distance_min: " << distance_min << " distance_max: " << distance_max \
 	<< " indensity_min: " << indensity_min << " indensity_max: " << indensity_max << " speed_min: " << speed_min \ 
 	<< " speed_max: " << speed_max << std::endl; 
+}
+double viewpanel::chooseChOffset(int id)
+{
+	switch (id)
+	{
+	case 1:
+
+		break;
+	case 2:
+		/* code */
+		break;
+	case 3:
+		/* code */
+		break;
+	case 4:
+		/* code */
+		break;					
+	default:
+		break;
+	}
 }
 
 void viewpanel::pcDataProc()
@@ -3913,7 +3949,8 @@ void viewpanel::pcDataProc()
 		udpPcMsg_free_buf_queue.put(pmsg);
 		return;
 	}
-	distance_offset = distance_Offset_edit->text().toDouble();
+	for(int i = 0; i < 4; i++)
+		distance_offset[i] = distance_Offset_edit[i]->text().toDouble();
 	rotation_offset = rotate_angle_edit->text().toDouble();
 	leftAngle_offset = left_angle_edit->text().toDouble();
 	rightAngle_offset = right_angle_edit->text().toDouble();
@@ -3927,6 +3964,7 @@ void viewpanel::pcDataProc()
 	double vertical_m;
 	double intensity_m;
 	double speed_m;
+	int chan_id_m;
 	int index_rgb;
 #if 1
 	time_t rawtime;
@@ -3963,11 +4001,12 @@ void viewpanel::pcDataProc()
 	{
 		horizontal_m = oneFrame360.pcDataOneFrame[j].pcmHorizontal * horizontal_bin;
 		if(horizontal_m > 360.0) horizontal_m -= 360.0;
-		if( horizontal_m < leftAngle_offset && horizontal_m > rightAngle_offset) continue;
+		//if( horizontal_m < leftAngle_offset && horizontal_m > rightAngle_offset) continue;
 		realSize++;
 		speed_m = oneFrame360.pcDataOneFrame[j].pcmSpeed * speed_bin;
-		distance_m = oneFrame360.pcDataOneFrame[j].pcmDistance * distance_bin - distance_offset;
 		vertical_m = fov_vertical[oneFrame360.pcDataOneFrame[j].pcmVerticalIndex];
+		chan_id_m = oneFrame360.pcDataOneFrame[j].pcmVerticalIndex / 4 + 1;
+		distance_m = oneFrame360.pcDataOneFrame[j].pcmDistance * distance_bin - distance_offset[chan_id_m - 1];
 		intensity_m = oneFrame360.pcDataOneFrame[j].pcmIndensity;
 		if(udpPCSingle_) {
 			csvfile << oneFrame360.pcDataOneFrame[j].pcmIndensity << "," << distance_m << "," << speed_m << "," \
@@ -3979,6 +4018,7 @@ void viewpanel::pcDataProc()
 		cloud.points[j].distance = distance_m;
 		cloud.points[j].indensity = intensity_m;
 		cloud.points[j].speed = speed_m;
+		cloud.points[j].chan_id = chan_id_m;
 		horizontal_m += rotation_offset;
 		cloud.points[j].x = distance_m * cos(vertical_m * PI_FMCW / 180) * \
 															cos(horizontal_m * PI_FMCW / 180);
@@ -4589,7 +4629,11 @@ void viewpanel::load_settings()
 	lidar_UDP_PC_port_ = settings.value("UDP PC Port","8001").toString();
 	lidar_ctrl_port_ = settings.value("TCP Port","5000").toString();
 	lidar_UDP_port_ = settings.value("UDP Port","8000").toString();
-	distance_offset_ = settings.value("Distance Offset","0.0").toString();
+	distance_offset_[0] = settings.value("Distance Offset1","0.0").toString();
+	distance_offset_[1] = settings.value("Distance Offset2","0.0").toString();
+	distance_offset_[2] = settings.value("Distance Offset3","0.0").toString();
+	distance_offset_[3] = settings.value("Distance Offset4","0.0").toString();
+
 	rotation_offset = settings.value("rotate angle","45.0").toDouble();
 	leftAngle_offset = settings.value("left angle","306.0").toDouble();
 	color_base = settings.value("color base","10.0").toDouble();
@@ -4722,7 +4766,11 @@ void viewpanel::save_settings(void )
 	settings.setValue("TCP Port", port_edit->text());
 	settings.setValue("UDP Port", udp_port_edit->text());
 	settings.setValue("UDP PC Port", udp_pc_port_edit->text());
-	settings.setValue("Distance Offset", distance_Offset_edit->text());
+	settings.setValue("Distance Offset1", distance_Offset_edit[0]->text());
+	settings.setValue("Distance Offset2", distance_Offset_edit[1]->text());
+	settings.setValue("Distance Offset3", distance_Offset_edit[2]->text());
+	settings.setValue("Distance Offset4", distance_Offset_edit[3]->text());
+
 	settings.setValue("rotate angle", rotate_angle_edit->text());
 	settings.setValue("left angle", left_angle_edit->text());
 	settings.setValue("right angle", right_angle_edit->text());

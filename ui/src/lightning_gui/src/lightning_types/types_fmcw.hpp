@@ -48,6 +48,7 @@ struct  EIGEN_ALIGN16 FmcwPointXYZRGBGeneric
         float vertical;
         float speed;
         float indensity;
+        int chan_id;
         uint32_t timestamp_sec;
         uint32_t timestamp_nsec;
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW     // make sure our new allocators are aligned
@@ -64,6 +65,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT (FmcwPointXYZRGBGeneric,           // here we 
                                 (float, vertical, vertical)
                                 (float, speed, speed)
                                 (float, indensity, indensity)
+                                (int, chan_id, chan_id)
                                 (uint32_t, timestamp_sec, timestamp_sec)
                                 (uint32_t, timestamp_nsec, timestamp_nsec)
 )
