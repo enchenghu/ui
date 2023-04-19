@@ -1834,7 +1834,7 @@ void viewpanel::CreatUIWindow()
 	PowerCombo = new QComboBox;
 	colorCombo = new QComboBox;
 	savePCCombo = new QComboBox;
-	savePCCombo->addItem(QString::number(-1));
+	savePCCombo->addItem(QString("all"));
 	for (int i = 1; i < 5; i++){
 		savePCCombo->addItem(QString::number(i));
 	}
@@ -2232,6 +2232,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	if(!ifsave) return;
 	//memset(&curPcData, 0, sizeof(curPcData));
 	static long findex = 0;
+	int chanID = 0;
 	QString str_power = PowerCombo->currentText();
 #if 0
 	std::string datPath;
@@ -2252,13 +2253,19 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	ptminfo->tm_year + 1900, ptminfo->tm_mon + 1, ptminfo->tm_mday,
 	ptminfo->tm_hour, ptminfo->tm_min, ptminfo->tm_sec);
 #if 1
-	int chanID = savePCCombo->currentText().toInt();
+	for(int i = 0; i < 4; i++){
+		distance_offset[i] = distance_Offset_edit[i]->text().toDouble();
+	}
+	if(savePCCombo->currentText() == "all")
+		chanID = -1;
+	else
+		chanID = savePCCombo->currentText().toInt();
 	std::string csvPath;
 	if(chanID > 0){
 		QString strValue = regVal_line[chanID - 1]->text();
 		csvPath = save_folder_.toStdString() + "/SavePC_" + str_power.toStdString() + "mW" + \
 		"_Ch" + std::to_string(chanID)  + "_" + "CFAR_" + \ 
-		cfarAddr[chanID - 1] + "_" +  strValue.toStdString() + "_" + \
+		cfarAddr[chanID - 1] + "_" +  strValue.toStdString() + "_offset_" + std::to_string(distance_offset[chanID - 1]) + "_" + \
 		std::to_string(ptminfo->tm_year + 1900) + \
 		"-" + std::to_string(ptminfo->tm_mon + 1) + \
 		"-" + std::to_string(ptminfo->tm_mday) + \
@@ -2268,7 +2275,8 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 		+".csv";
 	} else {
 		csvPath = save_folder_.toStdString() + "/SavePC_" + str_power.toStdString() + "mW" + \
-		"_Ch" + std::to_string(chanID) + "_" + "CFAR_" + \ 
+		"_Ch_all_" + "offset_" + std::to_string(distance_offset[0]) + "_" + \ 
+		std::to_string(distance_offset[1]) + "_" + std::to_string(distance_offset[2]) + "_"  + std::to_string(distance_offset[3]) + "_" + \
 		std::to_string(ptminfo->tm_year + 1900) + \
 		"-" + std::to_string(ptminfo->tm_mon + 1) + \
 		"-" + std::to_string(ptminfo->tm_mday) + \
@@ -2294,14 +2302,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 			csvfile << "," << "," << "intensity" << "," << "distance(m)" << \ 
 					","  << "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)"; 
 		}
-		for(int i = 0; i < 4; i++){
-			distance_offset[i] = distance_Offset_edit[i]->text().toDouble();
-		}
-	} else {
-		distance_offset[chanID - 1] = distance_Offset_edit[chanID - 1]->text().toDouble();
-		std::cout << " distance_offset ch " << chanID - 1 << " is " << distance_offset[chanID - 1] << std::endl;
-	}
-
+	} 
 	csvfile << "\n";
 	int dataPointID = 1;
 	int flag_nl = 0;	
