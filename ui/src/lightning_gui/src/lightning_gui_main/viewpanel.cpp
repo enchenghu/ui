@@ -2230,7 +2230,6 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 {
 	if(!ifsave) return;
-	//memset(&curPcData, 0, sizeof(curPcData));
 	static long findex = 0;
 	int chanID = 0;
 	QString str_power = PowerCombo->currentText();
@@ -2252,7 +2251,12 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	printf("current: %02d-%02d-%02d %02d:%02d:%02d\n",
 	ptminfo->tm_year + 1900, ptminfo->tm_mon + 1, ptminfo->tm_mday,
 	ptminfo->tm_hour, ptminfo->tm_min, ptminfo->tm_sec);
-#if 1
+	std::string time_str = 	std::to_string(ptminfo->tm_year + 1900) + \
+		"-" + std::to_string(ptminfo->tm_mon + 1) + \
+		"-" + std::to_string(ptminfo->tm_mday) + \
+		"-" + std::to_string(ptminfo->tm_hour) + \
+		"-" + std::to_string(ptminfo->tm_min) + \
+		"-" + std::to_string(ptminfo->tm_sec) + ".csv";
 	for(int i = 0; i < 4; i++){
 		distance_offset[i] = distance_Offset_edit[i]->text().toDouble();
 	}
@@ -2265,25 +2269,14 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 		QString strValue = regVal_line[chanID - 1]->text();
 		csvPath = save_folder_.toStdString() + "/SavePC_" + str_power.toStdString() + "mW" + \
 		"_Ch" + std::to_string(chanID)  + "_" + "CFAR_" + \ 
-		cfarAddr[chanID - 1] + "_" +  strValue.toStdString() + "_offset_" + std::to_string(distance_offset[chanID - 1]) + "_" + \
-		std::to_string(ptminfo->tm_year + 1900) + \
-		"-" + std::to_string(ptminfo->tm_mon + 1) + \
-		"-" + std::to_string(ptminfo->tm_mday) + \
-		"-" + std::to_string(ptminfo->tm_hour) + \
-		"-" + std::to_string(ptminfo->tm_min) + \
-		"-" + std::to_string(ptminfo->tm_sec) + \
-		+".csv";
+		cfarAddr[chanID - 1] + "_" +  strValue.toStdString() + "_offset_" + \ 
+		std::to_string(distance_offset[chanID - 1]) + "_" + time_str;
+
 	} else {
 		csvPath = save_folder_.toStdString() + "/SavePC_" + str_power.toStdString() + "mW" + \
 		"_Ch_all_" + "offset_" + std::to_string(distance_offset[0]) + "_" + \ 
-		std::to_string(distance_offset[1]) + "_" + std::to_string(distance_offset[2]) + "_"  + std::to_string(distance_offset[3]) + "_" + \
-		std::to_string(ptminfo->tm_year + 1900) + \
-		"-" + std::to_string(ptminfo->tm_mon + 1) + \
-		"-" + std::to_string(ptminfo->tm_mday) + \
-		"-" + std::to_string(ptminfo->tm_hour) + \
-		"-" + std::to_string(ptminfo->tm_min) + \
-		"-" + std::to_string(ptminfo->tm_sec) + \
-		+".csv";		
+		std::to_string(distance_offset[1]) + "_" + std::to_string(distance_offset[2]) + \ 
+		"_"  + std::to_string(distance_offset[3]) + "_" + time_str;	
 	}
 	ROS_INFO("csvPath is %s \n", csvPath.c_str());
 	std::ofstream csvfile; 
@@ -2293,7 +2286,6 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	double speed;
 	double vAngle;
 	double hAngle;
-
 	int index = 0;
 	csvfile << "intensity" << "," << "distance(m)" << "," << \
 				"speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)"; 
@@ -2377,7 +2369,6 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 		}
 	}
 	csvfile.close();
-#endif
 }
 
 
