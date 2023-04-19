@@ -27,24 +27,24 @@ using namespace std;
 #define LOG_END << std::endl;
 #define TCP_PC_SIZE 32000
 #define UDP_IP "127.0.0.1"
-typedef enum
-{
-    POWER_WRITE = 1, 
-    CFAR_WRITE,
-    DFT3_WRITE,
-    DIFF_WRITE,
-	REG_WRITE,
-    POWER_READ,
-    CFAR_READ,
-    DFT3_READ,
-    DIFF_READ,
-	REG_READ,
-	PC_READ,
-	FFT_ADC_READ_START,
-	FFT_ADC_READ_STOP,
-	POINTCLOUD_DISPLAY_START,
-	POINTCLOUD_DISPLAY_STOP
-}commandType;
+typedef enum {
+    POWER_WRITE                 = 1 ,   // 设置激光器输出功率
+    CFAR_WRITE                  = 2 ,   // 设置CFAR
+    DFT3_WRITE                  = 3 ,   // 设置DFT3
+    DIFF_WRITE                  = 4 ,   // 设置DIFF
+    REG_WRITE                   = 5 ,   // 写REG
+    POWER_READ                  = 6 ,   // 读取激光器输出功率
+    CFAR_READ                   = 7 ,   // 读取CFAR
+    DFT3_READ                   = 8 ,   // 读取DFT3
+    DIFF_READ                   = 9 ,   // 读取DIFF
+    REG_READ                    = 10,   // 读REG
+    FFT_ADC_READ_SETCH          = 11,   // 读FFT_ADC值（开始）
+    FFT_ADC_READ_START,             // 读FFT_ADC值（开始）
+    FFT_ADC_READ_STOP,              // 读FFT_ADC值（停止）
+    POINTCLOUD_TCP_READ,            // TCP读点云数据（400000个点）
+    POINTCLOUD_UDP_START,          // UDP读点云数据（开始）
+    POINTCLOUD_UDP_STOP          // UDP读点云数据（停止）
+} commandType;
 
 typedef enum {
     /* 硬件系统 */
@@ -132,8 +132,7 @@ typedef enum
 
 	MOTOR_SHOW_ITEMS_DISPLAY
 }motorCmdType;
-uint8_t *encode_cali_data = nullptr;
-long file_size_g = 0;
+
 typedef struct API_Header
 {
 	uint16_t 	usPrefix; // 0xeeff
@@ -248,6 +247,8 @@ typedef struct {
 
 #pragma pack()
 
+uint8_t *encode_cali_data = nullptr;
+long file_size_g = 0;
 pcData_t g_msg;
 UDP_PC_package_st g_msg_pc;
 
@@ -319,7 +320,7 @@ int loopsend(int socket, int size, uint8_t* data){
             return -1;
         }
         memset(&g_msg, 0, sizeof(g_msg));
-        g_msg.cmdmsg.mHead.usCommand = PC_READ;
+        g_msg.cmdmsg.mHead.usCommand = POINTCLOUD_TCP_READ;
         g_msg.cmdmsg.mCommandVal[1] = index++;
         //cout << " count is " << index++ << endl;; 
         memcpy(g_msg.pcTcpData, data, TCP_PC_SIZE);
@@ -767,8 +768,10 @@ void* udp_pc_msg_send_once(void* )
         sendMsg.UDP_PC_head.uphPayloadCrc = 0;
         std::cout << "mv_g size is " << mv_g.size() << std::endl;
         //memset(&sendMsg, 0, sizeof(sendMsg));
-        if(index > 3900) index = 0;
-        for(int i = index; i < index + 200; i++){
+        if(index > 3900 * 4) index = 0;
+        std::chrono::duration<double> elapsed;
+        auto start = std::chrono::steady_clock::now();
+        for(int i = index; i < index + 800; i++){
             //memset(&sendMsg, 0, sizeof(sendMsg));
 #if 1
             for(int j = 0; j < 100; j++){
@@ -782,9 +785,12 @@ void* udp_pc_msg_send_once(void* )
 #endif
             int nnn = sendto(udpPcRecvSocketFd_, &sendMsg, sizeof(sendMsg), 0, (struct sockaddr*)&ser_addr, len);
             //int nnn = sendto(udpPcRecvSocketFd_, encode_cali_data + i * 1424, 1424, 0, (struct sockaddr*)&ser_addr, len);
-            usleep(100);  //一秒发送一次消息
+            usleep(1);  //一秒发送一次消息
         }
-        index += 200;
+        auto end = std::chrono::steady_clock::now();
+        elapsed = end - start;
+        std::cout << "time for server send 800 udp pkg is : " <<  elapsed.count() * 1000 << " ms" << std::endl;    
+        index += 800;
     }
  }
 
@@ -912,20 +918,20 @@ int main(int argc, char** argv)
 
     const char *cali_file_path = "/home/encheng/data/data_test_raw_index0.bin";
     int  filesize = LoadDat(cali_file_path);
-    std::chrono::duration<double> elapsed;
+/*     std::chrono::duration<double> elapsed;
     auto start = std::chrono::steady_clock::now();
     float data_float = -8.888;
     float data_float_test;
     float data_float_out = 6.00;
     uint8_t data_u8_test[4];
     auto newfun = std::bind(func,  placeholders::_2, 2, 3,  placeholders::_1);
-    newfun(1, 4);
-    testFile();
+    newfun(1, 4); */
+    //testFile();
 /*     data_u8_test[0] = data_float & 0xff;
     data_u8_test[1] = (data_float & 0xff00) >> 8;
     data_u8_test[2] = (data_float & 0xff0000) >> 16;
     data_u8_test[3] = (data_float & 0xff000000) >> 24; */
-    memcpy(data_u8_test, &data_float, 4);
+/*     memcpy(data_u8_test, &data_float, 4);
     memcpy(&data_float_test, data_u8_test, 4);
     int flag = 7 / 4;
     std::cout << "test data is " <<  flag << std::endl;
@@ -944,15 +950,13 @@ int main(int argc, char** argv)
     cout << "test_str" << endl;
     double angle = 389.2;
     angle -= 360.0;
-    cout << "angle is " << angle << endl;
+    cout << "angle is " << angle << endl; */
     int listenfd, connfd; 
     commandMsg msg;
     struct sockaddr_in servaddr; 
     char buff[4096]; int n; 
 #if 1
     pthread_t motor_send;
-    //pthread_t motor_init;
-    //pthread_create(&motor_init, NULL, motorSockerInit, NULL);
     pthread_create(&motor_send, NULL, motor_msg_sender, NULL);
 
     pcSockerInit();
@@ -1042,7 +1046,7 @@ int main(int argc, char** argv)
         case REG_READ:
             write(connfd, &msg, sizeof(msg));
             break;   
-        case PC_READ:
+        case POINTCLOUD_TCP_READ:
             while(1){
                 //cout << "send data times: " << index_0++ << endl;
                 if(loopsend(connfd, filesize, encode_cali_data))
@@ -1056,11 +1060,11 @@ int main(int argc, char** argv)
             close(udpRecvSocketFd_);
             ifstop = true;
             break;
-        case POINTCLOUD_DISPLAY_START:
+        case POINTCLOUD_UDP_START:
         	pthread_create(&udp_PC_send, NULL, udp_pc_msg_send_once, NULL);
             //udp_pc_msg_send_once();
             break;       
-        case POINTCLOUD_DISPLAY_STOP:
+        case POINTCLOUD_UDP_STOP:
             close(udpPcRecvSocketFd_);
             ifPCstop = true;
             break;
