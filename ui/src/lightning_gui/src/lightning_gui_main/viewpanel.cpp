@@ -259,7 +259,7 @@ void viewpanel::init_queue()
 	vertical_bin = 1 / 256.0; 
 	speed_bin = 1 / 128.0; 
 	horizontal_bin = 360.0 / 65536.0; 
-	distance_bin = 1 / 65536.0; 
+	distance_bin = 1 / 32768.0; 
 	vertical_offset = -2.5;
 	udpPCBuff_last.pcDataOneFrame.clear();
 	udpPCBuff_last.frameCounter.clear();
@@ -2282,11 +2282,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	std::ofstream csvfile; 
 	csvfile.open(csvPath, std::ios::out); 
 	int32_t cur_data = 0;
-	double distance;
-	double speed;
-	double vAngle;
-	double hAngle;
-	int index = 0;
+	double distance, speed, vAngle, hAngle;
 	csvfile << "intensity" << "," << "distance(m)" << "," << \
 				"speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)"; 
 	if(chanID == -1){
@@ -2298,6 +2294,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	csvfile << "\n";
 	int dataPointID = 1;
 	int flag_nl = 0;	
+	int index = 0;
 	for(int i = 0; i < data.size(); i++) {
 		index += 1;
 		if(index < 5)
@@ -2317,8 +2314,8 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 				if(flag == chanID || (flag == (chanID - 4)) || chanID == -1) csvfile << cur_data << ",";	//intensity
 			}
 			else{
-				if(chanID > 0) distance = cur_data / 65536.0 - distance_offset[chanID - 1]; //distance
-				if(chanID < 0) distance = cur_data / 65536.0 - distance_offset[flag_nl]; //distance
+				if(chanID > 0) distance = cur_data * distance_bin - distance_offset[chanID - 1]; //distance
+				if(chanID < 0) distance = cur_data * distance_bin - distance_offset[flag_nl]; //distance
 				if(flag == chanID || (flag == (chanID - 4)) || chanID == -1) csvfile << distance << ",";	
 			}
 			cur_data = 0;
@@ -2344,7 +2341,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 		}
 
 		if(index == 14){
-			hAngle = cur_data * 360.0 / 65536.0; //horizontal
+			hAngle = cur_data * horizontal_bin; //horizontal
 			if(hAngle > 360.0) hAngle -= 360.0;
 			if(flag == chanID || (flag == (chanID - 4)) || chanID == -1) {
 				csvfile << hAngle;	
@@ -3813,26 +3810,6 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 	std::cout << "distance_min: " << distance_min << " distance_max: " << distance_max \
 	<< " indensity_min: " << indensity_min << " indensity_max: " << indensity_max << " speed_min: " << speed_min \ 
 	<< " speed_max: " << speed_max << std::endl; 
-}
-double viewpanel::chooseChOffset(int id)
-{
-	switch (id)
-	{
-	case 1:
-
-		break;
-	case 2:
-		/* code */
-		break;
-	case 3:
-		/* code */
-		break;
-	case 4:
-		/* code */
-		break;					
-	default:
-		break;
-	}
 }
 
 void viewpanel::pcDataProc()
