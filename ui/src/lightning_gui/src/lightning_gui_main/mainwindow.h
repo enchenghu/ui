@@ -29,6 +29,7 @@ private Q_SLOTS:
 	void quit();
 	void convertRosbag();
     void CtrlPanel_Control();
+    void pcOffset_Control();
     void PcPanel_Control();
     void resetViews();
 	void RecRvizPointcloudControl();
@@ -80,6 +81,7 @@ private:
 
 
     QAction *showCtrlDockAct;
+    QAction *pcOffsetDockAct;
     QAction *showPcPanelAct;
 
 	QAction *recRvizPointcloudAct;

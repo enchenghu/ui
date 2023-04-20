@@ -988,6 +988,11 @@ void viewpanel::registerPointcloudRviz()
 #endif
 }
 
+
+void viewpanel::ctrlShowPcOffset(bool show)
+{
+	pcOffsetDock->setVisible(show);
+}
 void viewpanel::ctrlShowWindows(bool show)
 {
 	ctrlDock->setVisible(show);
@@ -1771,13 +1776,6 @@ void viewpanel::CreatUIWindow()
 	udp_port_edit =  new QLineEdit();
 	udp_port_edit->setFixedSize(70,25);
 
-	for(int i = 0; i < 4; i++){
-		distance_Offset_edit[i] = new QLineEdit();
-		distance_Offset_edit[i]->setFixedSize(70,25);
-		distance_Offset_edit[i]->setPlaceholderText("input distance offset ");
-		distance_Offset_edit[i]->setText(distance_offset_[i]);
-	}
-
 	ip_edit->setPlaceholderText("input ip addr");
 	ip_edit->setText(lidar_ip_);
 	port_edit->setPlaceholderText("input tcp port");
@@ -1970,15 +1968,10 @@ void viewpanel::CreatUIWindow()
 
 	controls_layout->addWidget( pcProcBtn, 3, 15, Qt::AlignRight);
 	controls_layout->addWidget( pcRecordBtn, 4, 15, Qt::AlignRight);
-	controls_layout->addWidget( distanceOffset_label1, 0, 18, Qt::AlignRight);
-	controls_layout->addWidget( distanceOffset_label2, 1, 18, Qt::AlignRight);
-	controls_layout->addWidget( distanceOffset_label3, 2, 18, Qt::AlignRight);
-	controls_layout->addWidget( distanceOffset_label4, 3, 18, Qt::AlignRight);
-	for(int i = 0; i < 4; i++)
-		controls_layout->addWidget( distance_Offset_edit[i], i, 19, Qt::AlignLeft);	
 
-	controls_layout->addWidget( rotate_label, 4, 18, Qt::AlignRight);
-	controls_layout->addWidget( rotate_angle_edit, 4, 19, Qt::AlignLeft);	
+
+	controls_layout->addWidget( rotate_label, 0, 18, Qt::AlignRight);
+	controls_layout->addWidget( rotate_angle_edit, 0, 19, Qt::AlignLeft);	
 /* 	controls_layout->addWidget( left_label, 2, 18, Qt::AlignRight);
 	controls_layout->addWidget( left_angle_edit, 2, 19, Qt::AlignLeft);	
 	controls_layout->addWidget( right_label, 3, 18, Qt::AlignRight);
@@ -2024,58 +2017,41 @@ void viewpanel::CreatUIWindow()
 	render_panel_ = new rviz::RenderPanel();
 	selection_panel_ = new rviz::SelectionPanel();
 	controls->addWidget(controlsBox, 0, 0, Qt::AlignLeft);
-#if 0
-	controls->addWidget(stateShowBox, 0, 1, Qt::AlignLeft);
-	//controls->addWidget(fileBox, 0, 2, Qt::AlignLeft);
-	controls->setColumnStretch(0,6);
-	for(int i = 1; i < 2;i++)
-		controls->setColumnStretch(i,2);
-#endif
-
 	ctrlDockWidget->setLayout(controls);
-/* 	QString pic_name = "/home/encheng/data/autox.jpg";
-	QPalette pa(ctrlDockWidget->palette()); 
- 	QImage img = QImage(pic_name);
-    img = img.scaled(ctrlDockWidget->size());
-    QBrush *pic = new QBrush(img);
-    pa.setBrush(QPalette::Window,*pic); */
-
-/* 	QPixmap pixmap = QPixmap("/home/encheng/data/2.JPG").scaled(ctrlDock->size());//定义一个QPixmap图片变量，选择要显示的背景图所在的路径，scaled表示控制背景图进行缩放为窗体的大小
-	QPalette palette(ctrlDock->palette()); //定义一个QPalette图刷工具的变量，然后在当下窗口里面使用调色板
-	palette.setBrush(QPalette::Window,QBrush(pixmap));//使用画刷setBrush去画这个图片
-	ctrlDock->setPalette(palette);	//画完就在当下窗体显示
-	ctrlDock->setAutoFillBackground(true); */
-
 	ctrlDock->setWidget(ctrlDockWidget);
 
-/* 	QPalette pal =ctrlDock->palette();
-	pal.setBrush(QPalette::Background,QBrush(QPixmap("/home/encheng/data/autox.jpg")));
-	ctrlDock->setPalette(pal);
-	ctrlDock->setAutoFillBackground(true); */
 
-#if 0
-	QWidget* stateWidget = new QWidget();
-	QGridLayout* stateLayout = new QGridLayout ;
-	QLabel* devLabel0 = new QLabel("dev0 state");
-	QLabel* devLabel0_state = new QLabel("dev0");
-	QLabel* devLabel1 = new QLabel("dev1 state");
-	QLabel* devLabel1_state = new QLabel("dev1");
-	setLED(devLabel0_state, 1, 16);
-	setLED(devLabel1_state, 2, 16);
-	stateLayout->addWidget(devLabel0, 0, 0, Qt::AlignLeft);
-	stateLayout->addWidget(devLabel0_state, 0, 1, Qt::AlignLeft);
-	stateLayout->addWidget(devLabel1, 1, 0, Qt::AlignLeft);
-	stateLayout->addWidget(devLabel1_state, 1, 1, Qt::AlignLeft);
-	stateWidget->setLayout(stateLayout);
-	QPalette pal(stateWidget->palette());
+	pcOffsetDock = new QDockWidget();
+	QWidget* pcOffsetDockWidget = new QWidget();
+	pcOffsetDock->setFeatures(QDockWidget::DockWidgetClosable );
+	QGroupBox *pcOffsetBox = new QGroupBox(tr("PC Distance Offset:"));
+	QGridLayout* pcOffsetBoxLayout = new QGridLayout;	
+	std::vector<QLabel*> distanceOffset_labelV;
+	for(int i = 0; i < LIGHTNING_MAX_LINES; i++){
+		std::string name = "CH" + std::to_string(i + 1);
+		distanceOffset_labelV.emplace_back(new QLabel(name.c_str()));
+		distanceOffsetEditV.emplace_back(new QLineEdit());
+		pcOffsetBoxLayout->addWidget(distanceOffset_labelV[i], i, 0, Qt::AlignRight);
+		pcOffsetBoxLayout->addWidget(distanceOffsetEditV[i], i, 1, Qt::AlignLeft);
+		distanceOffsetEditV[i]->setText(distance_offset_[i]);
+	}
+
+	pcOffsetBox->setLayout(pcOffsetBoxLayout);
+	QGridLayout* pcOffsetLayout = new QGridLayout;	
+	pcOffsetLayout->addWidget(pcOffsetBox, 0, 0, Qt::AlignLeft);
+	pcOffsetDockWidget->setLayout(pcOffsetLayout);
+	pcOffsetDock->setWidget(pcOffsetDockWidget);
+
+	QPalette pal(pcOffsetDock->palette());
 	pal.setColor(QPalette::Background, Qt::white);
-	stateWidget->setAutoFillBackground(true);
-	stateWidget->setPalette(pal);
-	mainLayout->addWidget ( stateWidget, 1, 1, 5, 4, Qt::AlignLeft);
-#endif
+	pcOffsetDock->setAutoFillBackground(true);
+	pcOffsetDock->setPalette(pal);
+
 	mainLayout->addWidget ( ctrlDock, 0, 0);
 	mainLayout->addWidget ( render_panel_, 1, 0, 5, 5);
 	mainLayout->addWidget ( selection_panel_, 1, 0, 5, 1, Qt::AlignLeft);
+	mainLayout->addWidget ( pcOffsetDock, 1, 0, Qt::AlignRight);
+
 	multiWidget->setLayout(mainLayout);
 	this->addTab(multiWidget,  "Lidar Control");
 }
@@ -2257,9 +2233,10 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 		"-" + std::to_string(ptminfo->tm_hour) + \
 		"-" + std::to_string(ptminfo->tm_min) + \
 		"-" + std::to_string(ptminfo->tm_sec) + ".csv";
-	for(int i = 0; i < 4; i++){
-		distance_offset[i] = distance_Offset_edit[i]->text().toDouble();
+	for(int i = 0; i < LIGHTNING_MAX_LINES; i++){
+		distance_offset[i] = distanceOffsetEditV[i]->text().toDouble();
 	}
+	std::vector<double> distanceOffset_m = {distance_offset[0], distance_offset[4], distance_offset[8], distance_offset[12]};
 	if(savePCCombo->currentText() == "all")
 		chanID = -1;
 	else
@@ -2270,13 +2247,13 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 		csvPath = save_folder_.toStdString() + "/SavePC_" + str_power.toStdString() + "mW" + \
 		"_Ch" + std::to_string(chanID)  + "_" + "CFAR_" + \ 
 		cfarAddr[chanID - 1] + "_" +  strValue.toStdString() + "_offset_" + \ 
-		std::to_string(distance_offset[chanID - 1]) + "_" + time_str;
+		std::to_string(distanceOffset_m[chanID - 1]).substr(0, 6) + "_" + time_str;
 
 	} else {
 		csvPath = save_folder_.toStdString() + "/SavePC_" + str_power.toStdString() + "mW" + \
-		"_Ch_all_" + "offset_" + std::to_string(distance_offset[0]) + "_" + \ 
-		std::to_string(distance_offset[1]) + "_" + std::to_string(distance_offset[2]) + \ 
-		"_"  + std::to_string(distance_offset[3]) + "_" + time_str;	
+		"_Ch_all_" + "offset_" + std::to_string(distanceOffset_m[0]).substr(0, 6) + "_" + \ 
+		std::to_string(distanceOffset_m[1]).substr(0, 6) + "_" + std::to_string(distanceOffset_m[2]).substr(0, 6) + \ 
+		"_"  + std::to_string(distanceOffset_m[3]).substr(0, 6) + "_" + time_str;	
 	}
 	ROS_INFO("csvPath is %s \n", csvPath.c_str());
 	std::ofstream csvfile; 
@@ -2314,8 +2291,8 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 				if(flag == chanID || (flag == (chanID - 4)) || chanID == -1) csvfile << cur_data << ",";	//intensity
 			}
 			else{
-				if(chanID > 0) distance = cur_data * distance_bin - distance_offset[chanID - 1]; //distance
-				if(chanID < 0) distance = cur_data * distance_bin - distance_offset[flag_nl]; //distance
+				if(chanID > 0) distance = cur_data * distance_bin - distanceOffset_m[chanID - 1]; //distance
+				if(chanID < 0) distance = cur_data * distance_bin - distanceOffset_m[flag_nl]; //distance
 				if(flag == chanID || (flag == (chanID - 4)) || chanID == -1) csvfile << distance << ",";	
 			}
 			cur_data = 0;
@@ -3918,8 +3895,8 @@ void viewpanel::pcDataProc()
 		udpPcMsg_free_buf_queue.put(pmsg);
 		return;
 	}
-	for(int i = 0; i < 4; i++)
-		distance_offset[i] = distance_Offset_edit[i]->text().toDouble();
+	for(int i = 0; i < LIGHTNING_MAX_LINES; i++)
+		distance_offset[i] = distanceOffsetEditV[i]->text().toDouble();
 	rotation_offset = rotate_angle_edit->text().toDouble();
 	leftAngle_offset = left_angle_edit->text().toDouble();
 	rightAngle_offset = right_angle_edit->text().toDouble();
@@ -3972,10 +3949,11 @@ void viewpanel::pcDataProc()
 		if(horizontal_m > 360.0) horizontal_m -= 360.0;
 		//if( horizontal_m < leftAngle_offset && horizontal_m > rightAngle_offset) continue;
 		realSize++;
+		int lineIndex = oneFrame360.pcDataOneFrame[j].pcmVerticalIndex;
 		speed_m = oneFrame360.pcDataOneFrame[j].pcmSpeed * speed_bin;
-		vertical_m = fov_vertical[oneFrame360.pcDataOneFrame[j].pcmVerticalIndex];
-		chan_id_m = oneFrame360.pcDataOneFrame[j].pcmVerticalIndex / 4 + 1;
-		distance_m = oneFrame360.pcDataOneFrame[j].pcmDistance * distance_bin - distance_offset[chan_id_m - 1];
+		vertical_m = fov_vertical[lineIndex];
+		chan_id_m = lineIndex / 4 + 1;
+		distance_m = oneFrame360.pcDataOneFrame[j].pcmDistance * distance_bin - distance_offset[lineIndex];
 		intensity_m = oneFrame360.pcDataOneFrame[j].pcmIndensity;
 		if(udpPCSingle_) {
 			csvfile << oneFrame360.pcDataOneFrame[j].pcmIndensity << "," << distance_m << "," << speed_m << "," \
@@ -4598,10 +4576,10 @@ void viewpanel::load_settings()
 	lidar_UDP_PC_port_ = settings.value("UDP PC Port","8001").toString();
 	lidar_ctrl_port_ = settings.value("TCP Port","5000").toString();
 	lidar_UDP_port_ = settings.value("UDP Port","8000").toString();
-	distance_offset_[0] = settings.value("Distance Offset1","0.0").toString();
-	distance_offset_[1] = settings.value("Distance Offset2","0.0").toString();
-	distance_offset_[2] = settings.value("Distance Offset3","0.0").toString();
-	distance_offset_[3] = settings.value("Distance Offset4","0.0").toString();
+
+	for(int i = 0; i < LIGHTNING_MAX_LINES; i++){
+		distance_offset_[i] = settings.value("Distance Offset " + QString::number(i + 1), "13.672").toString();
+	}
 
 	rotation_offset = settings.value("rotate angle","45.0").toDouble();
 	leftAngle_offset = settings.value("left angle","306.0").toDouble();
@@ -4735,10 +4713,9 @@ void viewpanel::save_settings(void )
 	settings.setValue("TCP Port", port_edit->text());
 	settings.setValue("UDP Port", udp_port_edit->text());
 	settings.setValue("UDP PC Port", udp_pc_port_edit->text());
-	settings.setValue("Distance Offset1", distance_Offset_edit[0]->text());
-	settings.setValue("Distance Offset2", distance_Offset_edit[1]->text());
-	settings.setValue("Distance Offset3", distance_Offset_edit[2]->text());
-	settings.setValue("Distance Offset4", distance_Offset_edit[3]->text());
+	for(int i = 0; i < distanceOffsetEditV.size(); i++){
+		settings.setValue("Distance Offset " + QString::number(i + 1), distanceOffsetEditV[i]->text());
+	}
 
 	settings.setValue("rotate angle", rotate_angle_edit->text());
 	settings.setValue("left angle", left_angle_edit->text());

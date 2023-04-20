@@ -33,6 +33,7 @@
 #define UDP_TIMES_PER_FRAME 192
 #define MOTOR_ITEMS_NUM 10
 #define UDP_PC_TIMES_PER_FRAME 800
+#define LIGHTNING_MAX_LINES 16
 #define BST_MAX_TASK_NUM		(16)
 #define PI_FMCW 3.14159265
 #define NONE_COLOR                  "\e[0m"			//清除颜色，即之后的打印为正常输出，之前的不受影响

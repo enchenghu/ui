@@ -218,6 +218,11 @@ void MainWindow::convertRosbag( void )
 
 
 
+void MainWindow::pcOffset_Control( void )
+{
+	viewPanel->ctrlShowPcOffset(pcOffsetDockAct->isChecked());
+}
+
 void MainWindow::CtrlPanel_Control( void )
 {
 	viewPanel->ctrlShowWindows(showCtrlDockAct->isChecked());
@@ -304,6 +309,12 @@ void MainWindow::createActions()
 	showCtrlDockAct->setChecked(true);
 	connect(showCtrlDockAct, SIGNAL(triggered()), this, SLOT(CtrlPanel_Control()));
 
+	pcOffsetDockAct = new QAction(tr("PC Offset"), this);
+	//recParsedAct->setStatusTip(tr("When recording, record *all* parsed topics"));
+	pcOffsetDockAct->setCheckable(true);
+	pcOffsetDockAct->setChecked(true);
+	connect(pcOffsetDockAct, SIGNAL(triggered()), this, SLOT(pcOffset_Control()));
+
 	showPcPanelAct = new QAction(tr("PointCloud Panel"), this);
 	//recParsedAct->setStatusTip(tr("When recording, record *all* parsed topics"));
 	showPcPanelAct->setCheckable(true);
@@ -324,8 +335,10 @@ void MainWindow::fullScreen()
 	static bool showAll = false;
 	viewPanel->ctrlShowWindows(showAll);
 	viewPanel->ctrlPcPanel(showAll);
+	viewPanel->ctrlShowPcOffset(showAll);
 	showCtrlDockAct->setChecked(showAll);
 	showPcPanelAct->setChecked(showAll);
+	pcOffsetDockAct->setChecked(showAll);
 	showAll = !showAll;
 }
 
@@ -350,6 +363,8 @@ void MainWindow::createMenus()
 	viewFMCWMenu = menuBar()->addMenu(tr("&View"));
 	viewFMCWMenu->addAction(showCtrlDockAct);
 	viewFMCWMenu->addAction(showPcPanelAct);
+	viewFMCWMenu->addAction(pcOffsetDockAct);
+
 	menuBar()->addSeparator();
 	helpMenu = menuBar()->addMenu(tr("&Update"));
 	helpMenu->addAction(aboutAct);

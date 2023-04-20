@@ -120,6 +120,7 @@ class viewpanel : public QTabWidget {
   void readDiff(void);
   void readReg(int);
   void ctrlShowWindows(bool);
+  void ctrlShowPcOffset(bool);
   void ctrlPcPanel(bool);
   void resetViews(void);
 
@@ -264,7 +265,7 @@ class viewpanel : public QTabWidget {
   QSerialPort* m_serialPort;
   QSerialPort* m_serialPort_test;
   bool m_serialPort_test_open;
-  double distance_offset[4];
+  double distance_offset[LIGHTNING_MAX_LINES];
   double power_offset;
   double power_min;
   double rotation_offset;
@@ -287,7 +288,7 @@ class viewpanel : public QTabWidget {
   QString motor_port_;
   QString m_reg_addr_[4];
   QString m_reg_value_[4];
-  QString distance_offset_[4];
+  QString distance_offset_[LIGHTNING_MAX_LINES];
   QString power_offset_;
   QString power_min_;
   UDP_PC_package_st pcDataRaw_;
@@ -325,6 +326,7 @@ class viewpanel : public QTabWidget {
   QLineEdit* udp_port_edit;
   QLineEdit* udp_pc_port_edit;
   QLineEdit* distance_Offset_edit[4];
+	std::vector<QLineEdit*> distanceOffsetEditV;
   QLineEdit* rotate_angle_edit;
   QLineEdit* left_angle_edit;
   QLineEdit* right_angle_edit;
@@ -439,6 +441,8 @@ class viewpanel : public QTabWidget {
   QPushButton* resetADCBtn_;
   QPushButton* mFFTShowdBBtn;
   QDockWidget* ctrlDock;
+  QDockWidget* pcOffsetDock;
+  
   std::vector<QPushButton*> ctlWriteBtn_;
   std::vector<QPushButton*> ctlReadBtn_;
   std::vector<QLineEdit*> ctlReadLine_;
