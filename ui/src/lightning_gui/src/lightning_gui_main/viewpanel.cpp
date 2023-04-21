@@ -27,6 +27,7 @@
 #define DEBUG_UI 0
 #define SIGN_LIMIT_NUM 32767
 #define SIGN_OFFSET_NUM 65536
+#define SINGELE_PC_SAVE 0
 
 
 extern int terminating;
@@ -3886,7 +3887,7 @@ void viewpanel::pcDataProc()
 	double speed_m;
 	int chan_id_m;
 	int index_rgb;
-#if 1
+#if SINGELE_PC_SAVE
 	time_t rawtime;
 	struct tm *ptminfo;
 	time(&rawtime);
@@ -3911,7 +3912,6 @@ void viewpanel::pcDataProc()
 		<< "speed(m/s)" << "," << "Vertical angle(degree)" << "," << "Horizontal angle(degree)" << "," << "frame count" \
 		<<"\n";
 	}
-	
 #endif
 	pcFrameSize = oneFrame360.pcDataOneFrame.size();
 	std::cout << "pcFrameSize is " << pcFrameSize << std::endl;
@@ -3930,10 +3930,12 @@ void viewpanel::pcDataProc()
 		chan_id_m = lineIndex / 4 + 1;
 		distance_m = oneFrame360.pcDataOneFrame[j].pcmDistance * distance_bin - distance_offset[lineIndex];
 		intensity_m = oneFrame360.pcDataOneFrame[j].pcmIndensity;
+#if SINGELE_PC_SAVE
 		if(udpPCSingle_) {
 			csvfile << oneFrame360.pcDataOneFrame[j].pcmIndensity << "," << distance_m << "," << speed_m << "," \
 			<< vertical_m << ", " << horizontal_m << "," << oneFrame360.frameCounter[j] <<  "\n";
 		}
+#endif
 		if(distance_m < 0.0) continue;
 		realSize++;
 		cloud.points[j].vertical = vertical_m;
@@ -3984,7 +3986,9 @@ void viewpanel::pcDataProc()
 		}
 	}
 	ROS_INFO("====PC Show Real Size is %d", realSize);
+#if SINGELE_PC_SAVE
 	csvfile.close();
+#endif
 	if(udpPCSingle_) udpPCSingle_ = false;
 	output.header.stamp = ros::Time::now();
 	pcl::toROSMsg(cloud,output);
