@@ -164,7 +164,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_DB),\
 	power_offset(0.0),ifConnectedMotorSerial(false), ifConnectedMotorTcp(false),\
 	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
-	ifStarted(false),saveadc_(false), oneFramePure(false), ifConnectedStateTcp(false)
+	ifStarted(false),saveadc_(false), oneFramePure(true), ifConnectedStateTcp(false)
 {
 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
@@ -1606,7 +1606,7 @@ void viewpanel::CreatConnect()
 	connect(pcResetBtn, SIGNAL(clicked()), this, SLOT( startPcUdpContinuous( void )));
 	connect(pcBWBtn, SIGNAL(clicked()), this, SLOT( pcShowBW( void )));
 	connect(pcRecordBtn, SIGNAL(clicked()), this, SLOT( pcRecord( void )));
-	connect(pcProcBtn, SIGNAL(clicked()), this, SLOT( pcOneFramePure( void )));
+	//connect(pcProcBtn, SIGNAL(clicked()), this, SLOT( pcOneFramePure( void )));
 	connect(loadAlgBtn, SIGNAL(clicked()), this, SLOT( loadAlgFile( void )));
 	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
