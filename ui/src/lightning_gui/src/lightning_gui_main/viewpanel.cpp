@@ -1705,11 +1705,6 @@ void viewpanel::CreatUIWindow()
 	saveLayout->addWidget(saveDatalabel, 0, 0, Qt::AlignLeft);
 	saveLayout->addWidget(saveDataCombo, 0, 1, Qt::AlignLeft);
 	saveLayout->addWidget(saveBtn, 0, 2, Qt::AlignLeft);
-
-	//saveLayout->setColumnStretch(0, 1);
-	//saveLayout->setColumnStretch(1, 2);
-	//saveLayout->setColumnStretch(2, 2);
-
 	savefileBox->setLayout(saveLayout);
 	fileLayout->addWidget(savefileBox);
 
@@ -1754,17 +1749,9 @@ void viewpanel::CreatUIWindow()
 	setButtonStyle(pcRecordBtn);
 	pcProcBtn = new QPushButton("&Pure", this);
 	setButtonStyle(pcProcBtn);
-	//lidar_stop_button = new QPushButton("Stop", this);
-	//lidarIdCombo =  new QComboBox;
-
 	QLabel* lidar_IP_label = new QLabel( "Lidar IP addr" );
 	QLabel* lidar_port_label = new QLabel( "Lidar Ctrl Port" );
 	QLabel* lidar_udp_port_label = new QLabel( "FFT-ADC Port" );
-	QLabel* distanceOffset_label1 = new QLabel( "Ch1 Dist Offset" );
-	QLabel* distanceOffset_label2 = new QLabel( "Ch2 Dist Offset" );
-	QLabel* distanceOffset_label3 = new QLabel( "Ch3 Dist Offset" );
-	QLabel* distanceOffset_label4 = new QLabel( "Ch4 Dist Offset" );
-
 	QLabel* pcPort_label = new QLabel( "PointCloud port" );
 
 	ip_edit =  new QLineEdit();
@@ -1852,38 +1839,20 @@ void viewpanel::CreatUIWindow()
 		PowerCombo->addItem(QString::number(power_index[i]));
 	}
 	PowerCombo->setCurrentIndex(0);
-
 	m3DFTCombo->addItem(tr("0"));
 	m3DFTCombo->addItem(tr("1"));
-
 	DiffCombo->addItem(tr("0"));
 	DiffCombo->addItem(tr("1"));
-
 	controls_layout->addWidget( Power_label, 0, 2, Qt::AlignRight);	
 	//Power_label->setFixedSize(100,30);
 	Power_label->setFont(QFont("微软雅黑", 10.5));
-/* 	controls_layout->addWidget( CFAR_label, 1, 2, Qt::AlignRight);			
-	controls_layout->addWidget( m3DFT_label, 2, 2, Qt::AlignRight);			
-	controls_layout->addWidget( diff_label, 3, 2, Qt::AlignRight);	 */
-
 	controls_layout->addWidget( PowerCombo, 0, 3, Qt::AlignLeft);	
 	PowerCombo->setFixedSize(70,25);
-/* 	controls_layout->addWidget( CFARCombo, 1, 3, Qt::AlignLeft);			
-	controls_layout->addWidget( m3DFTCombo, 2, 3, Qt::AlignLeft);			
-	controls_layout->addWidget( DiffCombo, 3, 3, Qt::AlignLeft);	
- */
 	for(int i = 0; i < 1; i++){
 		ctlWriteBtn_.emplace_back(new QPushButton("&Cfg", this));
-/* 		ctlReadBtn_.emplace_back(new QPushButton("&Read", this));
-		ctlReadLine_.emplace_back(new QLineEdit);
-		setReadOnlyLineEdit(ctlReadLine_[i]); */
 		controls_layout->addWidget( ctlWriteBtn_[i], i, 4, Qt::AlignLeft);	
 		ctlWriteBtn_[i]->setFixedSize(70,30);
 		setButtonStyle(ctlWriteBtn_[i]);
-/* 		controls_layout->addWidget( ctlReadLine_[i], i, 5, Qt::AlignLeft);			
-		controls_layout->addWidget( ctlReadBtn_[i], i, 6, Qt::AlignLeft);	
-		ctlReadBtn_[i]->setFixedSize(100,30);
-		setButtonStyle(ctlReadBtn_[i]); */
 	}
 	for(int i = 0; i < 4; i++){
 		ctlReadLine_.emplace_back(new QLineEdit);
@@ -1905,8 +1874,6 @@ void viewpanel::CreatUIWindow()
 		controls_layout->addWidget( regBtnRead[i], i, 13, Qt::AlignLeft);	
 	}
 	controls_layout->addWidget( loadAlgBtn, 4, 13, Qt::AlignLeft);	
-	//controls_layout->addWidget( settingADCSavebutton, 4, 2, Qt::AlignLeft);
-
 	QLabel* rotate_label = new QLabel( "rotate angle" );
 	rotate_angle_edit = new QLineEdit;
 	rotate_angle_edit->setFixedSize(70,25);
@@ -1965,21 +1932,11 @@ void viewpanel::CreatUIWindow()
 
 	controls_layout->addWidget( savePCCombo, 1, 3, Qt::AlignLeft);	
 	savePCCombo->setFixedSize(70, 25);	
-
 	controls_layout->addWidget( pcProcBtn, 3, 15, Qt::AlignRight);
 	controls_layout->addWidget( pcRecordBtn, 4, 15, Qt::AlignRight);
-
-
 	controls_layout->addWidget( rotate_label, 0, 18, Qt::AlignRight);
 	controls_layout->addWidget( rotate_angle_edit, 0, 19, Qt::AlignLeft);	
-/* 	controls_layout->addWidget( left_label, 2, 18, Qt::AlignRight);
-	controls_layout->addWidget( left_angle_edit, 2, 19, Qt::AlignLeft);	
-	controls_layout->addWidget( right_label, 3, 18, Qt::AlignRight);
-	controls_layout->addWidget( right_angle_edit, 3, 19, Qt::AlignLeft);	 */
-
 	controlsBox->setLayout(controls_layout);
-
-
 	QGroupBox *stateShowBox  = new QGroupBox(tr("State Conditon:"));
 	QGridLayout* stateShowBoxLayout = new QGridLayout;
 	QGroupBox *errorLogBox = new QGroupBox(tr("Error Log:"));
@@ -2024,16 +1981,19 @@ void viewpanel::CreatUIWindow()
 	pcOffsetDock = new QDockWidget();
 	QWidget* pcOffsetDockWidget = new QWidget();
 	pcOffsetDock->setFeatures(QDockWidget::DockWidgetClosable );
-	QGroupBox *pcOffsetBox = new QGroupBox(tr("PC Distance Offset:"));
+	QGroupBox *pcOffsetBox = new QGroupBox(tr("PC Offset && Choose Show:"));
 	QGridLayout* pcOffsetBoxLayout = new QGridLayout;	
 	std::vector<QLabel*> distanceOffset_labelV;
 	for(int i = 0; i < LIGHTNING_MAX_LINES; i++){
 		std::string name = "CH" + std::to_string(i + 1);
 		distanceOffset_labelV.emplace_back(new QLabel(name.c_str()));
 		distanceOffsetEditV.emplace_back(new QLineEdit());
+		checkPCShowV.push_back(new QCheckBox());
 		pcOffsetBoxLayout->addWidget(distanceOffset_labelV[i], i, 0, Qt::AlignRight);
 		pcOffsetBoxLayout->addWidget(distanceOffsetEditV[i], i, 1, Qt::AlignLeft);
+		pcOffsetBoxLayout->addWidget(checkPCShowV[i], i, 2, Qt::AlignLeft);
 		distanceOffsetEditV[i]->setText(distance_offset_[i]);
+		checkPCShowV[i]->setChecked(true);
 	}
 
 	pcOffsetBox->setLayout(pcOffsetBoxLayout);
@@ -3948,8 +3908,9 @@ void viewpanel::pcDataProc()
 		horizontal_m = oneFrame360.pcDataOneFrame[j].pcmHorizontal * horizontal_bin;
 		if(horizontal_m > 360.0) horizontal_m -= 360.0;
 		//if( horizontal_m < leftAngle_offset && horizontal_m > rightAngle_offset) continue;
-		realSize++;
 		int lineIndex = oneFrame360.pcDataOneFrame[j].pcmVerticalIndex;
+		if(lineIndex > 15 || lineIndex < 0 ) continue;
+		if(!checkPCShowV[lineIndex]->isChecked()) continue;
 		speed_m = oneFrame360.pcDataOneFrame[j].pcmSpeed * speed_bin;
 		vertical_m = fov_vertical[lineIndex];
 		chan_id_m = lineIndex / 4 + 1;
@@ -3960,6 +3921,7 @@ void viewpanel::pcDataProc()
 			<< vertical_m << ", " << horizontal_m << "," << oneFrame360.frameCounter[j] <<  "\n";
 		}
 		if(distance_m < 0.0) continue;
+		realSize++;
 		cloud.points[j].vertical = vertical_m;
 		cloud.points[j].horizontal = horizontal_m;
 		cloud.points[j].distance = distance_m;
@@ -4007,7 +3969,7 @@ void viewpanel::pcDataProc()
 			cloud.points[j].b = B_V_g[index_rgb];
 		}
 	}
-	std::cout << "realSize is " << realSize << std::endl;
+	ROS_INFO("====PC Show Real Size is %d", realSize);
 	csvfile.close();
 	if(udpPCSingle_) udpPCSingle_ = false;
 	output.header.stamp = ros::Time::now();

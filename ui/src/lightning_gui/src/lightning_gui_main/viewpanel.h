@@ -455,6 +455,7 @@ class viewpanel : public QTabWidget {
   ChartLighting* pADCchart[2];
   ChartLighting* pMotorchart;
   QVector<QCheckBox*> checkShowV;
+  QVector<QCheckBox*> checkPCShowV;
 
   QVector<double> x_FFT;
   QVector<double> x_adc0;
