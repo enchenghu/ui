@@ -260,11 +260,12 @@ void MainWindow::helpUsePC()
 	QMessageBox::information(this, tr("点云显示界面操作说明"),
 	tr("点击<b>[Start PC]</b>按钮: 开启点云,再点击关闭 <br> \
 		点击<b>[PC Single]</b>按钮: 单帧显示点云 <br> \
-		点击<b>[PC Contin]</b>按钮: 单帧连续点云 <br> \
+		点击<b>[PC Contin]</b>按钮: 连续显示点云 <br> \
 		点击<b>[Pure]</b>按钮: 不组包显示点云 <br>   \
 		快捷方式<b>[Ctrl + a]</b>: 全屏显示点云, 再按关闭 <br> \
 		快捷方式<b>[Ctrl + r]</b>: 显示视角重置 <br> \
 		快捷方式<b>[Ctrl + Alt + s]</b>: 进入选择点云数据点模式, 再按关闭 <br> \
+		操作<b>[按住鼠标左键]</b>: 旋转拖动点云视角 <br> \
 		操作<b>[按住shift+按住鼠标左键]</b>: 平行拖动点云视角"));
 }
 
