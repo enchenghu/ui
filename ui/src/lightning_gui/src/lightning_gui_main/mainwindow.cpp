@@ -255,6 +255,18 @@ void MainWindow::RecRvizPointcloudControl( void )
 	}
 }
 
+void MainWindow::helpUsePC()
+{
+	QMessageBox::information(this, tr("点云显示界面操作说明"),
+	tr("点击<b>[Start PC]</b>按钮: 开启点云,再点击关闭 <br> \
+		点击<b>[PC Single]</b>按钮: 单帧显示点云 <br> \
+		点击<b>[PC Contin]</b>按钮: 单帧连续点云 <br> \
+		点击<b>[Pure]</b>按钮: 不组包显示点云 <br>   \
+		快捷方式<b>[Ctrl + a]</b>: 全屏显示点云, 再按关闭 <br> \
+		快捷方式<b>[Ctrl + r]</b>: 显示视角重置 <br> \
+		快捷方式<b>[Ctrl + Alt + s]</b>: 进入选择点云数据点模式, 再按关闭 <br> \
+		操作<b>[按住shift+按住鼠标左键]</b>: 平行拖动点云视角"));
+}
 
 void MainWindow::about()
 {
@@ -299,6 +311,10 @@ void MainWindow::createActions()
 	aboutAct = new QAction(tr("&About this app"), this);
 	aboutAct->setStatusTip(tr("Show the application's About box"));
 	connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
+
+	mannualAct = new QAction(tr("&How to use PC"), this);
+	mannualAct->setStatusTip(tr("Show the application's About box"));
+	connect(mannualAct, SIGNAL(triggered()), this, SLOT(helpUsePC()));
 
 	updateAct = new QAction(tr("&System update"), this);
 
@@ -366,9 +382,11 @@ void MainWindow::createMenus()
 	viewFMCWMenu->addAction(pcOffsetDockAct);
 
 	menuBar()->addSeparator();
-	helpMenu = menuBar()->addMenu(tr("&Update"));
-	helpMenu->addAction(aboutAct);
-	helpMenu->addAction(updateAct);
+	helpMenu = menuBar()->addMenu(tr("&帮助"));
+	//helpMenu->addAction(aboutAct);
+	//helpMenu->addAction(updateAct);
+	helpMenu->addAction(mannualAct);
+
 }
 
 void MainWindow::readSettings()

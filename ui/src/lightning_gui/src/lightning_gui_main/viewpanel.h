@@ -144,6 +144,9 @@ class viewpanel : public QTabWidget {
   void pcShowBW();
   void pcRecord();
   void pcOneFramePure();
+
+  void pcChSelect();
+
   void updateFFTdata();
   void updateADCdata();
   void updateMotorChart();
@@ -456,7 +459,8 @@ class viewpanel : public QTabWidget {
   ChartLighting* pMotorchart;
   QVector<QCheckBox*> checkShowV;
   QVector<QCheckBox*> checkPCShowV;
-
+  QCheckBox* selectAll;
+  QCheckBox* selectNone;
   QVector<double> x_FFT;
   QVector<double> x_adc0;
   QVector<double> x_adc1;

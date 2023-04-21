@@ -1612,6 +1612,8 @@ void viewpanel::CreatConnect()
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
 	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
+	connect(selectAll, SIGNAL(clicked()), this, SLOT( pcChSelect( void )));
+
 #if 1
 	connect(motorConnectBtnTcp, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmdM( void )));
 	connect(motorConnectBtnSerial, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
@@ -1932,10 +1934,16 @@ void viewpanel::CreatUIWindow()
 
 	controls_layout->addWidget( savePCCombo, 1, 3, Qt::AlignLeft);	
 	savePCCombo->setFixedSize(70, 25);	
-	controls_layout->addWidget( pcProcBtn, 3, 15, Qt::AlignRight);
-	controls_layout->addWidget( pcRecordBtn, 4, 15, Qt::AlignRight);
+	controls_layout->addWidget( pcProcBtn, 3, 15, Qt::AlignLeft);
+	controls_layout->addWidget( pcRecordBtn, 4, 15, Qt::AlignLeft);
 	controls_layout->addWidget( rotate_label, 0, 18, Qt::AlignRight);
 	controls_layout->addWidget( rotate_angle_edit, 0, 19, Qt::AlignLeft);	
+	selectAll = new QCheckBox("&Select Ch All/None");
+	selectAll->setChecked(true);
+	//selectNone = new QCheckBox("select None");
+	controls_layout->addWidget( selectAll, 4, 19, Qt::AlignRight);
+	//controls_layout->addWidget( selectNone, 2, 18, Qt::AlignLeft);
+
 	controlsBox->setLayout(controls_layout);
 	QGroupBox *stateShowBox  = new QGroupBox(tr("State Conditon:"));
 	QGridLayout* stateShowBoxLayout = new QGridLayout;
@@ -2534,6 +2542,12 @@ void viewpanel::saveDataThead()
 #endif
 }
 
+void viewpanel::pcChSelect()
+{
+	for(int i = 0; i < checkPCShowV.size(); i++){
+		checkPCShowV[i]->setChecked(selectAll->isChecked());
+	}
+}
 void viewpanel::pcOneFramePure()
 {
 	if(oneFramePure){

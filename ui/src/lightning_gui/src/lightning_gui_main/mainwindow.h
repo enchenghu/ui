@@ -26,6 +26,7 @@ private Q_SLOTS:
 	void stopPlayback();
 	void setSaveFolder();
 	void about();
+	void helpUsePC();
 	void quit();
 	void convertRosbag();
     void CtrlPanel_Control();
@@ -66,6 +67,8 @@ private:
 	QAction *cutAct;
 	QAction *aboutAct;
 	QAction *updateAct;
+	QAction *mannualAct;
+
 	QAction *aboutQtAct;
 	QAction *configAct;
 	QAction *debugAct;
