@@ -1878,6 +1878,8 @@ void viewpanel::CreatUIWindow()
 
 	//Power_label->setFixedSize(100,30);
 	Power_label->setFont(QFont("微软雅黑", 10.5));
+	ADC_DSA_label->setFont(QFont("微软雅黑", 9));
+
 	controls_layout->addWidget( PowerCombo, 0, 3, Qt::AlignLeft);	
 	controls_layout->addWidget( ADC_DSA_Combo, 1, 3, Qt::AlignLeft);	
 
