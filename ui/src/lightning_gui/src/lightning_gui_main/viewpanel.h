@@ -67,6 +67,7 @@
 #include "vx_mutex.h"
 #include "vx_queue.h"
 #include "vx_task.h"
+#include "systemMonitor.h"
 
 using namespace fmcw_types;
 namespace rviz {
@@ -109,6 +110,8 @@ class viewpanel : public QTabWidget {
   void startControl(void);
   void connectControl(void);
   void configPower(void);
+  void configADCDSA(void);
+
   void configCFAR(void);
   void config3DFT(void);
   void configDiff(void);
@@ -321,6 +324,8 @@ class viewpanel : public QTabWidget {
   QComboBox* m3DFTCombo;
   QComboBox* CFARCombo;
   QComboBox* PowerCombo;
+  QComboBox* ADC_DSA_Combo;
+
   QComboBox* DiffCombo;
   QComboBox* colorCombo;
   QComboBox* savePCCombo;
@@ -487,6 +492,8 @@ class viewpanel : public QTabWidget {
   std::string cell_size_;
   std::vector<std::string> wordsAddr;  // 声明一个字符串向量
   std::vector<std::string> wordsVal;   // 声明一个字符串向量
+  
+  SystemMonitor* systemMonitor_m;
 };
 
 #endif  // viewpanel_H

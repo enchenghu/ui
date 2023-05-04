@@ -194,8 +194,9 @@ viewpanel::viewpanel(QTabWidget* parent )
 	CreatADCWindow();
 	CreatMotorWindow();
 	CreatStateDetectWindow();
+/* 	systemMonitor_m  = new SystemMonitor();
+	this->addTab(systemMonitor_m, "test"); */
 	CreatConnect();
-
 	registerPointcloudRviz();
 	resize(QDesktopWidget().availableGeometry(this).size() * 0.85);
 	std::cout << "R: " << R_V_g.size() << " G: " << G_V_g.size() <<  " B: " << B_V_g.size() << std::endl;
@@ -454,8 +455,8 @@ void viewpanel::showdBFFT(void){
 	}
 }
 
-void viewpanel::configPower(void){
-
+void viewpanel::configPower(void)
+{
 	QString str = PowerCombo->currentText();
 	if(str.toDouble() < 0.0 || str.toDouble() > 50000.0){
 		QMessageBox msgBox;
@@ -469,6 +470,24 @@ void viewpanel::configPower(void){
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
 		msgBox.setText("config power failed!");
+		msgBox.exec();
+		return;
+	}
+}
+void viewpanel::configADCDSA(void)
+{
+	QString str = ADC_DSA_Combo->currentText();
+	if(str.toDouble() < 0.0 || str.toDouble() > 28){
+		QMessageBox msgBox;
+		msgBox.setText("input ADC-DSA invaild!");
+		msgBox.exec();
+		return;		
+	}
+	cmdMsg_.mCommandVal[0] = (uint32_t)(str.toInt());
+	cmdMsg_.mHead.usCommand = commandType::ADC_DSA_SET;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("config ADC-DSA failed!");
 		msgBox.exec();
 		return;
 	}
@@ -1383,17 +1402,14 @@ void viewpanel::CreatStateDetectWindow()
 	}
 	warnBox->setLayout(warnBoxLayout);
 	edfaBoxLayout->addWidget(warnBox, 2, 0);
-
 	edfaBoxLayout->setRowStretch(0, 1);
 	edfaBoxLayout->setRowStretch(1, 4);
 	edfaBoxLayout->setRowStretch(2, 4);
-
 	edfaBox->setLayout(edfaBoxLayout);
 
 	showLayout0->addWidget(edfaBox, 0, 0, Qt::AlignLeft);
-
-
 	multiWidget0->setLayout(showLayout0);
+
 	stateDetectTab->addTab(multiWidget0,  "光电系统");
 
 	QWidget* multiWidget1 = new QWidget();
@@ -1582,6 +1598,8 @@ void viewpanel::CreatConnect()
 {
 	connect(lidar_connect_button, SIGNAL(clicked()), this, SLOT( connectControl( void )));
 	connect(ctlWriteBtn_[0], SIGNAL(clicked()), this, SLOT( configPower( void )));
+	connect(ctlWriteBtn_[1], SIGNAL(clicked()), this, SLOT( configADCDSA( void )));
+
 	connect(saveBtn, SIGNAL(clicked()), this, SLOT( saveDataThead( void )));
 	connect(setSaveBtn, SIGNAL(clicked()), this, SLOT( setSaveFolder( void )));
 	connect(settingADCSavebutton, SIGNAL(clicked()), this, SLOT( udpConnect( void )));
@@ -1790,6 +1808,8 @@ void viewpanel::CreatUIWindow()
 	QLabel* CFAR_label = new QLabel( "CFAR" );
 	QLabel* m3DFT_label = new QLabel( "3DFT" );
 	QLabel* Power_label = new QLabel( "Power/mW" );
+	QLabel* ADC_DSA_label = new QLabel( "ADC_DSA/dBm" );
+
 	QLabel* diff_label = new QLabel( "Diff" );
 	QLabel* regAddr_label = new QLabel( "Reg Addr" );
 	QLabel* regVal_label = new QLabel( "Reg value" );
@@ -1820,18 +1840,25 @@ void viewpanel::CreatUIWindow()
 	CFARCombo = new QComboBox;
 	m3DFTCombo = new QComboBox;
 	PowerCombo = new QComboBox;
+	ADC_DSA_Combo =  new QComboBox;
 	colorCombo = new QComboBox;
 	savePCCombo = new QComboBox;
 	savePCCombo->addItem(QString("all"));
 	for (int i = 1; i < 5; i++){
 		savePCCombo->addItem(QString::number(i));
 	}
+	ADC_DSA_Combo->addItem(QString::number(0));
+	ADC_DSA_Combo->addItem(QString::number(27));
+	ADC_DSA_Combo->setCurrentIndex(1);
+
 	colorCombo->setFixedSize(90,25);
 	colorCombo->addItem(tr("range"));
 	colorCombo->addItem(tr("intensity"));
 	colorCombo->addItem(tr("speed"));
 
 	PowerCombo->setEditable(true);
+	ADC_DSA_Combo->setEditable(true);
+
 	DiffCombo = new QComboBox;
 
 	for (int i = 0; i < 8; i++){
@@ -1847,11 +1874,17 @@ void viewpanel::CreatUIWindow()
 	DiffCombo->addItem(tr("0"));
 	DiffCombo->addItem(tr("1"));
 	controls_layout->addWidget( Power_label, 0, 2, Qt::AlignRight);	
+	controls_layout->addWidget( ADC_DSA_label, 1, 2, Qt::AlignRight);	
+
 	//Power_label->setFixedSize(100,30);
 	Power_label->setFont(QFont("微软雅黑", 10.5));
 	controls_layout->addWidget( PowerCombo, 0, 3, Qt::AlignLeft);	
+	controls_layout->addWidget( ADC_DSA_Combo, 1, 3, Qt::AlignLeft);	
+
 	PowerCombo->setFixedSize(70,25);
-	for(int i = 0; i < 1; i++){
+	ADC_DSA_Combo->setFixedSize(70,25);
+
+	for(int i = 0; i < 2; i++){
 		ctlWriteBtn_.emplace_back(new QPushButton("&Cfg", this));
 		controls_layout->addWidget( ctlWriteBtn_[i], i, 4, Qt::AlignLeft);	
 		ctlWriteBtn_[i]->setFixedSize(70,30);
@@ -1919,7 +1952,7 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( pcSwitchBtn, 0, 15, Qt::AlignRight);	
 	controls_layout->addWidget( pcOnceBtn, 1, 15, Qt::AlignRight);	
 	controls_layout->addWidget( pcResetBtn, 2, 15, Qt::AlignRight);	
-	controls_layout->addWidget( saveBtn, 1, 2, Qt::AlignRight);
+	controls_layout->addWidget( saveBtn, 2, 2, Qt::AlignRight);
 	//controls_layout->addWidget( pcBWBtn, 3, 15, Qt::AlignRight);	
 
 	controls_layout->addWidget( point_size_label, 0, 16, Qt::AlignRight);
@@ -1933,7 +1966,7 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( color_by_label, 4, 16, Qt::AlignRight);	
 	controls_layout->addWidget( colorCombo, 4, 17, Qt::AlignLeft);		
 
-	controls_layout->addWidget( savePCCombo, 1, 3, Qt::AlignLeft);	
+	controls_layout->addWidget( savePCCombo, 2, 3, Qt::AlignLeft);	
 	savePCCombo->setFixedSize(70, 25);	
 	controls_layout->addWidget( pcProcBtn, 3, 15, Qt::AlignLeft);
 	controls_layout->addWidget( pcRecordBtn, 4, 15, Qt::AlignLeft);
