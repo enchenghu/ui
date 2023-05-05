@@ -1933,7 +1933,7 @@ void viewpanel::CreatUIWindow()
 	point_size_edit->setFixedSize(70,25);
 	point_size_edit->setText(QString::number(point_size));
 	QLabel* cell_size_label = new QLabel( "cell size" );
-	QLabel* point_size_interval_label = new QLabel( "point size interval" );
+	QLabel* point_size_interval_label = new QLabel( "point interval" );
 	cell_size_edit = new QLineEdit;
 	point_size_interval_edit = new QLineEdit;
 	cell_size_edit->setFixedSize(70,25);
