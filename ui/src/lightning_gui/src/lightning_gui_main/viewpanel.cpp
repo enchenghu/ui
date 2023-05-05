@@ -2705,13 +2705,11 @@ void viewpanel::configCellSize(){
 void viewpanel::increasePointSize(){
 	point_size += point_size_interval_edit->text().toDouble();
 	point_size_edit->setText(QString::number(point_size));
-	pointcloud_fmcw->subProp("Size (m)")->setValue(point_size);
 }
 
 void viewpanel::decreasePointSize(){
 	point_size -= point_size_interval_edit->text().toDouble();;
 	point_size_edit->setText(QString::number(point_size));
-	pointcloud_fmcw->subProp("Size (m)")->setValue(point_size);
 }
 
 
