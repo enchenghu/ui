@@ -236,6 +236,15 @@ void MainWindow::resetViews( void )
 {
 	viewPanel->resetViews();
 }
+void MainWindow::increasePointSize( void )
+{
+	viewPanel->increasePointSize();
+}
+
+void MainWindow::decreasePointSize( void )
+{
+	viewPanel->decreasePointSize();
+}
 
 void MainWindow::RecRvizPointcloudControl( void )
 {
@@ -265,6 +274,8 @@ void MainWindow::helpUsePC()
 		快捷方式<b>[Ctrl + a]</b>: 全屏显示点云, 再按关闭 <br> \
 		快捷方式<b>[Ctrl + r]</b>: 显示视角重置 <br> \
 		快捷方式<b>[Ctrl + Alt + s]</b>: 进入选择点云数据点模式, 再按关闭 <br> \
+		快捷方式<b>[Ctrl + 1]</b>:0.005步进增大点云点的尺寸 <br> \
+		快捷方式<b>[Ctrl + 2]</b>:0.005步进减小点云点的尺寸 <br> \
 		操作<b>[按住鼠标左键]</b>: 旋转拖动点云视角 <br> \
 		操作<b>[按住shift+按住鼠标左键]</b>: 平行拖动点云视角"));
 }
@@ -338,11 +349,17 @@ void MainWindow::createActions()
 	showPcPanelAct->setChecked(true);
 	connect(showPcPanelAct, SIGNAL(triggered()), this, SLOT(PcPanel_Control()));
 
-	QShortcut  *shortcut= new QShortcut(QKeySequence(tr("ctrl+a")), this);
+	QShortcut  *shortcut = new QShortcut(QKeySequence(tr("ctrl+a")), this);
 	connect(shortcut, SIGNAL(activated()), this,SLOT(fullScreen()));
 
-	QShortcut  *shortcut_r= new QShortcut(QKeySequence(tr("ctrl+r")), this);
+	QShortcut  *shortcut_r = new QShortcut(QKeySequence(tr("ctrl+r")), this);
 	connect(shortcut_r, SIGNAL(activated()), this,SLOT(resetViews()));
+
+	QShortcut  *shortcut_1 = new QShortcut(QKeySequence(tr("ctrl+1")), this);
+	connect(shortcut_1, SIGNAL(activated()), this,SLOT(increasePointSize()));
+
+	QShortcut  *shortcut_2 = new QShortcut(QKeySequence(tr("ctrl+2")), this);
+	connect(shortcut_2, SIGNAL(activated()), this,SLOT(decreasePointSize()));
 #endif
 
 }

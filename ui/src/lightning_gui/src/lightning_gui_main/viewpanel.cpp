@@ -1933,9 +1933,13 @@ void viewpanel::CreatUIWindow()
 	point_size_edit->setFixedSize(70,25);
 	point_size_edit->setText(QString::number(point_size));
 	QLabel* cell_size_label = new QLabel( "cell size" );
+	QLabel* point_size_interval_label = new QLabel( "point size interval" );
 	cell_size_edit = new QLineEdit;
+	point_size_interval_edit = new QLineEdit;
 	cell_size_edit->setFixedSize(70,25);
+	point_size_interval_edit->setFixedSize(70,25);
 	cell_size_edit->setText(QString::number(cell_size));
+	point_size_interval_edit->setText(QString::number(0.005));
 
 	QLabel* axes_size_label = new QLabel( "axes size" );
 	axes_size_edit = new QLineEdit;
@@ -1974,6 +1978,9 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( pcRecordBtn, 4, 15, Qt::AlignLeft);
 	controls_layout->addWidget( rotate_label, 0, 18, Qt::AlignRight);
 	controls_layout->addWidget( rotate_angle_edit, 0, 19, Qt::AlignLeft);	
+
+	controls_layout->addWidget( point_size_interval_label, 1, 18, Qt::AlignRight);
+	controls_layout->addWidget( point_size_interval_edit, 1, 19, Qt::AlignLeft);	
 	selectAll = new QCheckBox("&Select Ch All/None");
 	selectAll->setChecked(true);
 	//selectNone = new QCheckBox("select None");
@@ -2694,6 +2701,20 @@ void viewpanel::configCellSize(){
 	cell_size = cell_size_edit->text().toDouble();
 	grid_->subProp( "Cell Size" )->setValue(cell_size); 
 }
+
+void viewpanel::increasePointSize(){
+	point_size += point_size_interval_edit->text().toDouble();
+	point_size_edit->setText(QString::number(point_size));
+	pointcloud_fmcw->subProp("Size (m)")->setValue(point_size);
+}
+
+void viewpanel::decreasePointSize(){
+	point_size -= point_size_interval_edit->text().toDouble();;
+	point_size_edit->setText(QString::number(point_size));
+	pointcloud_fmcw->subProp("Size (m)")->setValue(point_size);
+}
+
+
 void viewpanel::configPointSize(){
 	point_size = point_size_edit->text().toDouble();
 	pointcloud_fmcw->subProp("Size (m)")->setValue(point_size);

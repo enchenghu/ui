@@ -126,6 +126,9 @@ class viewpanel : public QTabWidget {
   void ctrlShowPcOffset(bool);
   void ctrlPcPanel(bool);
   void resetViews(void);
+  void increasePointSize();
+  void decreasePointSize();
+
 
  private Q_SLOTS:
   void setLoadFileType(void);
@@ -341,6 +344,7 @@ class viewpanel : public QTabWidget {
   QLineEdit* color_base_edit;
   QLineEdit* point_size_edit;
   QLineEdit* cell_size_edit;
+  QLineEdit* point_size_interval_edit;
   QLineEdit* axes_size_edit;
   QLineEdit* power_Offset_edit;
   QLineEdit* power_Min_edit;

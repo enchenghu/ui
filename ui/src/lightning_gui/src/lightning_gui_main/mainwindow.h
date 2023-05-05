@@ -33,6 +33,9 @@ private Q_SLOTS:
     void pcOffset_Control();
     void PcPanel_Control();
     void resetViews();
+    void increasePointSize();
+  	void decreasePointSize();
+
 	void RecRvizPointcloudControl();
 	void fullScreen();
 
