@@ -4,6 +4,11 @@
 SystemMonitor::SystemMonitor(QTabWidget* parent)
 {
     creatEDFATab();
+    creatMotorSysTab();
+    creatHardSysTab();
+    creatIPeriTab();
+    creatSoftSysTab();
+
 }
 
 void SystemMonitor::setReadOnlyLineEdit(QLineEdit* line)
@@ -14,10 +19,42 @@ void SystemMonitor::setReadOnlyLineEdit(QLineEdit* line)
 	line->setPalette(palette);
 }
 
+void SystemMonitor::creatMotorSysTab()
+{
+	motorSysWidget = new QWidget();
+	motorSysLayout = new QGridLayout();
+	motorSysWidget->setLayout(motorSysLayout);
+	this->addTab(motorSysWidget,  "电机系统");
+}
+
+void SystemMonitor::creatHardSysTab()
+{
+	hardSysWidget = new QWidget();
+	hardSysLayout = new QGridLayout();
+	hardSysWidget->setLayout(hardSysLayout);
+	this->addTab(hardSysWidget,  "硬件系统");
+}
+
+void SystemMonitor::creatSoftSysTab()
+{
+	softSysWidget = new QWidget();
+	softSysLayout = new QGridLayout();
+	softSysWidget->setLayout(softSysLayout);
+	this->addTab(softSysWidget,  "软件系统");
+}
+
+void SystemMonitor::creatIPeriTab()
+{
+	iPeriSysWidget = new QWidget();
+	iPeriSysLayout = new QGridLayout();
+	iPeriSysWidget->setLayout(iPeriSysLayout);
+	this->addTab(iPeriSysWidget,  "接口外设");
+}
+
 void SystemMonitor::creatEDFATab()
 {
-	edfaWidget = new QWidget();
-	edfaLayout = new QGridLayout() ;
+	eoSysWidget = new QWidget();
+	eoSysLayout = new QGridLayout() ;
 	edfaBox = new QGroupBox(tr("EDFA:"));
 	edfaBoxLayout = new QGridLayout ;
 	basicBox = new QGroupBox(tr("基本信息:"));
@@ -57,9 +94,9 @@ void SystemMonitor::creatEDFATab()
 	edfaBoxLayout->setRowStretch(1, 4);
 	edfaBoxLayout->setRowStretch(2, 4);
 	edfaBox->setLayout(edfaBoxLayout);
-	edfaLayout->addWidget(edfaBox, 0, 0, Qt::AlignLeft);
-	edfaWidget->setLayout(edfaLayout);
-    this->addTab(edfaWidget,  "光电系统");
+	eoSysLayout->addWidget(edfaBox, 0, 0, Qt::AlignLeft);
+	eoSysWidget->setLayout(eoSysLayout);
+    this->addTab(eoSysWidget,  "光电系统");
 }
 
 void SystemMonitor::setLED(QLabel* label, int color)

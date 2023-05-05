@@ -36,8 +36,21 @@ public:
     virtual ~SystemMonitor(){}
 
 private:
-    QWidget* edfaWidget;
-	QGridLayout* edfaLayout;
+    QWidget* eoSysWidget;
+	QGridLayout* eoSysLayout;
+
+    QWidget* motorSysWidget;
+	QGridLayout* motorSysLayout;
+
+    QWidget* hardSysWidget;
+	QGridLayout* hardSysLayout;
+
+    QWidget* softSysWidget;
+	QGridLayout* softSysLayout;
+
+    QWidget* iPeriSysWidget;
+	QGridLayout* iPeriSysLayout;
+
 	QGroupBox* edfaBox;
 	QGridLayout* edfaBoxLayout;
 	QGroupBox* basicBox;
@@ -51,6 +64,10 @@ private:
     std::vector<QLineEdit*> edfaDeviceInfoLinesV;
     void setReadOnlyLineEdit(QLineEdit* line);
     void creatEDFATab();
+    void creatMotorSysTab();
+    void creatHardSysTab();
+    void creatSoftSysTab();
+    void creatIPeriTab();
     void setLED(QLabel* label, int color);
 
 };
