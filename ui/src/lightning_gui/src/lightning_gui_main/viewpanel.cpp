@@ -106,6 +106,21 @@ uint16_t FloatSum(float data)
 	return dataU8[0] + dataU8[1] + dataU8[2] + dataU8[3];
 }
 
+inline float calcFpsAndTransSpeed(int n)
+{
+	static auto last = std::chrono::steady_clock::now();
+	static long byteNum = 0;
+	std::chrono::duration<double> elapsed;
+	byteNum += n;
+	auto current = std::chrono::steady_clock::now();
+	elapsed = current - last;
+	if(elapsed.count() * 1000  > 3 * 1000){
+		last = current;
+		return (float) (byteNum * 1000) / (elapsed.count() * 1000);
+	}
+	return -1;
+}
+
 bool check_file_exist(const std::string &path) {
 #ifdef _MSC_VER  
 	bool ret = 0 == _access(path.c_str(), 0);
@@ -1607,7 +1622,7 @@ void viewpanel::CreatConnect()
     connect( axes_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configAxesSize( void )));
     connect( cell_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configCellSize( void )));
     connect( point_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configPointSize( void )));
-	connect( colorCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( colorChange( void )));
+	//connect( colorCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( colorChange( void )));
 
 	QSignalMapper * configMapper;
 	QSignalMapper * readMapper;
@@ -1917,8 +1932,8 @@ void viewpanel::CreatUIWindow()
 	QLabel* rotate_label = new QLabel( "rotate angle" );
 	rotation_spin = new QDoubleSpinBox;
 	//rotation_spin->setDecimals(3);
-	rotation_spin->setMaximum(90);
-	rotation_spin->setMinimum(-90);
+	rotation_spin->setMaximum(180);
+	rotation_spin->setMinimum(-180);
 	rotation_spin->setSingleStep(0.5);
 	//rotation_spin->setSuffix("°");
 	rotation_spin->setValue(rotation_offset);
@@ -4042,9 +4057,9 @@ void viewpanel::pcDataProc()
 				g = 0;
 				b = 0;
 			} else if(speed_m > 0 && speed_m > speed_critical) {
-				r = 0;
-				g = 0;
-				b = 240;
+				r = 13;
+				g = 206;
+				b = 235;
 			}else {
 				r = 192;
 				g = 192;
@@ -4227,11 +4242,13 @@ void viewpanel::udpRecvPCLoop()
 	struct sockaddr_in src_addr;
 	socklen_t len;
 	len = sizeof(sockaddr);
+	long bytesNum = 0;
 	while(!terminating && !udpPCStop_)
 	{
 		auto start = std::chrono::steady_clock::now();
 		pcDataOneFrame_.clear();
 		ifLost  = false;
+		bytesNum = 0;
 		for(int i = 0; i < UDP_PC_TIMES_PER_FRAME; i++){
 			memset(&pcDataRaw_, 0, sizeof(pcDataRaw_));
 			//printf("ready recv udp msg!\n");
@@ -4247,6 +4264,7 @@ void viewpanel::udpRecvPCLoop()
 				i--;
 				continue;
 			}
+			bytesNum += ret;
 
 			if(i == 0) head_frame_index = pcDataRaw_.UDP_PC_head.uphFrameCounter;
 			pcDataOneFrame_.emplace_back(pcDataRaw_);
@@ -4261,6 +4279,7 @@ void viewpanel::udpRecvPCLoop()
 		auto end = std::chrono::steady_clock::now();
 		elapsed = end - start;
 		std::cout << "time for one frame udp: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
+		byteSpeed_ =  calcFpsAndTransSpeed(bytesNum) / 1024.0;
 		//std::cout << "!!recv udp pkg successfully! "  << std::endl;
 		if(pcDataOneFrame_.size() > 2){
 			udpPcMsgOneFrame* pUdp = NULL;

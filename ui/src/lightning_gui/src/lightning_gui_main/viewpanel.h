@@ -293,6 +293,7 @@ class viewpanel : public QTabWidget {
   double indensity_max;
   double speed_min;
   double speed_max;
+  float byteSpeed_;
   QString lidar_ctrl_port_;
   QString lidar_UDP_port_;
   QString lidar_UDP_PC_port_;
