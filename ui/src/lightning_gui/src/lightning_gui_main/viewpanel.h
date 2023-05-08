@@ -459,8 +459,9 @@ class viewpanel : public QTabWidget {
   QPushButton* resetADCBtn_;
   QPushButton* mFFTShowdBBtn;
   QDockWidget* ctrlDock;
+  QWidget* ctrlDockWidget;
   QDockWidget* pcOffsetDock;
-  
+  QWidget* pcOffsetDockWidget;
   std::vector<QPushButton*> ctlWriteBtn_;
   std::vector<QPushButton*> ctlReadBtn_;
   std::vector<QLineEdit*> ctlReadLine_;

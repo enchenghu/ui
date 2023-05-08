@@ -1026,11 +1026,11 @@ void viewpanel::registerPointcloudRviz()
 
 void viewpanel::ctrlShowPcOffset(bool show)
 {
-	pcOffsetDock->setVisible(show);
+	pcOffsetDockWidget->setVisible(show);
 }
 void viewpanel::ctrlShowWindows(bool show)
 {
-	ctrlDock->setVisible(show);
+	ctrlDockWidget->setVisible(show);
 }
 
 void viewpanel::ctrlPcPanel(bool show)
@@ -1707,7 +1707,7 @@ void viewpanel::CreatUIWindow()
 
 	QWidget* multiWidget = new QWidget();
 	ctrlDock = new QDockWidget();
-	QWidget* ctrlDockWidget = new QWidget();
+	ctrlDockWidget = new QWidget();
 
 	ctrlDock->setFeatures(QDockWidget::DockWidgetClosable );
 	//dock->setWidget(multiWidget);
@@ -2056,12 +2056,14 @@ void viewpanel::CreatUIWindow()
 	render_panel_ = new rviz::RenderPanel();
 	selection_panel_ = new rviz::SelectionPanel();
 	controls->addWidget(controlsBox, 0, 0, Qt::AlignLeft);
+
 	ctrlDockWidget->setLayout(controls);
-	ctrlDock->setWidget(ctrlDockWidget);
+
+	//ctrlDock->setWidget(ctrlDockWidget);
 
 
 	pcOffsetDock = new QDockWidget();
-	QWidget* pcOffsetDockWidget = new QWidget();
+	pcOffsetDockWidget = new QWidget();
 	pcOffsetDock->setFeatures(QDockWidget::DockWidgetClosable );
 	QGroupBox *pcOffsetBox = new QGroupBox(tr("PC Offset && Choose Show:"));
 	QGridLayout* pcOffsetBoxLayout = new QGridLayout;	
@@ -2083,17 +2085,17 @@ void viewpanel::CreatUIWindow()
 	pcOffsetLayout->addWidget(pcOffsetBox, 1, 0, Qt::AlignLeft);
 	pcOffsetLayout->addWidget(selectAll, 0, 0, Qt::AlignLeft);
 	pcOffsetDockWidget->setLayout(pcOffsetLayout);
-	pcOffsetDock->setWidget(pcOffsetDockWidget);
+	//pcOffsetDock->setWidget(pcOffsetDockWidget);
 
-	QPalette pal(pcOffsetDock->palette());
+	QPalette pal(pcOffsetDockWidget->palette());
 	pal.setColor(QPalette::Background, Qt::white);
-	pcOffsetDock->setAutoFillBackground(true);
-	pcOffsetDock->setPalette(pal);
+	pcOffsetDockWidget->setAutoFillBackground(true);
+	pcOffsetDockWidget->setPalette(pal);
 
-	mainLayout->addWidget ( ctrlDock, 0, 0);
-	mainLayout->addWidget ( render_panel_, 1, 0, 5, 5);
-	mainLayout->addWidget ( selection_panel_, 1, 0, 5, 1, Qt::AlignLeft);
-	mainLayout->addWidget ( pcOffsetDock, 1, 0, Qt::AlignRight);
+	mainLayout->addWidget ( ctrlDockWidget, 0, 0);
+	mainLayout->addWidget ( render_panel_, 1, 0);
+	mainLayout->addWidget ( selection_panel_, 1, 0, Qt::AlignLeft);
+	mainLayout->addWidget ( pcOffsetDockWidget, 1, 0, Qt::AlignRight);
 
 	multiWidget->setLayout(mainLayout);
 	this->addTab(multiWidget,  "Lidar Control");
