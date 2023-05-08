@@ -1770,7 +1770,7 @@ void viewpanel::CreatUIWindow()
 	pcRecordBtn = new QPushButton("&Record", this);
 	pcRecordBtn->setFixedSize(70,25);
 	setButtonStyle(pcRecordBtn);
-	pcProcBtn = new QPushButton("&Pure", this);
+	pcProcBtn = new QPushButton("&Pure");
 	setButtonStyle(pcProcBtn);
 	QLabel* lidar_IP_label = new QLabel( "Lidar IP addr" );
 	QLabel* lidar_port_label = new QLabel( "Lidar Ctrl Port" );
@@ -1930,6 +1930,12 @@ void viewpanel::CreatUIWindow()
 	left_angle_edit = new QLineEdit;
 	left_angle_edit->setFixedSize(70,25);
 	left_angle_edit->setText(QString::number(leftAngle_offset));
+
+	QLabel* speed_critical_label = new QLabel( "critical speed" );
+	speed_critical_edit = new QLineEdit;
+	speed_critical_edit->setFixedSize(70,25);
+	speed_critical_edit->setText(QString::number(speed_critical));
+
 	QLabel* right_label = new QLabel( "right angle" );
 	right_angle_edit = new QLineEdit;
 	right_angle_edit->setFixedSize(70,25);
@@ -1991,6 +1997,8 @@ void viewpanel::CreatUIWindow()
 
 	controls_layout->addWidget( point_size_interval_label, 0, 18, Qt::AlignRight);
 	controls_layout->addWidget( point_size_interval_edit, 0, 19, Qt::AlignLeft);	
+	controls_layout->addWidget( speed_critical_label, 2, 18, Qt::AlignRight);
+	controls_layout->addWidget( speed_critical_edit, 2, 19, Qt::AlignLeft);	
 	selectAll = new QCheckBox("&Select Ch All/None");
 	selectAll->setChecked(true);
 	//controls_layout->addWidget( selectAll, 4, 19, Qt::AlignRight);
@@ -3944,6 +3952,7 @@ void viewpanel::pcDataProc()
 	for(int i = 0; i < LIGHTNING_MAX_LINES; i++)
 		distance_offset[i] = distanceOffsetEditV[i]->text().toDouble();
 	rotation_offset = rotation_spin->value();
+	speed_critical = speed_critical_edit->text().toDouble();
 	leftAngle_offset = left_angle_edit->text().toDouble();
 	rightAngle_offset = right_angle_edit->text().toDouble();
 	color_base = color_base_edit->text().toDouble();
@@ -4028,11 +4037,11 @@ void viewpanel::pcDataProc()
 			index_rgb = (intensity_m) / (color_base) * R_V_g.size();
 		else if(strColor == "speed"){
 			uint8_t r, g, b = 0;
-			if(speed_m < 0 && speed_m < - 0.4){
+			if(speed_m < 0 && speed_m < -speed_critical){
 				r = 255;
 				g = 0;
 				b = 0;
-			} else if(speed_m > 0 && speed_m > 0.4) {
+			} else if(speed_m > 0 && speed_m > speed_critical) {
 				r = 0;
 				g = 0;
 				b = 240;
@@ -4633,6 +4642,7 @@ void viewpanel::load_settings()
 	}
 
 	rotation_offset = settings.value("rotate angle","45.0").toDouble();
+	speed_critical = settings.value("critical speed","0.4").toDouble();
 	leftAngle_offset = settings.value("left angle","306.0").toDouble();
 	color_base = settings.value("color base","10.0").toDouble();
 	point_size = settings.value("point size","0.03").toDouble();
@@ -4769,6 +4779,7 @@ void viewpanel::save_settings(void )
 	}
 
 	settings.setValue("rotate angle", rotation_spin->text());
+	settings.setValue("critical speed", speed_critical_edit->text());
 	settings.setValue("left angle", left_angle_edit->text());
 	settings.setValue("right angle", right_angle_edit->text());
 

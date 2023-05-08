@@ -280,6 +280,7 @@ class viewpanel : public QTabWidget {
   double power_offset;
   double power_min;
   double rotation_offset;
+  double speed_critical;
   double leftAngle_offset;
   double rightAngle_offset;
   double cell_size;
@@ -342,6 +343,7 @@ class viewpanel : public QTabWidget {
   QLineEdit* distance_Offset_edit[4];
 	std::vector<QLineEdit*> distanceOffsetEditV;
   QLineEdit* rotate_angle_edit;
+  QLineEdit* speed_critical_edit;
   QLineEdit* left_angle_edit;
   QLineEdit* right_angle_edit;
   QLineEdit* color_base_edit;
