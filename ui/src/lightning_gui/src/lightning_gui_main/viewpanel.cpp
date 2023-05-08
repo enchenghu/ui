@@ -1976,16 +1976,13 @@ void viewpanel::CreatUIWindow()
 	savePCCombo->setFixedSize(70, 25);	
 	controls_layout->addWidget( pcProcBtn, 3, 15, Qt::AlignLeft);
 	controls_layout->addWidget( pcRecordBtn, 4, 15, Qt::AlignLeft);
-	controls_layout->addWidget( rotate_label, 0, 18, Qt::AlignRight);
-	controls_layout->addWidget( rotate_angle_edit, 0, 19, Qt::AlignLeft);	
-
-	controls_layout->addWidget( point_size_interval_label, 1, 18, Qt::AlignRight);
-	controls_layout->addWidget( point_size_interval_edit, 1, 19, Qt::AlignLeft);	
+	controls_layout->addWidget( rotate_label, 1, 18, Qt::AlignRight);
+	controls_layout->addWidget( rotate_angle_edit, 1, 19, Qt::AlignLeft);	
+	controls_layout->addWidget( point_size_interval_label, 0, 18, Qt::AlignRight);
+	controls_layout->addWidget( point_size_interval_edit, 0, 19, Qt::AlignLeft);	
 	selectAll = new QCheckBox("&Select Ch All/None");
 	selectAll->setChecked(true);
-	//selectNone = new QCheckBox("select None");
-	controls_layout->addWidget( selectAll, 4, 19, Qt::AlignRight);
-	//controls_layout->addWidget( selectNone, 2, 18, Qt::AlignLeft);
+	//controls_layout->addWidget( selectAll, 4, 19, Qt::AlignRight);
 
 	controlsBox->setLayout(controls_layout);
 	QGroupBox *stateShowBox  = new QGroupBox(tr("State Conditon:"));
@@ -2049,7 +2046,8 @@ void viewpanel::CreatUIWindow()
 
 	pcOffsetBox->setLayout(pcOffsetBoxLayout);
 	QGridLayout* pcOffsetLayout = new QGridLayout;	
-	pcOffsetLayout->addWidget(pcOffsetBox, 0, 0, Qt::AlignLeft);
+	pcOffsetLayout->addWidget(pcOffsetBox, 1, 0, Qt::AlignLeft);
+	pcOffsetLayout->addWidget(selectAll, 0, 0, Qt::AlignLeft);
 	pcOffsetDockWidget->setLayout(pcOffsetLayout);
 	pcOffsetDock->setWidget(pcOffsetDockWidget);
 
