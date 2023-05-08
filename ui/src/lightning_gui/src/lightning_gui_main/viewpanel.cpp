@@ -162,7 +162,7 @@ uint8_t * LoadDat(const char *cali_file_path)
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
-	save_folder_(QString(".")), udpStop_(true), ifShowdB_(FFT_DB),\
+	save_folder_(QString(".")), udpStop_(true), showBlack(true), ifShowdB_(FFT_DB),\
 	power_offset(0.0),ifConnectedMotorSerial(false), ifConnectedMotorTcp(false),\
 	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
 	ifStarted(false),saveadc_(false), oneFramePure(true), ifConnectedStateTcp(false)
@@ -1607,6 +1607,8 @@ void viewpanel::CreatConnect()
     connect( axes_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configAxesSize( void )));
     connect( cell_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configCellSize( void )));
     connect( point_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configPointSize( void )));
+	connect( colorCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( colorChange( void )));
+
 	QSignalMapper * configMapper;
 	QSignalMapper * readMapper;
 	configMapper = new QSignalMapper(this);
@@ -1982,7 +1984,7 @@ void viewpanel::CreatUIWindow()
 
 	controls_layout->addWidget( savePCCombo, 2, 3, Qt::AlignLeft);	
 	savePCCombo->setFixedSize(70, 25);	
-	controls_layout->addWidget( pcProcBtn, 3, 15, Qt::AlignLeft);
+	controls_layout->addWidget( pcBWBtn, 3, 15, Qt::AlignLeft);
 	controls_layout->addWidget( pcRecordBtn, 4, 15, Qt::AlignLeft);
 	controls_layout->addWidget( rotate_label, 1, 18, Qt::AlignRight);
 	controls_layout->addWidget( rotation_spin, 1, 19, Qt::AlignLeft);	
@@ -2653,8 +2655,16 @@ void viewpanel::pcRecord(){
 	}
 }
 
+void viewpanel::colorChange()
+{
+	if(colorCombo->currentText() == "speed")
+	{
+		render_panel_->setBackgroundColor(Ogre::ColourValue(238,238,236,0.3));
+		showBlack = false;
+	}
+
+}
 void viewpanel::pcShowBW(){
-	static bool showBlack = true;
 	if(showBlack){
 		render_panel_->setBackgroundColor(Ogre::ColourValue(238,238,236,0.3));
 		showBlack = false;

@@ -139,6 +139,7 @@ class viewpanel : public QTabWidget {
   void setSaveFolder();
   void udpConnect();
   void fftChannelChange();
+  void colorChange();
   void udpPcConnect();
   void startPcUdpOnce();
   void startPcUdpContinuous();
@@ -252,6 +253,7 @@ class viewpanel : public QTabWidget {
   bool udpPCStop_;
   bool udpPCSingle_;
   bool udpPCContinu_;
+  bool showBlack;
   bool saveadc_;
   int ctrl_sock;
   int motor_ctrl_sock;
