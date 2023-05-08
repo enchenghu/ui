@@ -328,6 +328,7 @@ class viewpanel : public QTabWidget {
   QComboBox* CFARCombo;
   QComboBox* PowerCombo;
   QComboBox* ADC_DSA_Combo;
+  QDoubleSpinBox* rotation_spin;
 
   QComboBox* DiffCombo;
   QComboBox* colorCombo;

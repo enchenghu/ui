@@ -1913,6 +1913,14 @@ void viewpanel::CreatUIWindow()
 	}
 	controls_layout->addWidget( loadAlgBtn, 4, 13, Qt::AlignLeft);	
 	QLabel* rotate_label = new QLabel( "rotate angle" );
+	rotation_spin = new QDoubleSpinBox;
+	//rotation_spin->setDecimals(3);
+	rotation_spin->setMaximum(90);
+	rotation_spin->setMinimum(-90);
+	rotation_spin->setSingleStep(0.5);
+	//rotation_spin->setSuffix("°");
+	rotation_spin->setValue(rotation_offset);
+
 	rotate_angle_edit = new QLineEdit;
 	rotate_angle_edit->setFixedSize(70,25);
 	rotate_angle_edit->setText(QString::number(rotation_offset));
@@ -1977,7 +1985,8 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( pcProcBtn, 3, 15, Qt::AlignLeft);
 	controls_layout->addWidget( pcRecordBtn, 4, 15, Qt::AlignLeft);
 	controls_layout->addWidget( rotate_label, 1, 18, Qt::AlignRight);
-	controls_layout->addWidget( rotate_angle_edit, 1, 19, Qt::AlignLeft);	
+	controls_layout->addWidget( rotation_spin, 1, 19, Qt::AlignLeft);	
+
 	controls_layout->addWidget( point_size_interval_label, 0, 18, Qt::AlignRight);
 	controls_layout->addWidget( point_size_interval_edit, 0, 19, Qt::AlignLeft);	
 	selectAll = new QCheckBox("&Select Ch All/None");
@@ -3924,7 +3933,7 @@ void viewpanel::pcDataProc()
 	}
 	for(int i = 0; i < LIGHTNING_MAX_LINES; i++)
 		distance_offset[i] = distanceOffsetEditV[i]->text().toDouble();
-	rotation_offset = rotate_angle_edit->text().toDouble();
+	rotation_offset = rotation_spin->value();
 	leftAngle_offset = left_angle_edit->text().toDouble();
 	rightAngle_offset = right_angle_edit->text().toDouble();
 	color_base = color_base_edit->text().toDouble();
@@ -4749,7 +4758,7 @@ void viewpanel::save_settings(void )
 		settings.setValue("Distance Offset " + QString::number(i + 1), distanceOffsetEditV[i]->text());
 	}
 
-	settings.setValue("rotate angle", rotate_angle_edit->text());
+	settings.setValue("rotate angle", rotation_spin->text());
 	settings.setValue("left angle", left_angle_edit->text());
 	settings.setValue("right angle", right_angle_edit->text());
 
