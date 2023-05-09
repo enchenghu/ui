@@ -21,6 +21,7 @@
 #include "rqt_gauges/qcgaugewidget.h"
 #include "viewpanel.h"
 #include <vector>
+#include <netinet/tcp.h>
 
 #define CTRL_SOCKET 0
 #define DEFAULT_AZIMUTH_BIN 0
@@ -116,9 +117,22 @@ inline float calcFpsAndTransSpeed(int n)
 	elapsed = current - last;
 	if(elapsed.count() * 1000  > 3 * 1000){
 		last = current;
-		return (float) (byteNum * 1000) / (elapsed.count() * 1000);
+		float res = (float) (byteNum * 1000) / (elapsed.count() * 1000);
+		byteNum = 0;
+		return res;
 	}
 	return -1;
+}
+
+inline int tcpSocketCheck(int sock)
+{
+	struct tcp_info info; 
+	int len = sizeof(info); 
+	getsockopt(sock, IPPROTO_TCP, TCP_INFO, &info, (socklen_t *)&len);
+	if((info.tcpi_state == TCP_ESTABLISHED))
+		return 0;
+	else 
+		return -1;
 }
 
 bool check_file_exist(const std::string &path) {
@@ -1686,7 +1700,7 @@ void viewpanel::CreatConnect()
     QTimer* timer_state  = new QTimer(this);
     connect(timer_state, SIGNAL(timeout()), this, SLOT(updateState(void)));
     //connect(timer_state, SIGNAL(timeout()), this, SLOT(printErrorLog(void)));
-    timer_state->start(20);
+    timer_state->start(100);
     //connect(timer_state, SIGNAL(timeout()), this, SLOT(recvSerialInfo(void)));
 #if 0	
     QTimer* test_show_item  = new QTimer(this);
@@ -1909,14 +1923,23 @@ void viewpanel::CreatUIWindow()
 		ctlWriteBtn_[i]->setFixedSize(70,30);
 		setButtonStyle(ctlWriteBtn_[i]);
 	}
-	for(int i = 0; i < 4; i++){
+	for(int i = 1; i < 4; i++){
 		ctlReadLine_.emplace_back(new QLineEdit);
-		setReadOnlyLineEdit(ctlReadLine_[i]); 
-		ctlReadLine_[i]->setFixedSize(70,25);
+		setReadOnlyLineEdit(ctlReadLine_[i - 1]); 
+		ctlReadLine_[i - 1]->setFixedSize(70,25);
 		QString name = QString("EDFA ") + QString(edfaStateName[i].c_str());
-		controls_layout->addWidget( new QLabel(name), i, 5, Qt::AlignLeft);			
-		controls_layout->addWidget( ctlReadLine_[i], i, 6, Qt::AlignLeft);	
+		controls_layout->addWidget( new QLabel(name), i + 1, 5, Qt::AlignLeft);			
+		controls_layout->addWidget( ctlReadLine_[i - 1], i + 1, 6, Qt::AlignLeft);	
 	}
+	byteSpeedLine = new QLineEdit;
+	netStateLED = new QLabel;
+	setLED(netStateLED, 1);
+	setReadOnlyLineEdit(byteSpeedLine); 
+	byteSpeedLine->setFixedSize(70,25);
+	controls_layout->addWidget( new QLabel("点云传输速度(KB/s)"), 1, 5, Qt::AlignLeft);			
+	controls_layout->addWidget( byteSpeedLine, 1, 6, Qt::AlignLeft);	
+	controls_layout->addWidget( new QLabel("网络连接状态"), 0, 5, Qt::AlignRight);			
+	controls_layout->addWidget( netStateLED, 0, 6, Qt::AlignLeft);	
 
 	controls_layout->addWidget( regAddr_label, 0, 7, Qt::AlignRight);
 	controls_layout->addWidget( regVal_label, 0, 9, Qt::AlignRight);	
@@ -2065,13 +2088,14 @@ void viewpanel::CreatUIWindow()
 	pcOffsetDock = new QDockWidget();
 	pcOffsetDockWidget = new QWidget();
 	pcOffsetDock->setFeatures(QDockWidget::DockWidgetClosable );
-	QGroupBox *pcOffsetBox = new QGroupBox(tr("PC Offset && Choose Show:"));
+	QGroupBox *pcOffsetBox = new QGroupBox(tr("Ch Offset&&Choose:"));
 	QGridLayout* pcOffsetBoxLayout = new QGridLayout;	
 	std::vector<QLabel*> distanceOffset_labelV;
 	for(int i = 0; i < LIGHTNING_MAX_LINES; i++){
 		std::string name = "CH" + std::to_string(i + 1);
 		distanceOffset_labelV.emplace_back(new QLabel(name.c_str()));
 		distanceOffsetEditV.emplace_back(new QLineEdit());
+		distanceOffsetEditV[i]->setFixedSize(70, 25);
 		checkPCShowV.push_back(new QCheckBox());
 		pcOffsetBoxLayout->addWidget(distanceOffset_labelV[i], i, 0, Qt::AlignRight);
 		pcOffsetBoxLayout->addWidget(distanceOffsetEditV[i], i, 1, Qt::AlignLeft);
@@ -2936,6 +2960,14 @@ void viewpanel::updateState()
 		}
 		stateMsg_free_buf_queue.put(ptr_msg);
 	}
+
+	if(tcpSocketCheck(ctrl_sock))
+	{
+		setLED(netStateLED, 1);
+	} else {
+		setLED(netStateLED, 2);
+	};
+	byteSpeedLine->setText(QString::number(byteSpeed_));
 
 #if 0
 	static bool update = true;
@@ -4262,6 +4294,7 @@ void viewpanel::udpRecvPCLoop()
 					return;
 				}
 				ROS_INFO("pc raw data recv failed, continue\n");
+				byteSpeed_ = 0;
 				usleep(100*1000);
 				i--;
 				continue;
@@ -4281,7 +4314,8 @@ void viewpanel::udpRecvPCLoop()
 		auto end = std::chrono::steady_clock::now();
 		elapsed = end - start;
 		std::cout << "time for one frame udp: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
-		byteSpeed_ =  calcFpsAndTransSpeed(bytesNum) / 1024.0;
+		float temp = calcFpsAndTransSpeed(bytesNum);
+		if(temp > 0) byteSpeed_ =  temp / 1024.0;
 		//std::cout << "!!recv udp pkg successfully! "  << std::endl;
 		if(pcDataOneFrame_.size() > 2){
 			udpPcMsgOneFrame* pUdp = NULL;

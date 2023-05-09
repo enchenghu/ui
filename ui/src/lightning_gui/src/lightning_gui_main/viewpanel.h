@@ -19,6 +19,7 @@
 #include <std_msgs/UInt8.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <QApplication>
@@ -95,7 +96,6 @@ typedef struct view_vals_t {
   QVariant pitch;
   QVariant focal_point;
 } view_vals_t;
-
 
 class viewpanel : public QTabWidget {
   Q_OBJECT
@@ -400,6 +400,7 @@ class viewpanel : public QTabWidget {
   std::vector<QLineEdit*> edfaStateLinesV;
   std::vector<QLabel*> edfaWarnLEDV;
   std::vector<QLineEdit*> edfaDeviceInfoLinesV;
+  QLabel* netStateLED;
 
   QPushButton* saveBtn;
   QLabel* devLabel0_state;
@@ -465,6 +466,7 @@ class viewpanel : public QTabWidget {
   std::vector<QPushButton*> ctlWriteBtn_;
   std::vector<QPushButton*> ctlReadBtn_;
   std::vector<QLineEdit*> ctlReadLine_;
+  QLineEdit* byteSpeedLine;
   std::vector<int> power_index;
   vx_task bst_task[BST_MAX_TASK_NUM];
   vx_task_create_params_t bst_params;
