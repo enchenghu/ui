@@ -241,6 +241,11 @@ void MainWindow::increasePointSize( void )
 	viewPanel->increasePointSize();
 }
 
+void MainWindow::colorChange( void )
+{
+	viewPanel->colorChange();
+}
+
 void MainWindow::decreasePointSize( void )
 {
 	viewPanel->decreasePointSize();
@@ -360,6 +365,9 @@ void MainWindow::createActions()
 
 	QShortcut  *shortcut_2 = new QShortcut(QKeySequence(tr("ctrl+2")), this);
 	connect(shortcut_2, SIGNAL(activated()), this,SLOT(decreasePointSize()));
+
+	QShortcut  *shortcut_3 = new QShortcut(QKeySequence(tr("ctrl+`")), this);
+	connect(shortcut_3, SIGNAL(activated()), this,SLOT(colorChange()));
 #endif
 
 }

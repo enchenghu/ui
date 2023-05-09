@@ -2706,12 +2706,21 @@ void viewpanel::pcRecord(){
 
 void viewpanel::colorChange()
 {
-	if(colorCombo->currentText() == "speed")
+	static int i = 0;
+	switch (i++ % 3)
 	{
-		render_panel_->setBackgroundColor(Ogre::ColourValue(238,238,236,0.3));
-		showBlack = false;
+	case 0:
+		colorCombo->setCurrentIndex(2);
+		break;
+	case 1:
+		colorCombo->setCurrentIndex(0);
+		break;
+	case 2:
+		colorCombo->setCurrentIndex(1);
+		break;
+	default:
+		break;
 	}
-
 }
 void viewpanel::pcShowBW(){
 	if(showBlack){

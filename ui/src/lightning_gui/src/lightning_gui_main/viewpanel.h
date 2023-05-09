@@ -128,6 +128,7 @@ class viewpanel : public QTabWidget {
   void resetViews(void);
   void increasePointSize();
   void decreasePointSize();
+  void colorChange();
 
 
  private Q_SLOTS:
@@ -139,7 +140,6 @@ class viewpanel : public QTabWidget {
   void setSaveFolder();
   void udpConnect();
   void fftChannelChange();
-  void colorChange();
   void udpPcConnect();
   void startPcUdpOnce();
   void startPcUdpContinuous();
