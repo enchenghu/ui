@@ -3,20 +3,12 @@
 
 SystemMonitor::SystemMonitor(QTabWidget* parent)
 {
-    creatEDFATab();
+    creatEoSysTab();
     creatMotorSysTab();
     creatHardSysTab();
     creatIPeriTab();
     creatSoftSysTab();
 
-}
-
-void SystemMonitor::setReadOnlyLineEdit(QLineEdit* line)
-{
-	line->setReadOnly(true);
-	QPalette palette = line->palette();
-	palette.setBrush(QPalette::Base,palette.brush(QPalette::Disabled, QPalette::Base));
-	line->setPalette(palette);
 }
 
 void SystemMonitor::creatMotorSysTab()
@@ -51,7 +43,7 @@ void SystemMonitor::creatIPeriTab()
 	this->addTab(iPeriSysWidget,  "接口外设");
 }
 
-void SystemMonitor::creatEDFATab()
+void SystemMonitor::creatEoSysTab()
 {
 	eoSysWidget = new QWidget();
 	eoSysLayout = new QGridLayout() ;
@@ -83,7 +75,7 @@ void SystemMonitor::creatEDFATab()
 	warnBoxLayout = new QGridLayout ;
 	for(int i = 0; i < edfaWarnName.size(); i++){
 		edfaWarnLEDV.push_back(new QLabel);
-		setLED(edfaWarnLEDV[i], 0);
+		setLED(edfaWarnLEDV[i], C_GRAY);
 		QLabel* temp = new QLabel(edfaWarnName[i].c_str());
 		warnBoxLayout->addWidget(temp, i, 0, Qt::AlignRight | Qt::AlignTop);
 		warnBoxLayout->addWidget(edfaWarnLEDV[i], i, 1, Qt::AlignLeft | Qt::AlignTop);
@@ -99,44 +91,4 @@ void SystemMonitor::creatEDFATab()
     this->addTab(eoSysWidget,  "光电系统");
 }
 
-void SystemMonitor::setLED(QLabel* label, int color)
-{
-    // 将label中的文字清空
-	int size = 20;
-    label->setText("");
-    // 先设置矩形大小
-    // 如果ui界面设置的label大小比最小宽度和高度小，矩形将被设置为最小宽度和最小高度；
-    // 如果ui界面设置的label大小比最小宽度和高度大，矩形将被设置为最大宽度和最大高度；
-    QString min_width = QString("min-width: %1px;").arg(size);              // 最小宽度：size
-    QString min_height = QString("min-height: %1px;").arg(size);            // 最小高度：size
-    QString max_width = QString("max-width: %1px;").arg(size);              // 最小宽度：size
-    QString max_height = QString("max-height: %1px;").arg(size);            // 最小高度：size
-    // 再设置边界形状及边框
-    QString border_radius = QString("border-radius: %1px;").arg(size/2);    // 边框是圆角，半径为size/2
-    QString border = QString("border:1px solid black;");                    // 边框为1px黑色
-    // 最后设置背景颜色
-    QString background = "background-color:";
-    switch (color) {
-    case 0:
-        // 灰色
-        background += "rgb(190,190,190)";
-        break;
-    case 1:
-        // 红色
-        background += "rgb(255,0,0)";
-        break;
-    case 2:
-        // 绿色
-        background += "rgb(0,255,0)";
-        break;
-    case 3:
-        // 黄色
-        background += "rgb(255,255,0)";
-        break;
-    default:
-        break;
-    }
 
-    const QString SheetStyle = min_width + min_height + max_width + max_height + border_radius + border + background;
-    label->setStyleSheet(SheetStyle);
-}

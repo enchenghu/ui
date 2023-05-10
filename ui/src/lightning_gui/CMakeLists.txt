@@ -184,7 +184,7 @@ src/lightning_gui_main/chartLightning.cpp
 src/lightning_gui_main/qcustomplot.cpp
 src/lightning_gui_main/plot_tracer.cpp
 src/lightning_gui_main/systemMonitor.cpp
-
+src/lightning_gui_main/qtCommon.cpp
 )
 
 add_executable(lightning_server src/local_server/server.cpp)

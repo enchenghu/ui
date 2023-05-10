@@ -1,32 +1,5 @@
 #pragma once
-
-#include <QApplication>
-#include <QCheckBox>
-#include <QColor>
-#include <QComboBox>
-#include <QDebug>
-#include <QDesktopWidget>
-#include <QDockWidget>
-#include <QFileDialog>
-#include <QGridLayout>
-#include <QGroupBox>
-#include <QLabel>
-#include <QMainWindow>
-#include <QMessageBox>
-#include <QPushButton>
-#include <QShortcut>
-#include <QSlider>
-#include <QStyleOptionSlider>
-#include <QTimer>
-#include <QToolTip>
-#include <QTreeWidget>
-#include <QVBoxLayout>
-#include <QWidget>
-#include <QLineEdit>
-#include <QtSerialPort/QSerialPort>
-#include <QtSerialPort/QSerialPortInfo>
-#include "flidar_stat.h"
-
+#include "qtCommon.hpp"
 
 class SystemMonitor : public QTabWidget
 {
@@ -62,12 +35,10 @@ private:
     std::vector<QLineEdit*> edfaStateLinesV;
     std::vector<QLabel*> edfaWarnLEDV;
     std::vector<QLineEdit*> edfaDeviceInfoLinesV;
-    void setReadOnlyLineEdit(QLineEdit* line);
-    void creatEDFATab();
+    void creatEoSysTab();
     void creatMotorSysTab();
     void creatHardSysTab();
     void creatSoftSysTab();
     void creatIPeriTab();
-    void setLED(QLabel* label, int color);
 
 };

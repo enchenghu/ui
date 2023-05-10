@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <pc_data.h>
+#include "qtCommon.hpp"
 #include <pcl/common/transforms.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>
@@ -235,17 +236,11 @@ class viewpanel : public QTabWidget {
   void parseFFTData(std::vector<uint8_t>& data);
   void parseADCData(std::vector<uint8_t>& data);
   void simulateADCData();
-  void setLED(QLabel* label, int color);
-  void setLEDColor(QLabel* label, int color);
-  void setButtonStyle(QPushButton* btn);
   std::string tohex(uint32_t a);
   inline double fft2dBm(double x);
   void load_settings();
   void save_settings();
   void init_queue();
-  void setReadOnlyLineEdit(QLineEdit* line);
-  void setCheckBoxUnvaild(QCheckBox* line, bool);
-  void setCheckBoxUnvaild(QCheckBox* line);
   void readMotorItemsFile();
   QTimer* timer_;
   QTimer* timer_adc;

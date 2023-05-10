@@ -453,7 +453,7 @@ void viewpanel::connectControl(void){
 				return;
 			}
 			for(int i = 0; i < edfaWarnLEDV.size(); i++){
-				setLED(edfaWarnLEDV[i], 2);
+				setLED(edfaWarnLEDV[i], C_GREEN);
 			}
 		}
 	}else {
@@ -1424,7 +1424,7 @@ void viewpanel::CreatStateDetectWindow()
 	QGridLayout* warnBoxLayout = new QGridLayout ;
 	for(int i = 0; i < edfaWarnName.size(); i++){
 		edfaWarnLEDV.push_back(new QLabel);
-		setLED(edfaWarnLEDV[i], 0);
+		setLED(edfaWarnLEDV[i], C_GRAY);
 		QLabel* temp = new QLabel(edfaWarnName[i].c_str());
 		warnBoxLayout->addWidget(temp, i, 0, Qt::AlignRight | Qt::AlignTop);
 		warnBoxLayout->addWidget(edfaWarnLEDV[i], i, 1, Qt::AlignLeft | Qt::AlignTop);
@@ -1933,7 +1933,7 @@ void viewpanel::CreatUIWindow()
 	}
 	byteSpeedLine = new QLineEdit;
 	netStateLED = new QLabel;
-	setLED(netStateLED, 1);
+	setLED(netStateLED, C_RED);
 	setReadOnlyLineEdit(byteSpeedLine); 
 	byteSpeedLine->setFixedSize(70,25);
 	controls_layout->addWidget( new QLabel("点云传输速度(KB/s)"), 1, 5, Qt::AlignLeft);			
@@ -2056,9 +2056,6 @@ void viewpanel::CreatUIWindow()
 	devLabel2_state = new QLabel("dev2");
 	errorLogText = new QTextEdit(this);
 	errorLogText->setReadOnly(true);
-	setLED(devLabel0_state, 1);
-	setLED(devLabel1_state, 2);	
-	setLED(devLabel2_state, 3);	
 	stateDisplayBoxLayout->addWidget(adc_label0, 0, 0, Qt::AlignLeft | Qt::AlignTop);
 	stateDisplayBoxLayout->addWidget(adcRead0_line, 0, 1, Qt::AlignLeft | Qt::AlignTop);
 	stateDisplayBoxLayout->addWidget(adc_label1, 1, 0, Qt::AlignLeft| Qt::AlignTop);
@@ -2474,87 +2471,6 @@ void viewpanel::saveData(){
 	ifSave = false;
 }
 
-// 该函数将label控件变成一个圆形指示灯，需要指定颜色color以及直径size
-// color 0:grey 1:red 2:green 3:yellow
-// size  单位是像素
-
-void viewpanel::setButtonStyle(QPushButton* btn)
-{
-	if(!btn) return;
-	btn->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}"
-	//"QPushButton:hover{background-color:rgba(0, 255, 0, 100);border:2px solid black;border-radius:10px;}"
-	"QPushButton:pressed{background-color:rgba(127, 255, 0, 100);}");
-}
-void viewpanel::setLEDColor(QLabel* label, int color)
-{
-    QString background = "background-color:";
-    switch (color) {
-    case 0:
-        // 灰色
-        background += "rgb(190,190,190)";
-        break;
-    case 1:
-        // 红色
-        background += "rgb(255,0,0)";
-        break;
-    case 2:
-        // 绿色
-        background += "rgb(0,255,0)";
-        break;
-    case 3:
-        // 黄色
-        background += "rgb(255,255,0)";
-        break;
-    default:
-        break;
-    }
-    const QString SheetStyle = background;
-    label->setStyleSheet(SheetStyle);
-}
-
-void viewpanel::setLED(QLabel* label, int color)
-{
-    // 将label中的文字清空
-	int size = 20;
-    label->setText("");
-    // 先设置矩形大小
-    // 如果ui界面设置的label大小比最小宽度和高度小，矩形将被设置为最小宽度和最小高度；
-    // 如果ui界面设置的label大小比最小宽度和高度大，矩形将被设置为最大宽度和最大高度；
-    QString min_width = QString("min-width: %1px;").arg(size);              // 最小宽度：size
-    QString min_height = QString("min-height: %1px;").arg(size);            // 最小高度：size
-    QString max_width = QString("max-width: %1px;").arg(size);              // 最小宽度：size
-    QString max_height = QString("max-height: %1px;").arg(size);            // 最小高度：size
-    // 再设置边界形状及边框
-    QString border_radius = QString("border-radius: %1px;").arg(size/2);    // 边框是圆角，半径为size/2
-    QString border = QString("border:1px solid black;");                    // 边框为1px黑色
-    // 最后设置背景颜色
-    QString background = "background-color:";
-    switch (color) {
-    case 0:
-        // 灰色
-        background += "rgb(190,190,190)";
-        break;
-    case 1:
-        // 红色
-        background += "rgb(255,0,0)";
-        break;
-    case 2:
-        // 绿色
-        background += "rgb(0,255,0)";
-        break;
-    case 3:
-        // 黄色
-        background += "rgb(255,255,0)";
-        break;
-    default:
-        break;
-    }
-
-    const QString SheetStyle = min_width + min_height + max_width + max_height + border_radius + border + background;
-    label->setStyleSheet(SheetStyle);
-}
-
-
 void viewpanel::TaskFunc(void *arg){
     viewpanel *pSave = (viewpanel *)arg;
 
@@ -2913,9 +2829,9 @@ void viewpanel::procEdfaInfo(uint8_t* data, uint8_t cmd_id)
 		uint8_t* ptr_o  = (uint8_t*)&warnInfo;
 		for(int i = 0; i < sizeof(flidar_sm_EDFA_warn_st); i++) {
 			if(*(ptr_o + i)  > 127){
-				setLED(edfaWarnLEDV[i], 1);
+				setLED(edfaWarnLEDV[i], C_RED);
 			} else {
-				setLED(edfaWarnLEDV[i], 2);
+				setLED(edfaWarnLEDV[i], C_GREEN);
 			}
 		}
 	}
@@ -2972,26 +2888,11 @@ void viewpanel::updateState()
 
 	if(tcpSocketCheck(ctrl_sock))
 	{
-		setLED(netStateLED, 1);
+		setLED(netStateLED, C_RED);
 	} else {
-		setLED(netStateLED, 2);
+		setLED(netStateLED, C_GREEN);
 	};
 	byteSpeedLine->setText(QString::number(byteSpeed_));
-
-#if 0
-	static bool update = true;
-	if(update){
-		setLED(devLabel0_state, 1);
-		setLED(devLabel1_state, 2);	
-		setLED(devLabel2_state, 3);
-		update = false;
-	} else {
-		setLED(devLabel0_state, 0);
-		setLED(devLabel1_state, 0);	
-		setLED(devLabel2_state, 0);		
-		update = true;
-	}
-#endif	
 }
 
 
@@ -4717,37 +4618,6 @@ void viewpanel::load_settings()
 	power_min_ = settings.value("Power Min","120.0").toString();
 	save_folder_ = settings.value("Save Folder",".").toString();
 	motor_port_ = settings.value("TCP Motor Port","5001").toString();
-}
-
-
-void viewpanel::setReadOnlyLineEdit(QLineEdit* line)
-{
-	line->setReadOnly(true);
-	QPalette palette = line->palette();
-	palette.setBrush(QPalette::Base,palette.brush(QPalette::Disabled, QPalette::Base));
-	line->setPalette(palette);
-}
-
-void viewpanel::setCheckBoxUnvaild(QCheckBox* checkBox, bool check)
-{
-	checkBox->setCheckable(check);
-	QPalette palette = checkBox->palette();
-	if(!check)
-		palette.setBrush(QPalette::Base,palette.brush(QPalette::Inactive, QPalette::Base));
-	else
-		palette.setBrush(QPalette::Base,palette.brush(QPalette::Active, QPalette::Base));
-
-	checkBox->setPalette(palette);
-	checkBox->setStyleSheet("QCheckBox::indicator {width: 20px; height: 20px;}");	
-}
-
-void viewpanel::setCheckBoxUnvaild(QCheckBox* checkBox)
-{
-	checkBox->setCheckable(false);
-	QPalette palette = checkBox->palette();
-	palette.setBrush(QPalette::Base,palette.brush(QPalette::Disabled, QPalette::Base));
-	checkBox->setPalette(palette);
-	checkBox->setStyleSheet("QCheckBox::indicator {width: 1px; height: 1px;}");	
 }
 
 void viewpanel:: readMotorItemsFile()
