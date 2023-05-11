@@ -25,7 +25,6 @@
 #include <QLineEdit>
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
-#include "flidar_stat.h"
 
 typedef enum {
     C_GRAY,

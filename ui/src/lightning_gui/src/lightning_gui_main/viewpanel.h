@@ -331,6 +331,7 @@ class viewpanel : public QTabWidget {
 
   QComboBox* DiffCombo;
   QComboBox* colorCombo;
+  QComboBox* filterCombo;
   QComboBox* savePCCombo;
   QLineEdit* ip_edit;
   QLineEdit* port_edit;
@@ -340,6 +341,10 @@ class viewpanel : public QTabWidget {
 	std::vector<QLineEdit*> distanceOffsetEditV;
   QLineEdit* rotate_angle_edit;
   QLineEdit* speed_critical_edit;
+  QLineEdit* maxPcValue_edit;
+  QLineEdit* intervalPcValue_edit;
+  QLineEdit* thresholdValue_edit;
+
   QLineEdit* left_angle_edit;
   QLineEdit* right_angle_edit;
   QLineEdit* color_base_edit;
@@ -500,7 +505,13 @@ class viewpanel : public QTabWidget {
   std::string cell_size_;
   std::vector<std::string> wordsAddr;  // 声明一个字符串向量
   std::vector<std::string> wordsVal;   // 声明一个字符串向量
-  
+	std::vector<int> statistcHistogramV;
+  double maxPcValue_;
+  double minPcValue_;
+  int interval_;
+  int threshold_;
+	std::vector<int> rangeHistogramV;
+	std::vector<int> intenHistogramV;
   SystemMonitor* systemMonitor_m;
 };
 

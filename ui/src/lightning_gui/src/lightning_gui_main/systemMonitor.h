@@ -1,6 +1,6 @@
 #pragma once
 #include "qtCommon.hpp"
-
+#include "flidar_stat.h"
 class SystemMonitor : public QTabWidget
 {
     Q_OBJECT
