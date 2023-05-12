@@ -131,7 +131,6 @@ class viewpanel : public QTabWidget {
   void decreasePointSize();
   void colorChange();
 
-
  private Q_SLOTS:
   void setLoadFileType(void);
   void closeEvent(QCloseEvent* event);
@@ -152,6 +151,7 @@ class viewpanel : public QTabWidget {
   void pcShowBW();
   void pcRecord();
   void pcOneFramePure();
+  void filterChange();
 
   void pcChSelect();
 
@@ -207,8 +207,8 @@ class viewpanel : public QTabWidget {
   void procNllInfo(uint8_t* data, uint8_t cmd_id);
   void sendSerialBytes(const uint8_t* begin, int size);
   void udpParseLoop();
-  void CreatDebugWindow();
-  void CreatUIWindow();
+  void CreatFFTWindow();
+  void CreatPCWindow();
   void CreatADCWindow();
   void CreatMotorWindow();
   void CreatStateDetectWindow();
@@ -327,6 +327,8 @@ class viewpanel : public QTabWidget {
   QComboBox* CFARCombo;
   QComboBox* PowerCombo;
   QComboBox* ADC_DSA_Combo;
+  QComboBox* filter_Combo;
+
   QDoubleSpinBox* rotation_spin;
 
   QComboBox* DiffCombo;

@@ -218,8 +218,8 @@ viewpanel::viewpanel(QTabWidget* parent )
 
 	power_index = {0, 1, 2, 3, 4, 5, 10, 50, 100, 200, 500, 1000, 2000};
 	load_settings();
-	CreatUIWindow();
-	CreatDebugWindow();
+	CreatPCWindow();
+	CreatFFTWindow();
 	CreatADCWindow();
 	CreatMotorWindow();
 	CreatStateDetectWindow();
@@ -506,19 +506,42 @@ void viewpanel::configPower(void)
 void viewpanel::configADCDSA(void)
 {
 	QString str = ADC_DSA_Combo->currentText();
-	if(str.toDouble() < 0.0 || str.toDouble() > 28){
-		QMessageBox msgBox;
-		msgBox.setText("input ADC-DSA invaild!");
-		msgBox.exec();
-		return;		
+	if(str == "clear")
+		cmdMsg_.mCommandVal[0] = 0xFF;
+	else{
+		if(str.toDouble() < 0.0 || str.toDouble() > 28){
+			QMessageBox msgBox;
+			msgBox.setText("input ADC-DSA invaild!");
+			msgBox.exec();
+			return;		
+		}
+		cmdMsg_.mCommandVal[0] = (uint32_t)(str.toInt());
 	}
-	cmdMsg_.mCommandVal[0] = (uint32_t)(str.toInt());
 	cmdMsg_.mHead.usCommand = commandType::ADC_DSA_SET;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
 		msgBox.setText("config ADC-DSA failed!");
 		msgBox.exec();
 		return;
+	}
+}
+
+void viewpanel::colorChange(void)
+{
+	static int i = 0;
+	switch (i++ % 3)
+	{
+	case 0:
+		colorCombo->setCurrentIndex(2);
+		break;
+	case 1:
+		colorCombo->setCurrentIndex(0);
+		break;
+	case 2:
+		colorCombo->setCurrentIndex(1);
+		break;
+	default:
+		break;
 	}
 }
 
@@ -1521,7 +1544,7 @@ void viewpanel::CreatADCWindow()
 }
 
 
-void viewpanel::CreatDebugWindow()
+void viewpanel::CreatFFTWindow()
 {
 	QWidget* multiWidget_new = new QWidget();
 	QGroupBox *chartADCBox = new QGroupBox(tr("FFT  chart 0:"));
@@ -1636,7 +1659,7 @@ void viewpanel::CreatConnect()
     connect( axes_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configAxesSize( void )));
     connect( cell_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configCellSize( void )));
     connect( point_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configPointSize( void )));
-	//connect( colorCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( colorChange( void )));
+	connect( filter_Combo, SIGNAL( currentTextChanged(QString)), this, SLOT( filterChange( void )));
 
 	QSignalMapper * configMapper;
 	QSignalMapper * readMapper;
@@ -1713,7 +1736,7 @@ void viewpanel::CreatConnect()
 	tcp_show_item->start(10);
 }
 
-void viewpanel::CreatUIWindow()
+void viewpanel::CreatPCWindow()
 {
 	const QSize button_size = QSize(200, 30);
 	const QSize view_button_side = QSize(60, 25);
@@ -1872,6 +1895,7 @@ void viewpanel::CreatUIWindow()
 	m3DFTCombo = new QComboBox;
 	PowerCombo = new QComboBox;
 	ADC_DSA_Combo =  new QComboBox;
+	filter_Combo =  new QComboBox;
 	colorCombo = new QComboBox;
 	savePCCombo = new QComboBox;
 	savePCCombo->addItem(QString("all"));
@@ -1880,7 +1904,15 @@ void viewpanel::CreatUIWindow()
 	}
 	ADC_DSA_Combo->addItem(QString::number(0));
 	ADC_DSA_Combo->addItem(QString::number(27));
+	ADC_DSA_Combo->addItem("clear");
 	ADC_DSA_Combo->setCurrentIndex(1);
+
+	filter_Combo->addItem("all DE");
+	filter_Combo->addItem("all En");
+	filter_Combo->addItem("Range En");
+	filter_Combo->addItem("Speed En");
+	filter_Combo->addItem("Intensity En");
+	filter_Combo->addItem("Radius En");
 
 	colorCombo->setFixedSize(90,25);
 	colorCombo->addItem(tr("range"));
@@ -1906,6 +1938,8 @@ void viewpanel::CreatUIWindow()
 	DiffCombo->addItem(tr("1"));
 	controls_layout->addWidget( Power_label, 0, 2, Qt::AlignRight);	
 	controls_layout->addWidget( ADC_DSA_label, 1, 2, Qt::AlignRight);	
+	controls_layout->addWidget( new QLabel("Filter"), 3, 2, Qt::AlignRight);	
+
 
 	//Power_label->setFixedSize(100,30);
 	Power_label->setFont(QFont("微软雅黑", 10.5));
@@ -1913,8 +1947,10 @@ void viewpanel::CreatUIWindow()
 
 	controls_layout->addWidget( PowerCombo, 0, 3, Qt::AlignLeft);	
 	controls_layout->addWidget( ADC_DSA_Combo, 1, 3, Qt::AlignLeft);	
+	controls_layout->addWidget( filter_Combo, 3, 3, Qt::AlignLeft);	
 
 	PowerCombo->setFixedSize(70,25);
+	filter_Combo->setFixedSize(70,25);
 	ADC_DSA_Combo->setFixedSize(70,25);
 
 	for(int i = 0; i < 2; i++){
@@ -2648,23 +2684,32 @@ void viewpanel::pcRecord(){
 	}
 }
 
-void viewpanel::colorChange()
+void viewpanel::filterChange()
 {
-	static int i = 0;
-	switch (i++ % 3)
-	{
-	case 0:
-		colorCombo->setCurrentIndex(2);
-		break;
-	case 1:
-		colorCombo->setCurrentIndex(0);
-		break;
-	case 2:
-		colorCombo->setCurrentIndex(1);
-		break;
-	default:
-		break;
+	QString str = filter_Combo->currentText();
+	int cmd = 0;
+	if(str == "All Disable"){
+		cmd = 0;
+	} else if(str == "All Enable"){
+		cmd = 1;
+	} else if(str == "Range"){
+		cmd = 2;
+	} else if(str == "Speed"){
+		cmd = 3;
+	} else if(str == "Intensity"){
+		cmd = 4;	
+	} else if(str == "Radius"){
+		cmd = 5;	
 	}
+	cmdMsg_.mCommandVal[0] = cmd;
+	cmdMsg_.mHead.usCommand = commandType::CtrlCmd_PC_Filter_enable;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("config filterChange failed!");
+		msgBox.exec();
+		return;
+	}
+
 }
 void viewpanel::pcShowBW(){
 	if(showBlack){
@@ -3861,14 +3906,12 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 
 void viewpanel::pcDataProc()
 {
-
 	udpPcMsgOneFrame* pmsg = nullptr;
 	static long long frame_index = 0;
 	auto start = std::chrono::steady_clock::now();
 	if(udpPcMsg_done_buf_queue.get(pmsg)){
 		return;
 	}
-
 	int pcFrameSize = 0;
 	double horizontal_m = 0.0;
 	bool begin_save = false;
@@ -3908,13 +3951,13 @@ void viewpanel::pcDataProc()
 			oneFrame360.frameCounter.push_back(udpPCBuff_last.frameCounter[j]);
 
 			if(begin_save && horizontal_m > 359.5 && horizontal_m < 360.0){
-				std::cout << "warnning, one_frame_360 is done in udpPCBuff_last" << horizontal_m << std::endl;
+				ROS_INFO("warning! one_frame_360 is done in udpPCBuff_last");
 				one_frame_360 = true;
 				break;
 			}
 		}
 		if(oneFrame360.pcDataOneFrame.empty()){
-			std::cout << "=============oneFrame360.pcDataOneFrame is empty, can't find 0 , frame index is " << udpPCBuff_last.frameCounter[0]<< std::endl;
+			ROS_INFO("oneFrame360.pcDataOneFrame is empty, can't find 0, frame index is %d", udpPCBuff_last.frameCounter[0]);
 		}
 
 		begin_save = false;
@@ -3975,17 +4018,10 @@ void viewpanel::pcDataProc()
 	QString strColor = colorCombo->currentText();
 	QString modeFilter = filterCombo->currentText();
 	threshold_ = thresholdValue_edit->text().toInt();
-
-	//std::cout << "rotation_offset: " << rotation_offset << ", leftAngle_offset: " << leftAngle_offset \
-	<< ", rightAngle_offset: " << rightAngle_offset << std::endl; 
 	if(modeFilter != "bypass") pcDataFindMaxMin(pmsg);
 	udpPcMsg_free_buf_queue.put(pmsg);
-	double distance_m;
-	double vertical_m;
-	double intensity_m;
-	double speed_m;
-	int chan_id_m;
-	int index_rgb;
+	double distance_m, vertical_m, intensity_m, speed_m;
+	int chan_id_m, index_rgb;
 #if SINGELE_PC_SAVE
 	time_t rawtime;
 	struct tm *ptminfo;

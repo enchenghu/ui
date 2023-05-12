@@ -106,7 +106,8 @@ typedef enum {
     POINTCLOUD_TCP_READ,            	// TCP读点云数据（400000个点）
     POINTCLOUD_UDP_START,          	// UDP读点云数据（开始）
     POINTCLOUD_UDP_STOP,          	// UDP读点云数据（停止）
-	ADC_DSA_SET                    // set ADC-DSA(0~27dbm)
+	ADC_DSA_SET,                    // set ADC-DSA(0~27dbm)
+	CtrlCmd_PC_Filter_enable		// set PC_filter  // param[0]: 0:allDisable 1:allEnable 2:rangeEnable 3:intensityEnable 4:speedEnable
 } commandType;
 
 typedef enum{
