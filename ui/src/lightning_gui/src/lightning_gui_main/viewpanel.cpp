@@ -2686,21 +2686,8 @@ void viewpanel::pcRecord(){
 
 void viewpanel::filterChange()
 {
-	QString str = filter_Combo->currentText();
-	int cmd = 0;
-	if(str == "All Disable"){
-		cmd = 0;
-	} else if(str == "All Enable"){
-		cmd = 1;
-	} else if(str == "Range"){
-		cmd = 2;
-	} else if(str == "Speed"){
-		cmd = 3;
-	} else if(str == "Intensity"){
-		cmd = 4;	
-	} else if(str == "Radius"){
-		cmd = 5;	
-	}
+	int cmd = filter_Combo->currentIndex();
+	ROS_INFO("filter_Combo currentIndexis %d", cmd);
 	cmdMsg_.mCommandVal[0] = cmd;
 	cmdMsg_.mHead.usCommand = commandType::CtrlCmd_PC_Filter_enable;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
