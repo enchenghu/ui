@@ -138,12 +138,12 @@ class viewpanel : public QTabWidget {
   void loadLidarFile();
   void loadAlgFile();
   void setSaveFolder();
-  void udpConnect();
+  void FFT_ADC_UDP_Connect();
   void fftChannelChange();
   void udpPcConnect();
   void startPcUdpOnce();
   void startPcUdpContinuous();
-  void udpClose();
+  void udpFftAdcClose();
   void udpPcClose();
   void configAxesSize();
   void configCellSize();
@@ -189,15 +189,16 @@ class viewpanel : public QTabWidget {
 
  protected:
   static void TaskFunc(void* arg);
-  static void TaskFuncUdpRecv(void* arg);
-  static void TaskFuncUdpParse(void* arg);
+  static void TaskFuncUdpFftAdcRecv(void* arg);
+  static void TaskFuncUdpFftAdcParse(void* arg);
   static void TaskFuncPCRecv(void* arg);
   static void TaskFuncPCParse(void* arg);
   static void TaskFuncMotorRecv(void* arg);
   static void TaskFuncStateRecv(void* arg);
 
  private:
-  void udpRecvLoop();
+  void udpRecvFftAdcLoop();
+  void udpParseFftAdcLoop();
   void udpRecvPCLoop();
   void udpRecvPCOnce();
   int udpRecvPCConnect();
@@ -206,7 +207,6 @@ class viewpanel : public QTabWidget {
   void procEdfaInfo(uint8_t* data, uint8_t cmd_id);
   void procNllInfo(uint8_t* data, uint8_t cmd_id);
   void sendSerialBytes(const uint8_t* begin, int size);
-  void udpParseLoop();
   void CreatFFTWindow();
   void CreatPCWindow();
   void CreatADCWindow();
@@ -244,7 +244,7 @@ class viewpanel : public QTabWidget {
   void readMotorItemsFile();
   QTimer* timer_;
   QTimer* timer_adc;
-  bool udpStop_;
+  bool udpFftAdcStop_;
   bool udpPCStop_;
   bool udpPCSingle_;
   bool udpPCContinu_;
@@ -253,7 +253,7 @@ class viewpanel : public QTabWidget {
   int ctrl_sock;
   int motor_ctrl_sock;
   int state_ctrl_sock;
-  int udpRecvSocketFd_;
+  int udpFftAdcSocketFd_;
   int udpRecvPCSocketFd_;
   std::vector<uint8_t> dataSimulateADC;
   std::string lidar_ip;

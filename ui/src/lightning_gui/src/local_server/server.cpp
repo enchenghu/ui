@@ -73,13 +73,13 @@ typedef enum {
 
     /* 软件系统 */
     sm_mCode_PROG  = 0xE1,     // PROG（进程）
-    sm_mCode_THRD  = 0xE2,     // PROG（进程）
+    sm_mCode_THRD  = 0xE2     // PROG（进程）
 } flidar_sm_moduleCode;
 
 typedef enum {
     sm_mCmd_base    = 0xF1,     // 基本信息
     sm_mCmd_stat    = 0xF2,     // 状态信息
-    sm_mCmd_warn    = 0xF3,     // 报警信息
+    sm_mCmd_warn    = 0xFE     // 报警信息
 } flidar_sm_moduleCmd;
 typedef enum
 {

@@ -75,7 +75,7 @@ typedef enum {
 typedef enum {
     sm_mCmd_base    = 0xF1,     // 基本信息
     sm_mCmd_stat    = 0xF2,     // 状态信息
-    sm_mCmd_warn    = 0xF3,     // 报警信息
+    sm_mCmd_warn    = 0xFE     // 报警信息
 } flidar_sm_moduleCmd;
 
 typedef struct {

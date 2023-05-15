@@ -191,7 +191,7 @@ uint8_t * LoadDat(const char *cali_file_path)
 /* Constructor for the viewpanel. */
 viewpanel::viewpanel(QTabWidget* parent )
 	: QTabWidget( parent ), ifConnected(false), ifSave(false), \
-	save_folder_(QString(".")), udpStop_(true), showBlack(true), ifShowdB_(FFT_DB),\
+	save_folder_(QString(".")), udpFftAdcStop_(true), showBlack(true), ifShowdB_(FFT_DB),\
 	power_offset(0.0),ifConnectedMotorSerial(false), ifConnectedMotorTcp(false),\
 	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
 	ifStarted(false),saveadc_(false), oneFramePure(true), ifConnectedStateTcp(false)
@@ -234,11 +234,11 @@ viewpanel::viewpanel(QTabWidget* parent )
 // Destructor.
 viewpanel::~viewpanel()
 {
-	if(!udpStop_) udpClose();
+	if(!udpFftAdcStop_) udpFftAdcClose();
 	if(!udpPCStop_) udpPcClose();
 	delete manager_;
 	save_settings();
-	::close(udpRecvSocketFd_);
+	::close(udpFftAdcSocketFd_);
 	::close(udpRecvPCSocketFd_);
 	::close(ctrl_sock);
 	serialClose(m_serialPort);	
@@ -461,7 +461,7 @@ void viewpanel::connectControl(void){
 		lidar_connect_button->setText("&Connect");
 		ifStarted = false;
 		ifConnectedStateTcp = false;
-		if(!udpStop_) udpClose();
+		if(!udpFftAdcStop_) udpFftAdcClose();
 		if(!udpPCStop_) udpPcClose();
 		::close(ctrl_sock);
 	}
@@ -1654,7 +1654,7 @@ void viewpanel::CreatConnect()
 
 	connect(saveBtn, SIGNAL(clicked()), this, SLOT( saveDataThead( void )));
 	connect(setSaveBtn, SIGNAL(clicked()), this, SLOT( setSaveFolder( void )));
-	connect(settingADCSavebutton, SIGNAL(clicked()), this, SLOT( udpConnect( void )));
+	connect(settingADCSavebutton, SIGNAL(clicked()), this, SLOT( FFT_ADC_UDP_Connect( void )));
 	connect( fftChCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( fftChannelChange( void )));
     connect( axes_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configAxesSize( void )));
     connect( cell_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configCellSize( void )));
@@ -2543,19 +2543,18 @@ void viewpanel::TaskFunc(void *arg){
     }
 }
 
-void viewpanel::TaskFuncUdpRecv(void *arg){
+void viewpanel::TaskFuncUdpFftAdcRecv(void *arg){
     viewpanel *pSave = (viewpanel *)arg;
 
-    if (pSave && pSave->TaskFuncUdpRecv) {
-        pSave->udpRecvLoop();
+    if (pSave && pSave->TaskFuncUdpFftAdcRecv) {
+        pSave->udpRecvFftAdcLoop();
     }
 }
 
-void viewpanel::TaskFuncUdpParse(void *arg){
+void viewpanel::TaskFuncUdpFftAdcParse(void *arg){
     viewpanel *pSave = (viewpanel *)arg;
-	std::cout << "enter TaskFuncUdpParse" << std::endl;
-    if (pSave && pSave->TaskFuncUdpParse) {
-        pSave->udpParseLoop();
+    if (pSave && pSave->TaskFuncUdpFftAdcParse) {
+        pSave->udpParseFftAdcLoop();
     }
 }
 
@@ -2599,7 +2598,7 @@ void viewpanel::saveDataThead()
 		msgBox.exec();
 		return;		
 	}
-	if(!udpStop_) udpClose();
+	if(!udpFftAdcStop_) udpFftAdcClose();
 	if(!udpPCStop_) udpPcClose();
 	saveData();
 #if 0
@@ -2708,7 +2707,7 @@ void viewpanel::pcShowBW(){
 	}
 }
 
-void viewpanel::udpClose(){
+void viewpanel::udpFftAdcClose(){
 	cmdMsg_.mHead.usCommand = commandType::FFT_ADC_READ_STOP;
 	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
 		QMessageBox msgBox;
@@ -2716,8 +2715,8 @@ void viewpanel::udpClose(){
 		msgBox.exec();
 		return;
 	}
-	::close(udpRecvSocketFd_);
-	udpStop_ = true;
+	::close(udpFftAdcSocketFd_);
+	udpFftAdcStop_ = true;
 	vx_task_delete(&bst_task[TASK_FFT_ADC_DATA_RECV]);
 	vx_task_delete(&bst_task[TASK_FFT_ADC_DATA_PARSE]);
 	settingADCSavebutton->setStyleSheet("color: black");
@@ -3720,7 +3719,7 @@ void viewpanel::startPcUdpContinuous() {
 
 void viewpanel::udpPcConnect() {
 
-	if(!udpStop_) udpClose();
+	if(!udpFftAdcStop_) udpFftAdcClose();
 	if(udpPCStop_){
 #if 1
 		commandMsg cmdMsg;
@@ -3746,7 +3745,7 @@ void viewpanel::udpPcConnect() {
 void viewpanel::fftChannelChange() 
 {
 	if(!udpPCStop_) udpPcClose();
-	if(!udpStop_) udpClose();
+	if(!udpFftAdcStop_) udpFftAdcClose();
 	usleep(100 * 1000);
 	commandMsg cmdMsg;
 	memset(&cmdMsg, 0, sizeof(commandMsg));
@@ -3759,12 +3758,12 @@ void viewpanel::fftChannelChange()
 		return;
 	}	
 	usleep(100 * 1000);
-	udpConnect();
+	FFT_ADC_UDP_Connect();
 }
 
-void viewpanel::udpConnect() {
+void viewpanel::FFT_ADC_UDP_Connect() {
 	if(!udpPCStop_) udpPcClose();
-	if(udpStop_){
+	if(udpFftAdcStop_){
 		commandMsg cmdMsg;
 		memset(&cmdMsg, 0, sizeof(commandMsg));
 		cmdMsg.mHead.usCommand = commandType::FFT_ADC_READ_START;
@@ -3777,18 +3776,18 @@ void viewpanel::udpConnect() {
 		vx_task_set_default_create_params(&bst_params);
 		bst_params.app_var = this;
 		bst_params.task_mode = 0;
-		bst_params.task_main = TaskFuncUdpRecv;
+		bst_params.task_main = TaskFuncUdpFftAdcRecv;
 		vx_task_create(&bst_task[TASK_FFT_ADC_DATA_RECV], &bst_params);  
 
 		vx_task_set_default_create_params(&bst_params);
 		bst_params.app_var = this;
 		bst_params.task_mode = 0;
-		bst_params.task_main = TaskFuncUdpParse;
+		bst_params.task_main = TaskFuncUdpFftAdcParse;
 		vx_task_create(&bst_task[TASK_FFT_ADC_DATA_PARSE], &bst_params);  
 		settingADCSavebutton->setStyleSheet("color: green");
 		settingADCSavebutton->setText("&Stop FFT-ADC");
 	}else{
-		udpClose();
+		udpFftAdcClose();
 		//QMessageBox msgBox;
 		//msgBox.setText("UDP Connection is already working, please stop it first !");
 		//msgBox.exec();		
@@ -4150,18 +4149,16 @@ void viewpanel::pcParseLoop()
 		pcDataProc();
 		auto end = std::chrono::steady_clock::now();
 		elapsed = end - start;
-		std::cout << "time for pub one frame pc data: " <<  elapsed.count() * 1000 << " ms" << std::endl;    
+		std::cout << "time for pcDataProc : " <<  elapsed.count() * 1000 << " ms" << std::endl;    
 		if(udpPCStop_) break;
 	}
 	std::cout << "quit pcParseLoop" << std::endl;
 }
-void viewpanel::udpParseLoop()
+void viewpanel::udpParseFftAdcLoop()
 {
-	std::cout << "enter udpParseLoop main" << std::endl;
     std::chrono::duration<double> elapsed;
 	while(!terminating)
 	{
-		//ROS_INFO("============enter udpParseLoop");
 		udp_ADC_FFT_Msg* pmsg = nullptr;
 		auto start = std::chrono::steady_clock::now();
 		if(udpMsg_done_buf_queue.get(pmsg) == 0){
@@ -4173,10 +4170,10 @@ void viewpanel::udpParseLoop()
 		}
 		auto end = std::chrono::steady_clock::now();
 		elapsed = end - start;
-		std::cout << "time for udpParseloop: " <<  elapsed.count() * 1000 << " ms" << std::endl;    
-		if(udpStop_) break;
+		std::cout << "time for parse FFT ADC data: " <<  elapsed.count() * 1000 << " ms" << std::endl;    
+		if(udpFftAdcStop_) break;
 	}
-	std::cout << "quit udpParseLoop" << std::endl;
+	std::cout << "quit udpParseFftAdcLoop" << std::endl;
 }
 
 int viewpanel::udpRecvPCConnect()
@@ -4342,14 +4339,14 @@ void viewpanel::udpRecvPCLoop()
 
 }
 
-void viewpanel::udpRecvLoop(){
+void viewpanel::udpRecvFftAdcLoop(){
 
 	//int client_fd;
 	lidar_UDP_port = udp_port_edit->text().toInt();
 	struct sockaddr_in ser_addr;
 
-	udpRecvSocketFd_ = socket(AF_INET, SOCK_DGRAM, 0);
-	if(udpRecvSocketFd_ < 0)
+	udpFftAdcSocketFd_ = socket(AF_INET, SOCK_DGRAM, 0);
+	if(udpFftAdcSocketFd_ < 0)
 	{
 		QMessageBox msgBox;
 		msgBox.setText("udp socket create fail!");
@@ -4358,7 +4355,7 @@ void viewpanel::udpRecvLoop(){
 	}
 
 	struct timeval timeout_recv = {3, 0};
-	setsockopt(udpRecvSocketFd_, SOL_SOCKET, SO_RCVTIMEO, &timeout_recv, sizeof(timeout_recv)); //recv timeout
+	setsockopt(udpFftAdcSocketFd_, SOL_SOCKET, SO_RCVTIMEO, &timeout_recv, sizeof(timeout_recv)); //recv timeout
 
 	memset(&ser_addr, 0, sizeof(ser_addr));
 	ser_addr.sin_family = AF_INET;
@@ -4367,7 +4364,7 @@ void viewpanel::udpRecvLoop(){
 	ser_addr.sin_port = htons(lidar_UDP_port);  //注意网络序转换
 	std::cout << "lidar_UDP_port is " << lidar_UDP_port << std::endl;
 
-    int ret = ::bind(udpRecvSocketFd_, (struct sockaddr*)&ser_addr, sizeof(ser_addr));
+    int ret = ::bind(udpFftAdcSocketFd_, (struct sockaddr*)&ser_addr, sizeof(ser_addr));
     if(ret < 0)
     {
 		QMessageBox msgBox;
@@ -4375,7 +4372,7 @@ void viewpanel::udpRecvLoop(){
 		msgBox.exec();
 		return;
     }
-	udpStop_ = false;
+	udpFftAdcStop_ = false;
 	socklen_t len;
 	struct sockaddr_in src;
 	//printf("ready recv udp msg!\n");
@@ -4385,7 +4382,7 @@ void viewpanel::udpRecvLoop(){
 	uint32_t last_frame_index = 0;
 	bool ifLost  = false;
     std::chrono::duration<double> elapsed;
-	while(!terminating && !udpStop_)
+	while(!terminating && !udpFftAdcStop_)
 	{
 		auto start = std::chrono::steady_clock::now();
 		fftDataV.clear();
@@ -4394,11 +4391,11 @@ void viewpanel::udpRecvLoop(){
 		for(int i = 0; i < UDP_TIMES_PER_FRAME; i++){
 			memset(&g_udpMsg, 0, sizeof(g_udpMsg));
 			//printf("ready recv udp msg!\n");
-			ret = recvfrom(udpRecvSocketFd_, &g_udpMsg, sizeof(g_udpMsg), MSG_WAITALL, (struct sockaddr*)&src, &len);  //接收来自server的信息
+			ret = recvfrom(udpFftAdcSocketFd_, &g_udpMsg, sizeof(g_udpMsg), MSG_WAITALL, (struct sockaddr*)&src, &len);  //接收来自server的信息
 			if(ret <= 0){
-				if(udpStop_) {
+				if(udpFftAdcStop_) {
 					printf("fftMsg udp  quit!\n"); 
-    				::close(udpRecvSocketFd_);
+    				::close(udpFftAdcSocketFd_);
 					return;
 				}
 				ROS_INFO("fft data recv failed, ret is %d, continue\n", ret);
@@ -4462,7 +4459,7 @@ void viewpanel::udpRecvLoop(){
 	}
 	printf("fftMsg udp  quit!\n");  //打印自己发送的信息
  
-    ::close(udpRecvSocketFd_);
+    ::close(udpFftAdcSocketFd_);
 }
 
 int viewpanel::motorSerialConnectTest()
