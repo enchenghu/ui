@@ -194,7 +194,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	save_folder_(QString(".")), udpFftAdcStop_(true), showBlack(true), ifShowdB_(FFT_DB),\
 	power_offset(0.0),ifConnectedMotorSerial(false), ifConnectedMotorTcp(false),\
 	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
-	ifStarted(false),saveadc_(false), oneFramePure(true), ifConnectedStateTcp(false)
+	ifStarted(false),saveadc_(false), oneFramePure(true), ifConnectedStateTcp(false), ctrl_sock(0)
 {
 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
