@@ -216,7 +216,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	speed_min = 0.0;
 	speed_max = 0.0;
 
-	power_index = {0, 1, 2, 3, 4, 5, 10, 50, 100, 200, 500, 1000, 2000};
+	power_index = {0, 1, 10, 50, 100, 200, 500, 1000, 2000};
 	load_settings();
 	CreatPCWindow();
 	CreatFFTWindow();
@@ -1651,6 +1651,7 @@ void viewpanel::CreatConnect()
 	connect(lidar_connect_button, SIGNAL(clicked()), this, SLOT( connectControl( void )));
 	connect(ctlWriteBtn_[0], SIGNAL(clicked()), this, SLOT( configPower( void )));
 	connect(ctlWriteBtn_[1], SIGNAL(clicked()), this, SLOT( configADCDSA( void )));
+	connect(ctlWriteBtn_[2], SIGNAL(clicked()), this, SLOT( filterChange( void )));
 
 	connect(saveBtn, SIGNAL(clicked()), this, SLOT( saveDataThead( void )));
 	connect(setSaveBtn, SIGNAL(clicked()), this, SLOT( setSaveFolder( void )));
@@ -1659,7 +1660,7 @@ void viewpanel::CreatConnect()
     connect( axes_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configAxesSize( void )));
     connect( cell_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configCellSize( void )));
     connect( point_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configPointSize( void )));
-	connect( filter_Combo, SIGNAL( currentTextChanged(QString)), this, SLOT( filterChange( void )));
+	//connect( filter_Combo, SIGNAL( currentTextChanged(QString)), this, SLOT( filterChange( void )));
 
 	QSignalMapper * configMapper;
 	QSignalMapper * readMapper;
@@ -1938,7 +1939,7 @@ void viewpanel::CreatPCWindow()
 	DiffCombo->addItem(tr("1"));
 	controls_layout->addWidget( Power_label, 0, 2, Qt::AlignRight);	
 	controls_layout->addWidget( ADC_DSA_label, 1, 2, Qt::AlignRight);	
-	controls_layout->addWidget( new QLabel("Filter"), 3, 2, Qt::AlignRight);	
+	controls_layout->addWidget( new QLabel("Filter"), 2, 2, Qt::AlignRight);	
 
 
 	//Power_label->setFixedSize(100,30);
@@ -1947,13 +1948,13 @@ void viewpanel::CreatPCWindow()
 
 	controls_layout->addWidget( PowerCombo, 0, 3, Qt::AlignLeft);	
 	controls_layout->addWidget( ADC_DSA_Combo, 1, 3, Qt::AlignLeft);	
-	controls_layout->addWidget( filter_Combo, 3, 3, Qt::AlignLeft);	
+	controls_layout->addWidget( filter_Combo, 2, 3, Qt::AlignLeft);	
 
 	PowerCombo->setFixedSize(70,25);
 	filter_Combo->setFixedSize(70,25);
 	ADC_DSA_Combo->setFixedSize(70,25);
 
-	for(int i = 0; i < 2; i++){
+	for(int i = 0; i < 3; i++){
 		ctlWriteBtn_.emplace_back(new QPushButton("&Cfg", this));
 		controls_layout->addWidget( ctlWriteBtn_[i], i, 4, Qt::AlignLeft);	
 		ctlWriteBtn_[i]->setFixedSize(70,30);
@@ -2048,7 +2049,7 @@ void viewpanel::CreatPCWindow()
 	controls_layout->addWidget( pcSwitchBtn, 0, 15, Qt::AlignRight);	
 	controls_layout->addWidget( pcOnceBtn, 1, 15, Qt::AlignRight);	
 	controls_layout->addWidget( pcResetBtn, 2, 15, Qt::AlignRight);	
-	controls_layout->addWidget( saveBtn, 2, 2, Qt::AlignRight);
+	controls_layout->addWidget( saveBtn, 3, 2, Qt::AlignRight);
 	//controls_layout->addWidget( pcBWBtn, 3, 15, Qt::AlignRight);	
 
 	controls_layout->addWidget( point_size_label, 0, 16, Qt::AlignRight);
@@ -2071,7 +2072,7 @@ void viewpanel::CreatPCWindow()
 	filterCombo->addItem(tr("bypass"));
 	filterCombo->setCurrentIndex(3);
 	controls_layout->addWidget( filterCombo, 5, 17, Qt::AlignLeft);		
-	controls_layout->addWidget( savePCCombo, 2, 3, Qt::AlignLeft);	
+	controls_layout->addWidget( savePCCombo, 3, 3, Qt::AlignLeft);	
 	savePCCombo->setFixedSize(70, 25);	
 	controls_layout->addWidget( pcBWBtn, 3, 15, Qt::AlignLeft);
 	controls_layout->addWidget( pcRecordBtn, 4, 15, Qt::AlignLeft);
