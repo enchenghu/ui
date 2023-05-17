@@ -1959,7 +1959,7 @@ void viewpanel::CreatPCWindow()
 		ctlWriteBtn_[i]->setFixedSize(70,30);
 		setButtonStyle(ctlWriteBtn_[i]);
 	}
-	for(int i = 1; i < 4; i++){
+	for(int i = 1; i < 5; i++){
 		ctlReadLine_.emplace_back(new QLineEdit);
 		setReadOnlyLineEdit(ctlReadLine_[i - 1]); 
 		ctlReadLine_[i - 1]->setFixedSize(70,25);
@@ -4124,6 +4124,7 @@ void viewpanel::pcDataProc()
 			cloud.points[j].b = B_V_g[index_rgb];
 		}
 	}
+	statistcHistogramV.clear();
 	ROS_INFO("====PC Show Real Size is %d", realSize);
 #if SINGELE_PC_SAVE
 	csvfile.close();
