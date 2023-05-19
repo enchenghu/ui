@@ -1965,7 +1965,7 @@ void viewpanel::CreatPCWindow()
 		setReadOnlyLineEdit(ctlReadLine_[i - 1]); 
 		ctlReadLine_[i - 1]->setFixedSize(70,25);
 		QString name = QString("EDFA ") + QString(edfaStateName[i].c_str());
-		controls_layout->addWidget( new QLabel(name), i + 1, 5, Qt::AlignLeft);			
+		controls_layout->addWidget( new QLabel(name), i + 1, 5, Qt::AlignRight);			
 		controls_layout->addWidget( ctlReadLine_[i - 1], i + 1, 6, Qt::AlignLeft);	
 	}
 	byteSpeedLine = new QLineEdit;
@@ -1973,7 +1973,7 @@ void viewpanel::CreatPCWindow()
 	setLED(netStateLED, C_RED);
 	setReadOnlyLineEdit(byteSpeedLine); 
 	byteSpeedLine->setFixedSize(70,25);
-	controls_layout->addWidget( new QLabel("点云传输速度(KB/s)"), 1, 5, Qt::AlignLeft);			
+	controls_layout->addWidget( new QLabel("点云传输速度(KB/s)"), 1, 5, Qt::AlignRight);			
 	controls_layout->addWidget( byteSpeedLine, 1, 6, Qt::AlignLeft);	
 	controls_layout->addWidget( new QLabel("网络连接状态"), 0, 5, Qt::AlignRight);			
 	controls_layout->addWidget( netStateLED, 0, 6, Qt::AlignLeft);	
