@@ -294,8 +294,8 @@ class viewpanel : public QTabWidget {
   QString lidar_UDP_PC_port_;
   QString lidar_ip_;
   QString motor_port_;
-  QString m_reg_addr_[4];
-  QString m_reg_value_[4];
+  QString m_reg_addr_[LIGHTNING_REG_NUM];
+  QString m_reg_value_[LIGHTNING_REG_NUM];
   QString distance_offset_[LIGHTNING_MAX_LINES];
   QString power_offset_;
   QString power_min_;
@@ -357,9 +357,9 @@ class viewpanel : public QTabWidget {
   QLineEdit* power_Offset_edit;
   QLineEdit* power_Min_edit;
   QString save_folder_;
-  QLineEdit* regAddr_line[4];
-  QLineEdit* regVal_line[4];
-  QLineEdit* regRead_line[4];
+  QLineEdit* regAddr_line[LIGHTNING_REG_NUM];
+  QLineEdit* regVal_line[LIGHTNING_REG_NUM];
+  QLineEdit* regRead_line[LIGHTNING_REG_NUM];
   QLineEdit* adcRead0_line;
   QLineEdit* adcRead1_line;
   QLineEdit* motorPidReadLine[5];
@@ -451,8 +451,8 @@ class viewpanel : public QTabWidget {
   QPushButton* pcOnceBtn;
   QPushButton* pcResetBtn;
   QPushButton* loadAlgBtn;
-  QPushButton* regBtnWrite[4];
-  QPushButton* regBtnRead[4];
+  QPushButton* regBtnWrite[LIGHTNING_REG_NUM];
+  QPushButton* regBtnRead[LIGHTNING_REG_NUM];
   QPushButton* settingADCSavebutton;
   QPushButton* settingADCConfigbutton;
   QComboBox* fftChCombo;
@@ -463,6 +463,7 @@ class viewpanel : public QTabWidget {
   QPushButton* mFFTShowdBBtn;
   QDockWidget* ctrlDock;
   QWidget* ctrlDockWidget;
+  QWidget* fullScreenWidget;
   QDockWidget* pcOffsetDock;
   QWidget* pcOffsetDockWidget;
   std::vector<QPushButton*> ctlWriteBtn_;
@@ -510,7 +511,7 @@ class viewpanel : public QTabWidget {
 	std::vector<int> statistcHistogramV;
   double maxPcValue_;
   double minPcValue_;
-  int interval_;
+  double interval_;
   int threshold_;
 	std::vector<int> rangeHistogramV;
 	std::vector<int> intenHistogramV;

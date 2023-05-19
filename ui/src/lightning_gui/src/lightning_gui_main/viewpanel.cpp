@@ -49,14 +49,18 @@ static QStringList regAddrList = {
 	"0xa00a0014",
 	"0xa00a0018",
 	"0xa00a0004",
-	"0xa0070010"
+	"0xa0070010",
+	"0",
+	"0"
 };
 
 static QStringList regValueList = {
 	"0xFFFF00B4",
 	"0x0A6CFC8F",
 	"0x91EC0001",
-	"0x40001183"
+	"0x40001183",
+	"0",
+	"0"
 };
 static std::vector<std::string> cfarAddr = {"A0070060", "A0070064", "A0070068", "A007006C"};
 static std::string softVersionName = "motor_xlidar_B_appA_0_3_2022_12_14";
@@ -1030,9 +1034,9 @@ void viewpanel::registerPointcloudRviz()
 
 	//Car_ = manager_->createDisplay( "rviz/Marker", "Marker", true );
 	//ROS_ASSERT( Car_ != NULL );
-
 	FloatingText_ = manager_->createDisplay( "rviz/Marker", "Marker", true );
 	ROS_ASSERT( FloatingText_ != NULL );
+	FloatingText_->subProp("Marker Topic")->setValue("/lightning/rviz/floatingText_marker");
 
 	Axes_ = manager_->createDisplay( "rviz/Axes", "Axes", true );
 	ROS_ASSERT( Axes_ != NULL );
@@ -1671,7 +1675,7 @@ void viewpanel::CreatConnect()
 	QSignalMapper * readMapper;
 	configMapper = new QSignalMapper(this);
 	readMapper = new QSignalMapper(this);
-	for(int i = 0; i < 4; i++) {
+	for(int i = 0; i < LIGHTNING_REG_NUM; i++) {
 		connect(regBtnWrite[i], SIGNAL(clicked(bool)), configMapper, SLOT(map()));//这个map(）是QSignalMapper类的槽函数，不需要我们定义
 		connect(regBtnRead[i], SIGNAL(clicked(bool)), readMapper, SLOT(map()));
 		configMapper->setMapping(regBtnWrite[i], i);//这个i就是我们传给槽函数的值，可以是字符串，其他等等。
@@ -1877,7 +1881,7 @@ void viewpanel::CreatPCWindow()
 	QLabel* adc_label0 = new QLabel( "ADC OverVol" );
 	QLabel* adc_label1 = new QLabel( "ADC Atten" );
 
-	for (int i = 0; i < 4; i++){
+	for (int i = 0; i < LIGHTNING_REG_NUM; i++){
 		regAddr_line[i] = new QLineEdit;
 		regAddr_line[i]->setText(m_reg_addr_[i]);
 		regVal_line[i] = new QLineEdit;
@@ -1890,6 +1894,8 @@ void viewpanel::CreatPCWindow()
 		setReadOnlyLineEdit(regRead_line[i]);
 	}
 	loadAlgBtn = new QPushButton("&Load Config", this);
+	//loadAlgBtn->setFixedSize(70,25);
+	loadAlgBtn->setFont(QFont("微软雅黑", 10.5));
 	setButtonStyle(loadAlgBtn);
 	adcRead0_line = new QLineEdit;
 	adcRead1_line = new QLineEdit;
@@ -1987,14 +1993,14 @@ void viewpanel::CreatPCWindow()
 	controls_layout->addWidget( regAddr_label, 0, 7, Qt::AlignRight);
 	controls_layout->addWidget( regVal_label, 0, 9, Qt::AlignRight);	
 
-	for(int i = 0; i < 4; i++){
+	for(int i = 0; i < LIGHTNING_REG_NUM; i++){
 		controls_layout->addWidget( regAddr_line[i], i, 8, Qt::AlignLeft);	
 		controls_layout->addWidget( regVal_line[i], i, 10, Qt::AlignLeft);	
 		controls_layout->addWidget( regBtnWrite[i], i, 11, Qt::AlignLeft);	
 		controls_layout->addWidget( regRead_line[i], i, 12, Qt::AlignLeft);	
 		controls_layout->addWidget( regBtnRead[i], i, 13, Qt::AlignLeft);	
 	}
-	controls_layout->addWidget( loadAlgBtn, 4, 13, Qt::AlignLeft);	
+	controls_layout->addWidget( loadAlgBtn, 4, 2, Qt::AlignLeft);	
 	QLabel* rotate_label = new QLabel( "rotate angle" );
 	rotation_spin = new QDoubleSpinBox;
 	//rotation_spin->setDecimals(3);
@@ -2050,7 +2056,7 @@ void viewpanel::CreatPCWindow()
 	//hframe->setStyleSheet("QFrame{background:red;min-height:5px}");
 	vframe->setFrameShape(QFrame::VLine);      // 设置垂直方向
 	vframe->setStyleSheet("QFrame{background:rgb(192,192,192);min-width:10px;border:0.0px solid black}");
-	controls_layout->addWidget( vframe, 0, 14, 5, 1);
+	controls_layout->addWidget( vframe, 0, 14, LIGHTNING_REG_NUM, 1);
 
 	controls_layout->addWidget( pcSwitchBtn, 0, 15, Qt::AlignRight);	
 	controls_layout->addWidget( pcOnceBtn, 1, 15, Qt::AlignRight);	
@@ -3845,8 +3851,10 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 	int pcFrameSize = pmsg->pcDataOneFrame.size();
 	int histogramSize;
 	maxPcValue_ = maxPcValue_edit->text().toDouble();
-	interval_ = intervalPcValue_edit->text().toInt();
+	interval_ = intervalPcValue_edit->text().toDouble();
+	if(interval_ == 0.0) interval_ = 0.1;
 	int size_c = maxPcValue_ / interval_;
+	ROS_INFO("size_c is %d", size_c);
 	minPcValue_ = 0.0;
 	QString mode = filterCombo->currentText();
 	histogramSize = size_c;
@@ -4308,13 +4316,13 @@ void viewpanel::udpRecvPCLoop()
 			//printf("ready recv udp msg!\n");
 			ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcDataRaw_), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
 			if(ret <= 0){
+				byteSpeed_ = 0;
 				if(udpPCStop_) {
 					printf("pc raw udp  quit!\n"); 
     				::close(udpRecvPCSocketFd_);
 					return;
 				}
 				ROS_INFO("pc raw data recv failed, continue\n");
-				byteSpeed_ = 0;
 				usleep(100*1000);
 				i--;
 				continue;
@@ -4704,7 +4712,7 @@ void viewpanel::load_settings()
 		QCoreApplication::applicationName());
 
 	lidar_ip_ = settings.value("IP Addr","10.20.30.40").toString();
-	for(int i = 0; i < 4; i++){
+	for(int i = 0; i < LIGHTNING_REG_NUM; i++){
 		m_reg_addr_[i] = settings.value("Reg Addr " + QString::number(i), regAddrList[i]).toString();
 		m_reg_value_[i] = settings.value("Reg Value " + QString::number(i), regValueList[i]).toString();
 	}
@@ -4837,7 +4845,7 @@ void viewpanel::save_settings(void )
 	settings.setValue("Save Folder", save_folder_);
 	settings.setValue("TCP Motor Port", motorConnectPortLine->text());
 
-	for(int i = 0; i < 4; i++){
+	for(int i = 0; i < LIGHTNING_REG_NUM; i++){
 		settings.setValue("Reg Addr " + QString::number(i), regAddr_line[i]->text());
 		settings.setValue("Reg Value " + QString::number(i), regVal_line[i]->text());
 	}
