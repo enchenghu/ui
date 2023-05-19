@@ -77,6 +77,8 @@ static std::vector<unsigned char> B_V_g = { 255, 255, 255, 255, 255, 255, 255, 2
 											240, 220, 200, 180, 160, 140, 120, 100, 80, 60, 40, 20, 0,
 											0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,
 											0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+										
+static std::vector<std::vector<uint8_t>> chanColorV = {{255, 192, 203}, {255, 97, 0}, {0, 255, 0}, {0, 255, 255}};
 
 float UnsignedChar4ToFloat(unsigned char *strBuf) 
 {
@@ -529,7 +531,7 @@ void viewpanel::configADCDSA(void)
 void viewpanel::colorChange(void)
 {
 	static int i = 0;
-	switch (i++ % 3)
+	switch (i++ % 4)
 	{
 	case 0:
 		colorCombo->setCurrentIndex(2);
@@ -539,6 +541,9 @@ void viewpanel::colorChange(void)
 		break;
 	case 2:
 		colorCombo->setCurrentIndex(1);
+		break;
+	case 3:
+		colorCombo->setCurrentIndex(3);
 		break;
 	default:
 		break;
@@ -1919,6 +1924,7 @@ void viewpanel::CreatPCWindow()
 	colorCombo->addItem(tr("range"));
 	colorCombo->addItem(tr("intensity"));
 	colorCombo->addItem(tr("speed"));
+	colorCombo->addItem(tr("channel"));
 
 	PowerCombo->setEditable(true);
 	ADC_DSA_Combo->setEditable(true);
@@ -4115,11 +4121,15 @@ void viewpanel::pcDataProc()
 			cloud.points[j].b = b;
 			//index_rgb = (speed_m + color_base) / (color_base * 2) * R_V_g.size();
 			//index_rgb = R_V_g.size() - 1 - index_rgb;
+		} else if(strColor == "channel"){
+			cloud.points[j].r = chanColorV[chan_id_m - 1][0];
+			cloud.points[j].g = chanColorV[chan_id_m - 1][1];
+			cloud.points[j].b = chanColorV[chan_id_m - 1][2];			
 		}
 
 		if(index_rgb > (R_V_g.size() - 1)) index_rgb = R_V_g.size() - 1;
 		if(index_rgb < 0) index_rgb = 0;
-		if(strColor != "speed"){
+		if(strColor != "speed" && strColor != "channel"){
 			cloud.points[j].r = R_V_g[index_rgb];
 			cloud.points[j].g = G_V_g[index_rgb];
 			cloud.points[j].b = B_V_g[index_rgb];
