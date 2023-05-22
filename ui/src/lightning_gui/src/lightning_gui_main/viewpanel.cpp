@@ -82,7 +82,7 @@ static std::vector<unsigned char> B_V_g = { 255, 255, 255, 255, 255, 255, 255, 2
 											0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,
 											0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 										
-static std::vector<std::vector<uint8_t>> chanColorV = {{255, 192, 203}, {255, 97, 0}, {0, 255, 0}, {0, 255, 255}};
+static std::vector<std::vector<uint8_t>> chanColorV = {{0xFF, 0x33, 0x00}, {0xFF, 0xFF, 0x00}, {0x00, 0xFF, 0x33}, {0xFF, 0x66, 0xFF}};
 
 float UnsignedChar4ToFloat(unsigned char *strBuf) 
 {
