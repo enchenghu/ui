@@ -66,6 +66,7 @@
 #include "rviz/view_manager.h"
 #include "rviz/visualization_manager.h"
 #include "types_fmcw.hpp"
+#include <visualization_msgs/MarkerArray.h>
 #include "vx_mutex.h"
 #include "vx_queue.h"
 #include "vx_task.h"
@@ -125,6 +126,7 @@ class viewpanel : public QTabWidget {
   void readReg(int);
   void ctrlShowWindows(bool);
   void ctrlShowPcOffset(bool);
+  void ctrlPcInfoWindows(bool);
   void ctrlPcPanel(bool);
   void resetViews(void);
   void increasePointSize();
@@ -152,6 +154,7 @@ class viewpanel : public QTabWidget {
   void pcRecord();
   void pcOneFramePure();
   void filterChange();
+  void colorInfoChange();
 
   void pcChSelect();
 
@@ -242,6 +245,7 @@ class viewpanel : public QTabWidget {
   void save_settings();
   void init_queue();
   void readMotorItemsFile();
+  void prepare_basic_markers( void );
   QTimer* timer_;
   QTimer* timer_adc;
   bool udpFftAdcStop_;
@@ -305,6 +309,8 @@ class viewpanel : public QTabWidget {
   rviz::RenderPanel* render_panel_;
   rviz::SelectionPanel* selection_panel_;
   rviz::ToolManager* tool_panel_;
+  ros::Publisher  lightning_info_markers;
+  visualization_msgs::Marker detections_per_frame_marker;
   rviz::Display* grid_;
   rviz::Display* pointcloud_fmcw;
   rviz::Display* Car_;
@@ -341,6 +347,7 @@ class viewpanel : public QTabWidget {
   QLineEdit* udp_pc_port_edit;
   QLineEdit* distance_Offset_edit[4];
 	std::vector<QLineEdit*> distanceOffsetEditV;
+	std::vector<QLineEdit*> showInfoEditV;
   QLineEdit* rotate_angle_edit;
   QLineEdit* speed_critical_edit;
   QLineEdit* maxPcValue_edit;

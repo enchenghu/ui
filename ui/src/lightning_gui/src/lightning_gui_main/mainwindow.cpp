@@ -378,6 +378,7 @@ void MainWindow::fullScreen()
 	viewPanel->ctrlShowWindows(showAll);
 	viewPanel->ctrlPcPanel(showAll);
 	viewPanel->ctrlShowPcOffset(showAll);
+	viewPanel->ctrlPcInfoWindows(!showAll);
 	showCtrlDockAct->setChecked(showAll);
 	showPcPanelAct->setChecked(showAll);
 	pcOffsetDockAct->setChecked(showAll);

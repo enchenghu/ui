@@ -508,6 +508,8 @@ void viewpanel::configPower(void)
 		msgBox.exec();
 		return;
 	}
+	showInfoEditV[1]->setText(str);
+	//showInfoEditV[1]->setStyleSheet("QLineEdit{color:rgb(255, 255, 0);}");
 }
 void viewpanel::configADCDSA(void)
 {
@@ -1049,6 +1051,7 @@ void viewpanel::registerPointcloudRviz()
 	ros::NodeHandle fmcw_pcl("~");// = boost::make_shared<ros::NodeHandle>();
 
 	fmcw_pcl_pub = fmcw_pcl.advertise<sensor_msgs::PointCloud2>(pointcloud_topic, 1);
+	lightning_info_markers = fmcw_pcl.advertise<visualization_msgs::Marker>("/lightning/rviz/floatingText_marker", 1);
 
 	//std::string stationary_pointcloud_topic = "/fmcw/rviz/stationary_pointcloud";
 	ROS_INFO("Registering new pointcloud topic: %s",pointcloud_topic.c_str());	
@@ -1066,7 +1069,32 @@ void viewpanel::registerPointcloudRviz()
 	pointcloud_fmcw->subProp("Position Transformer")->setValue("XYZ");
 	pointcloud_fmcw->subProp("Use Fixed Frame")->setValue("true");
 	pointcloud_fmcw->subProp( "Axis" )->setValue( "Z" );
+	prepare_basic_markers();
 #endif
+}
+
+void viewpanel::prepare_basic_markers( void )
+{
+	/* Prepare the markers that show the number of detections per frame */
+	detections_per_frame_marker.header.frame_id = "image_lidar";
+	detections_per_frame_marker.ns = "lidar_detections_per_frame_marker";
+	detections_per_frame_marker.id = 10006;
+	detections_per_frame_marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+	detections_per_frame_marker.action = visualization_msgs::Marker::ADD;
+	detections_per_frame_marker.pose.position.x = 0;
+	detections_per_frame_marker.pose.position.y = -10;
+	detections_per_frame_marker.pose.position.z = 1;
+	detections_per_frame_marker.pose.orientation.x = 0.0;
+	detections_per_frame_marker.pose.orientation.y = 0.0;
+	detections_per_frame_marker.pose.orientation.z = 0.0;
+	detections_per_frame_marker.pose.orientation.w = 1.0;
+	detections_per_frame_marker.scale.x = 1;
+	detections_per_frame_marker.scale.y = 1;
+	detections_per_frame_marker.scale.z = 1;
+	detections_per_frame_marker.color.r = 1.0f;
+	detections_per_frame_marker.color.g = 1.0f;
+	detections_per_frame_marker.color.b = 1.0f;
+	detections_per_frame_marker.color.a = 1.0;
 }
 
 
@@ -1077,6 +1105,11 @@ void viewpanel::ctrlShowPcOffset(bool show)
 void viewpanel::ctrlShowWindows(bool show)
 {
 	ctrlDockWidget->setVisible(show);
+}
+
+void viewpanel::ctrlPcInfoWindows(bool show)
+{
+	fullScreenWidget->setVisible(show);
 }
 
 void viewpanel::ctrlPcPanel(bool show)
@@ -1669,7 +1702,7 @@ void viewpanel::CreatConnect()
     connect( axes_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configAxesSize( void )));
     connect( cell_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configCellSize( void )));
     connect( point_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configPointSize( void )));
-	//connect( filter_Combo, SIGNAL( currentTextChanged(QString)), this, SLOT( filterChange( void )));
+	connect( colorCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( colorInfoChange( void )));
 
 	QSignalMapper * configMapper;
 	QSignalMapper * readMapper;
@@ -1755,6 +1788,29 @@ void viewpanel::CreatPCWindow()
 	QWidget* multiWidget = new QWidget();
 	ctrlDock = new QDockWidget();
 	ctrlDockWidget = new QWidget();
+	fullScreenWidget = new QWidget();
+	fullScreenWidget->setMaximumHeight(60);
+	fullScreenWidget->setStyleSheet("background-color: rgb(0, 0, 0);");
+	QGroupBox *fsBox = new QGroupBox();
+	fsBox->setStyleSheet("QGroupBox{border:none}");
+	QGridLayout* fsBoxLayout = new QGridLayout;
+	QGridLayout* fsLayout = new QGridLayout;
+	QLabel* fullShow0 = new QLabel("染色模式:");
+	fullShow0->setStyleSheet("color:yellow;");
+	QLabel* fullShow1 = new QLabel("功率/dBm:");
+	fullShow1->setStyleSheet("color:yellow;");
+	fsBoxLayout->addWidget(fullShow0, 0, 0, Qt::AlignRight);
+	fsBoxLayout->addWidget(fullShow1, 0, 2, Qt::AlignRight);
+	showInfoEditV.push_back(new QLineEdit());
+	fsBoxLayout->addWidget(showInfoEditV[0], 0, 1, Qt::AlignLeft);
+	showInfoEditV.push_back(new QLineEdit());
+	fsBoxLayout->addWidget(showInfoEditV[1], 0, 3, Qt::AlignLeft);
+	fsBox->setLayout(fsBoxLayout);
+	fsLayout->addWidget(fsBox, 0, 0, Qt::AlignLeft | Qt::AlignTop);
+	fullScreenWidget->setLayout(fsLayout);
+	showInfoEditV[1]->setText("0");
+	showInfoEditV[1]->setStyleSheet("QLineEdit{color:rgb(255, 255, 0);}");
+	fullScreenWidget->hide();
 
 	ctrlDock->setFeatures(QDockWidget::DockWidgetClosable );
 	//dock->setWidget(multiWidget);
@@ -1766,8 +1822,8 @@ void viewpanel::CreatPCWindow()
 	//ctrlDock->setTitleBarWidget(pEmptyWidget);//设置一个空的widget作为标题栏
 	//delete titleBarWidget;//删除原标题栏
 
-	QGridLayout* controls = new QGridLayout ;
-	QGridLayout* mainLayout = new QGridLayout ;
+	QGridLayout* controls = new QGridLayout;
+	QGridLayout* mainLayout = new QGridLayout;
 	//mainLayout->setRowStretch(0, 1);
 	//mainLayout->setRowStretch(1, 5);
 
@@ -2177,7 +2233,8 @@ void viewpanel::CreatPCWindow()
 		distanceOffsetEditV[i]->setText(distance_offset_[i]);
 		checkPCShowV[i]->setChecked(true);
 	}
-
+	showInfoEditV[0]->setText(colorCombo->currentText());
+	showInfoEditV[0]->setStyleSheet("QLineEdit{color:rgb(255, 255, 0);}");
 	pcOffsetBox->setLayout(pcOffsetBoxLayout);
 	QGridLayout* pcOffsetLayout = new QGridLayout;	
 	pcOffsetLayout->addWidget(pcOffsetBox, 1, 0, Qt::AlignLeft);
@@ -2191,6 +2248,7 @@ void viewpanel::CreatPCWindow()
 	pcOffsetDockWidget->setPalette(pal);
 
 	mainLayout->addWidget ( ctrlDockWidget, 0, 0);
+	mainLayout->addWidget ( fullScreenWidget, 0, 0);
 	mainLayout->addWidget ( render_panel_, 1, 0);
 	mainLayout->addWidget ( selection_panel_, 1, 0, Qt::AlignLeft);
 	mainLayout->addWidget ( pcOffsetDockWidget, 1, 0, Qt::AlignRight);
@@ -2696,6 +2754,12 @@ void viewpanel::pcRecord(){
 	}
 }
 
+
+void viewpanel::colorInfoChange()
+{
+	showInfoEditV[0]->setText(colorCombo->currentText());
+	//showInfoEditV[0]->setStyleSheet("QLineEdit{color:rgb(255, 255, 0);}");
+}
 void viewpanel::filterChange()
 {
 	int cmd = filter_Combo->currentIndex();
@@ -4154,6 +4218,8 @@ void viewpanel::pcDataProc()
 	output.header.frame_id = "image_lidar";
 	fmcw_pcl_pub.publish(output);
 	cloud.clear();
+/* 	detections_per_frame_marker.text = "hello world";
+	lightning_info_markers.publish(detections_per_frame_marker); */
 	auto end = std::chrono::steady_clock::now();
 
 }
