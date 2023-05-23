@@ -1797,7 +1797,7 @@ void viewpanel::CreatPCWindow()
 	QGridLayout* fsLayout = new QGridLayout;
 	QLabel* fullShow0 = new QLabel("染色模式:");
 	fullShow0->setStyleSheet("color:yellow;");
-	QLabel* fullShow1 = new QLabel("功率/dBm:");
+	QLabel* fullShow1 = new QLabel("功率/mW:");
 	fullShow1->setStyleSheet("color:yellow;");
 	fsBoxLayout->addWidget(fullShow0, 0, 0, Qt::AlignRight);
 	fsBoxLayout->addWidget(fullShow1, 0, 2, Qt::AlignRight);
