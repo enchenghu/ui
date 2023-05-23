@@ -200,7 +200,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	save_folder_(QString(".")), udpFftAdcStop_(true), showBlack(true), ifShowdB_(FFT_DB),\
 	power_offset(0.0),ifConnectedMotorSerial(false), ifConnectedMotorTcp(false),\
 	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
-	ifStarted(false),saveadc_(false), oneFramePure(true), ifConnectedStateTcp(false), ctrl_sock(0)
+	ifStarted(false),saveadc_(false), oneFramePure(true), ifConnectedStateTcp(false), ctrl_sock(-1)
 {
 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
@@ -616,14 +616,16 @@ void viewpanel::recvStateInfoloop()
 		memset(stateInfoHead, 0, 9);
 		ret = ::recv(state_ctrl_sock, &mHead, 2, MSG_WAITALL);
 		if (ret <= 0){
-			printf("read state timeout!\n");
+			printf("read state mHead timeout!\n");
+			if(ret < 0) break;
 			continue;
 		} 
 		if(mHead != 0x55aa) continue;;
 		ROS_INFO("====recv state info ");
 		ret = ::recv(state_ctrl_sock, stateInfoHead, 9, MSG_WAITALL);
 		if (ret <= 0){
-			printf("read state timeout!\n");
+			printf("read state stateInfoHead timeout!\n");
+			if(ret < 0) break;
 			continue;
 		} 
 		dataLen = stateInfoHead[8] + 1; // + count + crc
@@ -632,7 +634,8 @@ void viewpanel::recvStateInfoloop()
 		if(stateMsg_free_buf_queue.get(ptr_msg)) continue;
 		ret = ::recv(state_ctrl_sock, ptr_msg->data + 11, dataLen, MSG_WAITALL);
 		if (ret <= 0){
-			printf("read state timeout!\n");
+			printf("read state data timeout!\n");
+			if(ret < 0) break;
 			continue;
 		} 
 		memcpy(ptr_msg->data, &mHead, 2);
@@ -2801,10 +2804,8 @@ void viewpanel::udpFftAdcClose(){
 }
 
 void viewpanel::udpPcClose(){
-	::close(udpRecvPCSocketFd_);
 	udpPCStop_ = true;
-	vx_task_delete(&bst_task[TASK_POINTCLOUD_DATA_RECV]);
-	vx_task_delete(&bst_task[TASK_POINTCLOUD_DATA_PARSE]);
+	byteSpeed_ = 0;
 	commandMsg cmdMsg;
 	memset(&cmdMsg, 0, sizeof(commandMsg));
 	cmdMsg.mHead.usCommand = commandType::POINTCLOUD_UDP_STOP;
@@ -2814,6 +2815,9 @@ void viewpanel::udpPcClose(){
 		msgBox.exec();
 		return;
 	}
+	::close(udpRecvPCSocketFd_);
+	vx_task_delete(&bst_task[TASK_POINTCLOUD_DATA_RECV]);
+	vx_task_delete(&bst_task[TASK_POINTCLOUD_DATA_PARSE]);
 	pcSwitchBtn->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}");
 	pcSwitchBtn->setText("&Start PC");
 }
@@ -3025,6 +3029,14 @@ void viewpanel::updateState()
 	if(tcpSocketCheck(ctrl_sock))
 	{
 		setLED(netStateLED, C_RED);
+		if(ifStarted || ifConnectedStateTcp)
+		{
+			lidar_connect_button->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}");
+			lidar_connect_button->setText("&Connect");
+			ifStarted = false;
+			ifConnectedStateTcp = false;
+			::close(ctrl_sock);
+		}
 	} else {
 		setLED(netStateLED, C_GREEN);
 	};
@@ -4379,12 +4391,11 @@ void viewpanel::udpRecvPCLoop()
 		bytesNum = 0;
 		for(int i = 0; i < UDP_PC_TIMES_PER_FRAME; i++){
 			memset(&pcDataRaw_, 0, sizeof(pcDataRaw_));
-			//printf("ready recv udp msg!\n");
 			ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcDataRaw_), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
 			if(ret <= 0){
 				byteSpeed_ = 0;
 				if(udpPCStop_) {
-					printf("pc raw udp  quit!\n"); 
+					ROS_INFO("pc udp recv thread quit!"); 
     				::close(udpRecvPCSocketFd_);
 					return;
 				}
@@ -4417,12 +4428,13 @@ void viewpanel::udpRecvPCLoop()
 				pUdp->pcDataOneFrame = pcDataOneFrame_;
 				udpPcMsg_done_buf_queue.put(pUdp);	
 			}else{
+				byteSpeed_ = 0;
 				return;
 			}
 		}
 	}
-	printf("pc udp  quit!\n");	
-
+	byteSpeed_ = 0;
+	ROS_INFO("pc udp recv thread quit!");	
 }
 
 void viewpanel::udpRecvFftAdcLoop(){
@@ -4700,7 +4712,7 @@ int viewpanel::stateConnect()
 	struct timeval timeout_send = {2, 0};
 	setsockopt(state_ctrl_sock, SOL_SOCKET, SO_SNDTIMEO, &timeout_send, sizeof(timeout_send)); //send timeout
 
-	struct timeval timeout_recv = {5, 0};
+	struct timeval timeout_recv = {4, 0};
 	setsockopt(state_ctrl_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout_recv, sizeof(timeout_recv)); //recv timeout
 
 #endif
