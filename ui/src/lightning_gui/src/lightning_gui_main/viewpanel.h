@@ -118,11 +118,6 @@ class viewpanel : public QTabWidget {
   void config3DFT(void);
   void configDiff(void);
   void configReg(int);
-
-  void readPower(void);
-  void readCFAR(void);
-  void read3DFT(void);
-  void readDiff(void);
   void readReg(int);
   void ctrlShowWindows(bool);
   void ctrlShowPcOffset(bool);
