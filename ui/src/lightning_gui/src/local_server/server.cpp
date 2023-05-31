@@ -918,6 +918,8 @@ int main(int argc, char** argv)
 
     const char *cali_file_path = "/home/encheng/data/data_test_raw_index0.bin";
     int  filesize = LoadDat(cali_file_path);
+/*     std::pair<int, std::string> tp0 = std::make_pair(1, "hello");
+    std::cout << std::get<0>(tp0) << std::get<1>(tp0)  << std::endl; */
 /*     std::chrono::duration<double> elapsed;
     auto start = std::chrono::steady_clock::now();
     float data_float = -8.888;

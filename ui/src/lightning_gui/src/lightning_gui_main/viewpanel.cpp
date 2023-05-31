@@ -1646,12 +1646,17 @@ void viewpanel::CreatPCWindow()
 	fullShow0->setStyleSheet("color:yellow;");
 	QLabel* fullShow1 = new QLabel("功率/mW:");
 	fullShow1->setStyleSheet("color:yellow;");
+	QLabel* fullShow2 = new QLabel("单元格长度/m:");
+	fullShow2->setStyleSheet("color:yellow;");
 	fsBoxLayout->addWidget(fullShow0, 0, 0, Qt::AlignRight);
 	fsBoxLayout->addWidget(fullShow1, 0, 2, Qt::AlignRight);
+	fsBoxLayout->addWidget(fullShow2, 0, 4, Qt::AlignRight);
 	showInfoEditV.push_back(new QLineEdit());
 	fsBoxLayout->addWidget(showInfoEditV[0], 0, 1, Qt::AlignLeft);
 	showInfoEditV.push_back(new QLineEdit());
 	fsBoxLayout->addWidget(showInfoEditV[1], 0, 3, Qt::AlignLeft);
+	showInfoEditV.push_back(new QLineEdit());
+	fsBoxLayout->addWidget(showInfoEditV[2], 0, 5, Qt::AlignLeft);
 	fsBox->setLayout(fsBoxLayout);
 	fsLayout->addWidget(fsBox, 0, 0, Qt::AlignLeft | Qt::AlignTop);
 	fullScreenWidget->setLayout(fsLayout);
@@ -1875,13 +1880,13 @@ void viewpanel::CreatPCWindow()
 		ctlWriteBtn_[i]->setFixedSize(70,30);
 		setButtonStyle(ctlWriteBtn_[i]);
 	}
-	for(int i = 1; i < 5; i++){
+	for(int i = 0; i < 4; i++){
 		ctlReadLine_.emplace_back(new QLineEdit);
-		setReadOnlyLineEdit(ctlReadLine_[i - 1]); 
-		ctlReadLine_[i - 1]->setFixedSize(70,25);
-		QString name = QString("EDFA ") + QString(edfaStateName[i].c_str());
-		controls_layout->addWidget( new QLabel(name), i + 1, 5, Qt::AlignRight);			
-		controls_layout->addWidget( ctlReadLine_[i - 1], i + 1, 6, Qt::AlignLeft);	
+		setReadOnlyLineEdit(ctlReadLine_[i]); 
+		ctlReadLine_[i]->setFixedSize(70,25);
+		QString name = QString("EDFA ") + QString(edfaStateName[i + 1].c_str());
+		controls_layout->addWidget( new QLabel(name), i + 2, 5, Qt::AlignRight);			
+		controls_layout->addWidget( ctlReadLine_[i], i + 2, 6, Qt::AlignLeft);	
 	}
 	byteSpeedLine = new QLineEdit;
 	netStateLED = new QLabel;
@@ -2082,6 +2087,10 @@ void viewpanel::CreatPCWindow()
 	}
 	showInfoEditV[0]->setText(colorCombo->currentText());
 	showInfoEditV[0]->setStyleSheet("QLineEdit{color:rgb(255, 255, 0);}");
+
+	showInfoEditV[2]->setText(cell_size_edit->text());
+	showInfoEditV[2]->setStyleSheet("QLineEdit{color:rgb(255, 255, 0);}");
+
 	pcOffsetBox->setLayout(pcOffsetBoxLayout);
 	QGridLayout* pcOffsetLayout = new QGridLayout;	
 	pcOffsetLayout->addWidget(pcOffsetBox, 1, 0, Qt::AlignLeft);
@@ -2675,6 +2684,7 @@ void viewpanel::configAxesSize(){
 void viewpanel::configCellSize(){
 	cell_size = cell_size_edit->text().toDouble();
 	grid_->subProp( "Cell Size" )->setValue(cell_size); 
+	showInfoEditV[2]->setText(cell_size_edit->text());
 }
 
 void viewpanel::increasePointSize(){

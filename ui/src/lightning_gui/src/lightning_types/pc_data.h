@@ -118,14 +118,13 @@ typedef enum{
     MOTOR_ORI
 } showModel;
 
-typedef struct API_Header
-{
-	uint16_t 	usPrefix; // 0xeeff
-	uint16_t 	usType; // 0x10 version 1.0
-	uint16_t 	usCommand; // command enum
-	uint16_t 	usPayloadCrc;
-	uint32_t 	unLength;
-}API_Header;
+using API_Header  = struct{
+						uint16_t 	usPrefix; // 0xeeff
+						uint16_t 	usType; // 0x10 version 1.0
+						uint16_t 	usCommand; // command enum
+						uint16_t 	usPayloadCrc;
+						uint32_t 	unLength;
+					};
 
 typedef struct 
 {
