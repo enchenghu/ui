@@ -118,6 +118,14 @@ typedef enum{
     MOTOR_ORI
 } showModel;
 
+typedef enum{
+    BYPASS = 0,
+    SPEED_F = 0X1,
+    RANGE_F = 0x10,
+    INTEN_F = 0x100,
+    RADIUS_F = 0x1000
+} filterMode;
+
 using API_Header  = struct{
 						uint16_t 	usPrefix; // 0xeeff
 						uint16_t 	usType; // 0x10 version 1.0

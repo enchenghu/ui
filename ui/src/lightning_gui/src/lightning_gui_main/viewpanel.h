@@ -135,6 +135,9 @@ class viewpanel : public QTabWidget {
   void loadLidarFile();
   void loadAlgFile();
   void setSaveFolder();
+  void ConfigFilterDialog();
+  void save_SF_settings();
+  void ConfigFilterWork();
   void FFT_ADC_UDP_Connect();
   void fftChannelChange();
   void udpPcConnect();
@@ -237,6 +240,7 @@ class viewpanel : public QTabWidget {
   std::string tohex(uint32_t a);
   inline double fft2dBm(double x);
   void load_settings();
+  void load_SF_settings();
   void save_settings();
   void init_queue();
   void readMotorItemsFile();
@@ -343,6 +347,8 @@ class viewpanel : public QTabWidget {
   QLineEdit* distance_Offset_edit[4];
 	std::vector<QLineEdit*> distanceOffsetEditV;
 	std::vector<QLineEdit*> showInfoEditV;
+	std::vector<QLineEdit*> rangeSegmentEditV;
+	std::vector<QLineEdit*> sfParaSpeedEditV;
   QLineEdit* rotate_angle_edit;
   QLineEdit* speed_critical_edit;
   QLineEdit* maxPcValue_edit;
@@ -482,6 +488,8 @@ class viewpanel : public QTabWidget {
   ChartLighting* pMotorchart;
   QVector<QCheckBox*> checkShowV;
   QVector<QCheckBox*> checkPCShowV;
+  QVector<QCheckBox*> checkSfWorkV;
+
   QCheckBox* selectAll;
   QCheckBox* selectNone;
   QVector<double> x_FFT;
@@ -511,13 +519,22 @@ class viewpanel : public QTabWidget {
   std::vector<std::string> wordsAddr;  // 声明一个字符串向量
   std::vector<std::string> wordsVal;   // 声明一个字符串向量
 	std::vector<int> statistcHistogramV;
+	std::vector<std::vector<int>> shSpeedVV;
+  std::vector<int> rangeSegV;
+
   double maxPcValue_;
   double minPcValue_;
   double interval_;
   int threshold_;
-	std::vector<int> rangeHistogramV;
-	std::vector<int> intenHistogramV;
+  std::vector<double> maxPcValueSpeedV_;
+  std::vector<double> minPcValueSpeedV_;
+  std::vector<double> intervalSpeedV_;
+  std::vector<int> thresholdSpeedV_;
+  std::vector<QString> sfPara;
+
+
   SystemMonitor* systemMonitor_m;
+  int modeFilter_;
 };
 
 #endif  // viewpanel_H

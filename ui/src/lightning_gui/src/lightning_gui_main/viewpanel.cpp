@@ -45,6 +45,13 @@ QStringList motorDataString = {
 	"time",
 	"error time"
 };
+
+QStringList sfString = {
+	"速度滤波",
+	"距离滤波",
+	"强度滤波",
+	"半径滤波"
+};
 static QStringList regAddrList = {
 	"0xa00a0014",
 	"0xa00a0018",
@@ -200,7 +207,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	save_folder_(QString(".")), udpFftAdcStop_(true), showBlack(true), ifShowdB_(FFT_DB),\
 	power_offset(0.0),ifConnectedMotorSerial(false), ifConnectedMotorTcp(false),\
 	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
-	ifStarted(false),saveadc_(false), oneFramePure(true), ifConnectedStateTcp(false), ctrl_sock(-1)
+	ifStarted(false),saveadc_(false), oneFramePure(true), ifConnectedStateTcp(false), ctrl_sock(-1), modeFilter_(0)
 {
 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
@@ -1567,7 +1574,7 @@ void viewpanel::CreatConnect()
 	connect(pcSwitchBtn, SIGNAL(clicked()), this, SLOT( udpPcConnect( void )));
 	connect(pcOnceBtn, SIGNAL(clicked()), this, SLOT( startPcUdpOnce( void )));
 	connect(pcResetBtn, SIGNAL(clicked()), this, SLOT( startPcUdpContinuous( void )));
-	connect(pcBWBtn, SIGNAL(clicked()), this, SLOT( pcShowBW( void )));
+	connect(pcBWBtn, SIGNAL(clicked()), this, SLOT( ConfigFilterDialog( void )));
 	connect(pcRecordBtn, SIGNAL(clicked()), this, SLOT( pcRecord( void )));
 	//connect(pcProcBtn, SIGNAL(clicked()), this, SLOT( pcOneFramePure( void )));
 	connect(loadAlgBtn, SIGNAL(clicked()), this, SLOT( loadAlgFile( void )));
@@ -1733,7 +1740,7 @@ void viewpanel::CreatPCWindow()
 	setButtonStyle(pcOnceBtn);
 	pcResetBtn = new QPushButton("&PC Contin", this);
 	setButtonStyle(pcResetBtn);
-	pcBWBtn = new QPushButton("&Bg Color");
+	pcBWBtn = new QPushButton("&统计滤波");
 	pcBWBtn->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}"
 	//"QPushButton:hover{background-color:rgba(0, 255, 0, 100);border:2px solid black;border-radius:10px;}"
 	"QPushButton:pressed{background-color:rgba(127, 255, 0, 100);}");
@@ -1983,7 +1990,7 @@ void viewpanel::CreatPCWindow()
 	controls_layout->addWidget( color_by_label, 4, 16, Qt::AlignRight);	
 	controls_layout->addWidget( colorCombo, 4, 17, Qt::AlignLeft);
 
-	controls_layout->addWidget( new QLabel("S Filter by"), 5, 16, Qt::AlignRight);	
+	//controls_layout->addWidget( new QLabel("S Filter by"), 5, 16, Qt::AlignRight);	
 	filterCombo = new QComboBox;
 	filterCombo->setFixedSize(90,25);
 	filterCombo->addItem(tr("range"));
@@ -1991,7 +1998,7 @@ void viewpanel::CreatPCWindow()
 	filterCombo->addItem(tr("intensity"));
 	filterCombo->addItem(tr("bypass"));
 	filterCombo->setCurrentIndex(3);
-	controls_layout->addWidget( filterCombo, 5, 17, Qt::AlignLeft);		
+	//controls_layout->addWidget( filterCombo, 5, 17, Qt::AlignLeft);		
 	controls_layout->addWidget( savePCCombo, 3, 3, Qt::AlignLeft);	
 	savePCCombo->setFixedSize(70, 25);	
 	controls_layout->addWidget( pcBWBtn, 3, 15, Qt::AlignLeft);
@@ -2004,23 +2011,23 @@ void viewpanel::CreatPCWindow()
 	controls_layout->addWidget( speed_critical_label, 2, 18, Qt::AlignRight);
 	controls_layout->addWidget( speed_critical_edit, 2, 19, Qt::AlignLeft);	
 
-	controls_layout->addWidget( new QLabel("max value"), 3, 18, Qt::AlignRight);	
+	//controls_layout->addWidget( new QLabel("max value"), 3, 18, Qt::AlignRight);	
 	maxPcValue_edit = new QLineEdit;
 	maxPcValue_edit->setFixedSize(70, 25);	
 	maxPcValue_edit->setText(QString::number(100));
-	controls_layout->addWidget( maxPcValue_edit, 3, 19, Qt::AlignLeft);	
+	//controls_layout->addWidget( maxPcValue_edit, 3, 19, Qt::AlignLeft);	
 
-	controls_layout->addWidget( new QLabel("value interval"), 4, 18, Qt::AlignRight);	
+	//controls_layout->addWidget( new QLabel("value interval"), 4, 18, Qt::AlignRight);	
 	intervalPcValue_edit = new QLineEdit;
 	intervalPcValue_edit->setFixedSize(70, 25);	
 	intervalPcValue_edit->setText(QString::number(1));
-	controls_layout->addWidget( intervalPcValue_edit, 4, 19, Qt::AlignLeft);	
+	//controls_layout->addWidget( intervalPcValue_edit, 4, 19, Qt::AlignLeft);	
 
-	controls_layout->addWidget( new QLabel("threshold"), 5, 18, Qt::AlignRight);	
+	//controls_layout->addWidget( new QLabel("threshold"), 5, 18, Qt::AlignRight);	
 	thresholdValue_edit = new QLineEdit;
 	thresholdValue_edit->setFixedSize(70, 25);	
 	thresholdValue_edit->setText(QString::number(10));
-	controls_layout->addWidget( thresholdValue_edit, 5, 19, Qt::AlignLeft);
+	//controls_layout->addWidget( thresholdValue_edit, 5, 19, Qt::AlignLeft);
 
 	selectAll = new QCheckBox("&Select Ch All/None");
 	selectAll->setChecked(true);
@@ -2128,6 +2135,93 @@ void viewpanel::setSaveFolder()
 		save_folder_ = QString(".");
 	}
 }
+
+void viewpanel::ConfigFilterWork()
+{
+	rangeSegV.clear();
+	maxPcValueSpeedV_.clear();
+	intervalSpeedV_.clear();
+	thresholdSpeedV_.clear();
+	int flage = 0;
+	modeFilter_ = filterMode::BYPASS;
+	for(int i = 0; i < rangeSegmentEditV.size(); i++){
+		int data = rangeSegmentEditV[i]->text().toInt();
+		if(data == 0) continue;
+		rangeSegV.push_back(data);
+	}
+
+	for(int i = 0; i < sfParaSpeedEditV.size() / 3; i++){
+		maxPcValueSpeedV_.push_back(sfParaSpeedEditV[i * 3]->text().toDouble());
+		intervalSpeedV_.push_back(sfParaSpeedEditV[i * 3 + 1]->text().toDouble());
+		thresholdSpeedV_.push_back(sfParaSpeedEditV[i * 3 + 2]->text().toInt());
+	}
+
+	for(int i = 0; i < checkSfWorkV.size(); i++){
+		if(checkSfWorkV[i]->isChecked()){
+			flage = 0x1 << i;
+			modeFilter_ += flage;
+		}
+	}
+	save_SF_settings();
+}
+
+void viewpanel::ConfigFilterDialog()
+{
+	QDialog config_dialog(this);
+	config_dialog.setWindowModality(Qt::WindowModal);
+	config_dialog.setWindowTitle(tr("滤波设置"));
+	config_dialog.setWindowFlags(Qt::Dialog | Qt::Desktop | Qt::WindowStaysOnTopHint);
+	config_dialog.resize(500, 300);
+	QGridLayout *mainLayout = new QGridLayout;
+
+	QGroupBox *sfBox = new QGroupBox(tr("统计滤波:"));
+	QGridLayout* sfBoxLayout = new QGridLayout;	
+	sfBoxLayout->addWidget(new QLabel("分段距离/m:"), 1, 0, Qt::AlignHCenter| Qt::AlignTop);
+	checkSfWorkV.clear();
+	rangeSegmentEditV.clear();
+	sfParaSpeedEditV.clear();
+	QPushButton *configBtn = new QPushButton("&Config");
+	QPushButton *saveBtnsf = new QPushButton("&Save Config");
+	setButtonStyle(configBtn);
+	setButtonStyle(saveBtnsf);
+	for(int i  = 0; i < sfString.size(); i++)
+		checkSfWorkV.push_back(new QCheckBox(sfString[i]));
+	for(int i = 0; i < 3; i++)
+		rangeSegmentEditV.emplace_back(new QLineEdit);
+	for(int i = 0; i < 9; i++)
+		sfParaSpeedEditV.emplace_back(new QLineEdit);
+	
+	load_SF_settings();
+
+	for(int i = 0; i < checkSfWorkV.size(); i++)
+		sfBoxLayout->addWidget(checkSfWorkV[i], 0, i, Qt::AlignHCenter| Qt::AlignTop);
+	for(int i = 0; i < rangeSegmentEditV.size(); i++)
+		sfBoxLayout->addWidget(rangeSegmentEditV[i], 1, 1 + i, Qt::AlignHCenter| Qt::AlignTop);
+	for(int i = 0; i < 3; i++){
+		for(int j = 0; j < 3; j++){
+			sfBoxLayout->addWidget(sfParaSpeedEditV[i * 3 + j], 3 + i, 1 + j, Qt::AlignHCenter| Qt::AlignTop);
+		}
+	}
+
+	sfBoxLayout->addWidget(new QLabel("最大值"), 2, 1, Qt::AlignHCenter | Qt::AlignTop);
+	sfBoxLayout->addWidget(new QLabel("间隔"), 2, 2, Qt::AlignHCenter | Qt::AlignTop);
+	sfBoxLayout->addWidget(new QLabel("阈值"), 2, 3, Qt::AlignHCenter | Qt::AlignTop);
+	sfBoxLayout->addWidget(new QLabel("分段0速度"), 3, 0, Qt::AlignHCenter | Qt::AlignTop);
+	sfBoxLayout->addWidget(new QLabel("分段1速度"), 4, 0, Qt::AlignHCenter | Qt::AlignTop);
+	sfBoxLayout->addWidget(new QLabel("分段2速度"), 5, 0, Qt::AlignHCenter | Qt::AlignTop);
+
+	sfBox->setLayout(sfBoxLayout);
+	mainLayout->addWidget(sfBox, 0, 0, Qt::AlignLeft);
+	mainLayout->addWidget(configBtn, 1, 0, Qt::AlignRight);
+	mainLayout->addWidget(saveBtnsf, 1, 0, Qt::AlignLeft);
+	config_dialog.setLayout(mainLayout);
+
+	connect(configBtn, SIGNAL(clicked()), this, SLOT( ConfigFilterWork( void )));
+	connect(saveBtnsf, SIGNAL(clicked()), this, SLOT( save_SF_settings( void )));
+
+	config_dialog.exec();
+}
+
 void viewpanel::simulateADCData()
 {
 	std::string datPath;
@@ -3780,6 +3874,17 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 	speed_max = 0.0;
 	int pcFrameSize = pmsg->pcDataOneFrame.size();
 	int histogramSize;
+
+	std::vector<int> hSpeedSize;
+	for(int i = 0; i < maxPcValueSpeedV_.size(); i++){
+		if(intervalSpeedV_[i] == 0.0) intervalSpeedV_[i] = 0.1;
+		hSpeedSize.push_back((int)(maxPcValueSpeedV_[i] / intervalSpeedV_[i]));
+		minPcValueSpeedV_.push_back(0);
+	}
+	shSpeedVV.clear();
+	for(auto &it : hSpeedSize)
+		shSpeedVV.emplace_back(it, 0);
+	
 	maxPcValue_ = maxPcValue_edit->text().toDouble();
 	interval_ = intervalPcValue_edit->text().toDouble();
 	if(interval_ == 0.0) interval_ = 0.1;
@@ -3791,8 +3896,14 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 	if(mode == "speed"){
 		histogramSize = size_c * 2;
 		minPcValue_ = - maxPcValue_;
+
+		for(int i = 0; i < maxPcValueSpeedV_.size(); i++){
+			minPcValueSpeedV_.push_back(-maxPcValueSpeedV_[i]);
+		}
+
 	}
 	statistcHistogramV.resize(histogramSize, 0);
+
 	for(int j = 0; j < pcFrameSize; j++)
 	{
 		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++)
@@ -3802,6 +3913,15 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 			int lineIndex = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmVerticalIndex;
 			double distance_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmDistance * distance_bin - distance_offset[lineIndex];
 			if( distance_m < 0.0) continue;
+			int locIndex = -1;
+			for(int i = 0; i < rangeSegV.size(); i++){
+				if(distance_m <= rangeSegV[i]) {
+					locIndex = i;
+					break;
+				}
+			}
+			if(locIndex < 0 && rangeSegV.size() > 0) locIndex = rangeSegV.size() - 1;
+
 			if(mode == "range"){
 				if(distance_m < minPcValue_ || distance_m > maxPcValue_)continue;
 				int index_r = (distance_m - minPcValue_) / interval_;
@@ -3809,11 +3929,16 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 				statistcHistogramV[index_r]++;
 			}		
 			double speed_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmSpeed * speed_bin;
-			if(mode == "speed"){
-				if(speed_m < minPcValue_ || speed_m > maxPcValue_)continue;
+			if(modeFilter_ & filterMode::SPEED_F){
+/* 				if(speed_m < minPcValue_ || speed_m > maxPcValue_)continue;
 				int index_s = (speed_m - minPcValue_) / interval_;
 				if(index_s >= histogramSize) index_s = histogramSize - 1;
-				statistcHistogramV[index_s]++;
+				statistcHistogramV[index_s]++; */
+				if(locIndex < 0) continue;
+				if(speed_m < minPcValueSpeedV_[locIndex] || speed_m > maxPcValueSpeedV_[locIndex])continue;
+				int index_s = (speed_m - minPcValueSpeedV_[locIndex]) / intervalSpeedV_[locIndex];
+				if(index_s >= shSpeedVV[locIndex].size()) index_s = shSpeedVV[locIndex].size() - 1;
+				shSpeedVV[locIndex][index_s]++;
 			}
 			int  indensity_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity;
 			if(mode == "intensity"){
@@ -3949,7 +4074,7 @@ void viewpanel::pcDataProc()
 	QString strColor = colorCombo->currentText();
 	QString modeFilter = filterCombo->currentText();
 	threshold_ = thresholdValue_edit->text().toInt();
-	if(modeFilter != "bypass") pcDataFindMaxMin(pmsg);
+	if(modeFilter_ != BYPASS) pcDataFindMaxMin(pmsg);
 	udpPcMsg_free_buf_queue.put(pmsg);
 	double distance_m, vertical_m, intensity_m, speed_m;
 	int chan_id_m, index_rgb;
@@ -3991,16 +4116,32 @@ void viewpanel::pcDataProc()
 		int lineIndex = oneFrame360.pcDataOneFrame[j].pcmVerticalIndex;
 		if(lineIndex > 15 || lineIndex < 0 ) continue;
 		if(!checkPCShowV[lineIndex]->isChecked()) continue;
+		distance_m = oneFrame360.pcDataOneFrame[j].pcmDistance * distance_bin - distance_offset[lineIndex];
+		if(distance_m < 0.0) continue;
+
+		int locIndex = -1;
+		for(int i = 0; i < rangeSegV.size(); i++){
+			if(distance_m <= rangeSegV[i]) {
+				locIndex = i;
+				break;
+			}
+		}
+		if(locIndex < 0 && rangeSegV.size() > 0) locIndex = rangeSegV.size() - 1;
+
 		speed_m = oneFrame360.pcDataOneFrame[j].pcmSpeed * speed_bin;
-		if(modeFilter == "speed"){
-			if(speed_m > maxPcValue_ || speed_m < minPcValue_) continue;
+		if(modeFilter_ & filterMode::SPEED_F){
+/* 			if(speed_m > maxPcValue_ || speed_m < minPcValue_) continue;
 			int index_i = (int)((speed_m - minPcValue_) / interval_);
 			if(index_i >= statistcHistogramV.size()) index_i =  statistcHistogramV.size() - 1;
-			if(statistcHistogramV[index_i] < threshold_) continue;
+			if(statistcHistogramV[index_i] < threshold_) continue; */
+			if(locIndex < 0) continue;
+			if(speed_m < minPcValueSpeedV_[locIndex] || speed_m > maxPcValueSpeedV_[locIndex]) continue;
+			int index_s = (speed_m - minPcValueSpeedV_[locIndex]) / intervalSpeedV_[locIndex];
+			if(index_s >= shSpeedVV[locIndex].size()) index_s = shSpeedVV[locIndex].size() - 1;
+			if(shSpeedVV[locIndex][index_s] < thresholdSpeedV_[locIndex]) continue;
 		}
 		vertical_m = fov_vertical[lineIndex];
 		chan_id_m = lineIndex / 4 + 1;
-		distance_m = oneFrame360.pcDataOneFrame[j].pcmDistance * distance_bin - distance_offset[lineIndex];
 		if(modeFilter == "range"){
 			if(distance_m > maxPcValue_ || distance_m < minPcValue_) continue;
 			int index_i = (int)((distance_m - minPcValue_) / interval_);
@@ -4020,7 +4161,6 @@ void viewpanel::pcDataProc()
 			<< vertical_m << ", " << horizontal_m << "," << oneFrame360.frameCounter[j] <<  "\n";
 		}
 #endif
-		if(distance_m < 0.0) continue;
 		realSize++;
 		cloud.points[j].vertical = vertical_m;
 		cloud.points[j].horizontal = horizontal_m;
@@ -4670,6 +4810,24 @@ void viewpanel::load_settings()
 	motor_port_ = settings.value("TCP Motor Port","5001").toString();
 }
 
+void viewpanel::load_SF_settings()
+{
+	QSettings settings(QCoreApplication::organizationName(),
+		QCoreApplication::applicationName());
+
+	for(int i = 0; i < sfParaSpeedEditV.size(); i++){
+		if(sfParaSpeedEditV[i]) sfParaSpeedEditV[i]->setText(settings.value("sf para " + QString::number(i)).toString()); 
+	}
+
+	for(int i = 0; i < rangeSegmentEditV.size(); i++){
+		if(rangeSegmentEditV[i]) rangeSegmentEditV[i]->setText(settings.value("range seg " + QString::number(i)).toString()); 
+	}
+
+	for(int i = 0; i < checkSfWorkV.size(); i++){
+		if(checkSfWorkV[i]) checkSfWorkV[i]->setChecked(settings.value("sf mode " + QString::number(i), false).toBool()); 
+	}
+}
+
 void viewpanel:: readMotorItemsFile()
 {
 	//qDebug() <<  QCoreApplication::applicationDirPath();
@@ -4749,6 +4907,21 @@ void viewpanel:: motorInfoShow(uint8_t *ptr, int datalen)
 	frame_index++;
 }
 
+
+void viewpanel::save_SF_settings(void )
+{
+	QSettings settings(QCoreApplication::organizationName(),
+		QCoreApplication::applicationName());
+	for(int i = 0; i < sfParaSpeedEditV.size(); i++){
+		settings.setValue("sf para " + QString::number(i), sfParaSpeedEditV[i]->text());
+	}
+	for(int i = 0; i < rangeSegmentEditV.size(); i++){
+		settings.setValue("range seg " + QString::number(i), rangeSegmentEditV[i]->text());
+	}
+	for(int i = 0; i < checkSfWorkV.size(); i++){
+		settings.setValue("sf mode " + QString::number(i), checkSfWorkV[i]->isChecked());
+	}
+}
 void viewpanel::save_settings(void )
 {
 	ROS_INFO(L_GREEN"enter save_settings"NONE_COLOR);
