@@ -918,6 +918,14 @@ int main(int argc, char** argv)
 
     const char *cali_file_path = "/home/encheng/data/data_test_raw_index0.bin";
     int  filesize = LoadDat(cali_file_path);
+    std::map<int, int> maptest;
+    maptest[0]++;
+    maptest[11] = 20;
+    maptest[3] = 9;
+    maptest[66] = 17;
+    auto func = [](pair<char, int> left, pair<char,int> right) {return left.second < right.second;};
+    auto it_map = std::max_element(maptest.begin(), maptest.end(), func);
+    std::cout << it_map->first << ", " << it_map->second << std::endl;
 /*     std::pair<int, std::string> tp0 = std::make_pair(1, "hello");
     std::cout << std::get<0>(tp0) << std::get<1>(tp0)  << std::endl; */
 /*     std::chrono::duration<double> elapsed;

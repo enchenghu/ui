@@ -474,6 +474,7 @@ class viewpanel : public QTabWidget {
   QWidget* fullScreenWidget;
   QDockWidget* pcOffsetDock;
   QWidget* pcOffsetDockWidget;
+  QSlider* colorSlider;
   std::vector<QPushButton*> ctlWriteBtn_;
   std::vector<QPushButton*> ctlReadBtn_;
   std::vector<QLineEdit*> ctlReadLine_;
@@ -531,7 +532,7 @@ class viewpanel : public QTabWidget {
   std::vector<double> intervalSpeedV_;
   std::vector<int> thresholdSpeedV_;
   std::vector<QString> sfPara;
-
+  std::map<uint32_t, int> intenNumMap;
 
   SystemMonitor* systemMonitor_m;
   int modeFilter_;

@@ -1,0 +1,8 @@
+prefix=/home/encheng/code_ui/ui/ui/devel
+
+Name: autox_ui
+Description: Description of autox_ui
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib -limage_radar_driver
+Requires: message_runtime roscpp

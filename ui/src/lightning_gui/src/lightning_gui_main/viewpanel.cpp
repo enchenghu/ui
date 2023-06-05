@@ -1964,6 +1964,10 @@ void viewpanel::CreatPCWindow()
 	axes_size_edit->setFixedSize(70,25);
 	axes_size_edit->setText(QString::number(axes_size));
 
+	colorSlider = new QSlider( Qt::Horizontal );
+	colorSlider->setMinimum( 1 );
+	colorSlider->setMaximum( 100 );
+
 	QLabel* color_by_label = new QLabel( "color by" );
 	//QFrame* hframe = new QFrame(this);
 	QFrame* vframe = new QFrame(this);
@@ -2010,6 +2014,9 @@ void viewpanel::CreatPCWindow()
 	controls_layout->addWidget( point_size_interval_edit, 0, 19, Qt::AlignLeft);	
 	controls_layout->addWidget( speed_critical_label, 2, 18, Qt::AlignRight);
 	controls_layout->addWidget( speed_critical_edit, 2, 19, Qt::AlignLeft);	
+
+	controls_layout->addWidget( new QLabel("color bar"), 3, 18, Qt::AlignRight);
+	controls_layout->addWidget( colorSlider, 3, 19, Qt::AlignLeft);	
 
 	//controls_layout->addWidget( new QLabel("max value"), 3, 18, Qt::AlignRight);	
 	maxPcValue_edit = new QLineEdit;
@@ -3893,12 +3900,12 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 	minPcValue_ = 0.0;
 	QString mode = filterCombo->currentText();
 	histogramSize = size_c;
-	if(mode == "speed"){
+	if(modeFilter_ & filterMode::SPEED_F){
 		histogramSize = size_c * 2;
 		minPcValue_ = - maxPcValue_;
 
 		for(int i = 0; i < maxPcValueSpeedV_.size(); i++){
-			minPcValueSpeedV_.push_back(-maxPcValueSpeedV_[i]);
+			minPcValueSpeedV_[i] = (-maxPcValueSpeedV_[i]);
 		}
 
 	}
