@@ -4,6 +4,7 @@ ui/BUILD/
 ui/log/
 ui/.catkin_workspace 
 ui/tmp/
+ui/devel/
 ui/.vscode
 ui/core*
 ui/shortCut/*.boot
