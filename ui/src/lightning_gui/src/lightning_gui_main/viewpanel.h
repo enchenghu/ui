@@ -153,6 +153,7 @@ class viewpanel : public QTabWidget {
   void pcOneFramePure();
   void filterChange();
   void colorInfoChange();
+  void colorBarChange( int );
 
   void pcChSelect();
 
@@ -349,6 +350,9 @@ class viewpanel : public QTabWidget {
 	std::vector<QLineEdit*> showInfoEditV;
 	std::vector<QLineEdit*> rangeSegmentEditV;
 	std::vector<QLineEdit*> sfParaSpeedEditV;
+	std::vector<QLineEdit*> sfParaIntenEditV;
+	std::vector<QLineEdit*> sfParaRangeEditV;
+
   QLineEdit* rotate_angle_edit;
   QLineEdit* speed_critical_edit;
   QLineEdit* maxPcValue_edit;

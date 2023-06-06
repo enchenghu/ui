@@ -1967,6 +1967,8 @@ void viewpanel::CreatPCWindow()
 	colorSlider = new QSlider( Qt::Horizontal );
 	colorSlider->setMinimum( 1 );
 	colorSlider->setMaximum( 100 );
+	colorSlider->setValue( 10 );
+	colorSlider->setTickPosition(QSlider::TicksBelow); 
 
 	QLabel* color_by_label = new QLabel( "color by" );
 	//QFrame* hframe = new QFrame(this);
@@ -2187,6 +2189,8 @@ void viewpanel::ConfigFilterDialog()
 	checkSfWorkV.clear();
 	rangeSegmentEditV.clear();
 	sfParaSpeedEditV.clear();
+	sfParaRangeEditV.clear();
+	sfParaIntenEditV.clear();
 	QPushButton *configBtn = new QPushButton("&Config");
 	QPushButton *saveBtnsf = new QPushButton("&Save Config");
 	setButtonStyle(configBtn);
@@ -2195,8 +2199,12 @@ void viewpanel::ConfigFilterDialog()
 		checkSfWorkV.push_back(new QCheckBox(sfString[i]));
 	for(int i = 0; i < 3; i++)
 		rangeSegmentEditV.emplace_back(new QLineEdit);
-	for(int i = 0; i < 9; i++)
+	for(int i = 0; i < 9; i++){
 		sfParaSpeedEditV.emplace_back(new QLineEdit);
+		sfParaIntenEditV.emplace_back(new QLineEdit);
+	}
+	for(int i = 0; i < 5; i++)
+		sfParaRangeEditV.emplace_back(new QLineEdit);
 	
 	load_SF_settings();
 
@@ -2207,8 +2215,14 @@ void viewpanel::ConfigFilterDialog()
 	for(int i = 0; i < 3; i++){
 		for(int j = 0; j < 3; j++){
 			sfBoxLayout->addWidget(sfParaSpeedEditV[i * 3 + j], 3 + i, 1 + j, Qt::AlignHCenter| Qt::AlignTop);
+			//sfBoxLayout->addWidget(sfParaIntenEditV[i * 3 + j], 9 + i, 1 + j, Qt::AlignHCenter| Qt::AlignTop);
 		}
 	}
+/* 	for(int j = 0; j < 3; j++){
+		sfBoxLayout->addWidget(sfParaRangeEditV[j], 6, 1 + j, Qt::AlignHCenter| Qt::AlignTop);
+	}
+	sfBoxLayout->addWidget(sfParaRangeEditV[3], 7, 3, Qt::AlignHCenter| Qt::AlignTop);
+	sfBoxLayout->addWidget(sfParaRangeEditV[4], 8, 3, Qt::AlignHCenter| Qt::AlignTop); */
 
 	sfBoxLayout->addWidget(new QLabel("最大值"), 2, 1, Qt::AlignHCenter | Qt::AlignTop);
 	sfBoxLayout->addWidget(new QLabel("间隔"), 2, 2, Qt::AlignHCenter | Qt::AlignTop);
@@ -2216,6 +2230,13 @@ void viewpanel::ConfigFilterDialog()
 	sfBoxLayout->addWidget(new QLabel("分段0速度"), 3, 0, Qt::AlignHCenter | Qt::AlignTop);
 	sfBoxLayout->addWidget(new QLabel("分段1速度"), 4, 0, Qt::AlignHCenter | Qt::AlignTop);
 	sfBoxLayout->addWidget(new QLabel("分段2速度"), 5, 0, Qt::AlignHCenter | Qt::AlignTop);
+	
+/* 	sfBoxLayout->addWidget(new QLabel("分段0距离"), 6, 0, Qt::AlignHCenter | Qt::AlignTop);
+	sfBoxLayout->addWidget(new QLabel("分段1距离"), 7, 0, Qt::AlignHCenter | Qt::AlignTop);
+	sfBoxLayout->addWidget(new QLabel("分段2距离"), 8, 0, Qt::AlignHCenter | Qt::AlignTop);
+	sfBoxLayout->addWidget(new QLabel("分段0强度"), 9, 0, Qt::AlignHCenter | Qt::AlignTop);
+	sfBoxLayout->addWidget(new QLabel("分段1强度"), 10, 0, Qt::AlignHCenter | Qt::AlignTop);
+	sfBoxLayout->addWidget(new QLabel("分段2强度"), 11, 0, Qt::AlignHCenter | Qt::AlignTop); */
 
 	sfBox->setLayout(sfBoxLayout);
 	mainLayout->addWidget(sfBox, 0, 0, Qt::AlignLeft);
@@ -2715,8 +2736,25 @@ void viewpanel::pcRecord(){
 void viewpanel::colorInfoChange()
 {
 	showInfoEditV[0]->setText(colorCombo->currentText());
-	//showInfoEditV[0]->setStyleSheet("QLineEdit{color:rgb(255, 255, 0);}");
+	QString mode = colorCombo->currentText();
+	if(mode == "range"){
+		colorSlider->setMinimum( 1 );
+		colorSlider->setMaximum( 100 );
+		colorSlider->setValue(10);
+		colorSlider->setSingleStep(10);		
+	} else if(mode == "intensity"){
+		colorSlider->setMinimum( 1 );
+		colorSlider->setMaximum( 100000 );
+		colorSlider->setValue(60000);	
+		colorSlider->setSingleStep(10000);		
+	}
 }
+
+void viewpanel::colorBarChange(int value)
+{
+
+}
+
 void viewpanel::filterChange()
 {
 	int cmd = filter_Combo->currentIndex();
@@ -3884,6 +3922,9 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 
 	std::vector<int> hSpeedSize;
 	minPcValueSpeedV_.clear();
+
+	if(maxPcValueSpeedV_.empty() || intervalSpeedV_.empty() || thresholdSpeedV_.empty()) return;
+
 	for(int i = 0; i < maxPcValueSpeedV_.size(); i++){
 		if(intervalSpeedV_[i] == 0.0) intervalSpeedV_[i] = 0.1;
 		hSpeedSize.push_back((int)(maxPcValueSpeedV_[i] / intervalSpeedV_[i]));
@@ -3903,9 +3944,8 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 	interval_ = intervalPcValue_edit->text().toDouble();
 	if(interval_ == 0.0) interval_ = 0.1;
 	int size_c = maxPcValue_ / interval_;
-	ROS_INFO("size_c is %d", size_c);
 	minPcValue_ = 0.0;
-	QString mode = filterCombo->currentText();
+	QString mode = "";
 	histogramSize = size_c;
 	if(modeFilter_ & filterMode::SPEED_F){
 		histogramSize = size_c * 2;
@@ -3964,9 +4004,9 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 			if(speed_max < speed_m )speed_max = speed_m;
 		}
 	}
-	std::cout << "distance_min: " << distance_min << " distance_max: " << distance_max \
+/* 	std::cout << "distance_min: " << distance_min << " distance_max: " << distance_max \
 	<< " indensity_min: " << indensity_min << " indensity_max: " << indensity_max << " speed_min: " << speed_min \ 
-	<< " speed_max: " << speed_max << std::endl; 
+	<< " speed_max: " << speed_max << std::endl;  */
 }
 
 void viewpanel::pcDataProc()
@@ -4079,7 +4119,9 @@ void viewpanel::pcDataProc()
 	speed_critical = speed_critical_edit->text().toDouble();
 	leftAngle_offset = left_angle_edit->text().toDouble();
 	rightAngle_offset = right_angle_edit->text().toDouble();
-	color_base = color_base_edit->text().toDouble();
+	//color_base = color_base_edit->text().toDouble();
+	color_base = colorSlider->value();
+
 	QString strColor = colorCombo->currentText();
 	QString modeFilter = filterCombo->currentText();
 	threshold_ = thresholdValue_edit->text().toInt();
@@ -4114,7 +4156,7 @@ void viewpanel::pcDataProc()
 	}
 #endif
 	pcFrameSize = oneFrame360.pcDataOneFrame.size();
-	std::cout << "pcFrameSize is " << pcFrameSize << std::endl;
+	//std::cout << "pcFrameSize is " << pcFrameSize << std::endl;
 	cloud.points.resize(pcFrameSize);
 	int realSize = 0;
 	for(int j = 0; j < pcFrameSize; j++)
@@ -4143,7 +4185,8 @@ void viewpanel::pcDataProc()
 			int index_i = (int)((speed_m - minPcValue_) / interval_);
 			if(index_i >= statistcHistogramV.size()) index_i =  statistcHistogramV.size() - 1;
 			if(statistcHistogramV[index_i] < threshold_) continue; */
-			if(locIndex < 0) continue;
+			if(locIndex < 0 || minPcValueSpeedV_.empty() || maxPcValueSpeedV_.empty() || \ 
+			intervalSpeedV_.empty() || thresholdSpeedV_.empty() || shSpeedVV.empty()) continue;
 			if(speed_m < minPcValueSpeedV_[locIndex] || speed_m > maxPcValueSpeedV_[locIndex]) continue;
 			int index_s = (speed_m - minPcValueSpeedV_[locIndex]) / intervalSpeedV_[locIndex];
 			if(index_s >= shSpeedVV[locIndex].size()) index_s = shSpeedVV[locIndex].size() - 1;
@@ -4828,6 +4871,14 @@ void viewpanel::load_SF_settings()
 		if(sfParaSpeedEditV[i]) sfParaSpeedEditV[i]->setText(settings.value("sf para " + QString::number(i)).toString()); 
 	}
 
+	for(int i = 0; i < sfParaIntenEditV.size(); i++){
+		if(sfParaIntenEditV[i]) sfParaIntenEditV[i]->setText(settings.value("sf para inten " + QString::number(i)).toString()); 
+	}
+
+	for(int i = 0; i < sfParaRangeEditV.size(); i++){
+		if(sfParaRangeEditV[i]) sfParaRangeEditV[i]->setText(settings.value("sf para range " + QString::number(i)).toString()); 
+	}
+
 	for(int i = 0; i < rangeSegmentEditV.size(); i++){
 		if(rangeSegmentEditV[i]) rangeSegmentEditV[i]->setText(settings.value("range seg " + QString::number(i)).toString()); 
 	}
@@ -4924,6 +4975,15 @@ void viewpanel::save_SF_settings(void )
 	for(int i = 0; i < sfParaSpeedEditV.size(); i++){
 		settings.setValue("sf para " + QString::number(i), sfParaSpeedEditV[i]->text());
 	}
+
+	for(int i = 0; i < sfParaIntenEditV.size(); i++){
+		settings.setValue("sf para inten " + QString::number(i), sfParaIntenEditV[i]->text());
+	}
+
+	for(int i = 0; i < sfParaRangeEditV.size(); i++){
+		settings.setValue("sf para range " + QString::number(i), sfParaRangeEditV[i]->text());
+	}
+
 	for(int i = 0; i < rangeSegmentEditV.size(); i++){
 		settings.setValue("range seg " + QString::number(i), rangeSegmentEditV[i]->text());
 	}
