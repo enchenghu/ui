@@ -3883,10 +3883,17 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 	int histogramSize;
 
 	std::vector<int> hSpeedSize;
+	minPcValueSpeedV_.clear();
 	for(int i = 0; i < maxPcValueSpeedV_.size(); i++){
 		if(intervalSpeedV_[i] == 0.0) intervalSpeedV_[i] = 0.1;
 		hSpeedSize.push_back((int)(maxPcValueSpeedV_[i] / intervalSpeedV_[i]));
 		minPcValueSpeedV_.push_back(0);
+	}
+	if(modeFilter_ & filterMode::SPEED_F){
+		for(int i = 0; i < maxPcValueSpeedV_.size(); i++){
+			minPcValueSpeedV_[i] = (-maxPcValueSpeedV_[i]);
+			hSpeedSize[i] *= 2;
+		}
 	}
 	shSpeedVV.clear();
 	for(auto &it : hSpeedSize)
@@ -3903,11 +3910,6 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 	if(modeFilter_ & filterMode::SPEED_F){
 		histogramSize = size_c * 2;
 		minPcValue_ = - maxPcValue_;
-
-		for(int i = 0; i < maxPcValueSpeedV_.size(); i++){
-			minPcValueSpeedV_[i] = (-maxPcValueSpeedV_[i]);
-		}
-
 	}
 	statistcHistogramV.resize(histogramSize, 0);
 
