@@ -525,6 +525,7 @@ class viewpanel : public QTabWidget {
   std::vector<std::string> wordsVal;   // 声明一个字符串向量
 	std::vector<int> statistcHistogramV;
 	std::vector<std::vector<int>> shSpeedVV;
+	std::vector<int> shRangeV;
   std::vector<int> rangeSegV;
 
   double maxPcValue_;
@@ -532,9 +533,13 @@ class viewpanel : public QTabWidget {
   double interval_;
   int threshold_;
   std::vector<double> maxPcValueSpeedV_;
+  double maxPcValueRange_;
   std::vector<double> minPcValueSpeedV_;
+  double minPcValueRange_;
   std::vector<double> intervalSpeedV_;
+  double intervalRange_;
   std::vector<int> thresholdSpeedV_;
+  std::vector<int> thresholdRangeV_;
   std::vector<QString> sfPara;
   std::map<uint32_t, int> intenNumMap;
 

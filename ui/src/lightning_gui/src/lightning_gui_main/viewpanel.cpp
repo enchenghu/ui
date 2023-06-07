@@ -1989,13 +1989,14 @@ void viewpanel::CreatPCWindow()
 	controls_layout->addWidget( point_size_edit, 0, 17, Qt::AlignLeft);	
 	controls_layout->addWidget( cell_size_label, 1, 16, Qt::AlignRight);
 	controls_layout->addWidget( cell_size_edit, 1, 17, Qt::AlignLeft);	
-	controls_layout->addWidget( color_base_label, 2, 16, Qt::AlignRight);
-	controls_layout->addWidget( color_base_edit, 2, 17, Qt::AlignLeft);	
-	controls_layout->addWidget( axes_size_label, 3, 16, Qt::AlignRight);	
-	controls_layout->addWidget( axes_size_edit, 3, 17, Qt::AlignLeft);	
-	controls_layout->addWidget( color_by_label, 4, 16, Qt::AlignRight);	
-	controls_layout->addWidget( colorCombo, 4, 17, Qt::AlignLeft);
-
+	//controls_layout->addWidget( color_base_label, 2, 16, Qt::AlignRight);
+	//controls_layout->addWidget( color_base_edit, 2, 17, Qt::AlignLeft);	
+	controls_layout->addWidget( axes_size_label, 2, 16, Qt::AlignRight);	
+	controls_layout->addWidget( axes_size_edit, 2, 17, Qt::AlignLeft);	
+	controls_layout->addWidget( color_by_label, 3, 16, Qt::AlignRight);	
+	controls_layout->addWidget( colorCombo, 3, 17, Qt::AlignLeft);
+	controls_layout->addWidget( new QLabel("color bar"), 4, 16, Qt::AlignRight);
+	controls_layout->addWidget( colorSlider, 4, 17, Qt::AlignLeft);	
 	//controls_layout->addWidget( new QLabel("S Filter by"), 5, 16, Qt::AlignRight);	
 	filterCombo = new QComboBox;
 	filterCombo->setFixedSize(90,25);
@@ -2017,8 +2018,7 @@ void viewpanel::CreatPCWindow()
 	controls_layout->addWidget( speed_critical_label, 2, 18, Qt::AlignRight);
 	controls_layout->addWidget( speed_critical_edit, 2, 19, Qt::AlignLeft);	
 
-	controls_layout->addWidget( new QLabel("color bar"), 3, 18, Qt::AlignRight);
-	controls_layout->addWidget( colorSlider, 3, 19, Qt::AlignLeft);	
+
 
 	//controls_layout->addWidget( new QLabel("max value"), 3, 18, Qt::AlignRight);	
 	maxPcValue_edit = new QLineEdit;
@@ -2151,6 +2151,7 @@ void viewpanel::ConfigFilterWork()
 	maxPcValueSpeedV_.clear();
 	intervalSpeedV_.clear();
 	thresholdSpeedV_.clear();
+	thresholdRangeV_.clear();
 	int flage = 0;
 	modeFilter_ = filterMode::BYPASS;
 	for(int i = 0; i < rangeSegmentEditV.size(); i++){
@@ -2164,10 +2165,15 @@ void viewpanel::ConfigFilterWork()
 		intervalSpeedV_.push_back(sfParaSpeedEditV[i * 3 + 1]->text().toDouble());
 		thresholdSpeedV_.push_back(sfParaSpeedEditV[i * 3 + 2]->text().toInt());
 	}
+	maxPcValueRange_ = sfParaRangeEditV[0]->text().toDouble();
+	intervalRange_ = sfParaRangeEditV[1]->text().toDouble();
+	for(int i =0; i < 3; i++){
+		thresholdRangeV_.push_back(sfParaRangeEditV[i + 2]->text().toInt());
+	}
 
 	for(int i = 0; i < checkSfWorkV.size(); i++){
 		if(checkSfWorkV[i]->isChecked()){
-			flage = 0x1 << i;
+			flage = 0x1 << (i * 4);
 			modeFilter_ += flage;
 		}
 	}
@@ -2215,14 +2221,14 @@ void viewpanel::ConfigFilterDialog()
 	for(int i = 0; i < 3; i++){
 		for(int j = 0; j < 3; j++){
 			sfBoxLayout->addWidget(sfParaSpeedEditV[i * 3 + j], 3 + i, 1 + j, Qt::AlignHCenter| Qt::AlignTop);
-			//sfBoxLayout->addWidget(sfParaIntenEditV[i * 3 + j], 9 + i, 1 + j, Qt::AlignHCenter| Qt::AlignTop);
+			sfBoxLayout->addWidget(sfParaIntenEditV[i * 3 + j], 9 + i, 1 + j, Qt::AlignHCenter| Qt::AlignTop);
 		}
 	}
-/* 	for(int j = 0; j < 3; j++){
+	for(int j = 0; j < 3; j++){
 		sfBoxLayout->addWidget(sfParaRangeEditV[j], 6, 1 + j, Qt::AlignHCenter| Qt::AlignTop);
 	}
 	sfBoxLayout->addWidget(sfParaRangeEditV[3], 7, 3, Qt::AlignHCenter| Qt::AlignTop);
-	sfBoxLayout->addWidget(sfParaRangeEditV[4], 8, 3, Qt::AlignHCenter| Qt::AlignTop); */
+	sfBoxLayout->addWidget(sfParaRangeEditV[4], 8, 3, Qt::AlignHCenter| Qt::AlignTop);
 
 	sfBoxLayout->addWidget(new QLabel("最大值"), 2, 1, Qt::AlignHCenter | Qt::AlignTop);
 	sfBoxLayout->addWidget(new QLabel("间隔"), 2, 2, Qt::AlignHCenter | Qt::AlignTop);
@@ -2231,12 +2237,12 @@ void viewpanel::ConfigFilterDialog()
 	sfBoxLayout->addWidget(new QLabel("分段1速度"), 4, 0, Qt::AlignHCenter | Qt::AlignTop);
 	sfBoxLayout->addWidget(new QLabel("分段2速度"), 5, 0, Qt::AlignHCenter | Qt::AlignTop);
 	
-/* 	sfBoxLayout->addWidget(new QLabel("分段0距离"), 6, 0, Qt::AlignHCenter | Qt::AlignTop);
+	sfBoxLayout->addWidget(new QLabel("分段0距离"), 6, 0, Qt::AlignHCenter | Qt::AlignTop);
 	sfBoxLayout->addWidget(new QLabel("分段1距离"), 7, 0, Qt::AlignHCenter | Qt::AlignTop);
 	sfBoxLayout->addWidget(new QLabel("分段2距离"), 8, 0, Qt::AlignHCenter | Qt::AlignTop);
 	sfBoxLayout->addWidget(new QLabel("分段0强度"), 9, 0, Qt::AlignHCenter | Qt::AlignTop);
 	sfBoxLayout->addWidget(new QLabel("分段1强度"), 10, 0, Qt::AlignHCenter | Qt::AlignTop);
-	sfBoxLayout->addWidget(new QLabel("分段2强度"), 11, 0, Qt::AlignHCenter | Qt::AlignTop); */
+	sfBoxLayout->addWidget(new QLabel("分段2强度"), 11, 0, Qt::AlignHCenter | Qt::AlignTop);
 
 	sfBox->setLayout(sfBoxLayout);
 	mainLayout->addWidget(sfBox, 0, 0, Qt::AlignLeft);
@@ -2388,7 +2394,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	static long findex = 0;
 	int chanID = 0;
 	QString str_power = PowerCombo->currentText();
-#if 0
+#if 1
 	std::string datPath;
 	datPath = save_folder_.toStdString() + "/data_test_raw_index" + std::to_string(findex++) +".bin";
 	ROS_INFO("datPath is %s \n", datPath.c_str());
@@ -3919,24 +3925,31 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 	speed_max = 0.0;
 	int pcFrameSize = pmsg->pcDataOneFrame.size();
 	int histogramSize;
-
+	shSpeedVV.clear();
+	shRangeV.clear();
 	std::vector<int> hSpeedSize;
+	int hRangeSize = 0;
 	minPcValueSpeedV_.clear();
-
-	if(maxPcValueSpeedV_.empty() || intervalSpeedV_.empty() || thresholdSpeedV_.empty()) return;
+	minPcValueRange_ = 0.0;
+	if(maxPcValueSpeedV_.empty() || intervalSpeedV_.empty() || thresholdSpeedV_.empty() || thresholdRangeV_.empty()) return;
 
 	for(int i = 0; i < maxPcValueSpeedV_.size(); i++){
 		if(intervalSpeedV_[i] == 0.0) intervalSpeedV_[i] = 0.1;
 		hSpeedSize.push_back((int)(maxPcValueSpeedV_[i] / intervalSpeedV_[i]));
 		minPcValueSpeedV_.push_back(0);
 	}
+
+	if(intervalRange_ == 0.0) intervalRange_ = 0.1;
+	hRangeSize = maxPcValueRange_ / intervalRange_;
+	shRangeV.resize(hRangeSize, 0);
+
 	if(modeFilter_ & filterMode::SPEED_F){
 		for(int i = 0; i < maxPcValueSpeedV_.size(); i++){
 			minPcValueSpeedV_[i] = (-maxPcValueSpeedV_[i]);
 			hSpeedSize[i] *= 2;
 		}
 	}
-	shSpeedVV.clear();
+
 	for(auto &it : hSpeedSize)
 		shSpeedVV.emplace_back(it, 0);
 	
@@ -3951,6 +3964,7 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 		histogramSize = size_c * 2;
 		minPcValue_ = - maxPcValue_;
 	}
+	std::cout << "modeFilter_: " << modeFilter_ << std::endl;
 	statistcHistogramV.resize(histogramSize, 0);
 
 	for(int j = 0; j < pcFrameSize; j++)
@@ -3971,18 +3985,14 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 			}
 			if(locIndex < 0 && rangeSegV.size() > 0) locIndex = rangeSegV.size() - 1;
 
-			if(mode == "range"){
-				if(distance_m < minPcValue_ || distance_m > maxPcValue_)continue;
-				int index_r = (distance_m - minPcValue_) / interval_;
-				if(index_r >= histogramSize) index_r = histogramSize - 1;
-				statistcHistogramV[index_r]++;
+			if(modeFilter_ & filterMode::RANGE_F){
+				if(distance_m < minPcValueRange_ || distance_m > maxPcValueRange_) continue;
+				int index_r = (distance_m - minPcValueRange_) / intervalRange_;
+				if(index_r >= hRangeSize) index_r = hRangeSize - 1;
+				shRangeV[index_r]++;
 			}		
 			double speed_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmSpeed * speed_bin;
 			if(modeFilter_ & filterMode::SPEED_F){
-/* 				if(speed_m < minPcValue_ || speed_m > maxPcValue_)continue;
-				int index_s = (speed_m - minPcValue_) / interval_;
-				if(index_s >= histogramSize) index_s = histogramSize - 1;
-				statistcHistogramV[index_s]++; */
 				if(locIndex < 0) continue;
 				if(speed_m < minPcValueSpeedV_[locIndex] || speed_m > maxPcValueSpeedV_[locIndex])continue;
 				int index_s = (speed_m - minPcValueSpeedV_[locIndex]) / intervalSpeedV_[locIndex];
@@ -4181,10 +4191,6 @@ void viewpanel::pcDataProc()
 
 		speed_m = oneFrame360.pcDataOneFrame[j].pcmSpeed * speed_bin;
 		if(modeFilter_ & filterMode::SPEED_F){
-/* 			if(speed_m > maxPcValue_ || speed_m < minPcValue_) continue;
-			int index_i = (int)((speed_m - minPcValue_) / interval_);
-			if(index_i >= statistcHistogramV.size()) index_i =  statistcHistogramV.size() - 1;
-			if(statistcHistogramV[index_i] < threshold_) continue; */
 			if(locIndex < 0 || minPcValueSpeedV_.empty() || maxPcValueSpeedV_.empty() || \ 
 			intervalSpeedV_.empty() || thresholdSpeedV_.empty() || shSpeedVV.empty()) continue;
 			if(speed_m < minPcValueSpeedV_[locIndex] || speed_m > maxPcValueSpeedV_[locIndex]) continue;
@@ -4194,11 +4200,12 @@ void viewpanel::pcDataProc()
 		}
 		vertical_m = fov_vertical[lineIndex];
 		chan_id_m = lineIndex / 4 + 1;
-		if(modeFilter == "range"){
-			if(distance_m > maxPcValue_ || distance_m < minPcValue_) continue;
-			int index_i = (int)((distance_m - minPcValue_) / interval_);
-			if(index_i >= statistcHistogramV.size()) index_i =  statistcHistogramV.size() - 1;
-			if(statistcHistogramV[index_i] < threshold_) continue;
+		if(modeFilter_ & filterMode::RANGE_F){
+			if(locIndex < 0 || thresholdRangeV_.empty() || shRangeV.empty()) continue;
+			if(distance_m > maxPcValueRange_) continue;
+			int index_i = (int)((distance_m) / intervalRange_);
+			if(index_i >= shRangeV.size()) index_i =  shRangeV.size() - 1;
+			if(shRangeV[index_i] < thresholdRangeV_[locIndex]) continue;
 		}
 		intensity_m = oneFrame360.pcDataOneFrame[j].pcmIndensity;
 		if(modeFilter == "intensity"){
