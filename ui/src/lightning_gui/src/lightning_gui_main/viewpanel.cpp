@@ -2005,7 +2005,6 @@ void viewpanel::CreatPCWindow()
 	filterCombo->addItem(tr("intensity"));
 	filterCombo->addItem(tr("bypass"));
 	filterCombo->setCurrentIndex(3);
-	//controls_layout->addWidget( filterCombo, 5, 17, Qt::AlignLeft);		
 	controls_layout->addWidget( savePCCombo, 3, 3, Qt::AlignLeft);	
 	savePCCombo->setFixedSize(70, 25);	
 	controls_layout->addWidget( pcBWBtn, 3, 15, Qt::AlignLeft);
@@ -2018,29 +2017,8 @@ void viewpanel::CreatPCWindow()
 	controls_layout->addWidget( speed_critical_label, 2, 18, Qt::AlignRight);
 	controls_layout->addWidget( speed_critical_edit, 2, 19, Qt::AlignLeft);	
 
-
-
-	//controls_layout->addWidget( new QLabel("max value"), 3, 18, Qt::AlignRight);	
-	maxPcValue_edit = new QLineEdit;
-	maxPcValue_edit->setFixedSize(70, 25);	
-	maxPcValue_edit->setText(QString::number(100));
-	//controls_layout->addWidget( maxPcValue_edit, 3, 19, Qt::AlignLeft);	
-
-	//controls_layout->addWidget( new QLabel("value interval"), 4, 18, Qt::AlignRight);	
-	intervalPcValue_edit = new QLineEdit;
-	intervalPcValue_edit->setFixedSize(70, 25);	
-	intervalPcValue_edit->setText(QString::number(1));
-	//controls_layout->addWidget( intervalPcValue_edit, 4, 19, Qt::AlignLeft);	
-
-	//controls_layout->addWidget( new QLabel("threshold"), 5, 18, Qt::AlignRight);	
-	thresholdValue_edit = new QLineEdit;
-	thresholdValue_edit->setFixedSize(70, 25);	
-	thresholdValue_edit->setText(QString::number(10));
-	//controls_layout->addWidget( thresholdValue_edit, 5, 19, Qt::AlignLeft);
-
 	selectAll = new QCheckBox("&Select Ch All/None");
 	selectAll->setChecked(true);
-	//controls_layout->addWidget( selectAll, 4, 19, Qt::AlignRight);
 
 	controlsBox->setLayout(controls_layout);
 	QGroupBox *stateShowBox  = new QGroupBox(tr("State Conditon:"));
@@ -2149,9 +2127,15 @@ void viewpanel::ConfigFilterWork()
 {
 	rangeSegV.clear();
 	maxPcValueSpeedV_.clear();
+	maxPcValueIntenV_.clear();
+
 	intervalSpeedV_.clear();
+	intervalIntenV_.clear();
+
 	thresholdSpeedV_.clear();
 	thresholdRangeV_.clear();
+	thresholdIntenV_.clear();
+
 	int flage = 0;
 	modeFilter_ = filterMode::BYPASS;
 	for(int i = 0; i < rangeSegmentEditV.size(); i++){
@@ -2165,6 +2149,13 @@ void viewpanel::ConfigFilterWork()
 		intervalSpeedV_.push_back(sfParaSpeedEditV[i * 3 + 1]->text().toDouble());
 		thresholdSpeedV_.push_back(sfParaSpeedEditV[i * 3 + 2]->text().toInt());
 	}
+
+	for(int i = 0; i < sfParaIntenEditV.size() / 3; i++){
+		maxPcValueIntenV_.push_back(sfParaIntenEditV[i * 3]->text().toDouble());
+		intervalIntenV_.push_back(sfParaIntenEditV[i * 3 + 1]->text().toDouble());
+		thresholdIntenV_.push_back(sfParaIntenEditV[i * 3 + 2]->text().toInt());
+	}
+
 	maxPcValueRange_ = sfParaRangeEditV[0]->text().toDouble();
 	intervalRange_ = sfParaRangeEditV[1]->text().toDouble();
 	for(int i =0; i < 3; i++){
@@ -3924,48 +3915,37 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 	speed_min = 0.0;
 	speed_max = 0.0;
 	int pcFrameSize = pmsg->pcDataOneFrame.size();
-	int histogramSize;
 	shSpeedVV.clear();
 	shRangeV.clear();
+	shIntenVV.clear();
 	std::vector<int> hSpeedSize;
+	std::vector<int> hIntenSize;
 	int hRangeSize = 0;
 	minPcValueSpeedV_.clear();
 	minPcValueRange_ = 0.0;
 	if(maxPcValueSpeedV_.empty() || intervalSpeedV_.empty() || thresholdSpeedV_.empty() || thresholdRangeV_.empty()) return;
+	if(maxPcValueIntenV_.empty() || intervalIntenV_.empty() || thresholdIntenV_.empty()) return;
 
 	for(int i = 0; i < maxPcValueSpeedV_.size(); i++){
 		if(intervalSpeedV_[i] == 0.0) intervalSpeedV_[i] = 0.1;
-		hSpeedSize.push_back((int)(maxPcValueSpeedV_[i] / intervalSpeedV_[i]));
-		minPcValueSpeedV_.push_back(0);
+		hSpeedSize.push_back((int)(maxPcValueSpeedV_[i] / intervalSpeedV_[i]) * 2);
+		minPcValueSpeedV_.push_back((-maxPcValueSpeedV_[i]));
 	}
+	for(auto &it : hSpeedSize)
+		shSpeedVV.emplace_back(it, 0);
+
+	for(int i = 0; i < maxPcValueIntenV_.size(); i++){
+		if(intervalIntenV_[i] < 10.0) intervalIntenV_[i] = 10.0;
+		hIntenSize.push_back((int)(maxPcValueIntenV_[i] / intervalIntenV_[i]));
+	}
+	for(auto &it : hIntenSize)
+		shIntenVV.emplace_back(it, 0);
 
 	if(intervalRange_ == 0.0) intervalRange_ = 0.1;
 	hRangeSize = maxPcValueRange_ / intervalRange_;
 	shRangeV.resize(hRangeSize, 0);
 
-	if(modeFilter_ & filterMode::SPEED_F){
-		for(int i = 0; i < maxPcValueSpeedV_.size(); i++){
-			minPcValueSpeedV_[i] = (-maxPcValueSpeedV_[i]);
-			hSpeedSize[i] *= 2;
-		}
-	}
-
-	for(auto &it : hSpeedSize)
-		shSpeedVV.emplace_back(it, 0);
-	
-	maxPcValue_ = maxPcValue_edit->text().toDouble();
-	interval_ = intervalPcValue_edit->text().toDouble();
-	if(interval_ == 0.0) interval_ = 0.1;
-	int size_c = maxPcValue_ / interval_;
-	minPcValue_ = 0.0;
-	QString mode = "";
-	histogramSize = size_c;
-	if(modeFilter_ & filterMode::SPEED_F){
-		histogramSize = size_c * 2;
-		minPcValue_ = - maxPcValue_;
-	}
 	std::cout << "modeFilter_: " << modeFilter_ << std::endl;
-	statistcHistogramV.resize(histogramSize, 0);
 
 	for(int j = 0; j < pcFrameSize; j++)
 	{
@@ -3984,27 +3964,26 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 				}
 			}
 			if(locIndex < 0 && rangeSegV.size() > 0) locIndex = rangeSegV.size() - 1;
-
+			if(locIndex < 0) continue;
 			if(modeFilter_ & filterMode::RANGE_F){
-				if(distance_m < minPcValueRange_ || distance_m > maxPcValueRange_) continue;
-				int index_r = (distance_m - minPcValueRange_) / intervalRange_;
+				if(distance_m > maxPcValueRange_) continue;
+				int index_r = (distance_m) / intervalRange_;
 				if(index_r >= hRangeSize) index_r = hRangeSize - 1;
 				shRangeV[index_r]++;
 			}		
 			double speed_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmSpeed * speed_bin;
 			if(modeFilter_ & filterMode::SPEED_F){
-				if(locIndex < 0) continue;
 				if(speed_m < minPcValueSpeedV_[locIndex] || speed_m > maxPcValueSpeedV_[locIndex])continue;
 				int index_s = (speed_m - minPcValueSpeedV_[locIndex]) / intervalSpeedV_[locIndex];
 				if(index_s >= shSpeedVV[locIndex].size()) index_s = shSpeedVV[locIndex].size() - 1;
 				shSpeedVV[locIndex][index_s]++;
 			}
 			int  indensity_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity;
-			if(mode == "intensity"){
-				if(indensity_m < minPcValue_ || indensity_m > maxPcValue_)continue;
-				int index_i = (indensity_m - minPcValue_) / interval_;
-				if(index_i >= histogramSize) index_i = histogramSize - 1;
-				statistcHistogramV[index_i]++;
+			if(modeFilter_ & filterMode::INTEN_F){
+				if(indensity_m > maxPcValueIntenV_[locIndex])continue;
+				int index_s = (indensity_m) / intervalIntenV_[locIndex];
+				if(index_s >= shIntenVV[locIndex].size()) index_s = shIntenVV[locIndex].size() - 1;
+				shIntenVV[locIndex][index_s]++;
 			}
 			if(distance_min > distance_m )distance_min = distance_m;
 			if(distance_max < distance_m )distance_max = distance_m;
@@ -4134,7 +4113,6 @@ void viewpanel::pcDataProc()
 
 	QString strColor = colorCombo->currentText();
 	QString modeFilter = filterCombo->currentText();
-	threshold_ = thresholdValue_edit->text().toInt();
 	if(modeFilter_ != BYPASS) pcDataFindMaxMin(pmsg);
 	udpPcMsg_free_buf_queue.put(pmsg);
 	double distance_m, vertical_m, intensity_m, speed_m;
@@ -4208,11 +4186,12 @@ void viewpanel::pcDataProc()
 			if(shRangeV[index_i] < thresholdRangeV_[locIndex]) continue;
 		}
 		intensity_m = oneFrame360.pcDataOneFrame[j].pcmIndensity;
-		if(modeFilter == "intensity"){
-			if(intensity_m > maxPcValue_ || intensity_m < minPcValue_) continue;
-			int index_i = (int)((intensity_m - minPcValue_) / interval_);
-			if(index_i >= statistcHistogramV.size()) index_i =  statistcHistogramV.size() - 1;
-			if(statistcHistogramV[index_i] < threshold_) continue;
+		if(modeFilter_ & filterMode::INTEN_F){
+			if(locIndex < 0 ||  maxPcValueIntenV_.empty() || intervalIntenV_.empty() || thresholdIntenV_.empty() || shIntenVV.empty()) continue;
+			if(intensity_m > maxPcValueIntenV_[locIndex]) continue;
+			int index_s = (intensity_m) / intervalIntenV_[locIndex];
+			if(index_s >= shIntenVV[locIndex].size()) index_s = shIntenVV[locIndex].size() - 1;
+			if(shIntenVV[locIndex][index_s] < thresholdIntenV_[locIndex]) continue;			
 		}
 #if SINGELE_PC_SAVE
 		if(udpPCSingle_) {
@@ -4272,7 +4251,6 @@ void viewpanel::pcDataProc()
 			cloud.points[j].b = B_V_g[index_rgb];
 		}
 	}
-	statistcHistogramV.clear();
 	ROS_INFO("====PC Show Real Size is %d", realSize);
 #if SINGELE_PC_SAVE
 	csvfile.close();
