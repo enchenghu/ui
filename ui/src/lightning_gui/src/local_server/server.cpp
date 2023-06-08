@@ -27,6 +27,8 @@ using namespace std;
 #define LOG_END << std::endl;
 #define TCP_PC_SIZE 32000
 #define UDP_IP "127.0.0.1"
+ros::Subscriber pc_raw_path_sub;
+
 typedef enum {
     POWER_WRITE                 = 1 ,   // 设置激光器输出功率
     CFAR_WRITE                  = 2 ,   // 设置CFAR
@@ -493,6 +495,13 @@ void *motor_msg_sender(void *)
 #endif
 
 }
+void pc_raw_path_callback();
+
+void *pc_sub_loop(void *)
+{
+
+
+}
 
 void *udp_msg_sender(void *)
  {
@@ -619,11 +628,13 @@ void motorSockerInit(void)
 }
 
 static vector<PC_pointMeta_st> mv_g;
-void Save2filecsv()
+int Save2filecsv()
 {
 	//memset(&curPcData, 0, sizeof(curPcData));
 	static long findex = 0;
     string save_folder_ = ".";
+    ros::spinOnce();
+    if(!encode_cali_data) return -1;
     uint8_t* data = encode_cali_data;
 #if 0
 	std::string datPath;
@@ -668,6 +679,7 @@ void Save2filecsv()
 	double speed;
 	double vAngle;
 	double hAngle;
+    mv_g.clear();
 	for(int i = 0; i < file_size_g; i++) {
 		index += 1;
 		if(index < 5)
@@ -726,14 +738,18 @@ void Save2filecsv()
             memset(&temp, 0, sizeof(PC_pointMeta_st));
 		}
 	}
+    free(encode_cali_data);
+    encode_cali_data = nullptr;
+    return 0;
 	//csvfile.close();
 }
 
 
 
-void* udp_pc_msg_send_once(void* )
+void* udp_pc_msg_send(void* )
  {
-     int ret;
+    pcSockerInit();
+    int ret;
     struct sockaddr_in ser_addr; 
     memset(&ser_addr, 0, sizeof(ser_addr));
     ser_addr.sin_family = AF_INET;
@@ -748,14 +764,13 @@ void* udp_pc_msg_send_once(void* )
     UDP_PC_package_st sendMsg;
     memset(&sendMsg, 0, sizeof(sendMsg));
     static long long index = 0;
-    Save2filecsv();
+    if(Save2filecsv() < 0) {
+        std::cout << "file empty!!!quit send pc loop " << std::endl;
+        return (void *)0;
+    };
     long long index_frame = 0;
     while(!ifPCstop)
     {
-        //memset(buf, 0, 1024);
-        //recvfrom(udpRecvSocketFd_, buf, 1024, 0, (struct sockaddr*)&src, &len);  //接收来自server的信息
-        //printf("client send is :%s\n",msg.c_str());
-        //std::cout << "msg is " << msg << std::endl
         sendMsg.UDP_PC_head.uphPrefix  = 0xEEFF;
         sendMsg.UDP_PC_head.uphVersion = 0x0102;
         sendMsg.UDP_PC_head.uphTimeLsb = 0;
@@ -784,14 +799,16 @@ void* udp_pc_msg_send_once(void* )
             }
 #endif
             int nnn = sendto(udpPcRecvSocketFd_, &sendMsg, sizeof(sendMsg), 0, (struct sockaddr*)&ser_addr, len);
+            //std::cout << "send pc bytes is  " << nnn << std::endl;
             //int nnn = sendto(udpPcRecvSocketFd_, encode_cali_data + i * 1424, 1424, 0, (struct sockaddr*)&ser_addr, len);
-            usleep(1);  //一秒发送一次消息
+            usleep(1000);  //一秒发送一次消息
         }
         auto end = std::chrono::steady_clock::now();
         elapsed = end - start;
         std::cout << "time for server send 800 udp pkg is : " <<  elapsed.count() * 1000 << " ms" << std::endl;    
         index += 800;
     }
+    std::cout << "quit send pc loop " << std::endl;
  }
 
 
@@ -911,13 +928,19 @@ void testFile()
     }
 	csvfile << "\n";    
 }
+
+void pc_raw_path_callback(std_msgs::String msg)
+{
+    ROS_INFO("=========pc path is %s",  msg.data.c_str());
+    const char *cali_file_path = msg.data.c_str();
+    LoadDat(cali_file_path);
+}
 int main(int argc, char** argv) 
 { 
     pthread_t udp_send;
     pthread_t udp_PC_send;
 
-    const char *cali_file_path = "/home/encheng/data/data_test_raw_index0.bin";
-    int  filesize = LoadDat(cali_file_path);
+
     std::map<int, int> maptest;
     maptest[0]++;
     maptest[11] = 20;
@@ -969,7 +992,6 @@ int main(int argc, char** argv)
     pthread_t motor_send;
     pthread_create(&motor_send, NULL, motor_msg_sender, NULL);
 
-    pcSockerInit();
     if( (listenfd = socket(AF_INET, SOCK_STREAM, 0)) == -1 )
     { 
         printf("create socket error: %s(errno: %d)\n",strerror(errno),errno);
@@ -1016,8 +1038,8 @@ int main(int argc, char** argv)
 #endif
    // motorSockerInit();
     ros::init(argc, argv, "talker");
-    ros::NodeHandle roshandle;
-    ros::V_string v_nodes;
+    ros::NodeHandle roshandle("~");
+/*     ros::V_string v_nodes;
     ros::master::getNodes(v_nodes);
     std::string myNode = "/record";
     for(int i  = 0; i < v_nodes.size(); i++)
@@ -1031,17 +1053,15 @@ int main(int argc, char** argv)
     if(it != v_nodes.end())
     {
         std::cout << "myNode :" << myNode << std::endl;
-    }
-
-
-    //pthread_join(motor_send, NULL);
+    } */
+    pc_raw_path_sub = roshandle.subscribe("/fmcw/pc_raw_data", 10, pc_raw_path_callback);
 
 #if 1
     while(1)
     {
         memset(&msg, 0,  sizeof(msg)); 
         n = recv(connfd, &msg, sizeof(msg), MSG_WAITALL); 
-        printf("buffer len is %d\n", n); 
+        printf("recv len is %d\n", n); 
         if(n == 0){
             close(connfd); 
             connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
@@ -1057,11 +1077,6 @@ int main(int argc, char** argv)
             write(connfd, &msg, sizeof(msg));
             break;   
         case POINTCLOUD_TCP_READ:
-            while(1){
-                //cout << "send data times: " << index_0++ << endl;
-                if(loopsend(connfd, filesize, encode_cali_data))
-                    return -1;
-            }
             break;
         case FFT_ADC_READ_START:
         	pthread_create(&udp_send, NULL, udp_msg_sender, NULL);
@@ -1071,8 +1086,8 @@ int main(int argc, char** argv)
             ifstop = true;
             break;
         case POINTCLOUD_UDP_START:
-        	pthread_create(&udp_PC_send, NULL, udp_pc_msg_send_once, NULL);
-            //udp_pc_msg_send_once();
+            ifPCstop = false;
+        	pthread_create(&udp_PC_send, NULL, udp_pc_msg_send, NULL);
             break;       
         case POINTCLOUD_UDP_STOP:
             close(udpPcRecvSocketFd_);
@@ -1082,9 +1097,8 @@ int main(int argc, char** argv)
             break;
         }
 
-        if(ifPCstop) break;
-        //buff[n] = '\0'; 
-        printf("msg.mCommandVal from client: %d\n", msg.mCommandVal[1]); 
+        //if(ifPCstop) break;
+        printf("wait for next cmd.....\n"); 
     } 
     close(connfd); 
     close(listenfd); 

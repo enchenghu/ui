@@ -134,6 +134,7 @@ class viewpanel : public QTabWidget {
   void saveDataThead();
   void loadLidarFile();
   void loadAlgFile();
+  void loadPCFile();
   void setSaveFolder();
   void ConfigFilterDialog();
   void save_SF_settings();
@@ -445,6 +446,7 @@ class viewpanel : public QTabWidget {
 
   std::string loadFileType_;
   QString loadLidarFile_;
+  QString loadPCFile_;
   bool ifConnected;
   bool ifStarted;
   bool ifConnectedMotorTcp;
@@ -463,6 +465,7 @@ class viewpanel : public QTabWidget {
   QPushButton* pcOnceBtn;
   QPushButton* pcResetBtn;
   QPushButton* loadAlgBtn;
+  QPushButton* loadPCRawBtn;
   QPushButton* regBtnWrite[LIGHTNING_REG_NUM];
   QPushButton* regBtnRead[LIGHTNING_REG_NUM];
   QPushButton* settingADCSavebutton;
@@ -507,6 +510,8 @@ class viewpanel : public QTabWidget {
   QVector<double> y_FFT_1;
   myTracer* plotTracer;
   ros::Publisher fmcw_pcl_pub;
+  ros::Publisher fmcw_pc_datapath_pub;
+
   motorCmdMsg motorMsgSend_;
   motorCmdMsg1 motorMsgSend1_;
   motorPidMsg motorMsgPid_;

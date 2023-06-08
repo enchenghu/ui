@@ -312,6 +312,25 @@ void viewpanel::init_queue()
 	//simulateADCData();
 }
 
+void viewpanel::loadPCFile(void){
+	loadPCFile_  =  QFileDialog::getOpenFileName(
+											viewpanel::Instance(),
+											"Choose register config file",
+											QDir::currentPath(),
+											"register config files (*.bin)",0,QFileDialog::DontUseNativeDialog);	
+
+	if(loadPCFile_.isNull()) return; 	
+
+	qDebug() << "loadPCFile_ is " << loadPCFile_;
+	std_msgs::String status_message;
+	status_message.data = loadPCFile_.toStdString();
+	fmcw_pc_datapath_pub.publish(status_message);
+	QMessageBox msgBox;
+	msgBox.setText("load pc raw file success!");
+	msgBox.exec();
+	//ros::spinOnce();
+
+}
 void viewpanel::loadAlgFile(void){
 	loadLidarFile_  =  QFileDialog::getOpenFileName(
 											viewpanel::Instance(),
@@ -905,6 +924,8 @@ void viewpanel::registerPointcloudRviz()
 	ros::NodeHandle fmcw_pcl("~");// = boost::make_shared<ros::NodeHandle>();
 
 	fmcw_pcl_pub = fmcw_pcl.advertise<sensor_msgs::PointCloud2>(pointcloud_topic, 1);
+	fmcw_pc_datapath_pub = fmcw_pcl.advertise<std_msgs::String>("/fmcw/pc_raw_data", 10);
+
 	lightning_info_markers = fmcw_pcl.advertise<visualization_msgs::Marker>("/lightning/rviz/floatingText_marker", 1);
 
 	//std::string stationary_pointcloud_topic = "/fmcw/rviz/stationary_pointcloud";
@@ -1578,6 +1599,7 @@ void viewpanel::CreatConnect()
 	connect(pcRecordBtn, SIGNAL(clicked()), this, SLOT( pcRecord( void )));
 	//connect(pcProcBtn, SIGNAL(clicked()), this, SLOT( pcOneFramePure( void )));
 	connect(loadAlgBtn, SIGNAL(clicked()), this, SLOT( loadAlgFile( void )));
+	connect(loadPCRawBtn, SIGNAL(clicked()), this, SLOT( loadPCFile( void )));
 	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
@@ -1809,9 +1831,11 @@ void viewpanel::CreatPCWindow()
 		setReadOnlyLineEdit(regRead_line[i]);
 	}
 	loadAlgBtn = new QPushButton("&Load Config", this);
+	loadPCRawBtn = new QPushButton("&Load PC", this);
 	//loadAlgBtn->setFixedSize(70,25);
 	loadAlgBtn->setFont(QFont("微软雅黑", 10.5));
 	setButtonStyle(loadAlgBtn);
+	setButtonStyle(loadPCRawBtn);
 	adcRead0_line = new QLineEdit;
 	adcRead1_line = new QLineEdit;
 	setReadOnlyLineEdit(adcRead0_line);
@@ -1916,6 +1940,7 @@ void viewpanel::CreatPCWindow()
 		controls_layout->addWidget( regBtnRead[i], i, 13, Qt::AlignLeft);	
 	}
 	controls_layout->addWidget( loadAlgBtn, 4, 2, Qt::AlignLeft);	
+	controls_layout->addWidget( loadPCRawBtn, 4, 3, Qt::AlignLeft);	
 	QLabel* rotate_label = new QLabel( "rotate angle" );
 	rotation_spin = new QDoubleSpinBox;
 	//rotation_spin->setDecimals(3);
@@ -2385,17 +2410,7 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 	static long findex = 0;
 	int chanID = 0;
 	QString str_power = PowerCombo->currentText();
-#if 1
-	std::string datPath;
-	datPath = save_folder_.toStdString() + "/data_test_raw_index" + std::to_string(findex++) +".bin";
-	ROS_INFO("datPath is %s \n", datPath.c_str());
-	std::ofstream datfile; 
-	datfile.open(datPath, std::ios::out | std::ios::binary); 
-	for(int i = 0; i < data.size(); i++) {
-		datfile << data[i];
-	}
-	datfile.close();
-#endif
+
 	time_t rawtime;
 	struct tm *ptminfo;
 	time(&rawtime);
@@ -2408,7 +2423,20 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 		"-" + std::to_string(ptminfo->tm_mday) + \
 		"-" + std::to_string(ptminfo->tm_hour) + \
 		"-" + std::to_string(ptminfo->tm_min) + \
-		"-" + std::to_string(ptminfo->tm_sec) + ".csv";
+		"-" + std::to_string(ptminfo->tm_sec) ;
+
+#if 1
+	std::string datPath;
+	datPath = save_folder_.toStdString() + "/pc_raw_data_" + time_str +".bin";
+	ROS_INFO("pc_raw_data path is %s \n", datPath.c_str());
+	std::ofstream datfile; 
+	datfile.open(datPath, std::ios::out | std::ios::binary); 
+	for(int i = 0; i < data.size(); i++) {
+		datfile << data[i];
+	}
+	datfile.close();
+#endif
+
 	for(int i = 0; i < LIGHTNING_MAX_LINES; i++){
 		distance_offset[i] = distanceOffsetEditV[i]->text().toDouble();
 	}
@@ -2423,13 +2451,13 @@ void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 		csvPath = save_folder_.toStdString() + "/SavePC_" + str_power.toStdString() + "mW" + \
 		"_Ch" + std::to_string(chanID)  + "_" + "CFAR_" + \ 
 		cfarAddr[chanID - 1] + "_" +  strValue.toStdString() + "_offset_" + \ 
-		std::to_string(distanceOffset_m[chanID - 1]).substr(0, 6) + "_" + time_str;
+		std::to_string(distanceOffset_m[chanID - 1]).substr(0, 6) + "_" + time_str + ".csv";
 
 	} else {
 		csvPath = save_folder_.toStdString() + "/SavePC_" + str_power.toStdString() + "mW" + \
 		"_Ch_all_" + "offset_" + std::to_string(distanceOffset_m[0]).substr(0, 6) + "_" + \ 
 		std::to_string(distanceOffset_m[1]).substr(0, 6) + "_" + std::to_string(distanceOffset_m[2]).substr(0, 6) + \ 
-		"_"  + std::to_string(distanceOffset_m[3]).substr(0, 6) + "_" + time_str;	
+		"_"  + std::to_string(distanceOffset_m[3]).substr(0, 6) + "_" + time_str + ".csv";	
 	}
 	ROS_INFO("csvPath is %s \n", csvPath.c_str());
 	std::ofstream csvfile; 
