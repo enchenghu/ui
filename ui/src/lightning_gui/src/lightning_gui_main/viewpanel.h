@@ -228,7 +228,7 @@ class viewpanel : public QTabWidget {
   void motorInfoShow(uint8_t* ptr, int datalen);
   void pcParseLoop();
   void pcDataProc();
-  void pcDataFindMaxMin(udpPcMsgOneFrame*);
+  void pcDataFilterPreProc(udpPcMsgOneFrame*);
   void registerPointcloudRviz();
   void startPcTask();
   void startMotorTask();
@@ -353,6 +353,7 @@ class viewpanel : public QTabWidget {
 	std::vector<QLineEdit*> sfParaSpeedEditV;
 	std::vector<QLineEdit*> sfParaIntenEditV;
 	std::vector<QLineEdit*> sfParaRangeEditV;
+	std::vector<QLineEdit*> sfParaRadiusEditV;
 
   QLineEdit* rotate_angle_edit;
   QLineEdit* speed_critical_edit;
@@ -528,8 +529,12 @@ class viewpanel : public QTabWidget {
   std::string cell_size_;
   std::vector<std::string> wordsAddr;  // 声明一个字符串向量
   std::vector<std::string> wordsVal;   // 声明一个字符串向量
+	udpPcMsgOneFrame360 oneFrame360;
 	std::vector<std::vector<int>> shSpeedVV;
 	std::vector<std::vector<int>> shIntenVV;
+
+	std::vector<std::vector<pc_radius_meta>> pcRadius2DVV;
+
 	std::vector<int> shRangeV;
   std::vector<int> rangeSegV;
 
@@ -545,6 +550,10 @@ class viewpanel : public QTabWidget {
   double intervalRange_;
   std::vector<double> intervalIntenV_;
 
+  double radius_sf;
+  int th_radius;
+  int width_radius;
+  
   std::vector<int> thresholdSpeedV_;
   std::vector<int> thresholdRangeV_;
   std::vector<int> thresholdIntenV_;

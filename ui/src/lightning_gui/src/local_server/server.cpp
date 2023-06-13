@@ -575,6 +575,7 @@ void pcSockerInit()
     {
         printf("create udpRecvSocketFd fail!");
     }
+    fcntl(udpPcRecvSocketFd_, F_SETFL, O_NONBLOCK);
 }
 
 void motorSockerInit(void)
@@ -801,7 +802,7 @@ void* udp_pc_msg_send(void* )
             int nnn = sendto(udpPcRecvSocketFd_, &sendMsg, sizeof(sendMsg), 0, (struct sockaddr*)&ser_addr, len);
             //std::cout << "send pc bytes is  " << nnn << std::endl;
             //int nnn = sendto(udpPcRecvSocketFd_, encode_cali_data + i * 1424, 1424, 0, (struct sockaddr*)&ser_addr, len);
-            usleep(1000);  //一秒发送一次消息
+            usleep(1);  //一秒发送一次消息
         }
         auto end = std::chrono::steady_clock::now();
         elapsed = end - start;

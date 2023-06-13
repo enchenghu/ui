@@ -207,7 +207,8 @@ viewpanel::viewpanel(QTabWidget* parent )
 	save_folder_(QString(".")), udpFftAdcStop_(true), showBlack(true), ifShowdB_(FFT_DB),\
 	power_offset(0.0),ifConnectedMotorSerial(false), ifConnectedMotorTcp(false),\
 	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
-	ifStarted(false),saveadc_(false), oneFramePure(true), ifConnectedStateTcp(false), ctrl_sock(-1), modeFilter_(0)
+	ifStarted(false),saveadc_(false), oneFramePure(true), ifConnectedStateTcp(false), ctrl_sock(-1), modeFilter_(0), \
+	th_radius(1), radius_sf(0.1), width_radius(0)
 {
 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
@@ -2187,6 +2188,10 @@ void viewpanel::ConfigFilterWork()
 		thresholdRangeV_.push_back(sfParaRangeEditV[i + 2]->text().toInt());
 	}
 
+	width_radius = sfParaRadiusEditV[0]->text().toInt();
+	radius_sf = sfParaRadiusEditV[1]->text().toDouble();
+	th_radius = sfParaRadiusEditV[2]->text().toInt();
+
 	for(int i = 0; i < checkSfWorkV.size(); i++){
 		if(checkSfWorkV[i]->isChecked()){
 			flage = 0x1 << (i * 4);
@@ -2213,14 +2218,17 @@ void viewpanel::ConfigFilterDialog()
 	sfParaSpeedEditV.clear();
 	sfParaRangeEditV.clear();
 	sfParaIntenEditV.clear();
+	sfParaRadiusEditV.clear();
 	QPushButton *configBtn = new QPushButton("&Config");
 	QPushButton *saveBtnsf = new QPushButton("&Save Config");
 	setButtonStyle(configBtn);
 	setButtonStyle(saveBtnsf);
 	for(int i  = 0; i < sfString.size(); i++)
 		checkSfWorkV.push_back(new QCheckBox(sfString[i]));
-	for(int i = 0; i < 3; i++)
+	for(int i = 0; i < 3; i++){
 		rangeSegmentEditV.emplace_back(new QLineEdit);
+		sfParaRadiusEditV.emplace_back(new QLineEdit);
+	}
 	for(int i = 0; i < 9; i++){
 		sfParaSpeedEditV.emplace_back(new QLineEdit);
 		sfParaIntenEditV.emplace_back(new QLineEdit);
@@ -2242,6 +2250,7 @@ void viewpanel::ConfigFilterDialog()
 	}
 	for(int j = 0; j < 3; j++){
 		sfBoxLayout->addWidget(sfParaRangeEditV[j], 6, 1 + j, Qt::AlignHCenter| Qt::AlignTop);
+		sfBoxLayout->addWidget(sfParaRadiusEditV[j], 13, 1 + j, Qt::AlignHCenter| Qt::AlignTop);
 	}
 	sfBoxLayout->addWidget(sfParaRangeEditV[3], 7, 3, Qt::AlignHCenter| Qt::AlignTop);
 	sfBoxLayout->addWidget(sfParaRangeEditV[4], 8, 3, Qt::AlignHCenter| Qt::AlignTop);
@@ -2259,6 +2268,11 @@ void viewpanel::ConfigFilterDialog()
 	sfBoxLayout->addWidget(new QLabel("分段0强度"), 9, 0, Qt::AlignHCenter | Qt::AlignTop);
 	sfBoxLayout->addWidget(new QLabel("分段1强度"), 10, 0, Qt::AlignHCenter | Qt::AlignTop);
 	sfBoxLayout->addWidget(new QLabel("分段2强度"), 11, 0, Qt::AlignHCenter | Qt::AlignTop);
+
+	sfBoxLayout->addWidget(new QLabel("搜索宽度"), 12, 1, Qt::AlignHCenter | Qt::AlignTop);
+	sfBoxLayout->addWidget(new QLabel("半径/m"), 12, 2, Qt::AlignHCenter | Qt::AlignTop);
+	sfBoxLayout->addWidget(new QLabel("阈值"), 12, 3, Qt::AlignHCenter | Qt::AlignTop);
+	sfBoxLayout->addWidget(new QLabel("半径滤波参数"), 13, 0, Qt::AlignHCenter | Qt::AlignTop);
 
 	sfBox->setLayout(sfBoxLayout);
 	mainLayout->addWidget(sfBox, 0, 0, Qt::AlignLeft);
@@ -3933,24 +3947,24 @@ void viewpanel::startStateDectTask()
 	bst_params.task_main = TaskFuncStateRecv;
 	vx_task_create(&bst_task[TASK_SYSTEM_DATA_RECV], &bst_params);  
 }
-void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
+void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 {
 	if(!pmsg) return;
-	distance_min  = 0.0;
-	distance_max = 0.0;
-	indensity_min = 0.0;
-	indensity_max = 0.0;
-	speed_min = 0.0;
-	speed_max = 0.0;
+	distance_min, distance_max, indensity_min, indensity_max, speed_min, speed_max   = 0.0;
 	int pcFrameSize = pmsg->pcDataOneFrame.size();
 	shSpeedVV.clear();
 	shRangeV.clear();
 	shIntenVV.clear();
+	pcRadius2DVV.clear();
 	std::vector<int> hSpeedSize;
 	std::vector<int> hIntenSize;
+	std::vector<pc_radius_meta> pc_16line;
+	pc_16line.clear();
+	pc_16line.resize(16);
 	int hRangeSize = 0;
 	minPcValueSpeedV_.clear();
 	minPcValueRange_ = 0.0;
+	bool start_copy = false;
 	if(maxPcValueSpeedV_.empty() || intervalSpeedV_.empty() || thresholdSpeedV_.empty() || thresholdRangeV_.empty()) return;
 	if(maxPcValueIntenV_.empty() || intervalIntenV_.empty() || thresholdIntenV_.empty()) return;
 
@@ -3975,14 +3989,37 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 
 	std::cout << "modeFilter_: " << modeFilter_ << std::endl;
 
-	for(int j = 0; j < pcFrameSize; j++)
-	{
-		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++)
-		{
+	if(modeFilter_ & filterMode::RADIUS_F){
+		oneFrame360.pcDataOneFrame.clear();
+		oneFrame360.vaildV.clear();
+		oneFrame360.around_count.clear();
+	}
+
+	for(int j = 0; j < pcFrameSize; j++){
+		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){
 			double horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
 			if(horizontal_m > 360.0) horizontal_m -= 360.0;
 			int lineIndex = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmVerticalIndex;
 			double distance_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmDistance * distance_bin - distance_offset[lineIndex];
+			if(modeFilter_ & filterMode::RADIUS_F){
+				bool valid  = true;
+				if( distance_m < 0.0) valid  = false;
+				if(lineIndex == 0) start_copy  = true;
+				if(start_copy){
+					pc_radius_meta temp;
+					temp.data = pmsg->pcDataOneFrame[j].UDP_PC_payload[index];
+					temp.vaild = valid;
+					temp.around_count = 0;
+					pc_16line[lineIndex] = temp;
+					if(lineIndex == 15) {
+						for(auto &it : pc_16line) {
+							oneFrame360.pcDataOneFrame.push_back(it.data);
+							oneFrame360.vaildV.push_back(it.vaild);
+							oneFrame360.around_count.push_back(it.around_count);
+						}
+					}
+				}
+			}
 			if( distance_m < 0.0) continue;
 			int locIndex = -1;
 			for(int i = 0; i < rangeSegV.size(); i++){
@@ -4021,6 +4058,40 @@ void viewpanel::pcDataFindMaxMin(udpPcMsgOneFrame* pmsg)
 			if(speed_max < speed_m )speed_max = speed_m;
 		}
 	}
+
+	if(modeFilter_ & filterMode::RADIUS_F){
+		std::cout << "======RADIUS_F: oneFrame360.pcDataOneFrame size() is : " <<  oneFrame360.pcDataOneFrame.size() << std::endl;	
+		int width = width_radius;
+		double r_radius = radius_sf;
+		int row = 16; //16 lines
+		int col = oneFrame360.pcDataOneFrame.size() / 16;
+		int first_x, first_y, last_x, last_y;
+		for(int i = 0; i < col; i++){
+			for(int j = 0; j < row; j ++){
+				if(oneFrame360.vaildV[i * row + j] == false) continue;
+				int lineIndex =  oneFrame360.pcDataOneFrame[i * row + j].pcmVerticalIndex;
+				double distance_m =  oneFrame360.pcDataOneFrame[i * row + j].pcmDistance * distance_bin - distance_offset[lineIndex];
+				first_x = i - width;
+				if(first_x < 0) first_x = 0;
+				first_y = j - width;
+				if(first_y < 0) first_y = 0;
+				last_x = i + width + 1;
+				if(last_x > col) last_x = col;
+				last_y = j + width + 1;
+				if(last_y > row) last_y = row;
+				/* Traverse the selected rectangle */
+				for(int x =  first_x; x < last_x; x++){
+					for(int y = first_y; y < last_y; y++){
+						int index =  oneFrame360.pcDataOneFrame[x * row + y].pcmVerticalIndex;
+						double distance_c =  oneFrame360.pcDataOneFrame[x * row + y].pcmDistance * distance_bin - distance_offset[index];
+						double distance_d  = distance_c - distance_m;	
+						if(distance_d <= r_radius && distance_d >= -r_radius)
+							 oneFrame360.around_count[i * row + j]++;					
+					}
+				}
+			}
+		}
+	}
 /* 	std::cout << "distance_min: " << distance_min << " distance_max: " << distance_max \
 	<< " indensity_min: " << indensity_min << " indensity_max: " << indensity_max << " speed_min: " << speed_min \ 
 	<< " speed_max: " << speed_max << std::endl;  */
@@ -4057,7 +4128,6 @@ void viewpanel::pcDataProc()
 		}
 	}
 	pcFrameSize = udpPCBuff_last.pcDataOneFrame.size();
-	udpPcMsgOneFrame360 oneFrame360;
 	oneFrame360.pcDataOneFrame.clear();
 	if(!oneFramePure_){
 		oneFrame360.frameCounterLast = udpPCBuff_last.frameCounterLast;
@@ -4141,7 +4211,7 @@ void viewpanel::pcDataProc()
 
 	QString strColor = colorCombo->currentText();
 	QString modeFilter = filterCombo->currentText();
-	if(modeFilter_ != BYPASS) pcDataFindMaxMin(pmsg);
+	if(modeFilter_ != BYPASS) pcDataFilterPreProc(pmsg);
 	udpPcMsg_free_buf_queue.put(pmsg);
 	double distance_m, vertical_m, intensity_m, speed_m;
 	int chan_id_m, index_rgb;
@@ -4172,21 +4242,30 @@ void viewpanel::pcDataProc()
 	}
 #endif
 	pcFrameSize = oneFrame360.pcDataOneFrame.size();
-	//std::cout << "pcFrameSize is " << pcFrameSize << std::endl;
+	std::cout << "pcFrameSize is " << pcFrameSize << std::endl;
 	cloud.points.resize(pcFrameSize);
 	int realSize = 0;
+	int lineIndex = 0;
+	int locIndex = -1;
+	int thld = 10;
+	if(modeFilter_ & filterMode::RADIUS_F){
+		if(oneFrame360.around_count.size() != pcFrameSize) {
+			std::cout << "!!!!!!RADIUS_F ERROR!!around_count is wrong! "  << std::endl;
+		}
+	}
 	for(int j = 0; j < pcFrameSize; j++)
 	{
 		horizontal_m = oneFrame360.pcDataOneFrame[j].pcmHorizontal * horizontal_bin;
 		if(horizontal_m > 360.0) horizontal_m -= 360.0;
 		//if( horizontal_m < leftAngle_offset && horizontal_m > rightAngle_offset) continue;
-		int lineIndex = oneFrame360.pcDataOneFrame[j].pcmVerticalIndex;
+		lineIndex = oneFrame360.pcDataOneFrame[j].pcmVerticalIndex;
 		if(lineIndex > 15 || lineIndex < 0 ) continue;
 		if(!checkPCShowV[lineIndex]->isChecked()) continue;
 		distance_m = oneFrame360.pcDataOneFrame[j].pcmDistance * distance_bin - distance_offset[lineIndex];
 		if(distance_m < 0.0) continue;
-
-		int locIndex = -1;
+		if(modeFilter_ & filterMode::RADIUS_F){
+			if(oneFrame360.around_count[j] < th_radius) continue;	
+		}
 		for(int i = 0; i < rangeSegV.size(); i++){
 			if(distance_m <= rangeSegV[i]) {
 				locIndex = i;
@@ -4196,6 +4275,7 @@ void viewpanel::pcDataProc()
 		if(locIndex < 0 && rangeSegV.size() > 0) locIndex = rangeSegV.size() - 1;
 
 		speed_m = oneFrame360.pcDataOneFrame[j].pcmSpeed * speed_bin;
+
 		if(modeFilter_ & filterMode::SPEED_F){
 			if(locIndex < 0 || minPcValueSpeedV_.empty() || maxPcValueSpeedV_.empty() || \ 
 			intervalSpeedV_.empty() || thresholdSpeedV_.empty() || shSpeedVV.empty()) continue;
@@ -4892,6 +4972,10 @@ void viewpanel::load_SF_settings()
 		if(sfParaRangeEditV[i]) sfParaRangeEditV[i]->setText(settings.value("sf para range " + QString::number(i)).toString()); 
 	}
 
+	for(int i = 0; i < sfParaRadiusEditV.size(); i++){
+		if(sfParaRadiusEditV[i]) sfParaRadiusEditV[i]->setText(settings.value("sf para radius  " + QString::number(i)).toString()); 
+	}
+
 	for(int i = 0; i < rangeSegmentEditV.size(); i++){
 		if(rangeSegmentEditV[i]) rangeSegmentEditV[i]->setText(settings.value("range seg " + QString::number(i)).toString()); 
 	}
@@ -4995,6 +5079,10 @@ void viewpanel::save_SF_settings(void )
 
 	for(int i = 0; i < sfParaRangeEditV.size(); i++){
 		settings.setValue("sf para range " + QString::number(i), sfParaRangeEditV[i]->text());
+	}
+
+	for(int i = 0; i < sfParaRadiusEditV.size(); i++){
+		settings.setValue("sf para radius  " + QString::number(i), sfParaRadiusEditV[i]->text());
 	}
 
 	for(int i = 0; i < rangeSegmentEditV.size(); i++){

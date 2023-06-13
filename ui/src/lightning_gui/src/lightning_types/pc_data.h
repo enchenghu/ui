@@ -327,6 +327,12 @@ typedef struct {
     uint16_t pcmHorizontal; // 水平角（单位：°）  // 实际值：*360/65536  // 0° ~ 359°
 }PC_pointMeta_st;   // 14Bytes
 
+typedef struct 
+{
+	PC_pointMeta_st data;
+	bool vaild;
+	uint16_t around_count;
+} pc_radius_meta;
 
 typedef struct {
     UDP_PC_head_st  UDP_PC_head;                        // head：24字节
@@ -342,6 +348,8 @@ typedef struct
 typedef struct 
 {
 	std::vector<PC_pointMeta_st> pcDataOneFrame;
+	std::vector<bool> vaildV;
+	std::vector<uint16_t> around_count;
 	std::vector<uint16_t> frameCounter;
 	uint16_t frameCounterLast;   // 点云图的帧计数
 	uint16_t frameCounterCur;   // 点云图的帧计数
