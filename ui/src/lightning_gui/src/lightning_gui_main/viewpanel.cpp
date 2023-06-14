@@ -888,6 +888,7 @@ void viewpanel::registerPointcloudRviz()
 
 	render_panel_->initialize( manager_->getSceneManager(), manager_ );
 	selection_panel_->initialize( manager_ );
+	selection_panel_->setFixedSize(300, 600);
 	manager_->initialize();
 	manager_->startUpdate();
 	/* Create a Grid display. */
@@ -1871,6 +1872,7 @@ void viewpanel::CreatPCWindow()
 	colorCombo->addItem(tr("intensity"));
 	colorCombo->addItem(tr("speed"));
 	colorCombo->addItem(tr("channel"));
+	colorCombo->addItem(tr("reflectivity"));
 
 	PowerCombo->setEditable(true);
 	ADC_DSA_Combo->setEditable(true);
@@ -2786,6 +2788,11 @@ void viewpanel::colorInfoChange()
 		colorSlider->setMaximum( 100000 );
 		colorSlider->setValue(60000);	
 		colorSlider->setSingleStep(10000);		
+	} else if(mode == "reflectivity"){
+		colorSlider->setMinimum( 1 );
+		colorSlider->setMaximum( 100000 );
+		colorSlider->setValue(60000);	
+		colorSlider->setSingleStep(10000);	
 	}
 }
 
@@ -4213,7 +4220,7 @@ void viewpanel::pcDataProc()
 	QString modeFilter = filterCombo->currentText();
 	if(modeFilter_ != BYPASS) pcDataFilterPreProc(pmsg);
 	udpPcMsg_free_buf_queue.put(pmsg);
-	double distance_m, vertical_m, intensity_m, speed_m;
+	double distance_m, vertical_m, intensity_m, speed_m, reflectivity_m;
 	int chan_id_m, index_rgb;
 #if SINGELE_PC_SAVE
 	time_t rawtime;
@@ -4294,6 +4301,7 @@ void viewpanel::pcDataProc()
 			if(shRangeV[index_i] < thresholdRangeV_[locIndex]) continue;
 		}
 		intensity_m = oneFrame360.pcDataOneFrame[j].pcmIndensity;
+		reflectivity_m = intensity_m * distance_m * distance_m;
 		if(modeFilter_ & filterMode::INTEN_F){
 			if(locIndex < 0 ||  maxPcValueIntenV_.empty() || intervalIntenV_.empty() || thresholdIntenV_.empty() || shIntenVV.empty()) continue;
 			if(intensity_m > maxPcValueIntenV_[locIndex]) continue;
@@ -4314,6 +4322,7 @@ void viewpanel::pcDataProc()
 		cloud.points[j].indensity = intensity_m;
 		cloud.points[j].speed = speed_m;
 		cloud.points[j].chan_id = chan_id_m;
+		cloud.points[j].reflectivity = reflectivity_m;
 		horizontal_m += rotation_offset;
 		cloud.points[j].x = distance_m * cos(vertical_m * PI_FMCW / 180) * \
 															cos(horizontal_m * PI_FMCW / 180);
@@ -4325,6 +4334,10 @@ void viewpanel::pcDataProc()
 		else if(strColor == "intensity")
 			//index_rgb = (intensity_m - indensity_min) / (indensity_max - indensity_min) * R_V_g.size();
 			index_rgb = (intensity_m) / (color_base) * R_V_g.size();
+		else if(strColor == "reflectivity"){
+			color_base *= 100;
+			index_rgb = (reflectivity_m) / (color_base) * R_V_g.size();
+		}
 		else if(strColor == "speed"){
 			uint8_t r, g, b = 0;
 			if(speed_m < 0 && speed_m < -speed_critical){
