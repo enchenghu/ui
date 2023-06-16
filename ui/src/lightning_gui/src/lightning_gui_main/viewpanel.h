@@ -560,9 +560,15 @@ class viewpanel : public QTabWidget {
 
   std::vector<QString> sfPara;
   std::map<uint32_t, int> intenNumMap;
+  std::map<uint32_t, int> reflectNumMap;
 
   SystemMonitor* systemMonitor_m;
   int modeFilter_;
+  bool getMaxIntensityNum;
+  bool getMaxReflectNum;
+  QString lastPCRawPath_; 
+  QString lastAlgPath_; 
+
 };
 
 #endif  // viewpanel_H

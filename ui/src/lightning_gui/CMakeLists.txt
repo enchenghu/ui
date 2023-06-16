@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(autox_ui)
 
 #add_compile_options(-std=c++21)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 add_definitions(-w)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)

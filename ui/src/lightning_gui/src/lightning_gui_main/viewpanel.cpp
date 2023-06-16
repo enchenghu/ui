@@ -314,14 +314,22 @@ void viewpanel::init_queue()
 }
 
 void viewpanel::loadPCFile(void){
+
+	QSettings settings(QCoreApplication::organizationName(),
+	QCoreApplication::applicationName());
+
+	lastPCRawPath_ = settings.value("lastPCRawPath_",".").toString();
+
 	loadPCFile_  =  QFileDialog::getOpenFileName(
-											viewpanel::Instance(),
-											"Choose register config file",
-											QDir::currentPath(),
-											"register config files (*.bin)",0,QFileDialog::DontUseNativeDialog);	
+											this,
+											"Choose pc raw file",
+											lastPCRawPath_,
+											"pc raw files (*.bin)",0,QFileDialog::DontUseNativeDialog);	
 
 	if(loadPCFile_.isNull()) return; 	
-
+	std::string temp = loadPCFile_.toStdString();
+	lastPCRawPath_ = QString::fromStdString(temp.substr(0, temp.find_last_of('/')));
+	settings.setValue("lastPCRawPath_", lastPCRawPath_);
 	qDebug() << "loadPCFile_ is " << loadPCFile_;
 	std_msgs::String status_message;
 	status_message.data = loadPCFile_.toStdString();
@@ -333,13 +341,23 @@ void viewpanel::loadPCFile(void){
 
 }
 void viewpanel::loadAlgFile(void){
+	QSettings settings(QCoreApplication::organizationName(),
+	QCoreApplication::applicationName());
+
+	lastAlgPath_ = settings.value("lastAlgPath_",".").toString();
+
 	loadLidarFile_  =  QFileDialog::getOpenFileName(
-											viewpanel::Instance(),
+											this,
 											"Choose register config file",
-											QDir::currentPath(),
+											lastAlgPath_,
 											"register config files (*.csv)",0,QFileDialog::DontUseNativeDialog);	
 
-	if(loadLidarFile_.isNull()) return; 									
+	if(loadLidarFile_.isNull()) return; 	
+
+	std::string temp = loadLidarFile_.toStdString();
+	lastAlgPath_ = QString::fromStdString(temp.substr(0, temp.find_last_of('/')));
+	settings.setValue("lastAlgPath_", lastAlgPath_);
+
 	qDebug() << "loadLidarFile_ is " << loadLidarFile_;
     std::ifstream csv_data(loadLidarFile_.toStdString(), std::ios::in);
     std::string line;
@@ -2785,14 +2803,14 @@ void viewpanel::colorInfoChange()
 		colorSlider->setSingleStep(10);		
 	} else if(mode == "intensity"){
 		colorSlider->setMinimum( 1 );
-		colorSlider->setMaximum( 100000 );
-		colorSlider->setValue(60000);	
+		colorSlider->setMaximum( 80000 );
+		colorSlider->setValue(25000);	
 		colorSlider->setSingleStep(10000);		
 	} else if(mode == "reflectivity"){
 		colorSlider->setMinimum( 1 );
-		colorSlider->setMaximum( 100000 );
-		colorSlider->setValue(60000);	
-		colorSlider->setSingleStep(10000);	
+		colorSlider->setMaximum( 500000 );
+		colorSlider->setValue(100000);	
+		colorSlider->setSingleStep(50000);	
 	}
 }
 
@@ -3963,6 +3981,8 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 	shRangeV.clear();
 	shIntenVV.clear();
 	pcRadius2DVV.clear();
+	intenNumMap.clear();
+	reflectNumMap.clear();
 	std::vector<int> hSpeedSize;
 	std::vector<int> hIntenSize;
 	std::vector<pc_radius_meta> pc_16line;
@@ -3972,8 +3992,8 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 	minPcValueSpeedV_.clear();
 	minPcValueRange_ = 0.0;
 	bool start_copy = false;
-	if(maxPcValueSpeedV_.empty() || intervalSpeedV_.empty() || thresholdSpeedV_.empty() || thresholdRangeV_.empty()) return;
-	if(maxPcValueIntenV_.empty() || intervalIntenV_.empty() || thresholdIntenV_.empty()) return;
+/* 	if(maxPcValueSpeedV_.empty() || intervalSpeedV_.empty() || thresholdSpeedV_.empty() || thresholdRangeV_.empty()) return;
+	if(maxPcValueIntenV_.empty() || intervalIntenV_.empty() || thresholdIntenV_.empty()) return; */
 
 	for(int i = 0; i < maxPcValueSpeedV_.size(); i++){
 		if(intervalSpeedV_[i] == 0.0) intervalSpeedV_[i] = 0.1;
@@ -3993,7 +4013,7 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 	if(intervalRange_ == 0.0) intervalRange_ = 0.1;
 	hRangeSize = maxPcValueRange_ / intervalRange_;
 	shRangeV.resize(hRangeSize, 0);
-
+	QString strColor = colorCombo->currentText();
 	std::cout << "modeFilter_: " << modeFilter_ << std::endl;
 
 	if(modeFilter_ & filterMode::RADIUS_F){
@@ -4036,7 +4056,7 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 				}
 			}
 			if(locIndex < 0 && rangeSegV.size() > 0) locIndex = rangeSegV.size() - 1;
-			if(locIndex < 0) continue;
+			//if(locIndex < 0) continue;
 			if(modeFilter_ & filterMode::RANGE_F){
 				if(distance_m > maxPcValueRange_) continue;
 				int index_r = (distance_m) / intervalRange_;
@@ -4050,7 +4070,12 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 				if(index_s >= shSpeedVV[locIndex].size()) index_s = shSpeedVV[locIndex].size() - 1;
 				shSpeedVV[locIndex][index_s]++;
 			}
-			int  indensity_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity;
+			uint32_t  indensity_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity;
+			uint32_t intenIndex = indensity_m / 3000;
+			uint32_t  reflectiviy_m = (uint32_t) (indensity_m * distance_m * distance_m);
+			uint32_t reIndex = reflectiviy_m / 15000;
+			//intenNumMap[intenIndex]++;
+			//reflectNumMap[reIndex]++;
 			if(modeFilter_ & filterMode::INTEN_F){
 				if(indensity_m > maxPcValueIntenV_[locIndex])continue;
 				int index_s = (indensity_m) / intervalIntenV_[locIndex];
@@ -4065,6 +4090,19 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 			if(speed_max < speed_m )speed_max = speed_m;
 		}
 	}
+
+/* 	getMaxIntensityNum = 1;
+	if(strColor == "intensity"){
+		auto func = [](std::pair<uint32_t, int> left, std::pair<uint32_t,int> right) {return left.second < right.second;};
+		auto it_map = std::max_element(intenNumMap.begin(), intenNumMap.end(), func);
+		std::cout << "most intensity is " << it_map->first << ", num is " << it_map->second << std::endl;	
+	}
+	getMaxReflectNum = 1;
+	if(strColor == "reflectivity"){
+		auto func = [](std::pair<uint32_t, int> left, std::pair<uint32_t,int> right) {return left.second < right.second;};
+		auto it_map = std::max_element(reflectNumMap.begin(), reflectNumMap.end(), func);
+		std::cout << "most reflect is " << it_map->first << ", num is " << it_map->second << std::endl;	
+	} */
 
 	if(modeFilter_ & filterMode::RADIUS_F){
 		std::cout << "======RADIUS_F: oneFrame360.pcDataOneFrame size() is : " <<  oneFrame360.pcDataOneFrame.size() << std::endl;	
@@ -4335,7 +4373,6 @@ void viewpanel::pcDataProc()
 			//index_rgb = (intensity_m - indensity_min) / (indensity_max - indensity_min) * R_V_g.size();
 			index_rgb = (intensity_m) / (color_base) * R_V_g.size();
 		else if(strColor == "reflectivity"){
-			color_base *= 100;
 			index_rgb = (reflectivity_m) / (color_base) * R_V_g.size();
 		}
 		else if(strColor == "speed"){
