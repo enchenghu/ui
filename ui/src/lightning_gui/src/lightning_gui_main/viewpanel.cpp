@@ -2808,9 +2808,9 @@ void viewpanel::colorInfoChange()
 		colorSlider->setSingleStep(10000);		
 	} else if(mode == "reflectivity"){
 		colorSlider->setMinimum( 1 );
-		colorSlider->setMaximum( 500000 );
-		colorSlider->setValue(100000);	
-		colorSlider->setSingleStep(50000);	
+		colorSlider->setMaximum( 6000000 );
+		colorSlider->setValue(700000);	
+		colorSlider->setSingleStep(600000);	
 	}
 }
 
