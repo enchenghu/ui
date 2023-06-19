@@ -3985,9 +3985,9 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 	reflectNumMap.clear();
 	std::vector<int> hSpeedSize;
 	std::vector<int> hIntenSize;
-	std::vector<pc_radius_meta> pc_16line;
-	pc_16line.clear();
-	pc_16line.resize(16);
+	std::vector<pc_radius_meta> pc_all_line;
+	pc_all_line.clear();
+	pc_all_line.resize(LIGHTNING_MAX_LINES);
 	int hRangeSize = 0;
 	minPcValueSpeedV_.clear();
 	minPcValueRange_ = 0.0;
@@ -4037,9 +4037,9 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 					temp.data = pmsg->pcDataOneFrame[j].UDP_PC_payload[index];
 					temp.vaild = valid;
 					temp.around_count = 0;
-					pc_16line[lineIndex] = temp;
-					if(lineIndex == 15) {
-						for(auto &it : pc_16line) {
+					pc_all_line[lineIndex] = temp;
+					if(lineIndex == LIGHTNING_MAX_LINES - 1) {
+						for(auto &it : pc_all_line) {
 							oneFrame360.pcDataOneFrame.push_back(it.data);
 							oneFrame360.vaildV.push_back(it.vaild);
 							oneFrame360.around_count.push_back(it.around_count);
@@ -4108,8 +4108,8 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 		std::cout << "======RADIUS_F: oneFrame360.pcDataOneFrame size() is : " <<  oneFrame360.pcDataOneFrame.size() << std::endl;	
 		int width = width_radius;
 		double r_radius = radius_sf;
-		int row = 16; //16 lines
-		int col = oneFrame360.pcDataOneFrame.size() / 16;
+		int row = LIGHTNING_MAX_LINES; //max lines
+		int col = oneFrame360.pcDataOneFrame.size() / LIGHTNING_MAX_LINES;
 		int first_x, first_y, last_x, last_y;
 		for(int i = 0; i < col; i++){
 			for(int j = 0; j < row; j ++){
