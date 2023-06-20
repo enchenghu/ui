@@ -148,6 +148,9 @@ class viewpanel : public QTabWidget {
   void udpPcClose();
   void configAxesSize();
   void configCellSize();
+  void configCellOffset();
+  void config3dCellSize();
+
   void configPointSize();
   void pcShowBW();
   void pcRecord();
@@ -284,6 +287,9 @@ class viewpanel : public QTabWidget {
   double leftAngle_offset;
   double rightAngle_offset;
   double cell_size;
+  double cell_offset;
+  double cell_3d_size;
+
   double point_size;
   double color_base;
   double axes_size;
@@ -366,6 +372,9 @@ class viewpanel : public QTabWidget {
   QLineEdit* color_base_edit;
   QLineEdit* point_size_edit;
   QLineEdit* cell_size_edit;
+  QLineEdit* cell_offset_edit;
+  QLineEdit* cell_3d_size_edit;
+
   QLineEdit* point_size_interval_edit;
   QLineEdit* axes_size_edit;
   QLineEdit* power_Offset_edit;

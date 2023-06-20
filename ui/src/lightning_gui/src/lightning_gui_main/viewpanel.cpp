@@ -916,9 +916,11 @@ void viewpanel::registerPointcloudRviz()
 	//grid_->cc( "Alpha" )->setValue( "0.5" );
 	grid_->subProp( "Line Style" )->setValue( "Lines" );
 	grid_->subProp( "Plane" )->setValue( "XY" );
-	grid_->subProp( "Cell Size" )->setValue(10); 
+	grid_->subProp( "Cell Size" )->setValue(cell_size); 
+	grid_->subProp( "Normal Cell Count" )->setValue(cell_3d_size); 
 	grid_->subProp( "Plane Cell Count" )->setValue( "1000" );
-	grid_->subProp( "Offset" )->setValue( "X: -100 Y: 0 Z: 0" );
+	double offset = cell_size * 0.5 * cell_3d_size;
+	grid_->subProp( "Offset" )->setValue( "0;0;" + QString::number(offset) );
 	grid_->subProp( "Reference Frame" )->setValue( "<Fixed Frame>" );
 
 	manager_->getViewManager()->setCurrentViewControllerType("rviz/XYOrbit");
@@ -1596,6 +1598,10 @@ void viewpanel::CreatConnect()
 	connect( fftChCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( fftChannelChange( void )));
     connect( axes_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configAxesSize( void )));
     connect( cell_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configCellSize( void )));
+    connect( cell_3d_size_edit, SIGNAL( textChanged(QString)), this, SLOT( config3dCellSize( void )));
+    connect( cell_offset_edit, SIGNAL( textChanged(QString)), this, SLOT( configCellOffset( void )));
+
+
     connect( point_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configPointSize( void )));
 	connect( colorCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( colorInfoChange( void )));
 
@@ -2001,6 +2007,14 @@ void viewpanel::CreatPCWindow()
 	cell_size_edit = new QLineEdit;
 	point_size_interval_edit = new QLineEdit;
 	cell_size_edit->setFixedSize(70,25);
+	cell_3d_size_edit = new QLineEdit;
+	cell_3d_size_edit->setText(QString::number(cell_3d_size));
+	cell_3d_size_edit->setFixedSize(70,25);
+
+	cell_offset_edit = new QLineEdit;
+	cell_offset_edit->setText(QString::number(cell_offset));
+	cell_offset_edit->setFixedSize(70,25);
+
 	point_size_interval_edit->setFixedSize(70,25);
 	cell_size_edit->setText(QString::number(cell_size));
 	point_size_interval_edit->setText(QString::number(0.005));
@@ -2035,14 +2049,18 @@ void viewpanel::CreatPCWindow()
 	controls_layout->addWidget( point_size_edit, 0, 17, Qt::AlignLeft);	
 	controls_layout->addWidget( cell_size_label, 1, 16, Qt::AlignRight);
 	controls_layout->addWidget( cell_size_edit, 1, 17, Qt::AlignLeft);	
+
+	controls_layout->addWidget( new QLabel("3d size"), 2, 16, Qt::AlignRight);	
+	controls_layout->addWidget( cell_3d_size_edit, 2, 17, Qt::AlignLeft);	
+
 	//controls_layout->addWidget( color_base_label, 2, 16, Qt::AlignRight);
 	//controls_layout->addWidget( color_base_edit, 2, 17, Qt::AlignLeft);	
-	controls_layout->addWidget( axes_size_label, 2, 16, Qt::AlignRight);	
-	controls_layout->addWidget( axes_size_edit, 2, 17, Qt::AlignLeft);	
-	controls_layout->addWidget( color_by_label, 3, 16, Qt::AlignRight);	
-	controls_layout->addWidget( colorCombo, 3, 17, Qt::AlignLeft);
-	controls_layout->addWidget( new QLabel("color bar"), 4, 16, Qt::AlignRight);
-	controls_layout->addWidget( colorSlider, 4, 17, Qt::AlignLeft);	
+	controls_layout->addWidget( axes_size_label, 3, 16, Qt::AlignRight);	
+	controls_layout->addWidget( axes_size_edit, 3, 17, Qt::AlignLeft);	
+	controls_layout->addWidget( color_by_label, 4, 16, Qt::AlignRight);	
+	controls_layout->addWidget( colorCombo, 4, 17, Qt::AlignLeft);
+	controls_layout->addWidget( new QLabel("color bar"), 5, 16, Qt::AlignRight);
+	controls_layout->addWidget( colorSlider, 5, 17, Qt::AlignLeft);	
 	//controls_layout->addWidget( new QLabel("S Filter by"), 5, 16, Qt::AlignRight);	
 	filterCombo = new QComboBox;
 	filterCombo->setFixedSize(90,25);
@@ -2062,6 +2080,9 @@ void viewpanel::CreatPCWindow()
 	controls_layout->addWidget( point_size_interval_edit, 0, 19, Qt::AlignLeft);	
 	controls_layout->addWidget( speed_critical_label, 2, 18, Qt::AlignRight);
 	controls_layout->addWidget( speed_critical_edit, 2, 19, Qt::AlignLeft);	
+
+/* 	controls_layout->addWidget( new QLabel("3d offset"), 3, 18, Qt::AlignRight);
+	controls_layout->addWidget( cell_offset_edit, 3, 19, Qt::AlignLeft); */	
 
 	selectAll = new QCheckBox("&Select Ch All/None");
 	selectAll->setChecked(true);
@@ -2884,10 +2905,30 @@ void viewpanel::configAxesSize(){
 	Axes_->subProp("Length")->setValue(axes_size);
 
 }
+
+void viewpanel::configCellOffset(){
+
+	cell_offset = cell_offset_edit->text().toDouble();
+	QString offset = "0;0;" + QString::number(cell_offset);
+	qDebug() << "====offset is " << offset;
+	grid_->subProp( "Offset" )->setValue(offset);
+
+}
 void viewpanel::configCellSize(){
 	cell_size = cell_size_edit->text().toDouble();
 	grid_->subProp( "Cell Size" )->setValue(cell_size); 
+	double offset = cell_size * 0.5 * cell_3d_size;
+	std::cout << "offset is " << offset << std::endl;
+	grid_->subProp( "Offset" )->setValue( "0;0;" + QString::number(offset) );
 	showInfoEditV[2]->setText(cell_size_edit->text());
+}
+
+void viewpanel::config3dCellSize(){
+	cell_3d_size = cell_3d_size_edit->text().toDouble();
+	grid_->subProp( "Normal Cell Count" )->setValue(cell_3d_size); 
+	double offset = cell_size * 0.5 * cell_3d_size;
+	std::cout << "offset is " << offset << std::endl;
+	grid_->subProp( "Offset" )->setValue( "0;0;" + QString::number(offset) );
 }
 
 void viewpanel::increasePointSize(){
@@ -4997,6 +5038,7 @@ void viewpanel::load_settings()
 	color_base = settings.value("color base","10.0").toDouble();
 	point_size = settings.value("point size","0.03").toDouble();
 	cell_size = settings.value("cell size","10.0").toDouble();
+	cell_3d_size = settings.value("cell 3d size","2").toDouble();
 	axes_size = settings.value("axes size","0.1").toDouble();
 	rightAngle_offset = settings.value("right angle","125.0").toDouble();
 	power_offset_ = settings.value("Power Offset","0.0").toString();
@@ -5161,6 +5203,7 @@ void viewpanel::save_settings(void )
 	settings.setValue("right angle", right_angle_edit->text());
 
 	settings.setValue("cell size", cell_size_edit->text());
+	settings.setValue("cell 3d size", cell_3d_size_edit->text());
 	settings.setValue("point size", point_size_edit->text());
 	settings.setValue("color base", color_base_edit->text());
 	settings.setValue("axes size", axes_size_edit->text());
