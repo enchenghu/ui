@@ -1664,7 +1664,7 @@ void viewpanel::CreatConnect()
     //timer_adc_test->start(100);
     timer_adc  = new QTimer(this);
     connect(timer_adc, SIGNAL(timeout()), this, SLOT(updateADCdata(void)));
-    timer_adc->start(10);
+    timer_adc->start(100);
     QTimer* timer_state  = new QTimer(this);
     connect(timer_state, SIGNAL(timeout()), this, SLOT(updateState(void)));
     //connect(timer_state, SIGNAL(timeout()), this, SLOT(printErrorLog(void)));
@@ -1678,7 +1678,7 @@ void viewpanel::CreatConnect()
 
     QTimer* tcp_show_item  = new QTimer(this);
     connect(tcp_show_item, SIGNAL(timeout()), this, SLOT(updateMotorChart(void)));
-	tcp_show_item->start(10);
+	tcp_show_item->start(100);
 }
 
 void viewpanel::CreatPCWindow()
@@ -4013,6 +4013,42 @@ void viewpanel::startStateDectTask()
 	bst_params.task_main = TaskFuncStateRecv;
 	vx_task_create(&bst_task[TASK_SYSTEM_DATA_RECV], &bst_params);  
 }
+
+
+void viewpanel::radiusFilterProc()
+{
+	std::cout << "======RADIUS_F: oneFrame360.pcDataOneFrame size() is : " <<  oneFrame360.pcDataOneFrame.size() << std::endl;	
+	int width = width_radius;
+	double r_radius = radius_sf;
+	int row = LIGHTNING_MAX_LINES; //max lines
+	int col = oneFrame360.pcDataOneFrame.size() / LIGHTNING_MAX_LINES;
+	int first_x, first_y, last_x, last_y;
+	for(int i = 0; i < col; i++){
+		for(int j = 0; j < row; j ++){
+			if(oneFrame360.vaildV[i * row + j] == false) continue;
+			int lineIndex =  oneFrame360.pcDataOneFrame[i * row + j].pcmVerticalIndex;
+			double distance_m =  oneFrame360.pcDataOneFrame[i * row + j].pcmDistance * distance_bin - distance_offset[lineIndex];
+			first_x = i - width;
+			if(first_x < 0) first_x = 0;
+			first_y = j - width;
+			if(first_y < 0) first_y = 0;
+			last_x = i + width + 1;
+			if(last_x > col) last_x = col;
+			last_y = j + width + 1;
+			if(last_y > row) last_y = row;
+			/* Traverse the selected rectangle */
+			for(int x =  first_x; x < last_x; x++){
+				for(int y = first_y; y < last_y; y++){
+					int index =  oneFrame360.pcDataOneFrame[x * row + y].pcmVerticalIndex;
+					double distance_c =  oneFrame360.pcDataOneFrame[x * row + y].pcmDistance * distance_bin - distance_offset[index];
+					double distance_d  = distance_c - distance_m;	
+					if(distance_d <= r_radius && distance_d >= -r_radius)
+							oneFrame360.around_count[i * row + j]++;					
+				}
+			}
+		}
+	}
+}
 void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 {
 	if(!pmsg) return;
@@ -4144,40 +4180,7 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 		auto it_map = std::max_element(reflectNumMap.begin(), reflectNumMap.end(), func);
 		std::cout << "most reflect is " << it_map->first << ", num is " << it_map->second << std::endl;	
 	} */
-
-	if(modeFilter_ & filterMode::RADIUS_F){
-		std::cout << "======RADIUS_F: oneFrame360.pcDataOneFrame size() is : " <<  oneFrame360.pcDataOneFrame.size() << std::endl;	
-		int width = width_radius;
-		double r_radius = radius_sf;
-		int row = LIGHTNING_MAX_LINES; //max lines
-		int col = oneFrame360.pcDataOneFrame.size() / LIGHTNING_MAX_LINES;
-		int first_x, first_y, last_x, last_y;
-		for(int i = 0; i < col; i++){
-			for(int j = 0; j < row; j ++){
-				if(oneFrame360.vaildV[i * row + j] == false) continue;
-				int lineIndex =  oneFrame360.pcDataOneFrame[i * row + j].pcmVerticalIndex;
-				double distance_m =  oneFrame360.pcDataOneFrame[i * row + j].pcmDistance * distance_bin - distance_offset[lineIndex];
-				first_x = i - width;
-				if(first_x < 0) first_x = 0;
-				first_y = j - width;
-				if(first_y < 0) first_y = 0;
-				last_x = i + width + 1;
-				if(last_x > col) last_x = col;
-				last_y = j + width + 1;
-				if(last_y > row) last_y = row;
-				/* Traverse the selected rectangle */
-				for(int x =  first_x; x < last_x; x++){
-					for(int y = first_y; y < last_y; y++){
-						int index =  oneFrame360.pcDataOneFrame[x * row + y].pcmVerticalIndex;
-						double distance_c =  oneFrame360.pcDataOneFrame[x * row + y].pcmDistance * distance_bin - distance_offset[index];
-						double distance_d  = distance_c - distance_m;	
-						if(distance_d <= r_radius && distance_d >= -r_radius)
-							 oneFrame360.around_count[i * row + j]++;					
-					}
-				}
-			}
-		}
-	}
+	if(modeFilter_ & filterMode::RADIUS_F) radiusFilterProc();
 /* 	std::cout << "distance_min: " << distance_min << " distance_max: " << distance_max \
 	<< " indensity_min: " << indensity_min << " indensity_max: " << indensity_max << " speed_min: " << speed_min \ 
 	<< " speed_max: " << speed_max << std::endl;  */

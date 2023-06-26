@@ -17,6 +17,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <opencv2/opencv.hpp>
 
 using namespace std;
 #define MAXLINE 4096 
@@ -949,6 +950,7 @@ int main(int argc, char** argv)
     maptest[66] = 17;
     auto func = [](pair<char, int> left, pair<char,int> right) {return left.second < right.second;};
     auto it_map = std::max_element(maptest.begin(), maptest.end(), func);
+    std::cout <<  "cv version" << CV_VERSION << std::endl;
     //std::cout << "0x1 << i : " << (0x1 << 1) << std::endl;
 /*     std::pair<int, std::string> tp0 = std::make_pair(1, "hello");
     std::cout << std::get<0>(tp0) << std::get<1>(tp0)  << std::endl; */
