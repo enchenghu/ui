@@ -2050,7 +2050,7 @@ void viewpanel::CreatPCWindow()
 	controls_layout->addWidget( cell_size_label, 1, 16, Qt::AlignRight);
 	controls_layout->addWidget( cell_size_edit, 1, 17, Qt::AlignLeft);	
 
-	controls_layout->addWidget( new QLabel("3d size"), 2, 16, Qt::AlignRight);	
+	controls_layout->addWidget( new QLabel("Z count"), 2, 16, Qt::AlignRight);	
 	controls_layout->addWidget( cell_3d_size_edit, 2, 17, Qt::AlignLeft);	
 
 	//controls_layout->addWidget( color_base_label, 2, 16, Qt::AlignRight);
