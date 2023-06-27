@@ -975,12 +975,12 @@ void viewpanel::prepare_basic_markers( void )
 	/* Prepare the markers that show the number of detections per frame */
 	detections_per_frame_marker.header.frame_id = "image_lidar";
 	detections_per_frame_marker.ns = "lidar_detections_per_frame_marker";
-	detections_per_frame_marker.id = 10006;
+	detections_per_frame_marker.id = 0;
 	detections_per_frame_marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
 	detections_per_frame_marker.action = visualization_msgs::Marker::ADD;
 	detections_per_frame_marker.pose.position.x = 0;
 	detections_per_frame_marker.pose.position.y = -10;
-	detections_per_frame_marker.pose.position.z = 1;
+	detections_per_frame_marker.pose.position.z = 0;
 	detections_per_frame_marker.pose.orientation.x = 0.0;
 	detections_per_frame_marker.pose.orientation.y = 0.0;
 	detections_per_frame_marker.pose.orientation.z = 0.0;
@@ -2086,6 +2086,9 @@ void viewpanel::CreatPCWindow()
 
 	selectAll = new QCheckBox("&Select Ch All/None");
 	selectAll->setChecked(true);
+	selectShowCell = new QCheckBox("&点云刻度");
+	selectShowCell->setChecked(true);
+	controls_layout->addWidget( selectShowCell, 3, 18, Qt::AlignLeft);	
 
 	controlsBox->setLayout(controls_layout);
 	QGroupBox *stateShowBox  = new QGroupBox(tr("State Conditon:"));
@@ -4463,8 +4466,24 @@ void viewpanel::pcDataProc()
 	output.header.frame_id = "image_lidar";
 	fmcw_pcl_pub.publish(output);
 	cloud.clear();
-/* 	detections_per_frame_marker.text = "hello world";
-	lightning_info_markers.publish(detections_per_frame_marker); */
+
+	int cell_size_cur = cell_size;
+	int text_cell;
+	bool showCell = selectShowCell->isChecked();
+	for(int i = 0; i < 2; i++){
+		for(int j = -11; j < 10; j++){
+			detections_per_frame_marker.id = i * 21 + j;
+			detections_per_frame_marker.pose.position.x = (i % 2 == 0) ? 0 : (cell_size_cur * (j+1));
+			detections_per_frame_marker.pose.position.y = (i % 2 == 0) ? (cell_size_cur * (j+1)) : 0;
+			text_cell = cell_size_cur * (j+1);
+			if(text_cell < 0) text_cell = -text_cell;
+			if(showCell)
+				detections_per_frame_marker.text = std::to_string(text_cell).c_str();
+			else
+				detections_per_frame_marker.text = "";
+			lightning_info_markers.publish(detections_per_frame_marker);
+		}
+	}
 	auto end = std::chrono::steady_clock::now();
 
 }

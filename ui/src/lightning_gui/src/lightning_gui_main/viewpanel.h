@@ -510,6 +510,7 @@ class viewpanel : public QTabWidget {
   QVector<QCheckBox*> checkSfWorkV;
 
   QCheckBox* selectAll;
+  QCheckBox* selectShowCell;
   QCheckBox* selectNone;
   QVector<double> x_FFT;
   QVector<double> x_adc0;
