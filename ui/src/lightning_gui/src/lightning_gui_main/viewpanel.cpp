@@ -208,7 +208,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	power_offset(0.0),ifConnectedMotorSerial(false), ifConnectedMotorTcp(false),\
 	ifOpenMotor(false), udpPCStop_(true), udpPCContinu_(true), udpPCSingle_(false),\
 	ifStarted(false),saveadc_(false), oneFramePure(true), ifConnectedStateTcp(false), ctrl_sock(-1), modeFilter_(0), \
-	th_radius(1), radius_sf(0.1), width_radius(0)
+	th_radius(1), radius_sf(0.1), width_radius(0), scale_text_size_(1)
 {
 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
@@ -982,9 +982,9 @@ void viewpanel::prepare_basic_markers( void )
 	detections_per_frame_marker.pose.orientation.y = 0.0;
 	detections_per_frame_marker.pose.orientation.z = 0.0;
 	detections_per_frame_marker.pose.orientation.w = 1.0;
-	detections_per_frame_marker.scale.x = 1;
-	detections_per_frame_marker.scale.y = 1;
-	detections_per_frame_marker.scale.z = 1;
+	detections_per_frame_marker.scale.x = scale_text_size_;
+	detections_per_frame_marker.scale.y = scale_text_size_;
+	detections_per_frame_marker.scale.z = scale_text_size_;
 	detections_per_frame_marker.color.r = 1.0f;
 	detections_per_frame_marker.color.g = 1.0f;
 	detections_per_frame_marker.color.b = 1.0f;
@@ -2962,11 +2962,28 @@ void viewpanel::increasePointSize(){
 	point_size_edit->setText(QString::number(point_size));
 }
 
+void viewpanel::increaseScaleSize()
+{
+	scale_text_size_ += 0.5;
+	detections_per_frame_marker.scale.x = scale_text_size_;
+	detections_per_frame_marker.scale.y = scale_text_size_;
+	detections_per_frame_marker.scale.z = scale_text_size_;
+	configShowCellScale();
+}
 void viewpanel::decreasePointSize(){
 	point_size -= point_size_interval_edit->text().toDouble();;
 	point_size_edit->setText(QString::number(point_size));
 }
 
+void viewpanel::decreaseScaleSize()
+{
+	scale_text_size_ -= 0.5;
+	if(scale_text_size_ <= 0.0) scale_text_size_ = 0.5;
+	detections_per_frame_marker.scale.x = scale_text_size_;
+	detections_per_frame_marker.scale.y = scale_text_size_;
+	detections_per_frame_marker.scale.z = scale_text_size_;
+	configShowCellScale();
+}
 
 void viewpanel::configPointSize(){
 	point_size = point_size_edit->text().toDouble();

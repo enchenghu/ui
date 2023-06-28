@@ -35,6 +35,8 @@ private Q_SLOTS:
     void resetViews();
     void increasePointSize();
   	void decreasePointSize();
+	void increaseScaleSize();
+	void decreaseScaleSize();
   	void colorChange();
 
 	void RecRvizPointcloudControl();

@@ -241,6 +241,16 @@ void MainWindow::increasePointSize( void )
 	viewPanel->increasePointSize();
 }
 
+void MainWindow::increaseScaleSize( void )
+{
+	viewPanel->increaseScaleSize();
+}
+
+void MainWindow::decreaseScaleSize( void )
+{
+	viewPanel->decreaseScaleSize();
+}
+
 void MainWindow::colorChange( void )
 {
 	viewPanel->colorChange();
@@ -368,6 +378,12 @@ void MainWindow::createActions()
 
 	QShortcut  *shortcut_3 = new QShortcut(QKeySequence(tr("ctrl+`")), this);
 	connect(shortcut_3, SIGNAL(activated()), this,SLOT(colorChange()));
+
+	QShortcut  *shortcut_4 = new QShortcut(QKeySequence(tr("ctrl+3")), this);
+	connect(shortcut_4, SIGNAL(activated()), this,SLOT(increaseScaleSize()));
+
+	QShortcut  *shortcut_5 = new QShortcut(QKeySequence(tr("ctrl+4")), this);
+	connect(shortcut_5, SIGNAL(activated()), this,SLOT(decreaseScaleSize()));
 #endif
 
 }

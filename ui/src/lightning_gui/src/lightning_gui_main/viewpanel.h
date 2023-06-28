@@ -126,6 +126,9 @@ class viewpanel : public QTabWidget {
   void resetViews(void);
   void increasePointSize();
   void decreasePointSize();
+
+  void increaseScaleSize();
+  void decreaseScaleSize();
   void colorChange();
 
  private Q_SLOTS:
@@ -294,6 +297,8 @@ class viewpanel : public QTabWidget {
   double cell_3d_size;
 
   double point_size;
+  double scale_text_size_;
+
   double color_base;
   double axes_size;
   double distance_min;
