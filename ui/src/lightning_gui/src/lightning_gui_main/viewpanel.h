@@ -148,6 +148,8 @@ class viewpanel : public QTabWidget {
   void udpPcClose();
   void configAxesSize();
   void configCellSize();
+  void configShowCellScale();
+
   void configCellOffset();
   void config3dCellSize();
 

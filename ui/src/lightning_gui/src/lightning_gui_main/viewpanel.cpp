@@ -975,11 +975,8 @@ void viewpanel::prepare_basic_markers( void )
 	/* Prepare the markers that show the number of detections per frame */
 	detections_per_frame_marker.header.frame_id = "image_lidar";
 	detections_per_frame_marker.ns = "lidar_detections_per_frame_marker";
-	detections_per_frame_marker.id = 0;
 	detections_per_frame_marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
 	detections_per_frame_marker.action = visualization_msgs::Marker::ADD;
-	detections_per_frame_marker.pose.position.x = 0;
-	detections_per_frame_marker.pose.position.y = -10;
 	detections_per_frame_marker.pose.position.z = 0;
 	detections_per_frame_marker.pose.orientation.x = 0.0;
 	detections_per_frame_marker.pose.orientation.y = 0.0;
@@ -992,6 +989,8 @@ void viewpanel::prepare_basic_markers( void )
 	detections_per_frame_marker.color.g = 1.0f;
 	detections_per_frame_marker.color.b = 1.0f;
 	detections_per_frame_marker.color.a = 1.0;
+
+	configShowCellScale();
 }
 
 
@@ -1598,6 +1597,8 @@ void viewpanel::CreatConnect()
 	connect( fftChCombo, SIGNAL( currentTextChanged(QString)), this, SLOT( fftChannelChange( void )));
     connect( axes_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configAxesSize( void )));
     connect( cell_size_edit, SIGNAL( textChanged(QString)), this, SLOT( configCellSize( void )));
+	connect(selectShowCell, SIGNAL(clicked()), this, SLOT( configShowCellScale( void )));
+
     connect( cell_3d_size_edit, SIGNAL( textChanged(QString)), this, SLOT( config3dCellSize( void )));
     connect( cell_offset_edit, SIGNAL( textChanged(QString)), this, SLOT( configCellOffset( void )));
 
@@ -2917,6 +2918,27 @@ void viewpanel::configCellOffset(){
 	grid_->subProp( "Offset" )->setValue(offset);
 
 }
+void viewpanel::configShowCellScale()
+{
+	int cell_size_cur = cell_size;
+	int text_cell;
+	bool showCell = selectShowCell->isChecked();
+	for(int i = 0; i < 2; i++){
+		for(int j = -11; j < 10; j++){
+			detections_per_frame_marker.id = i * 21 + j;
+			detections_per_frame_marker.pose.position.x = (i % 2 == 0) ? 0 : (cell_size_cur * (j+1));
+			detections_per_frame_marker.pose.position.y = (i % 2 == 0) ? (cell_size_cur * (j+1)) : 0;
+			text_cell = cell_size_cur * (j+1);
+			if(text_cell < 0) text_cell = -text_cell;
+			if(showCell)
+				detections_per_frame_marker.text = std::to_string(text_cell).c_str();
+			else
+				detections_per_frame_marker.text = "";
+			lightning_info_markers.publish(detections_per_frame_marker);
+		}
+	}	
+}
+
 void viewpanel::configCellSize(){
 	cell_size = cell_size_edit->text().toDouble();
 	grid_->subProp( "Cell Size" )->setValue(cell_size); 
@@ -2924,6 +2946,7 @@ void viewpanel::configCellSize(){
 	std::cout << "offset is " << offset << std::endl;
 	grid_->subProp( "Offset" )->setValue( "0;0;" + QString::number(offset) );
 	showInfoEditV[2]->setText(cell_size_edit->text());
+	configShowCellScale();
 }
 
 void viewpanel::config3dCellSize(){
@@ -4466,24 +4489,6 @@ void viewpanel::pcDataProc()
 	output.header.frame_id = "image_lidar";
 	fmcw_pcl_pub.publish(output);
 	cloud.clear();
-
-	int cell_size_cur = cell_size;
-	int text_cell;
-	bool showCell = selectShowCell->isChecked();
-	for(int i = 0; i < 2; i++){
-		for(int j = -11; j < 10; j++){
-			detections_per_frame_marker.id = i * 21 + j;
-			detections_per_frame_marker.pose.position.x = (i % 2 == 0) ? 0 : (cell_size_cur * (j+1));
-			detections_per_frame_marker.pose.position.y = (i % 2 == 0) ? (cell_size_cur * (j+1)) : 0;
-			text_cell = cell_size_cur * (j+1);
-			if(text_cell < 0) text_cell = -text_cell;
-			if(showCell)
-				detections_per_frame_marker.text = std::to_string(text_cell).c_str();
-			else
-				detections_per_frame_marker.text = "";
-			lightning_info_markers.publish(detections_per_frame_marker);
-		}
-	}
 	auto end = std::chrono::steady_clock::now();
 
 }
