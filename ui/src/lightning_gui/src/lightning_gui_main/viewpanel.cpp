@@ -4245,7 +4245,7 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg, int fMode)
 		auto it_map = std::max_element(reflectNumMap.begin(), reflectNumMap.end(), func);
 		std::cout << "most reflect is " << it_map->first << ", num is " << it_map->second << std::endl;	
 	} */
-	if(modeFilter_ & filterMode::RADIUS_F) radiusFilterProc();
+	if(fMode & filterMode::RADIUS_F) radiusFilterProc();
 /* 	std::cout << "distance_min: " << distance_min << " distance_max: " << distance_max \
 	<< " indensity_min: " << indensity_min << " indensity_max: " << indensity_max << " speed_min: " << speed_min \ 
 	<< " speed_max: " << speed_max << std::endl;  */
