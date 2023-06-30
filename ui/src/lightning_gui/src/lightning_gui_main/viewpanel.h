@@ -348,6 +348,8 @@ class viewpanel : public QTabWidget {
   QComboBox* CFARCombo;
   QComboBox* PowerCombo;
   QComboBox* ADC_DSA_Combo;
+  QComboBox* InvSincFIR_Combo;
+
   QComboBox* filter_Combo;
 
   QDoubleSpinBox* rotation_spin;
@@ -382,6 +384,8 @@ class viewpanel : public QTabWidget {
   QLineEdit* cell_size_edit;
   QLineEdit* cell_offset_edit;
   QLineEdit* cell_3d_size_edit;
+  QLineEdit* InvSincFIR_edit;
+
 
   QLineEdit* point_size_interval_edit;
   QLineEdit* axes_size_edit;
@@ -484,6 +488,9 @@ class viewpanel : public QTabWidget {
   QPushButton* pcResetBtn;
   QPushButton* loadAlgBtn;
   QPushButton* loadPCRawBtn;
+  QPushButton* configInvBtn;
+  QPushButton* readInvBtn;
+
   QPushButton* regBtnWrite[LIGHTNING_REG_NUM];
   QPushButton* regBtnRead[LIGHTNING_REG_NUM];
   QPushButton* settingADCSavebutton;

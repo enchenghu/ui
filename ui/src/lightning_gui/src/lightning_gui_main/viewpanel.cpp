@@ -1743,19 +1743,9 @@ void viewpanel::CreatPCWindow()
 	QGridLayout* saveLayout = new QGridLayout;
 	QLabel* saveDatalabel = new QLabel( "Select" );
 	QComboBox*saveDataCombo = new QComboBox;
-	saveBtn = new QPushButton("Save PC", this);
+	saveBtn = new QPushButton("Save", this);
 	setButtonStyle(saveBtn);
-	saveDataCombo->addItem(tr("point cloud "));
-	saveDataCombo->addItem(tr("data stream 1"));
-	saveDataCombo->addItem(tr("data stream 2"));
-	saveDataCombo->addItem(tr("data stream 3"));
-	saveDataCombo->addItem(tr("data stream 4"));
-	saveDataCombo->setCurrentIndex(0);
-	saveLayout->addWidget(saveDatalabel, 0, 0, Qt::AlignLeft);
-	saveLayout->addWidget(saveDataCombo, 0, 1, Qt::AlignLeft);
-	saveLayout->addWidget(saveBtn, 0, 2, Qt::AlignLeft);
-	savefileBox->setLayout(saveLayout);
-	fileLayout->addWidget(savefileBox);
+	saveBtn->setFixedSize(70,25);
 
 	QGroupBox *loadfileBox  = new QGroupBox(tr("Load:"));
 	QGridLayout* loadLayout = new QGridLayout;
@@ -1830,8 +1820,15 @@ void viewpanel::CreatPCWindow()
 	controls_layout->addWidget( udp_port_edit, 2, 1, Qt::AlignLeft);
 	controls_layout->addWidget( pcPort_label, 3, 0, Qt::AlignRight);	
 	controls_layout->addWidget( udp_pc_port_edit, 3, 1, Qt::AlignLeft);	
-	controls_layout->addWidget( lidar_connect_button, 4, 0, Qt::AlignLeft);
-	controls_layout->addWidget( setSaveBtn, 4, 1, Qt::AlignLeft);
+	controls_layout->addWidget( lidar_connect_button, 4, 0, Qt::AlignHCenter);
+	controls_layout->addWidget( setSaveBtn, 4, 2, Qt::AlignHCenter);
+
+	//controls_layout->addWidget( new QLabel( "InvSincFIR" ), 4, 0, Qt::AlignRight);
+	InvSincFIR_edit = new QLineEdit;
+	InvSincFIR_edit->setFixedSize(80,25);
+	setReadOnlyLineEdit(InvSincFIR_edit);
+	//controls_layout->addWidget( InvSincFIR_edit, 4, 3, Qt::AlignRight);
+
 
 	QLabel* CFAR_label = new QLabel( "CFAR" );
 	QLabel* m3DFT_label = new QLabel( "3DFT" );
@@ -1859,8 +1856,19 @@ void viewpanel::CreatPCWindow()
 	}
 	loadAlgBtn = new QPushButton("&Load Config", this);
 	loadPCRawBtn = new QPushButton("&Load PC", this);
+
+	configInvBtn = new QPushButton("&config", this);
+	readInvBtn = new QPushButton("&read", this);
+	setButtonStyle(configInvBtn);
+	setButtonStyle(readInvBtn);
+	configInvBtn->setFixedSize(70,25);
+	readInvBtn->setFixedSize(70,25);
+	//controls_layout->addWidget( configInvBtn, 4, 2, Qt::AlignHCenter);
+	//controls_layout->addWidget( readInvBtn, 4, 4, Qt::AlignLeft);
+
 	//loadAlgBtn->setFixedSize(70,25);
-	loadAlgBtn->setFont(QFont("微软雅黑", 10.5));
+	loadAlgBtn->setFont(QFont("微软雅黑", 10));
+	loadPCRawBtn->setFont(QFont("微软雅黑", 10));
 	setButtonStyle(loadAlgBtn);
 	setButtonStyle(loadPCRawBtn);
 	adcRead0_line = new QLineEdit;
@@ -1873,6 +1881,9 @@ void viewpanel::CreatPCWindow()
 	m3DFTCombo = new QComboBox;
 	PowerCombo = new QComboBox;
 	ADC_DSA_Combo =  new QComboBox;
+	InvSincFIR_Combo =  new QComboBox;
+	//controls_layout->addWidget( InvSincFIR_Combo, 4, 1, Qt::AlignLeft);
+
 	filter_Combo =  new QComboBox;
 	colorCombo = new QComboBox;
 	savePCCombo = new QComboBox;
@@ -1884,6 +1895,13 @@ void viewpanel::CreatPCWindow()
 	ADC_DSA_Combo->addItem(QString::number(27));
 	ADC_DSA_Combo->addItem("clear");
 	ADC_DSA_Combo->setCurrentIndex(1);
+
+	InvSincFIR_Combo->addItem("disable");
+	InvSincFIR_Combo->addItem("1st Nyquist Zone");
+	InvSincFIR_Combo->addItem("2nd Nyquist Zone");
+	InvSincFIR_Combo->setCurrentIndex(0);
+	InvSincFIR_Combo->setFixedSize(70,25);
+
 
 	filter_Combo->addItem("all DE");
 	filter_Combo->addItem("all En");
@@ -1967,8 +1985,11 @@ void viewpanel::CreatPCWindow()
 		controls_layout->addWidget( regRead_line[i], i, 12, Qt::AlignLeft);	
 		controls_layout->addWidget( regBtnRead[i], i, 13, Qt::AlignLeft);	
 	}
-	controls_layout->addWidget( loadAlgBtn, 4, 2, Qt::AlignLeft);	
-	controls_layout->addWidget( loadPCRawBtn, 4, 3, Qt::AlignLeft);	
+	controls_layout->addWidget( loadAlgBtn, 4, 3, Qt::AlignLeft);	
+	controls_layout->addWidget( loadPCRawBtn, 4, 4, Qt::AlignLeft);	
+	loadAlgBtn->setFixedSize(75,25);
+	loadPCRawBtn->setFixedSize(70,25);
+
 	QLabel* rotate_label = new QLabel( "rotate angle" );
 	rotation_spin = new QDoubleSpinBox;
 	//rotation_spin->setDecimals(3);
@@ -2043,7 +2064,8 @@ void viewpanel::CreatPCWindow()
 	controls_layout->addWidget( pcSwitchBtn, 0, 15, Qt::AlignRight);	
 	controls_layout->addWidget( pcOnceBtn, 1, 15, Qt::AlignRight);	
 	controls_layout->addWidget( pcResetBtn, 2, 15, Qt::AlignRight);	
-	controls_layout->addWidget( saveBtn, 3, 2, Qt::AlignRight);
+	controls_layout->addWidget( new QLabel("点云采集"), 3, 2, Qt::AlignRight);
+	controls_layout->addWidget( saveBtn, 3, 4, Qt::AlignRight);
 	//controls_layout->addWidget( pcBWBtn, 3, 15, Qt::AlignRight);	
 
 	controls_layout->addWidget( point_size_label, 0, 16, Qt::AlignRight);
@@ -4112,8 +4134,8 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 	minPcValueSpeedV_.clear();
 	minPcValueRange_ = 0.0;
 	bool start_copy = false;
-/* 	if(maxPcValueSpeedV_.empty() || intervalSpeedV_.empty() || thresholdSpeedV_.empty() || thresholdRangeV_.empty()) return;
-	if(maxPcValueIntenV_.empty() || intervalIntenV_.empty() || thresholdIntenV_.empty()) return; */
+	if(maxPcValueSpeedV_.empty() || intervalSpeedV_.empty() || thresholdSpeedV_.empty() || thresholdRangeV_.empty()) return;
+	if(maxPcValueIntenV_.empty() || intervalIntenV_.empty() || thresholdIntenV_.empty()) return;
 
 	for(int i = 0; i < maxPcValueSpeedV_.size(); i++){
 		if(intervalSpeedV_[i] == 0.0) intervalSpeedV_[i] = 0.1;
@@ -4396,6 +4418,7 @@ void viewpanel::pcDataProc()
 		distance_m = oneFrame360.pcDataOneFrame[j].pcmDistance * distance_bin - distance_offset[lineIndex];
 		if(distance_m < 0.0) continue;
 		if(modeFilter_ & filterMode::RADIUS_F){
+			if(oneFrame360.around_count.empty()) continue;
 			if(oneFrame360.around_count[j] < th_radius) continue;	
 		}
 		for(int i = 0; i < rangeSegV.size(); i++){
