@@ -236,7 +236,7 @@ class viewpanel : public QTabWidget {
   void motorInfoShow(uint8_t* ptr, int datalen);
   void pcParseLoop();
   void pcDataProc();
-  void pcDataFilterPreProc(udpPcMsgOneFrame*);
+  void pcDataFilterPreProc(udpPcMsgOneFrame*, int);
   void radiusFilterProc();
   void registerPointcloudRviz();
   void startPcTask();

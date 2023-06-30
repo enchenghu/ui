@@ -4114,9 +4114,9 @@ void viewpanel::radiusFilterProc()
 		}
 	}
 }
-void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
+void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg, int fMode)
 {
-	if(!pmsg) return;
+	if(!pmsg || fMode == BYPASS) return;
 	distance_min, distance_max, indensity_min, indensity_max, speed_min, speed_max   = 0.0;
 	int pcFrameSize = pmsg->pcDataOneFrame.size();
 	shSpeedVV.clear();
@@ -4156,9 +4156,9 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 	hRangeSize = maxPcValueRange_ / intervalRange_;
 	shRangeV.resize(hRangeSize, 0);
 	QString strColor = colorCombo->currentText();
-	std::cout << "modeFilter_: " << modeFilter_ << std::endl;
+	std::cout << "fMode: " << fMode << std::endl;
 
-	if(modeFilter_ & filterMode::RADIUS_F){
+	if(fMode & filterMode::RADIUS_F){
 		oneFrame360.pcDataOneFrame.clear();
 		oneFrame360.vaildV.clear();
 		oneFrame360.around_count.clear();
@@ -4170,7 +4170,7 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 			if(horizontal_m > 360.0) horizontal_m -= 360.0;
 			int lineIndex = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmVerticalIndex;
 			double distance_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmDistance * distance_bin - distance_offset[lineIndex];
-			if(modeFilter_ & filterMode::RADIUS_F){
+			if(fMode & filterMode::RADIUS_F){
 				bool valid  = true;
 				if( distance_m < 0.0) valid  = false;
 				if(lineIndex == 0) start_copy  = true;
@@ -4199,14 +4199,14 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 			}
 			if(locIndex < 0 && rangeSegV.size() > 0) locIndex = rangeSegV.size() - 1;
 			//if(locIndex < 0) continue;
-			if(modeFilter_ & filterMode::RANGE_F){
+			if(fMode & filterMode::RANGE_F){
 				if(distance_m > maxPcValueRange_) continue;
 				int index_r = (distance_m) / intervalRange_;
 				if(index_r >= hRangeSize) index_r = hRangeSize - 1;
 				shRangeV[index_r]++;
 			}		
 			double speed_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmSpeed * speed_bin;
-			if(modeFilter_ & filterMode::SPEED_F){
+			if(fMode & filterMode::SPEED_F){
 				if(speed_m < minPcValueSpeedV_[locIndex] || speed_m > maxPcValueSpeedV_[locIndex])continue;
 				int index_s = (speed_m - minPcValueSpeedV_[locIndex]) / intervalSpeedV_[locIndex];
 				if(index_s >= shSpeedVV[locIndex].size()) index_s = shSpeedVV[locIndex].size() - 1;
@@ -4218,7 +4218,7 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg)
 			uint32_t reIndex = reflectiviy_m / 15000;
 			//intenNumMap[intenIndex]++;
 			//reflectNumMap[reIndex]++;
-			if(modeFilter_ & filterMode::INTEN_F){
+			if(fMode & filterMode::INTEN_F){
 				if(indensity_m > maxPcValueIntenV_[locIndex])continue;
 				int index_s = (indensity_m) / intervalIntenV_[locIndex];
 				if(index_s >= shIntenVV[locIndex].size()) index_s = shIntenVV[locIndex].size() - 1;
@@ -4365,7 +4365,8 @@ void viewpanel::pcDataProc()
 
 	QString strColor = colorCombo->currentText();
 	QString modeFilter = filterCombo->currentText();
-	if(modeFilter_ != BYPASS) pcDataFilterPreProc(pmsg);
+	int modeFilterCur = modeFilter_;
+	pcDataFilterPreProc(pmsg, modeFilterCur);
 	udpPcMsg_free_buf_queue.put(pmsg);
 	double distance_m, vertical_m, intensity_m, speed_m, reflectivity_m;
 	int chan_id_m, index_rgb;
@@ -4402,7 +4403,7 @@ void viewpanel::pcDataProc()
 	int lineIndex = 0;
 	int locIndex = -1;
 	int thld = 10;
-	if(modeFilter_ & filterMode::RADIUS_F){
+	if(modeFilterCur & filterMode::RADIUS_F){
 		if(oneFrame360.around_count.size() != pcFrameSize) {
 			std::cout << "!!!!!!RADIUS_F ERROR!!around_count is wrong! "  << std::endl;
 		}
@@ -4417,7 +4418,7 @@ void viewpanel::pcDataProc()
 		if(!checkPCShowV[lineIndex]->isChecked()) continue;
 		distance_m = oneFrame360.pcDataOneFrame[j].pcmDistance * distance_bin - distance_offset[lineIndex];
 		if(distance_m < 0.0) continue;
-		if(modeFilter_ & filterMode::RADIUS_F){
+		if(modeFilterCur & filterMode::RADIUS_F){
 			if(oneFrame360.around_count.empty()) continue;
 			if(oneFrame360.around_count[j] < th_radius) continue;	
 		}
@@ -4431,7 +4432,7 @@ void viewpanel::pcDataProc()
 
 		speed_m = oneFrame360.pcDataOneFrame[j].pcmSpeed * speed_bin;
 
-		if(modeFilter_ & filterMode::SPEED_F){
+		if(modeFilterCur & filterMode::SPEED_F){
 			if(locIndex < 0 || minPcValueSpeedV_.empty() || maxPcValueSpeedV_.empty() || \ 
 			intervalSpeedV_.empty() || thresholdSpeedV_.empty() || shSpeedVV.empty()) continue;
 			if(speed_m < minPcValueSpeedV_[locIndex] || speed_m > maxPcValueSpeedV_[locIndex]) continue;
@@ -4441,7 +4442,7 @@ void viewpanel::pcDataProc()
 		}
 		vertical_m = fov_vertical[lineIndex];
 		chan_id_m = lineIndex / 4 + 1;
-		if(modeFilter_ & filterMode::RANGE_F){
+		if(modeFilterCur & filterMode::RANGE_F){
 			if(locIndex < 0 || thresholdRangeV_.empty() || shRangeV.empty()) continue;
 			if(distance_m > maxPcValueRange_) continue;
 			int index_i = (int)((distance_m) / intervalRange_);
@@ -4450,7 +4451,7 @@ void viewpanel::pcDataProc()
 		}
 		intensity_m = oneFrame360.pcDataOneFrame[j].pcmIndensity;
 		reflectivity_m = intensity_m * distance_m * distance_m;
-		if(modeFilter_ & filterMode::INTEN_F){
+		if(modeFilterCur & filterMode::INTEN_F){
 			if(locIndex < 0 ||  maxPcValueIntenV_.empty() || intervalIntenV_.empty() || thresholdIntenV_.empty() || shIntenVV.empty()) continue;
 			if(intensity_m > maxPcValueIntenV_[locIndex]) continue;
 			int index_s = (intensity_m) / intervalIntenV_[locIndex];
