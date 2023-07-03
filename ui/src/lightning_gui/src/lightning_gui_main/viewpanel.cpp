@@ -1857,8 +1857,8 @@ void viewpanel::CreatPCWindow()
 	loadAlgBtn = new QPushButton("&Load Config", this);
 	loadPCRawBtn = new QPushButton("&Load PC", this);
 
-	configInvBtn = new QPushButton("&config", this);
-	readInvBtn = new QPushButton("&read", this);
+	configInvBtn = new QPushButton("&config");
+	readInvBtn = new QPushButton("&read");
 	setButtonStyle(configInvBtn);
 	setButtonStyle(readInvBtn);
 	configInvBtn->setFixedSize(70,25);
