@@ -515,6 +515,8 @@ void viewpanel::connectControl(void){
 		if(!udpFftAdcStop_) udpFftAdcClose();
 		if(!udpPCStop_) udpPcClose();
 		::close(ctrl_sock);
+		::close(state_ctrl_sock);
+		vx_task_delete(&bst_task[TASK_SYSTEM_DATA_RECV]);
 	}
 }
 
@@ -1709,10 +1711,13 @@ void viewpanel::CreatPCWindow()
 	fsBoxLayout->addWidget(fullShow2, 0, 4, Qt::AlignRight);
 	showInfoEditV.push_back(new QLineEdit());
 	fsBoxLayout->addWidget(showInfoEditV[0], 0, 1, Qt::AlignLeft);
+	setReadOnlyLineEdit(showInfoEditV[0]);
 	showInfoEditV.push_back(new QLineEdit());
 	fsBoxLayout->addWidget(showInfoEditV[1], 0, 3, Qt::AlignLeft);
+	setReadOnlyLineEdit(showInfoEditV[1]);
 	showInfoEditV.push_back(new QLineEdit());
 	fsBoxLayout->addWidget(showInfoEditV[2], 0, 5, Qt::AlignLeft);
+	setReadOnlyLineEdit(showInfoEditV[2]);
 	fsBox->setLayout(fsBoxLayout);
 	fsLayout->addWidget(fsBox, 0, 0, Qt::AlignLeft | Qt::AlignTop);
 	fullScreenWidget->setLayout(fsLayout);
