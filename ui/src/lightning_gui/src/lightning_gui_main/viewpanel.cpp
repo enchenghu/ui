@@ -4731,8 +4731,9 @@ void viewpanel::udpRecvPCLoop()
 				pUdp->pcDataOneFrame = pcDataOneFrame_;
 				udpPcMsg_done_buf_queue.put(pUdp);	
 			}else{
-				byteSpeed_ = 0;
-				return;
+				byteSpeed_ = -1;
+				ROS_INFO("!!!!error!!!!udpPcMsg_free_buf_queue is empty, continue\n");
+				//return;
 			}
 		}
 	}
