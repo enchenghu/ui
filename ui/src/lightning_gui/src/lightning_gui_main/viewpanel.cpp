@@ -4476,6 +4476,7 @@ void viewpanel::pcDataProc()
 		cloud.points[j].indensity = intensity_m;
 		cloud.points[j].speed = speed_m;
 		cloud.points[j].chan_id = chan_id_m;
+		cloud.points[j].line_id = lineIndex + 1;
 		cloud.points[j].reflectivity = reflectivity_m;
 		horizontal_m += rotation_offset;
 		cloud.points[j].x = distance_m * cos(vertical_m * PI_FMCW / 180) * \
