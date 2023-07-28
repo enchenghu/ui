@@ -4260,7 +4260,6 @@ void viewpanel::pcDataProc()
 {
 	udpPcMsgOneFrame* pmsg = nullptr;
 	static long long frame_index = 0;
-	auto start = std::chrono::steady_clock::now();
 	if(udpPcMsg_done_buf_queue.get(pmsg)){
 		return;
 	}
@@ -4359,6 +4358,7 @@ void viewpanel::pcDataProc()
 		udpPcMsg_free_buf_queue.put(pmsg);
 		return;
 	}
+	auto start = std::chrono::steady_clock::now();
 	for(int i = 0; i < LIGHTNING_MAX_LINES; i++)
 		distance_offset[i] = distanceOffsetEditV[i]->text().toDouble();
 	rotation_offset = rotation_spin->value();
@@ -4371,7 +4371,9 @@ void viewpanel::pcDataProc()
 	QString strColor = colorCombo->currentText();
 	QString modeFilter = filterCombo->currentText();
 	int modeFilterCur = modeFilter_;
+	/*pc filter*/
 	pcDataFilterPreProc(pmsg, modeFilterCur);
+
 	udpPcMsg_free_buf_queue.put(pmsg);
 	double distance_m, vertical_m, intensity_m, speed_m, reflectivity_m;
 	int chan_id_m, index_rgb;
@@ -4537,7 +4539,8 @@ void viewpanel::pcDataProc()
 	fmcw_pcl_pub.publish(output);
 	cloud.clear();
 	auto end = std::chrono::steady_clock::now();
-
+    std::chrono::duration<double> elapsed = end - start;
+	std::cout << "======time for pcDataProc of post process: " <<  elapsed.count() * 1000 << " ms" << std::endl;    
 }
 
 void viewpanel::pcParseLoop()
@@ -4546,12 +4549,11 @@ void viewpanel::pcParseLoop()
     std::chrono::duration<double> elapsed;
 	while(!terminating)
 	{
-		//ROS_INFO("============enter udpParseLoop");
 		auto start = std::chrono::steady_clock::now();
 		pcDataProc();
 		auto end = std::chrono::steady_clock::now();
 		elapsed = end - start;
-		std::cout << "time for pcDataProc : " <<  elapsed.count() * 1000 << " ms" << std::endl;    
+		std::cout << "=======time for pcDataProc of all: " <<  elapsed.count() * 1000 << " ms" << std::endl;    
 		if(udpPCStop_) break;
 	}
 	std::cout << "quit pcParseLoop" << std::endl;
@@ -4709,32 +4711,27 @@ void viewpanel::udpRecvPCLoop()
 				continue;
 			}
 			bytesNum += ret;
-
 			if(i == 0) head_frame_index = pcDataRaw_.UDP_PC_head.uphFrameCounter;
-			pcDataOneFrame_.emplace_back(pcDataRaw_);
 			if(pcDataRaw_.UDP_PC_head.uphFrameCounter!= head_frame_index) {
-				if(pcDataOneFrame_.size() > 2)pcDataOneFrame_.pop_back();
-				ifLost = true;
-				std::cout << "!!!warnning!!! current usFrameCounter is " << pcDataRaw_.UDP_PC_head.uphFrameCounter
+				std::cout << "!!!warnning!!! current usFrameCounter is " << pcDataRaw_.UDP_PC_head.uphFrameCounter \
 				 << ", head_frame_index is " << head_frame_index << std::endl;	
 				break;
 			} 
+			pcDataOneFrame_.emplace_back(pcDataRaw_);
 		}
 		auto end = std::chrono::steady_clock::now();
 		elapsed = end - start;
-		std::cout << "time for one frame udp: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
+		std::cout << "udp cost time for recv one frame pc raw data: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
 		float temp = calcFpsAndTransSpeed(bytesNum);
 		if(temp > 0) byteSpeed_ =  temp / 1024.0;
-		//std::cout << "!!recv udp pkg successfully! "  << std::endl;
 		if(pcDataOneFrame_.size() > 2){
 			udpPcMsgOneFrame* pUdp = NULL;
-			if(udpPcMsg_free_buf_queue.get(pUdp) == 0){
-				pUdp->pcDataOneFrame = pcDataOneFrame_;
-				udpPcMsg_done_buf_queue.put(pUdp);	
-			}else{
+			if(udpPcMsg_free_buf_queue.get(pUdp)){
 				byteSpeed_ = -1;
 				ROS_INFO("!!!!error!!!!udpPcMsg_free_buf_queue is empty, continue\n");
-				//return;
+			}else{
+				pUdp->pcDataOneFrame = pcDataOneFrame_;
+				udpPcMsg_done_buf_queue.put(pUdp);	
 			}
 		}
 	}
