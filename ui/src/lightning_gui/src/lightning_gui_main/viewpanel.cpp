@@ -4372,7 +4372,13 @@ void viewpanel::pcDataProc()
 	QString modeFilter = filterCombo->currentText();
 	int modeFilterCur = modeFilter_;
 	/*pc filter*/
+	auto start1 = std::chrono::steady_clock::now();
+
 	pcDataFilterPreProc(pmsg, modeFilterCur);
+
+	auto end1 = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed_1 = end1 - start1;
+	std::cout << "======time for pcDataFilterPreProc: " <<  elapsed_1.count() * 1000 << " ms" << std::endl;    
 
 	udpPcMsg_free_buf_queue.put(pmsg);
 	double distance_m, vertical_m, intensity_m, speed_m, reflectivity_m;
