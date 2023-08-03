@@ -2958,6 +2958,7 @@ void viewpanel::udpPcClose(){
 	vx_task_delete(&bst_task[TASK_POINTCLOUD_DATA_PARSE]);
 	pcSwitchBtn->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}");
 	pcSwitchBtn->setText("&Start PC");
+	fps_m = 0;
 }
 
 
@@ -4291,12 +4292,12 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg, int fMode)
 	<< " speed_max: " << speed_max << std::endl;  */
 }
 
-void viewpanel::pcDataProc()
+int viewpanel::pcDataProc()
 {
 	udpPcMsgOneFrame* pmsg = nullptr;
 	static long long frame_index = 0;
 	if(udpPcMsg_done_buf_queue.get(pmsg)){
-		return;
+		return -1;
 	}
 	int pcFrameSize = 0;
 	double horizontal_m = 0.0;
@@ -4317,7 +4318,7 @@ void viewpanel::pcDataProc()
 		}
 		udpPcMsg_free_buf_queue.put(pmsg);
 		if(udpPcMsg_done_buf_queue.get(pmsg)){
-			return;
+			return -1;
 		}
 	}
 	pcFrameSize = udpPCBuff_last.pcDataOneFrame.size();
@@ -4391,7 +4392,7 @@ void viewpanel::pcDataProc()
 #endif
 	if(!udpPCContinu_ && !udpPCSingle_){
 		udpPcMsg_free_buf_queue.put(pmsg);
-		return;
+		return 0;
 	}
 	auto start = std::chrono::steady_clock::now();
 	for(int i = 0; i < LIGHTNING_MAX_LINES; i++)
@@ -4582,6 +4583,7 @@ void viewpanel::pcDataProc()
 	auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapsed = end - start;
 	std::cout << "======time for pcDataProc of post process: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
+	return 0;
 
 }
 
@@ -4592,7 +4594,7 @@ void viewpanel::pcParseLoop()
 	while(!terminating)
 	{
 		auto start = std::chrono::steady_clock::now();
-		pcDataProc();
+		if(pcDataProc()) break;
 		auto end = std::chrono::steady_clock::now();
 		elapsed = end - start;
 		std::cout << "=======time for pcDataProc of all: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
@@ -4600,8 +4602,12 @@ void viewpanel::pcParseLoop()
 /* 		if(fps_c >= 0) {
 			showInfoEditV[3]->setText(QString::number(fps_c));
 		}   */ 
-		if(udpPCStop_) break;
+		if(udpPCStop_) {
+			fps_m = 0;
+			break;
+		}
 	}
+	fps_m = 0;
 	std::cout << "quit pcParseLoop" << std::endl;
 }
 void viewpanel::udpParseFftAdcLoop()
