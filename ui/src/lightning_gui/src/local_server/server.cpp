@@ -18,7 +18,9 @@
 #include <sstream>
 #include <vector>
 #include <opencv2/opencv.hpp>
-
+#include <thread>
+#include <mutex>
+#include <list>
 using namespace std;
 #define MAXLINE 4096 
 #define INFO "info"
@@ -937,20 +939,73 @@ void pc_raw_path_callback(std_msgs::String msg)
     const char *cali_file_path = msg.data.c_str();
     LoadDat(cali_file_path);
 }
+
+using namespace std;
+class Things
+{
+public:
+	void goToilet()
+	{
+        cout << "goToilet id is " <<  std::this_thread::get_id() << endl;
+		for (int i = 0; i < 20; i++)
+		{
+			//unique_lock<mutex> unique(mtx);//一样是在构造函数和析构函数中进行加锁和解锁的过程
+			cout << "上厕所 i = " << i << endl;
+			num.push_back(i);
+            //std::this_thread::yield();
+		}
+	}
+	void goBath()
+	{
+        cout << "goBath id is " <<  std::this_thread::get_id() << endl;
+		for (int i = 0; i < 20; i++)
+		{
+			if (!num.empty())
+			{
+				//unique_lock<mutex> unique(mtx);
+			    cout << "洗澡 i = " << i << endl;
+				num.pop_back();
+                //if(i = 16) std::this_thread::yield();
+			}
+			else
+			{
+				cout << "干其他事情" << endl;
+			}
+		}
+	}
+protected:
+	list<int> num;
+	mutex mtx;
+};
+
+void change( int & a,  int &b)
+{
+    int temp = a;
+    a = b;
+    b = temp;
+}
 int main(int argc, char** argv) 
 { 
-    pthread_t udp_send;
-    pthread_t udp_PC_send;
-
-
-    std::map<int, int> maptest;
+    int a = 666;
+    int b = 777;
+    //auto x = std::ref(a);
+    //auto y = std::ref(b);
+    change((int &)a, (int &)b);
+    cout << "a is "  << a << ", b is "  << b <<endl; 
+/* 	Things DoSomeThing;
+	thread t1(&Things::goToilet, &DoSomeThing);
+	thread t2(&Things::goBath, &DoSomeThing);
+	t1.detach();
+	t2.detach();    
+    cout << "next" << endl; */
+/*     std::map<int, int> maptest;
     maptest[0]++;
     maptest[11] = 20;
     maptest[3] = 9;
     maptest[66] = 17;
     auto func = [](pair<char, int> left, pair<char,int> right) {return left.second < right.second;};
     auto it_map = std::max_element(maptest.begin(), maptest.end(), func);
-    std::cout <<  "cv version" << CV_VERSION << std::endl;
+    std::cout <<  "cv version" << CV_VERSION << std::endl; */
     //std::cout << "0x1 << i : " << (0x1 << 1) << std::endl;
 /*     std::pair<int, std::string> tp0 = std::make_pair(1, "hello");
     std::cout << std::get<0>(tp0) << std::get<1>(tp0)  << std::endl; */
@@ -987,6 +1042,8 @@ int main(int argc, char** argv)
     double angle = 389.2;
     angle -= 360.0;
     cout << "angle is " << angle << endl; */
+    pthread_t udp_send;
+    pthread_t udp_PC_send;
     int listenfd, connfd; 
     commandMsg msg;
     struct sockaddr_in servaddr; 

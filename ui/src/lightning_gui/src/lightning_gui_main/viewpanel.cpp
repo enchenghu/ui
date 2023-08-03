@@ -128,14 +128,32 @@ inline float calcFpsAndTransSpeed(int n)
 	byteNum += n;
 	auto current = std::chrono::steady_clock::now();
 	elapsed = current - last;
-	if(elapsed.count() * 1000  > 3 * 1000){
+	if(elapsed.count() > 3){
 		last = current;
-		float res = (float) (byteNum * 1000) / (elapsed.count() * 1000);
+		float res = (float) (byteNum) / (elapsed.count());
 		byteNum = 0;
 		return res;
 	}
 	return -1;
 }
+
+inline float calcFps()
+{
+	static auto last = std::chrono::steady_clock::now();
+	static long fNum = 0;
+	std::chrono::duration<double> elapsed;
+	fNum++;
+	auto current = std::chrono::steady_clock::now();
+	elapsed = current - last;
+	if(elapsed.count() > 3){
+		last = current;
+		float res = (float) (fNum) / (elapsed.count());
+		fNum = 0;
+		return res;
+	}
+	return -1;
+}
+
 
 inline int tcpSocketCheck(int sock)
 {
@@ -1706,9 +1724,12 @@ void viewpanel::CreatPCWindow()
 	fullShow1->setStyleSheet("color:yellow;");
 	QLabel* fullShow2 = new QLabel("单元格长度/m:");
 	fullShow2->setStyleSheet("color:yellow;");
+	QLabel* fullShow3 = new QLabel("帧率/fps:");
+	fullShow3->setStyleSheet("color:yellow;");
 	fsBoxLayout->addWidget(fullShow0, 0, 0, Qt::AlignRight);
 	fsBoxLayout->addWidget(fullShow1, 0, 2, Qt::AlignRight);
 	fsBoxLayout->addWidget(fullShow2, 0, 4, Qt::AlignRight);
+	fsBoxLayout->addWidget(fullShow3, 0, 6, Qt::AlignRight);
 	showInfoEditV.push_back(new QLineEdit());
 	fsBoxLayout->addWidget(showInfoEditV[0], 0, 1, Qt::AlignLeft);
 	setReadOnlyLineEdit(showInfoEditV[0]);
@@ -1718,11 +1739,20 @@ void viewpanel::CreatPCWindow()
 	showInfoEditV.push_back(new QLineEdit());
 	fsBoxLayout->addWidget(showInfoEditV[2], 0, 5, Qt::AlignLeft);
 	setReadOnlyLineEdit(showInfoEditV[2]);
+
+	showInfoEditV.push_back(new QLineEdit());
+	fsBoxLayout->addWidget(showInfoEditV[3], 0, 7, Qt::AlignLeft);
+	setReadOnlyLineEdit(showInfoEditV[3]);
+
+	showInfoEditV[3]->setText("0");
+	showInfoEditV[3]->setStyleSheet("QLineEdit{color:rgb(255, 255, 0);}");
+
 	fsBox->setLayout(fsBoxLayout);
 	fsLayout->addWidget(fsBox, 0, 0, Qt::AlignLeft | Qt::AlignTop);
 	fullScreenWidget->setLayout(fsLayout);
 	showInfoEditV[1]->setText("0");
 	showInfoEditV[1]->setStyleSheet("QLineEdit{color:rgb(255, 255, 0);}");
+
 	fullScreenWidget->hide();
 
 	ctrlDock->setFeatures(QDockWidget::DockWidgetClosable );
@@ -3101,6 +3131,8 @@ void viewpanel::updateFFTdata() {
 		}
 		fftMsg_free_buf_queue.put(pfft);
 		ROS_INFO("fftMsg update");  
+	}else{
+		//std::this_thread::yield();
 	}
 #endif
 
@@ -3209,6 +3241,9 @@ void viewpanel::updateState()
 		setLED(netStateLED, C_GREEN);
 	};
 	byteSpeedLine->setText(QString::number(byteSpeed_));
+	if(fps_m >= 0) {
+		showInfoEditV[3]->setText(QString::number(fps_m, 'f', 2));
+	}   
 }
 
 
@@ -4546,7 +4581,8 @@ void viewpanel::pcDataProc()
 	cloud.clear();
 	auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapsed = end - start;
-	std::cout << "======time for pcDataProc of post process: " <<  elapsed.count() * 1000 << " ms" << std::endl;    
+	std::cout << "======time for pcDataProc of post process: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
+
 }
 
 void viewpanel::pcParseLoop()
@@ -4559,7 +4595,11 @@ void viewpanel::pcParseLoop()
 		pcDataProc();
 		auto end = std::chrono::steady_clock::now();
 		elapsed = end - start;
-		std::cout << "=======time for pcDataProc of all: " <<  elapsed.count() * 1000 << " ms" << std::endl;    
+		std::cout << "=======time for pcDataProc of all: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
+		fps_m = calcFps();
+/* 		if(fps_c >= 0) {
+			showInfoEditV[3]->setText(QString::number(fps_c));
+		}   */ 
 		if(udpPCStop_) break;
 	}
 	std::cout << "quit pcParseLoop" << std::endl;

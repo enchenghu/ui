@@ -478,6 +478,7 @@ class viewpanel : public QTabWidget {
   showModel ifShowdB_;
   bool ifSave;
   bool oneFramePure;
+  float fps_m;
   QPushButton* lidar_connect_button;
   QPushButton* setSaveBtn;
   QPushButton* pcSwitchBtn;
