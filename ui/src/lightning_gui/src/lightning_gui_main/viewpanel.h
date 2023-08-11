@@ -71,26 +71,38 @@
 #include "vx_queue.h"
 #include "vx_task.h"
 #include "systemMonitor.h"
+#include <map>
+#include <queue>
+#include <tuple>
+#include "SafeQueue.h"
 
 using namespace fmcw_types;
+template<class T>
+class TestClass{
+public:
+  TestClass(int i, int j){
+    int a = i;
+    int b = j;
+  }
+};
+using flidarMsgPtr_ = std::shared_ptr<msgBase>;
+using FlidarMsgQueue = SafeQueue<flidarMsgPtr_>;//bstMsgQueue<std::shared_ptr<void>>;
+//using FlidarMsgQueue = bstMsgQueue<void *>;
+using FlidarMsgQueues  = std::vector<FlidarMsgQueue>;
+struct FlidarMsgQueuesUnit{
+  FlidarMsgQueuesUnit(FlidarMsgQueues &&a, FlidarMsgQueues &&b): free(std::forward<FlidarMsgQueues>(a)), done(std::forward<FlidarMsgQueues>(b)){}
+  FlidarMsgQueues free;
+  FlidarMsgQueues done;
+};
+//using FlidarMsgQueuesUnit = std::pair<FlidarMsgQueues, FlidarMsgQueues>;
+using FlidarTaskUnit = std::pair<LIGHTNING_TASK_ID, std::shared_ptr<FlidarMsgQueuesUnit>>;
+using FlidarTaskMap  = std::map<LIGHTNING_TASK_ID, std::shared_ptr<FlidarMsgQueuesUnit>>;
+
 namespace rviz {
 class Display;
 class RenderPanel;
 class VisualizationManager;
 }  // namespace rviz
-
-typedef enum {
-  VT_TOP,
-  VT_TOP_CAR,
-  VT_CAR,
-  VT_SIDE,
-  VT_STANDOFF,
-  VT_120M,
-  VT_DIAG,
-  VT_BOUTIQUE_1,
-  VT_BOUTIQUE_2,
-  VT_BOUTIQUE_3
-} eViewType;
 
 typedef struct view_vals_t {
   QVariant distance;
@@ -465,6 +477,10 @@ class viewpanel : public QTabWidget {
   bstMsgQueue<motorMaxBuff*> motorMsg_done_buf_queue;
   bstMsgQueue<stateMaxBuff*> stateMsg_free_buf_queue;
   bstMsgQueue<stateMaxBuff*> stateMsg_done_buf_queue;
+
+  FlidarMsgQueues msgQueues_m;
+  FlidarTaskMap msgQueuesMap_m;
+  std::shared_ptr<FlidarMsgQueuesUnit> msg_queue_pc;
 
   std::string loadFileType_;
   QString loadLidarFile_;

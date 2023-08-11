@@ -290,20 +290,33 @@ void viewpanel::init_queue()
 		x_adc0.append(i);
 		x_adc1.append(i);
 	}
-	fmcwPointsData_ = std::make_shared<fmcw_types::fmcwPoints>();
+	msgQueuesMap_m.clear();
+	msgQueuesMap_m.insert(FlidarTaskUnit(TASK_FFT_ADC_DATA_RECV, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
+	msgQueuesMap_m.insert(FlidarTaskUnit(TASK_FFT_ADC_DATA_PARSE, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(2), FlidarMsgQueues(2))));
+	msgQueuesMap_m.insert(FlidarTaskUnit(TASK_POINTCLOUD_DATA_RECV, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
+	msgQueuesMap_m.insert(FlidarTaskUnit(TASK_MOTOR_DATA_RECV, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
+	msgQueuesMap_m.insert(FlidarTaskUnit(TASK_SYSTEM_DATA_RECV,std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
+
+	for (int loop = 0; loop < 4; loop++) {
+		msgQueuesMap_m[TASK_FFT_ADC_DATA_RECV]->free.at(0).put(std::make_shared<udp_ADC_FFT_Msg>());
+		msgQueuesMap_m[TASK_FFT_ADC_DATA_PARSE]->free.at(0).put(std::make_shared<fftMsg>());
+		msgQueuesMap_m[TASK_FFT_ADC_DATA_PARSE]->free.at(1).put(std::make_shared<adcMsg>());
+		msgQueuesMap_m[TASK_POINTCLOUD_DATA_RECV]->free.at(0).put(std::make_shared<udpPcMsgOneFrame>());
+		msgQueuesMap_m[TASK_MOTOR_DATA_RECV]->free.at(0).put(std::make_shared<motorMaxBuff>());
+		msgQueuesMap_m[TASK_SYSTEM_DATA_RECV]->free.at(0).put(std::make_shared<stateMaxBuff>());
+    }
+	
+
     fftMsg_free_buf_queue.setParam("fftMsg_free_buf_queue", MAX_BUFF_LEN);
     fftMsg_done_buf_queue.setParam("fftMsg_done_buf_queue", MAX_BUFF_LEN);
     adcMsg_free_buf_queue.setParam("adcMsg_free_buf_queue", MAX_BUFF_LEN);
     adcMsg_done_buf_queue.setParam("adcMsg_done_buf_queue", MAX_BUFF_LEN);
 	udpMsg_free_buf_queue.setParam("udpMsg_free_buf_queue", MAX_BUFF_LEN);
     udpMsg_done_buf_queue.setParam("udpMsg_done_buf_queue", MAX_BUFF_LEN); 
-	udpPcMsg_free_buf_queue.setParam("udpPcMsg_free_buf_queue", MAX_BUFF_LEN);
-    udpPcMsg_done_buf_queue.setParam("udpPcMsg_done_buf_queue", MAX_BUFF_LEN); 
 	motorMsg_free_buf_queue.setParam("motorMsg_free_buf_queue", MAX_BUFF_LEN);
 	motorMsg_done_buf_queue.setParam("motorMsg_done_buf_queue", MAX_BUFF_LEN);
 	stateMsg_free_buf_queue.setParam("stateMsg_free_buf_queue", MAX_BUFF_LEN);
 	stateMsg_done_buf_queue.setParam("stateMsg_done_buf_queue", MAX_BUFF_LEN);
-
 
     for (int loop = 0; loop < 4; loop++) {
         fftMsg *fbuf0 = &fftBuff[loop];
@@ -315,7 +328,6 @@ void viewpanel::init_queue()
         fftMsg_free_buf_queue.put(fbuf0);
         adcMsg_free_buf_queue.put(fbuf1);
         udpMsg_free_buf_queue.put(fbuf2);
-        udpPcMsg_free_buf_queue.put(fbuf3);
 		motorMsg_free_buf_queue.put(fbuf4);
 		stateMsg_free_buf_queue.put(fbuf5);
     }
@@ -3985,23 +3997,8 @@ void viewpanel::updateADCdata() {
 }
 
 void viewpanel::startPcUdpOnce() {
-
-#if 0
-	commandMsg cmdMsg;
-	memset(&cmdMsg, 0, sizeof(commandMsg));
-	cmdMsg.mHead.usCommand = commandType::POINTCLOUD_UDP_START;
-	if(::write(ctrl_sock, &cmdMsg, sizeof(commandMsg)) < 0){
-		QMessageBox msgBox;
-		msgBox.setText("startPcUdpOnce failed! Disconnect the target");
-		msgBox.exec();
-		return;
-	}	
-	udpRecvPCOnce();	
-	pcDataProc();
-#else
 	udpPCContinu_ = false;
 	udpPCSingle_ = true;
-#endif
 }
 
 void viewpanel::startPcUdpContinuous() {
@@ -4089,6 +4086,7 @@ void viewpanel::FFT_ADC_UDP_Connect() {
 
 void viewpanel::startPcTask() 
 {
+	msg_queue_pc = msgQueuesMap_m[TASK_POINTCLOUD_DATA_RECV];
 	vx_task_set_default_create_params(&bst_params);
 	bst_params.app_var = this;
 	bst_params.task_mode = 0;
@@ -4294,11 +4292,12 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg, int fMode)
 
 int viewpanel::pcDataProc()
 {
-	udpPcMsgOneFrame* pmsg = nullptr;
+	flidarMsgPtr_ ppmsg = nullptr;
 	static long long frame_index = 0;
-	if(udpPcMsg_done_buf_queue.get(pmsg)){
+	if(msg_queue_pc->done.at(0).get(ppmsg)){
 		return -1;
 	}
+	udpPcMsgOneFrame* pmsg = (udpPcMsgOneFrame*)ppmsg.get();
 	int pcFrameSize = 0;
 	double horizontal_m = 0.0;
 	bool begin_save = false;
@@ -4316,10 +4315,11 @@ int viewpanel::pcDataProc()
 				udpPCBuff_last.frameCounter.push_back(pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter);
 			}
 		}
-		udpPcMsg_free_buf_queue.put(pmsg);
-		if(udpPcMsg_done_buf_queue.get(pmsg)){
+		msg_queue_pc->free.at(0).put(ppmsg);
+		if(msg_queue_pc->done.at(0).get(ppmsg)){
 			return -1;
 		}
+		pmsg = (udpPcMsgOneFrame*)ppmsg.get();
 	}
 	pcFrameSize = udpPCBuff_last.pcDataOneFrame.size();
 	oneFrame360.pcDataOneFrame.clear();
@@ -4391,7 +4391,7 @@ int viewpanel::pcDataProc()
 	}
 #endif
 	if(!udpPCContinu_ && !udpPCSingle_){
-		udpPcMsg_free_buf_queue.put(pmsg);
+		msg_queue_pc->free.at(0).put(ppmsg);
 		return 0;
 	}
 	auto start = std::chrono::steady_clock::now();
@@ -4416,7 +4416,7 @@ int viewpanel::pcDataProc()
     std::chrono::duration<double> elapsed_1 = end1 - start1;
 	std::cout << "======time for pcDataFilterPreProc: " <<  elapsed_1.count() * 1000 << " ms" << std::endl;    
 
-	udpPcMsg_free_buf_queue.put(pmsg);
+	msg_queue_pc->free.at(0).put(ppmsg);
 	double distance_m, vertical_m, intensity_m, speed_m, reflectivity_m;
 	int chan_id_m, index_rgb;
 #if SINGELE_PC_SAVE
@@ -4675,60 +4675,7 @@ int viewpanel::udpRecvPCConnect()
 
 void viewpanel::udpRecvPCOnce()
 {
-	uint32_t head_frame_index = 0;
-	bool ifLost  = false;
-    std::chrono::duration<double> elapsed;	
-	int ret = 0;
-	struct sockaddr_in src_addr;
-	socklen_t len;
-	len = sizeof(sockaddr);
-	auto start = std::chrono::steady_clock::now();
-	pcDataOneFrame_.clear();
-	ifLost  = false;
-	for(int i = 0; i < UDP_PC_TIMES_PER_FRAME; i++){
-		memset(&pcDataRaw_, 0, sizeof(pcDataRaw_));
-		ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcDataRaw_), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
-		if(ret <= 0){
-			if(udpPCStop_) {
-				printf("pc raw udp  quit!\n"); 
-				::close(udpRecvPCSocketFd_);
-				return;
-			}
-			ROS_INFO("pc raw data recv failed, continue\n");
-			usleep(100*1000);
-			i--;
-			continue;
-		}
 
-		if(i == 0) head_frame_index = pcDataRaw_.UDP_PC_head.uphFrameCounter;
-		pcDataOneFrame_.emplace_back(pcDataRaw_);
-		if(pcDataRaw_.UDP_PC_head.uphFrameCounter!= head_frame_index) {
-			if(pcDataOneFrame_.size() > 2)pcDataOneFrame_.pop_back();
-			ifLost = true;
-			std::cout << "!!!warnning!!! current usFrameCounter is " << pcDataRaw_.UDP_PC_head.uphFrameCounter
-				<< ", head_frame_index is " << head_frame_index << std::endl;	
-			break;
-		} 
-	}
-	auto end = std::chrono::steady_clock::now();
-	elapsed = end - start;
-	std::cout << "time for one frame udp: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
-	//std::cout << "!!recv udp pkg successfully! "  << std::endl;
-	if(pcDataOneFrame_.size() > 2){
-		udpPcMsgOneFrame* pUdp = NULL;
-		if(udpPcMsg_free_buf_queue.get(pUdp) == 0){
-			pUdp->pcDataOneFrame = pcDataOneFrame_;
-			udpPcMsg_done_buf_queue.put(pUdp);	
-		}else{
-			std::cout << "error!!! udpPcMsg_free_buf_queue timeout!! "  << std::endl;
-			return;
-		}
-	}else{
-		QMessageBox msgBox;
-		msgBox.setText("udpRecvPCOnce fail! pcDataOneFrame_ points are not enough!!");
-		msgBox.exec();
-		return;		
-	}	
 }
 
 void viewpanel::udpRecvPCLoop()
@@ -4777,13 +4724,14 @@ void viewpanel::udpRecvPCLoop()
 		float temp = calcFpsAndTransSpeed(bytesNum);
 		if(temp > 0) byteSpeed_ =  temp / 1024.0;
 		if(pcDataOneFrame_.size() > 2){
-			udpPcMsgOneFrame* pUdp = NULL;
-			if(udpPcMsg_free_buf_queue.get(pUdp)){
+			flidarMsgPtr_ ppUdp = NULL;
+			if(msg_queue_pc->free.at(0).get(ppUdp)){
 				byteSpeed_ = -1;
-				ROS_INFO("!!!!error!!!!udpPcMsg_free_buf_queue is empty, continue\n");
+				ROS_INFO("!!!!error!!!!msg_queue_pc free is empty, continue\n");
 			}else{
+				udpPcMsgOneFrame* pUdp = (udpPcMsgOneFrame*)ppUdp.get();
 				pUdp->pcDataOneFrame = pcDataOneFrame_;
-				udpPcMsg_done_buf_queue.put(pUdp);	
+				msg_queue_pc->done.at(0).put(ppUdp);	
 			}
 		}
 	}

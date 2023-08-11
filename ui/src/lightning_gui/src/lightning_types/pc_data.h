@@ -150,6 +150,9 @@ typedef struct
 	uint32_t 	mCommandVal[2];
 } commandMsg;
 
+struct msgBase{
+
+};
 #pragma pack(1)    // pack(1): pack之间的数据类型，1字节对齐
 
 typedef struct 
@@ -257,12 +260,12 @@ typedef struct
 	MotorMsgTailer 	tailer; 
 } motorShowMsg;
 
-typedef struct 
+typedef struct : msgBase
 {
 	uint8_t     data[128];
 } motorMaxBuff;
 
-typedef struct 
+typedef struct : msgBase
 {
 	uint8_t     data[128];
 } stateMaxBuff;
@@ -275,7 +278,10 @@ typedef struct
 	uint8_t 	pcUdpData[UDP_PC_SIZE_SINGLE];
 } udpMsg;
 
-typedef struct 
+
+
+
+typedef struct : public msgBase
 {
 	QVector<double> dataFFT_0;
 	QVector<double> dataFFT_1;
@@ -284,13 +290,13 @@ typedef struct
 
 }fftMsg;
 
-typedef struct 
+typedef struct : public msgBase
 {
 	QVector<double> dataADC0;
 	QVector<double> dataADC1;
 }adcMsg;
 
-typedef struct 
+typedef struct : public msgBase
 {
 	std::vector<uint8_t> fftDataV;
 	std::vector<uint8_t> adcDataV;
@@ -340,7 +346,7 @@ typedef struct {
 } UDP_PC_package_st;    // 1424字节
 
 
-typedef struct 
+typedef struct : public msgBase
 {
 	std::vector<UDP_PC_package_st> pcDataOneFrame;
 }udpPcMsgOneFrame;
