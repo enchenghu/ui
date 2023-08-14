@@ -22,6 +22,13 @@
 #include <QtCore/QStack>
 #include <QtCore/QCache>
 #include <QtCore/QMargins>
+#include "vx_mutex.h"
+#include "vx_queue.h"
+#include "vx_task.h"
+#include "bst_msg_queue.h"
+#include "SafeQueue.h"
+#include <map>
+#include <tuple>
 #define TCP_PC_SIZE_SINGLE 128000
 #define UDP_PC_SIZE_SINGLE 1024
 #define UDP_PC_SIZE_SINGLE_V01 100
@@ -89,6 +96,7 @@ typedef struct
 } fmcwPoint;
 
 typedef std::vector<fmcw_types::fmcwPoint> fmcwPoints;
+
 
 typedef enum {
     POWER_WRITE                 = 1 ,   // 设置激光器输出功率
@@ -413,6 +421,19 @@ typedef enum
 
 	MOTOR_SHOW_ITEMS_DISPLAY
 }motorCmdType;
+
+using flidarMsgPtr_ = std::shared_ptr<msgBase>;
+using FlidarMsgQueue = SafeQueue<flidarMsgPtr_>;//bstMsgQueue<std::shared_ptr<void>>;
+//using FlidarMsgQueue = bstMsgQueue<void *>;
+using FlidarMsgQueues  = std::vector<FlidarMsgQueue>;
+struct FlidarMsgQueuesUnit{
+  FlidarMsgQueuesUnit(FlidarMsgQueues &&a, FlidarMsgQueues &&b): free(std::forward<FlidarMsgQueues>(a)), done(std::forward<FlidarMsgQueues>(b)){}
+  FlidarMsgQueues free;
+  FlidarMsgQueues done;
+};
+//using FlidarMsgQueuesUnit = std::pair<FlidarMsgQueues, FlidarMsgQueues>;
+using FlidarTaskUnit = std::pair<LIGHTNING_TASK_ID, std::shared_ptr<FlidarMsgQueuesUnit>>;
+using FlidarTaskMap  = std::map<LIGHTNING_TASK_ID, std::shared_ptr<FlidarMsgQueuesUnit>>;
 //PcMetadata PcMetadata_Arr[100];	// 每个UDP报文，包含2列激光数据
 //PointCloud_V1_0_Header + PcMetadata_Arr
 }

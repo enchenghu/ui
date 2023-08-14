@@ -52,8 +52,6 @@
 #include <iostream>
 #include <map>
 #include <sstream>
-
-#include "bst_msg_queue.h"
 #include "chartLightning.h"
 #include "flidar_stat.h"
 #include "plot_tracer.h"
@@ -67,37 +65,9 @@
 #include "rviz/visualization_manager.h"
 #include "types_fmcw.hpp"
 #include <visualization_msgs/MarkerArray.h>
-#include "vx_mutex.h"
-#include "vx_queue.h"
-#include "vx_task.h"
 #include "systemMonitor.h"
-#include <map>
-#include <queue>
-#include <tuple>
-#include "SafeQueue.h"
 
 using namespace fmcw_types;
-template<class T>
-class TestClass{
-public:
-  TestClass(int i, int j){
-    int a = i;
-    int b = j;
-  }
-};
-using flidarMsgPtr_ = std::shared_ptr<msgBase>;
-using FlidarMsgQueue = SafeQueue<flidarMsgPtr_>;//bstMsgQueue<std::shared_ptr<void>>;
-//using FlidarMsgQueue = bstMsgQueue<void *>;
-using FlidarMsgQueues  = std::vector<FlidarMsgQueue>;
-struct FlidarMsgQueuesUnit{
-  FlidarMsgQueuesUnit(FlidarMsgQueues &&a, FlidarMsgQueues &&b): free(std::forward<FlidarMsgQueues>(a)), done(std::forward<FlidarMsgQueues>(b)){}
-  FlidarMsgQueues free;
-  FlidarMsgQueues done;
-};
-//using FlidarMsgQueuesUnit = std::pair<FlidarMsgQueues, FlidarMsgQueues>;
-using FlidarTaskUnit = std::pair<LIGHTNING_TASK_ID, std::shared_ptr<FlidarMsgQueuesUnit>>;
-using FlidarTaskMap  = std::map<LIGHTNING_TASK_ID, std::shared_ptr<FlidarMsgQueuesUnit>>;
-
 namespace rviz {
 class Display;
 class RenderPanel;
@@ -457,30 +427,15 @@ class viewpanel : public QTabWidget {
   QLabel* devLabel2_state;
   QTextEdit* errorLogText;
 
-  fftMsg fftBuff[MAX_BUFF_LEN];
-  adcMsg adcBuff[MAX_BUFF_LEN];
-  udp_ADC_FFT_Msg udpFABuff[MAX_BUFF_LEN];
-  udpPcMsgOneFrame udpPCBuff[MAX_BUFF_LEN];
+
   udpPcMsgOneFrame360 udpPCBuff_last;
-  motorMaxBuff motorBuff[MAX_BUFF_LEN];
-  stateMaxBuff stateBuff[MAX_BUFF_LEN];
 
-  bstMsgQueue<fftMsg*> fftMsg_free_buf_queue;
-  bstMsgQueue<fftMsg*> fftMsg_done_buf_queue;
-  bstMsgQueue<adcMsg*> adcMsg_free_buf_queue;
-  bstMsgQueue<adcMsg*> adcMsg_done_buf_queue;
-  bstMsgQueue<udp_ADC_FFT_Msg*> udpMsg_free_buf_queue;
-  bstMsgQueue<udp_ADC_FFT_Msg*> udpMsg_done_buf_queue;
-  bstMsgQueue<udpPcMsgOneFrame*> udpPcMsg_free_buf_queue;
-  bstMsgQueue<udpPcMsgOneFrame*> udpPcMsg_done_buf_queue;
-  bstMsgQueue<motorMaxBuff*> motorMsg_free_buf_queue;
-  bstMsgQueue<motorMaxBuff*> motorMsg_done_buf_queue;
-  bstMsgQueue<stateMaxBuff*> stateMsg_free_buf_queue;
-  bstMsgQueue<stateMaxBuff*> stateMsg_done_buf_queue;
-
-  FlidarMsgQueues msgQueues_m;
   FlidarTaskMap msgQueuesMap_m;
   std::shared_ptr<FlidarMsgQueuesUnit> msg_queue_pc;
+  std::shared_ptr<FlidarMsgQueuesUnit> msg_queue_sys;
+  std::shared_ptr<FlidarMsgQueuesUnit> msg_queue_motor;
+  std::shared_ptr<FlidarMsgQueuesUnit> msg_queue_adc_fft_raw;
+  std::shared_ptr<FlidarMsgQueuesUnit> msg_queue_adc_fft;
 
   std::string loadFileType_;
   QString loadLidarFile_;

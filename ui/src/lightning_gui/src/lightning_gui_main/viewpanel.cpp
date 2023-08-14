@@ -306,31 +306,12 @@ void viewpanel::init_queue()
 		msgQueuesMap_m[TASK_SYSTEM_DATA_RECV]->free.at(0).put(std::make_shared<stateMaxBuff>());
     }
 	
+	msg_queue_adc_fft_raw = msgQueuesMap_m[TASK_FFT_ADC_DATA_RECV];
+	msg_queue_adc_fft = msgQueuesMap_m[TASK_FFT_ADC_DATA_PARSE];
+	msg_queue_pc = msgQueuesMap_m[TASK_POINTCLOUD_DATA_RECV];
+	msg_queue_sys = msgQueuesMap_m[TASK_SYSTEM_DATA_RECV];
+	msg_queue_motor = msgQueuesMap_m[TASK_MOTOR_DATA_RECV];
 
-    fftMsg_free_buf_queue.setParam("fftMsg_free_buf_queue", MAX_BUFF_LEN);
-    fftMsg_done_buf_queue.setParam("fftMsg_done_buf_queue", MAX_BUFF_LEN);
-    adcMsg_free_buf_queue.setParam("adcMsg_free_buf_queue", MAX_BUFF_LEN);
-    adcMsg_done_buf_queue.setParam("adcMsg_done_buf_queue", MAX_BUFF_LEN);
-	udpMsg_free_buf_queue.setParam("udpMsg_free_buf_queue", MAX_BUFF_LEN);
-    udpMsg_done_buf_queue.setParam("udpMsg_done_buf_queue", MAX_BUFF_LEN); 
-	motorMsg_free_buf_queue.setParam("motorMsg_free_buf_queue", MAX_BUFF_LEN);
-	motorMsg_done_buf_queue.setParam("motorMsg_done_buf_queue", MAX_BUFF_LEN);
-	stateMsg_free_buf_queue.setParam("stateMsg_free_buf_queue", MAX_BUFF_LEN);
-	stateMsg_done_buf_queue.setParam("stateMsg_done_buf_queue", MAX_BUFF_LEN);
-
-    for (int loop = 0; loop < 4; loop++) {
-        fftMsg *fbuf0 = &fftBuff[loop];
-        adcMsg *fbuf1 = &adcBuff[loop];
-        udp_ADC_FFT_Msg *fbuf2 = &udpFABuff[loop];
-        udpPcMsgOneFrame *fbuf3 = &udpPCBuff[loop];
-		motorMaxBuff *fbuf4 = &motorBuff[loop];
-		stateMaxBuff *fbuf5 = &stateBuff[loop];
-        fftMsg_free_buf_queue.put(fbuf0);
-        adcMsg_free_buf_queue.put(fbuf1);
-        udpMsg_free_buf_queue.put(fbuf2);
-		motorMsg_free_buf_queue.put(fbuf4);
-		stateMsg_free_buf_queue.put(fbuf5);
-    }
 	vertical_bin = 1 / 256.0; 
 	speed_bin = 1 / 128.0; 
 	horizontal_bin = 360.0 / 65536.0; 
@@ -643,6 +624,8 @@ void viewpanel::recvMotorInfoloop()
 	//printf("send motorMsg , ret is %d!\n", ret);
 	ROS_INFO("====enter recvMotorInfoloop ");
 	ifConnectedMotorTcp = true;
+	motorMaxBuff *ptr_msg = nullptr;
+	flidarMsgPtr_ ppmsg = nullptr;
 	while(!terminating){
 		if(!ifConnectedMotorTcp) break;
 		memset(&mHead, 0, 2);
@@ -660,17 +643,17 @@ void viewpanel::recvMotorInfoloop()
 			continue;
 		} 
 		dataLen = motorInfoHead[2] + 3; // + count + crc
-		motorMaxBuff *ptr_msg = nullptr;
-		if(motorMsg_free_buf_queue.get(ptr_msg)) continue;
+		if(msg_queue_motor->free.at(0).get(ppmsg))continue;
+		ptr_msg = (motorMaxBuff *)ppmsg.get();
 		ret = ::recv(motor_ctrl_sock, ptr_msg->data + 5, dataLen, MSG_WAITALL);
 		if (ret <= 0){
 			printf("read MotorInfo timeout!\n");
-			motorMsg_free_buf_queue.put(ptr_msg);
+			msg_queue_motor->free.at(0).put(ppmsg);
 			continue;
 		} 
 		memcpy(ptr_msg->data, &mHead, 2);
 		memcpy(ptr_msg->data + 2, motorInfoHead, 3);
-		motorMsg_done_buf_queue.put(ptr_msg);
+		msg_queue_motor->done.at(0).put(ppmsg);
 		ROS_INFO("====send motor msg ");
 		//parseMotorInfo(recvBuffBody);
 		//ROS_INFO("====finish parse motor info ");
@@ -687,6 +670,8 @@ void viewpanel::recvStateInfoloop()
 	//printf("send motorMsg , ret is %d!\n", ret);
 	ROS_INFO("====enter recvStateInfoloop ");
 	//ifConnected = true;
+	stateMaxBuff *ptr_msg = nullptr;
+	flidarMsgPtr_ ppmsg = nullptr;
 	while(!terminating){
 		if(!ifConnectedStateTcp) break;
 		memset(&mHead, 0, 2);
@@ -707,17 +692,19 @@ void viewpanel::recvStateInfoloop()
 		} 
 		dataLen = stateInfoHead[8] + 1; // + count + crc
 		ROS_INFO("====recv state dataLen %d ", dataLen);
-		stateMaxBuff *ptr_msg = nullptr;
-		if(stateMsg_free_buf_queue.get(ptr_msg)) continue;
+
+		if(msg_queue_sys->free.at(0).get(ppmsg)) continue;
+		ptr_msg = (stateMaxBuff *)ppmsg.get();
 		ret = ::recv(state_ctrl_sock, ptr_msg->data + 11, dataLen, MSG_WAITALL);
 		if (ret <= 0){
 			printf("read state data timeout!\n");
 			if(ret < 0) break;
+			msg_queue_sys->free.at(0).put(ppmsg);
 			continue;
 		} 
 		memcpy(ptr_msg->data, &mHead, 2);
 		memcpy(ptr_msg->data + 2, stateInfoHead, 9);
-		stateMsg_done_buf_queue.put(ptr_msg);
+		msg_queue_sys->done.at(0).put(ppmsg);
 		ROS_INFO("====send state msg ");
 		//parseMotorInfo(recvBuffBody);
 	}
@@ -2434,7 +2421,6 @@ void viewpanel::showADCDataSim()
 
 void viewpanel::parseADCData(std::vector<uint8_t> &data)
 {
-	//std::cout << "!!enter parseADCData! input point num is  "  <<  data.size() / 2 << std::endl;
 #if 1
 	if(saveadc_){
 		std::string datPath;
@@ -2448,13 +2434,13 @@ void viewpanel::parseADCData(std::vector<uint8_t> &data)
 		datfile.close();
 		saveadc_ = false;
 	}
-
 #endif
 	int32_t cur_data  = 0;
 	int index = 0;
 	adcMsg* padc = NULL;
-	if(!adcMsg_free_buf_queue.empty()){
-		adcMsg_free_buf_queue.get(padc);
+	flidarMsgPtr_ ppadc = nullptr;
+	if(!msg_queue_adc_fft->free.at(1).get(ppadc)){
+		padc = (adcMsg*)ppadc.get();
 		padc->dataADC0.clear();
 		padc->dataADC1.clear();
 		for(int i = 0; i < data.size(); i++) {			
@@ -2475,18 +2461,13 @@ void viewpanel::parseADCData(std::vector<uint8_t> &data)
 				if(index == 16) index = 0;
 			}
 		}
-		adcMsg_done_buf_queue.put(padc);
-		//ROS_INFO("adcMsg send finished");  
-	}else{
-		ROS_INFO("warning!!adcMsg_free_buf_queue is empty, will discard adc data");
+		msg_queue_adc_fft->done.at(1).put(ppadc);
 	}
-
 }
 
 
 void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 {
-	//std::cout << "!!enter parseFFTData! input point num is  "  <<  data.size() / 4 << std::endl;
 #if 0
 	std::string datPath;
 	datPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".dat";
@@ -2500,36 +2481,35 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 	uint32_t cur_data  = 0;
 	int index = 0;
 	fftMsg* pfft = NULL;
+	flidarMsgPtr_ ppfft = nullptr;
 	double power_offset_ = power_offset;
-	if(fftMsg_free_buf_queue.empty()) {
-		ROS_INFO("warning!!fftMsg_free_buf_queue is empty, will discard fft data");
-		return;
-	}
-	fftMsg_free_buf_queue.get(pfft);
-	pfft->dataFFT_0.clear();
-	pfft->dataFFT_1.clear();
-	pfft->dataFFTdB_0.clear();
-	pfft->dataFFTdB_1.clear();
-	power_min = power_Min_edit->text().toDouble();
-	for(int i = 0; i < data.size(); i++) {
-		int flag = index / 4;
-		cur_data += data[i] << (8 * (index - (flag * 4)));
-		if(index % 4 == 3){
-			if(i < data.size() / 2){
-				pfft->dataFFT_0.append(cur_data);
-				pfft->dataFFTdB_0.append(fft2dBm(cur_data) + power_offset_);
-			} else{
-				pfft->dataFFT_1.append(cur_data);	
-				pfft->dataFFTdB_1.append(fft2dBm(cur_data) + power_offset_);
+	if(!msg_queue_adc_fft->free.at(0).get(ppfft)){
+		pfft = (fftMsg*)ppfft.get();
+		pfft->dataFFT_0.clear();
+		pfft->dataFFT_1.clear();
+		pfft->dataFFTdB_0.clear();
+		pfft->dataFFTdB_1.clear();
+		power_min = power_Min_edit->text().toDouble();
+		for(int i = 0; i < data.size(); i++) {
+			int flag = index / 4;
+			cur_data += data[i] << (8 * (index - (flag * 4)));
+			if(index % 4 == 3){
+				if(i < data.size() / 2){
+					pfft->dataFFT_0.append(cur_data);
+					pfft->dataFFTdB_0.append(fft2dBm(cur_data) + power_offset_);
+				} else{
+					pfft->dataFFT_1.append(cur_data);	
+					pfft->dataFFTdB_1.append(fft2dBm(cur_data) + power_offset_);
+				}
+				cur_data = 0;
 			}
-			cur_data = 0;
+			if(index == 31) 
+				index = 0;
+			else 
+				index += 1;
 		}
-		if(index == 31) 
-			index = 0;
-		else 
-			index += 1;
+		msg_queue_adc_fft->done.at(0).put(ppfft);
 	}
-	fftMsg_done_buf_queue.put(pfft);
 }
 
 void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
@@ -3131,9 +3111,11 @@ void viewpanel::updateFFTdata() {
 		pFFTchart[1]->setData(x_FFT_1, y_FFT_1_dB);
 	}
 #else 
-	if(!fftMsg_done_buf_queue.empty()){
-		fftMsg* pfft = NULL;
-		fftMsg_done_buf_queue.get(pfft);
+	fftMsg* pfft = NULL;
+	flidarMsgPtr_ ppfft = nullptr;
+	if(msg_queue_adc_fft->done.at(0).empty()) return;
+	if(msg_queue_adc_fft->done.at(0).get(ppfft)){
+		pfft = (fftMsg* )ppfft.get();
 		if(ifShowdB_ == FFT_ORI){
 			pFFTchart[0]->setData(x_FFT, pfft->dataFFT_0);
 			pFFTchart[1]->setData(x_FFT_1, pfft->dataFFT_1);
@@ -3142,10 +3124,8 @@ void viewpanel::updateFFTdata() {
 			pFFTchart[0]->setData(x_FFT, pfft->dataFFTdB_0);
 			pFFTchart[1]->setData(x_FFT_1, pfft->dataFFTdB_1);
 		}
-		fftMsg_free_buf_queue.put(pfft);
+		msg_queue_adc_fft->free.at(0).put(ppfft);
 		ROS_INFO("fftMsg update");  
-	}else{
-		//std::this_thread::yield();
 	}
 #endif
 
@@ -3220,23 +3200,26 @@ void viewpanel::procNllInfo(uint8_t* data, uint8_t cmd_id)
 
 void viewpanel::updateState()
 {
-	if(!stateMsg_done_buf_queue.empty()){
-		stateMaxBuff* ptr_msg = nullptr;
-		stateMsg_done_buf_queue.get(ptr_msg);
+	stateMaxBuff* pmsg = nullptr;
+	flidarMsgPtr_ ppmsg = nullptr;
+
+	if(!msg_queue_sys->done.at(0).empty()){
+		msg_queue_sys->done.at(0).get(ppmsg);
+		pmsg = (stateMaxBuff*)ppmsg.get();
 		//uint8_t* pdata = ptr_msg->data + 11;
-		uint8_t devID = ptr_msg->data[8];
-		uint8_t devCmd = ptr_msg->data[9];
+		uint8_t devID = pmsg->data[8];
+		uint8_t devCmd = pmsg->data[9];
 		switch (devID)
 		{
 		case sm_mCode_EDFA:
 			/* code */
-			procEdfaInfo(ptr_msg->data + 11, devCmd);
+			procEdfaInfo(pmsg->data + 11, devCmd);
 			break;
 		
 		default:
 			break;
 		}
-		stateMsg_free_buf_queue.put(ptr_msg);
+		msg_queue_sys->free.at(0).put(ppmsg);
 	}
 
 	if(tcpSocketCheck(ctrl_sock))
@@ -3953,11 +3936,13 @@ void viewpanel::sendMotorConnectCmd()
 
 void viewpanel::updateMotorChart() {
 
-	if(!motorMsg_done_buf_queue.empty()){
-		motorMaxBuff* pMotor = NULL;
-		motorMsg_done_buf_queue.get(pMotor);
-		parseMotorInfo(pMotor->data);
-		motorMsg_free_buf_queue.put(pMotor);
+	motorMaxBuff *ptr_msg = nullptr;
+	flidarMsgPtr_ ppmsg = nullptr;
+	if(!msg_queue_motor->done.at(0).empty()){
+		msg_queue_motor->done.at(0).get(ppmsg);
+		ptr_msg = (motorMaxBuff *)ppmsg.get();
+		parseMotorInfo(ptr_msg->data);
+		msg_queue_motor->free.at(0).put(ppmsg);
 		ROS_INFO("motor chart update");  
 	}
 }
@@ -3965,6 +3950,7 @@ void viewpanel::updateMotorChart() {
 
 void viewpanel::updateADCdata() {
 
+	if(msg_queue_adc_fft->done.at(1).empty()) return;
 	static long long frame_index = 0;
 	x_adc0.clear();
 	x_adc1.clear();
@@ -3984,12 +3970,13 @@ void viewpanel::updateADCdata() {
 	pADCchart[0]->setData(x_adc0, y_adc0);
 	pADCchart[1]->setData(x_adc1, y_adc1);
 #else 
-	if(!adcMsg_done_buf_queue.empty()){
-		adcMsg* padc = NULL;
-		adcMsg_done_buf_queue.get(padc);
+	adcMsg* padc = NULL;
+	flidarMsgPtr_ ppadc = nullptr;
+	if(msg_queue_adc_fft->done.at(1).get(ppadc)){
+		padc = (adcMsg*)ppadc.get();
 		pADCchart[0]->setData(x_adc0, padc->dataADC0);
 		pADCchart[1]->setData(x_adc1, padc->dataADC1);
-		adcMsg_free_buf_queue.put(padc);
+		msg_queue_adc_fft->free.at(1).put(ppadc);
 		ROS_INFO("adcMsg update");  
 	}
 #endif
@@ -4086,7 +4073,6 @@ void viewpanel::FFT_ADC_UDP_Connect() {
 
 void viewpanel::startPcTask() 
 {
-	msg_queue_pc = msgQueuesMap_m[TASK_POINTCLOUD_DATA_RECV];
 	vx_task_set_default_create_params(&bst_params);
 	bst_params.app_var = this;
 	bst_params.task_mode = 0;
@@ -4616,13 +4602,15 @@ void viewpanel::udpParseFftAdcLoop()
 	while(!terminating)
 	{
 		udp_ADC_FFT_Msg* pmsg = nullptr;
+		flidarMsgPtr_ ppmsg = nullptr;
 		auto start = std::chrono::steady_clock::now();
-		if(udpMsg_done_buf_queue.get(pmsg) == 0){
+		if(msg_queue_adc_fft_raw->done.at(0).get(ppmsg)){
+			std::cout << "warning!!msg_queue_adc_fft_raw done get timeout!!!" << std::endl;
+		}else{
+			pmsg = (udp_ADC_FFT_Msg*)ppmsg.get();
 			parseFFTData(pmsg->fftDataV);
 			parseADCData(pmsg->adcDataV);
-			udpMsg_free_buf_queue.put(pmsg);
-		}else{
-			std::cout << "warning!!udpMsg_done_buf_queue get timeout!!!" << std::endl;
+			msg_queue_adc_fft_raw->free.at(0).put(ppmsg);
 		}
 		auto end = std::chrono::steady_clock::now();
 		elapsed = end - start;
@@ -4834,28 +4822,16 @@ void viewpanel::udpRecvFftAdcLoop(){
 		}
 		//std::cout << "!!recv udp pkg successfully! "  << std::endl;
 		udp_ADC_FFT_Msg* pUdp = NULL;
-		if(udpMsg_free_buf_queue.empty()){
-			std::cout << "warning!!! udpMsg_free_buf_queue is empty, will discard old udp msg "  << std::endl;
-			udpMsg_done_buf_queue.get(pUdp);
-			udpMsg_free_buf_queue.put(pUdp);
-			udpMsg_free_buf_queue.get(pUdp);
-			pUdp->fftDataV = fftDataV;
-			pUdp->adcDataV = adcDataV;
-			udpMsg_done_buf_queue.put(pUdp);	
-			continue;			
-		}
-		if(udpMsg_free_buf_queue.get(pUdp) == 0){
-			pUdp->fftDataV = fftDataV;
-			pUdp->adcDataV = adcDataV;
-			udpMsg_done_buf_queue.put(pUdp);	
+		flidarMsgPtr_ ppUdp = nullptr;
+		if(msg_queue_adc_fft_raw->free.at(0).get(ppUdp)){
+			std::cout << "error!!! msg_queue_adc_fft_raw free timeout!! "  << std::endl;
+			return;	
 		}else{
-			std::cout << "error!!! udpMsg_free_buf_queue timeout!! "  << std::endl;
-			return;
+			pUdp = (udp_ADC_FFT_Msg*)ppUdp.get();
+			pUdp->fftDataV = fftDataV;
+			pUdp->adcDataV = adcDataV;
+			msg_queue_adc_fft_raw->done.at(0).put(ppUdp);
 		}
-	
-#if 0
-		parseFFTData(fftDataV);
-#endif
 	}
 	printf("fftMsg udp  quit!\n");  //打印自己发送的信息
  
