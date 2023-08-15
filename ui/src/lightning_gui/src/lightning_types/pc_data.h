@@ -432,8 +432,8 @@ struct FlidarMsgQueuesUnit{
   FlidarMsgQueues done;
 };
 //using FlidarMsgQueuesUnit = std::pair<FlidarMsgQueues, FlidarMsgQueues>;
-using FlidarTaskUnit = std::pair<LIGHTNING_TASK_ID, std::shared_ptr<FlidarMsgQueuesUnit>>;
-using FlidarTaskMap  = std::map<LIGHTNING_TASK_ID, std::shared_ptr<FlidarMsgQueuesUnit>>;
+using FlidarTaskQueuesUnit = std::pair<LIGHTNING_TASK_ID, std::shared_ptr<FlidarMsgQueuesUnit>>;
+using FlidarTaskQueuesMap  = std::map<LIGHTNING_TASK_ID, std::shared_ptr<FlidarMsgQueuesUnit>>;
 //PcMetadata PcMetadata_Arr[100];	// 每个UDP报文，包含2列激光数据
 //PointCloud_V1_0_Header + PcMetadata_Arr
 }

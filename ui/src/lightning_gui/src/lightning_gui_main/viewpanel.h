@@ -430,7 +430,7 @@ class viewpanel : public QTabWidget {
 
   udpPcMsgOneFrame360 udpPCBuff_last;
 
-  FlidarTaskMap msgQueuesMap_m;
+  FlidarTaskQueuesMap msgQueuesMap_m;
   std::shared_ptr<FlidarMsgQueuesUnit> msg_queue_pc;
   std::shared_ptr<FlidarMsgQueuesUnit> msg_queue_sys;
   std::shared_ptr<FlidarMsgQueuesUnit> msg_queue_motor;

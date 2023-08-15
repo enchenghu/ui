@@ -291,11 +291,11 @@ void viewpanel::init_queue()
 		x_adc1.append(i);
 	}
 	msgQueuesMap_m.clear();
-	msgQueuesMap_m.insert(FlidarTaskUnit(TASK_FFT_ADC_DATA_RECV, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
-	msgQueuesMap_m.insert(FlidarTaskUnit(TASK_FFT_ADC_DATA_PARSE, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(2), FlidarMsgQueues(2))));
-	msgQueuesMap_m.insert(FlidarTaskUnit(TASK_POINTCLOUD_DATA_RECV, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
-	msgQueuesMap_m.insert(FlidarTaskUnit(TASK_MOTOR_DATA_RECV, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
-	msgQueuesMap_m.insert(FlidarTaskUnit(TASK_SYSTEM_DATA_RECV,std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
+	msgQueuesMap_m.insert(FlidarTaskQueuesUnit(TASK_FFT_ADC_DATA_RECV, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
+	msgQueuesMap_m.insert(FlidarTaskQueuesUnit(TASK_FFT_ADC_DATA_PARSE, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(2), FlidarMsgQueues(2))));
+	msgQueuesMap_m.insert(FlidarTaskQueuesUnit(TASK_POINTCLOUD_DATA_RECV, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
+	msgQueuesMap_m.insert(FlidarTaskQueuesUnit(TASK_MOTOR_DATA_RECV, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
+	msgQueuesMap_m.insert(FlidarTaskQueuesUnit(TASK_SYSTEM_DATA_RECV,std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
 
 	for (int loop = 0; loop < 4; loop++) {
 		msgQueuesMap_m[TASK_FFT_ADC_DATA_RECV]->free.at(0).put(std::make_shared<udp_ADC_FFT_Msg>());
