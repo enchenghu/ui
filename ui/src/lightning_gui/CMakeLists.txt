@@ -176,15 +176,9 @@ link_directories(${catkin_LIBRARY_DIRS})
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(lightning_gui 
-src/lightning_gui_main/main.cpp
-src/lightning_gui_main/mainwindow.cpp
-src/lightning_gui_main/viewpanel.cpp
-src/lightning_gui_main/chartLightning.cpp
-src/lightning_gui_main/qcustomplot.cpp
-src/lightning_gui_main/plot_tracer.cpp
-src/lightning_gui_main/systemMonitor.cpp
-src/lightning_gui_main/qtCommon.cpp
+AUX_SOURCE_DIRECTORY(src/lightning_gui_main SRC_GUI)
+
+add_executable(lightning_gui ${SRC_GUI}
 )
 
 add_executable(lightning_server src/local_server/server.cpp)

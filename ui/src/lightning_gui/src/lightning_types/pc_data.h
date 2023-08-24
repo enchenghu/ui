@@ -27,6 +27,7 @@
 #include "vx_task.h"
 #include "bst_msg_queue.h"
 #include "SafeQueue.h"
+#include "baseNode.h"
 #include <map>
 #include <tuple>
 #define TCP_PC_SIZE_SINGLE 128000
@@ -43,6 +44,7 @@
 #define LIGHTNING_MAX_LINES 16
 #define LIGHTNING_REG_NUM 6
 #define BST_MAX_TASK_NUM		(16)
+#define PC_META_SIZE 100
 #define PI_FMCW 3.14159265
 #define NONE_COLOR                  "\e[0m"			//清除颜色，即之后的打印为正常输出，之前的不受影响
 #define BLACK                 "\e[0;30m"		//深黑
@@ -74,16 +76,6 @@ namespace fmcw_types
 static std::vector<double> fov_vertical = {2.32, 1.99, 1.66, 1.33, 0.99, 0.66, 0.33, \ 
 										0, -0.33, -0.66, -0.99, -1.33, -1.66, -1.99, -2.32, -2.65};
 
-typedef enum {
-	TASK_DEFAULT = 0, 
-	TASK_FFT_ADC_DATA_RECV, 
-	TASK_FFT_ADC_DATA_PARSE, 
-	TASK_POINTCLOUD_DATA_RECV, 
-	TASK_POINTCLOUD_DATA_PARSE, 
-	TASK_MOTOR_DATA_RECV, 
-	TASK_SYSTEM_DATA_RECV,
-	TASK_LAST = BST_MAX_TASK_NUM - 1
-}LIGHTNING_TASK_ID;
 
 typedef struct 
 {
@@ -158,9 +150,7 @@ typedef struct
 	uint32_t 	mCommandVal[2];
 } commandMsg;
 
-struct msgBase{
 
-};
 #pragma pack(1)    // pack(1): pack之间的数据类型，1字节对齐
 
 typedef struct 
@@ -350,13 +340,13 @@ typedef struct
 
 typedef struct {
     UDP_PC_head_st  UDP_PC_head;                        // head：24字节
-    PC_pointMeta_st UDP_PC_payload[100];   // Payload：1400字节 = 14 * 100
+    PC_pointMeta_st UDP_PC_payload[PC_META_SIZE];   // Payload：1400字节 = 14 * 100
 } UDP_PC_package_st;    // 1424字节
 
 
 typedef struct : public msgBase
 {
-	std::vector<UDP_PC_package_st> pcDataOneFrame;
+	std::vector<PC_pointMeta_st> pcDataOneFrame;
 }udpPcMsgOneFrame;
 
 typedef struct 
@@ -422,18 +412,7 @@ typedef enum
 	MOTOR_SHOW_ITEMS_DISPLAY
 }motorCmdType;
 
-using flidarMsgPtr_ = std::shared_ptr<msgBase>;
-using FlidarMsgQueue = SafeQueue<flidarMsgPtr_>;//bstMsgQueue<std::shared_ptr<void>>;
-//using FlidarMsgQueue = bstMsgQueue<void *>;
-using FlidarMsgQueues  = std::vector<FlidarMsgQueue>;
-struct FlidarMsgQueuesUnit{
-  FlidarMsgQueuesUnit(FlidarMsgQueues &&a, FlidarMsgQueues &&b): free(std::forward<FlidarMsgQueues>(a)), done(std::forward<FlidarMsgQueues>(b)){}
-  FlidarMsgQueues free;
-  FlidarMsgQueues done;
-};
-//using FlidarMsgQueuesUnit = std::pair<FlidarMsgQueues, FlidarMsgQueues>;
-using FlidarTaskQueuesUnit = std::pair<LIGHTNING_TASK_ID, std::shared_ptr<FlidarMsgQueuesUnit>>;
-using FlidarTaskQueuesMap  = std::map<LIGHTNING_TASK_ID, std::shared_ptr<FlidarMsgQueuesUnit>>;
+
 //PcMetadata PcMetadata_Arr[100];	// 每个UDP报文，包含2列激光数据
 //PointCloud_V1_0_Header + PcMetadata_Arr
 }

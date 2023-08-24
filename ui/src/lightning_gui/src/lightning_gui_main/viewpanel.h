@@ -193,7 +193,6 @@ class viewpanel : public QTabWidget {
   void udpRecvFftAdcLoop();
   void udpParseFftAdcLoop();
   void udpRecvPCLoop();
-  void udpRecvPCOnce();
   int udpRecvPCConnect();
   void recvMotorInfoloop();
   void recvStateInfoloop();
@@ -430,12 +429,12 @@ class viewpanel : public QTabWidget {
 
   udpPcMsgOneFrame360 udpPCBuff_last;
 
-  FlidarTaskQueuesMap msgQueuesMap_m;
-  std::shared_ptr<FlidarMsgQueuesUnit> msg_queue_pc;
-  std::shared_ptr<FlidarMsgQueuesUnit> msg_queue_sys;
-  std::shared_ptr<FlidarMsgQueuesUnit> msg_queue_motor;
-  std::shared_ptr<FlidarMsgQueuesUnit> msg_queue_adc_fft_raw;
-  std::shared_ptr<FlidarMsgQueuesUnit> msg_queue_adc_fft;
+  TaskQueuesMap msgQueuesMap_m;
+  std::shared_ptr<MsgQueuesUnit> msg_queue_pc;
+  std::shared_ptr<MsgQueuesUnit> msg_queue_sys;
+  std::shared_ptr<MsgQueuesUnit> msg_queue_motor;
+  std::shared_ptr<MsgQueuesUnit> msg_queue_adc_fft_raw;
+  std::shared_ptr<MsgQueuesUnit> msg_queue_adc_fft;
 
   std::string loadFileType_;
   QString loadLidarFile_;

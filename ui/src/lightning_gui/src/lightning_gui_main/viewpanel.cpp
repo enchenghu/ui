@@ -291,11 +291,11 @@ void viewpanel::init_queue()
 		x_adc1.append(i);
 	}
 	msgQueuesMap_m.clear();
-	msgQueuesMap_m.insert(FlidarTaskQueuesUnit(TASK_FFT_ADC_DATA_RECV, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
-	msgQueuesMap_m.insert(FlidarTaskQueuesUnit(TASK_FFT_ADC_DATA_PARSE, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(2), FlidarMsgQueues(2))));
-	msgQueuesMap_m.insert(FlidarTaskQueuesUnit(TASK_POINTCLOUD_DATA_RECV, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
-	msgQueuesMap_m.insert(FlidarTaskQueuesUnit(TASK_MOTOR_DATA_RECV, std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
-	msgQueuesMap_m.insert(FlidarTaskQueuesUnit(TASK_SYSTEM_DATA_RECV,std::make_shared<FlidarMsgQueuesUnit>(FlidarMsgQueues(1), FlidarMsgQueues(1))));
+	msgQueuesMap_m.insert(TaskQueuesUnit(TASK_FFT_ADC_DATA_RECV, std::make_shared<MsgQueuesUnit>(MsgQueues(1), MsgQueues(1))));
+	msgQueuesMap_m.insert(TaskQueuesUnit(TASK_FFT_ADC_DATA_PARSE, std::make_shared<MsgQueuesUnit>(MsgQueues(2), MsgQueues(2))));
+	msgQueuesMap_m.insert(TaskQueuesUnit(TASK_POINTCLOUD_DATA_RECV, std::make_shared<MsgQueuesUnit>(MsgQueues(1), MsgQueues(1))));
+	msgQueuesMap_m.insert(TaskQueuesUnit(TASK_MOTOR_DATA_RECV, std::make_shared<MsgQueuesUnit>(MsgQueues(1), MsgQueues(1))));
+	msgQueuesMap_m.insert(TaskQueuesUnit(TASK_SYSTEM_DATA_RECV,std::make_shared<MsgQueuesUnit>(MsgQueues(1), MsgQueues(1))));
 
 	for (int loop = 0; loop < 4; loop++) {
 		msgQueuesMap_m[TASK_FFT_ADC_DATA_RECV]->free.at(0).put(std::make_shared<udp_ADC_FFT_Msg>());
@@ -625,7 +625,7 @@ void viewpanel::recvMotorInfoloop()
 	ROS_INFO("====enter recvMotorInfoloop ");
 	ifConnectedMotorTcp = true;
 	motorMaxBuff *ptr_msg = nullptr;
-	flidarMsgPtr_ ppmsg = nullptr;
+	MsgPtr_ ppmsg = nullptr;
 	while(!terminating){
 		if(!ifConnectedMotorTcp) break;
 		memset(&mHead, 0, 2);
@@ -671,7 +671,7 @@ void viewpanel::recvStateInfoloop()
 	ROS_INFO("====enter recvStateInfoloop ");
 	//ifConnected = true;
 	stateMaxBuff *ptr_msg = nullptr;
-	flidarMsgPtr_ ppmsg = nullptr;
+	MsgPtr_ ppmsg = nullptr;
 	while(!terminating){
 		if(!ifConnectedStateTcp) break;
 		memset(&mHead, 0, 2);
@@ -1643,7 +1643,7 @@ void viewpanel::CreatConnect()
 	connect(pcResetBtn, SIGNAL(clicked()), this, SLOT( startPcUdpContinuous( void )));
 	connect(pcBWBtn, SIGNAL(clicked()), this, SLOT( ConfigFilterDialog( void )));
 	connect(pcRecordBtn, SIGNAL(clicked()), this, SLOT( pcRecord( void )));
-	//connect(pcProcBtn, SIGNAL(clicked()), this, SLOT( pcOneFramePure( void )));
+	connect(pcProcBtn, SIGNAL(clicked()), this, SLOT( pcOneFramePure( void )));
 	connect(loadAlgBtn, SIGNAL(clicked()), this, SLOT( loadAlgFile( void )));
 	connect(loadPCRawBtn, SIGNAL(clicked()), this, SLOT( loadPCFile( void )));
 	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
@@ -2130,6 +2130,7 @@ void viewpanel::CreatPCWindow()
 	savePCCombo->setFixedSize(70, 25);	
 	controls_layout->addWidget( pcBWBtn, 3, 15, Qt::AlignLeft);
 	controls_layout->addWidget( pcRecordBtn, 4, 15, Qt::AlignLeft);
+	controls_layout->addWidget( pcProcBtn, 5, 15, Qt::AlignLeft);
 	controls_layout->addWidget( rotate_label, 1, 18, Qt::AlignRight);
 	controls_layout->addWidget( rotation_spin, 1, 19, Qt::AlignLeft);	
 
@@ -2438,7 +2439,7 @@ void viewpanel::parseADCData(std::vector<uint8_t> &data)
 	int32_t cur_data  = 0;
 	int index = 0;
 	adcMsg* padc = NULL;
-	flidarMsgPtr_ ppadc = nullptr;
+	MsgPtr_ ppadc = nullptr;
 	if(!msg_queue_adc_fft->free.at(1).get(ppadc)){
 		padc = (adcMsg*)ppadc.get();
 		padc->dataADC0.clear();
@@ -2481,7 +2482,7 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 	uint32_t cur_data  = 0;
 	int index = 0;
 	fftMsg* pfft = NULL;
-	flidarMsgPtr_ ppfft = nullptr;
+	MsgPtr_ ppfft = nullptr;
 	double power_offset_ = power_offset;
 	if(!msg_queue_adc_fft->free.at(0).get(ppfft)){
 		pfft = (fftMsg*)ppfft.get();
@@ -2813,12 +2814,12 @@ void viewpanel::pcChSelect()
 void viewpanel::pcOneFramePure()
 {
 	if(oneFramePure){
-		pcProcBtn->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}");
-		pcProcBtn->setText("&Pure");	
-		oneFramePure = false;	
-	} else {
 		pcProcBtn->setStyleSheet("QPushButton{background-color:rgba(127, 255, 0, 100);}");
 		pcProcBtn->setText("&360");	
+		oneFramePure = false;	
+	} else {
+		pcProcBtn->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}");
+		pcProcBtn->setText("&Pure");	
 		oneFramePure = true;			
 	}
 
@@ -3112,7 +3113,7 @@ void viewpanel::updateFFTdata() {
 	}
 #else 
 	fftMsg* pfft = NULL;
-	flidarMsgPtr_ ppfft = nullptr;
+	MsgPtr_ ppfft = nullptr;
 	if(msg_queue_adc_fft->done.at(0).empty()) return;
 	if(msg_queue_adc_fft->done.at(0).get(ppfft)){
 		pfft = (fftMsg* )ppfft.get();
@@ -3201,7 +3202,7 @@ void viewpanel::procNllInfo(uint8_t* data, uint8_t cmd_id)
 void viewpanel::updateState()
 {
 	stateMaxBuff* pmsg = nullptr;
-	flidarMsgPtr_ ppmsg = nullptr;
+	MsgPtr_ ppmsg = nullptr;
 
 	if(!msg_queue_sys->done.at(0).empty()){
 		msg_queue_sys->done.at(0).get(ppmsg);
@@ -3937,7 +3938,7 @@ void viewpanel::sendMotorConnectCmd()
 void viewpanel::updateMotorChart() {
 
 	motorMaxBuff *ptr_msg = nullptr;
-	flidarMsgPtr_ ppmsg = nullptr;
+	MsgPtr_ ppmsg = nullptr;
 	if(!msg_queue_motor->done.at(0).empty()){
 		msg_queue_motor->done.at(0).get(ppmsg);
 		ptr_msg = (motorMaxBuff *)ppmsg.get();
@@ -3971,7 +3972,7 @@ void viewpanel::updateADCdata() {
 	pADCchart[1]->setData(x_adc1, y_adc1);
 #else 
 	adcMsg* padc = NULL;
-	flidarMsgPtr_ ppadc = nullptr;
+	MsgPtr_ ppadc = nullptr;
 	if(msg_queue_adc_fft->done.at(1).get(ppadc)){
 		padc = (adcMsg*)ppadc.get();
 		pADCchart[0]->setData(x_adc0, padc->dataADC0);
@@ -4141,9 +4142,9 @@ void viewpanel::radiusFilterProc()
 }
 void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg, int fMode)
 {
+	if(pmsg) oneFrame360.pcDataOneFrame = pmsg->pcDataOneFrame;
 	if(!pmsg || fMode == BYPASS) return;
 	distance_min, distance_max, indensity_min, indensity_max, speed_min, speed_max   = 0.0;
-	int pcFrameSize = pmsg->pcDataOneFrame.size();
 	shSpeedVV.clear();
 	shRangeV.clear();
 	shIntenVV.clear();
@@ -4188,74 +4189,73 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg, int fMode)
 		oneFrame360.vaildV.clear();
 		oneFrame360.around_count.clear();
 	}
+	int pcFrameSize = pmsg->pcDataOneFrame.size();
 
 	for(int j = 0; j < pcFrameSize; j++){
-		for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){
-			double horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
-			if(horizontal_m > 360.0) horizontal_m -= 360.0;
-			int lineIndex = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmVerticalIndex;
-			double distance_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmDistance * distance_bin - distance_offset[lineIndex];
-			if(fMode & filterMode::RADIUS_F){
-				bool valid  = true;
-				if( distance_m < 0.0) valid  = false;
-				if(lineIndex == 0) start_copy  = true;
-				if(start_copy){
-					pc_radius_meta temp;
-					temp.data = pmsg->pcDataOneFrame[j].UDP_PC_payload[index];
-					temp.vaild = valid;
-					temp.around_count = 0;
-					pc_all_line[lineIndex] = temp;
-					if(lineIndex == LIGHTNING_MAX_LINES - 1) {
-						for(auto &it : pc_all_line) {
-							oneFrame360.pcDataOneFrame.push_back(it.data);
-							oneFrame360.vaildV.push_back(it.vaild);
-							oneFrame360.around_count.push_back(it.around_count);
-						}
+		double horizontal_m = pmsg->pcDataOneFrame[j].pcmHorizontal * horizontal_bin;
+		if(horizontal_m > 360.0) horizontal_m -= 360.0;
+		int lineIndex = pmsg->pcDataOneFrame[j].pcmVerticalIndex;
+		double distance_m = pmsg->pcDataOneFrame[j].pcmDistance * distance_bin - distance_offset[lineIndex];
+		if(fMode & filterMode::RADIUS_F){
+			bool valid  = true;
+			if( distance_m < 0.0) valid  = false;
+			if(lineIndex == 0) start_copy  = true;
+			if(start_copy){
+				pc_radius_meta temp;
+				temp.data = pmsg->pcDataOneFrame[j];
+				temp.vaild = valid;
+				temp.around_count = 0;
+				pc_all_line[lineIndex] = temp;
+				if(lineIndex == LIGHTNING_MAX_LINES - 1) {
+					for(auto &it : pc_all_line) {
+						oneFrame360.pcDataOneFrame.push_back(it.data);
+						oneFrame360.vaildV.push_back(it.vaild);
+						oneFrame360.around_count.push_back(it.around_count);
 					}
 				}
 			}
-			if( distance_m < 0.0) continue;
-			int locIndex = -1;
-			for(int i = 0; i < rangeSegV.size(); i++){
-				if(distance_m <= rangeSegV[i]) {
-					locIndex = i;
-					break;
-				}
-			}
-			if(locIndex < 0 && rangeSegV.size() > 0) locIndex = rangeSegV.size() - 1;
-			//if(locIndex < 0) continue;
-			if(fMode & filterMode::RANGE_F){
-				if(distance_m > maxPcValueRange_) continue;
-				int index_r = (distance_m) / intervalRange_;
-				if(index_r >= hRangeSize) index_r = hRangeSize - 1;
-				shRangeV[index_r]++;
-			}		
-			double speed_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmSpeed * speed_bin;
-			if(fMode & filterMode::SPEED_F){
-				if(speed_m < minPcValueSpeedV_[locIndex] || speed_m > maxPcValueSpeedV_[locIndex])continue;
-				int index_s = (speed_m - minPcValueSpeedV_[locIndex]) / intervalSpeedV_[locIndex];
-				if(index_s >= shSpeedVV[locIndex].size()) index_s = shSpeedVV[locIndex].size() - 1;
-				shSpeedVV[locIndex][index_s]++;
-			}
-			uint32_t  indensity_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmIndensity;
-			uint32_t intenIndex = indensity_m / 3000;
-			uint32_t  reflectiviy_m = (uint32_t) (indensity_m * distance_m * distance_m);
-			uint32_t reIndex = reflectiviy_m / 15000;
-			//intenNumMap[intenIndex]++;
-			//reflectNumMap[reIndex]++;
-			if(fMode & filterMode::INTEN_F){
-				if(indensity_m > maxPcValueIntenV_[locIndex])continue;
-				int index_s = (indensity_m) / intervalIntenV_[locIndex];
-				if(index_s >= shIntenVV[locIndex].size()) index_s = shIntenVV[locIndex].size() - 1;
-				shIntenVV[locIndex][index_s]++;
-			}
-			if(distance_min > distance_m )distance_min = distance_m;
-			if(distance_max < distance_m )distance_max = distance_m;
-			if(indensity_min > indensity_m )indensity_min = indensity_m;
-			if(indensity_max < indensity_m )indensity_max = indensity_m;
-			if(speed_min > speed_m )speed_min = speed_m;
-			if(speed_max < speed_m )speed_max = speed_m;
 		}
+		if( distance_m < 0.0) continue;
+		int locIndex = -1;
+		for(int i = 0; i < rangeSegV.size(); i++){
+			if(distance_m <= rangeSegV[i]) {
+				locIndex = i;
+				break;
+			}
+		}
+		if(locIndex < 0 && rangeSegV.size() > 0) locIndex = rangeSegV.size() - 1;
+		//if(locIndex < 0) continue;
+		if(fMode & filterMode::RANGE_F){
+			if(distance_m > maxPcValueRange_) continue;
+			int index_r = (distance_m) / intervalRange_;
+			if(index_r >= hRangeSize) index_r = hRangeSize - 1;
+			shRangeV[index_r]++;
+		}		
+		double speed_m = pmsg->pcDataOneFrame[j].pcmSpeed * speed_bin;
+		if(fMode & filterMode::SPEED_F){
+			if(speed_m < minPcValueSpeedV_[locIndex] || speed_m > maxPcValueSpeedV_[locIndex])continue;
+			int index_s = (speed_m - minPcValueSpeedV_[locIndex]) / intervalSpeedV_[locIndex];
+			if(index_s >= shSpeedVV[locIndex].size()) index_s = shSpeedVV[locIndex].size() - 1;
+			shSpeedVV[locIndex][index_s]++;
+		}
+		uint32_t  indensity_m = pmsg->pcDataOneFrame[j].pcmIndensity;
+		uint32_t intenIndex = indensity_m / 3000;
+		uint32_t  reflectiviy_m = (uint32_t) (indensity_m * distance_m * distance_m);
+		uint32_t reIndex = reflectiviy_m / 15000;
+		//intenNumMap[intenIndex]++;
+		//reflectNumMap[reIndex]++;
+		if(fMode & filterMode::INTEN_F){
+			if(indensity_m > maxPcValueIntenV_[locIndex])continue;
+			int index_s = (indensity_m) / intervalIntenV_[locIndex];
+			if(index_s >= shIntenVV[locIndex].size()) index_s = shIntenVV[locIndex].size() - 1;
+			shIntenVV[locIndex][index_s]++;
+		}
+		if(distance_min > distance_m )distance_min = distance_m;
+		if(distance_max < distance_m )distance_max = distance_m;
+		if(indensity_min > indensity_m )indensity_min = indensity_m;
+		if(indensity_max < indensity_m )indensity_max = indensity_m;
+		if(speed_min > speed_m )speed_min = speed_m;
+		if(speed_max < speed_m )speed_max = speed_m;
 	}
 
 /* 	getMaxIntensityNum = 1;
@@ -4278,7 +4278,7 @@ void viewpanel::pcDataFilterPreProc(udpPcMsgOneFrame* pmsg, int fMode)
 
 int viewpanel::pcDataProc()
 {
-	flidarMsgPtr_ ppmsg = nullptr;
+	MsgPtr_ ppmsg = nullptr;
 	static long long frame_index = 0;
 	if(msg_queue_pc->done.at(0).get(ppmsg)){
 		return -1;
@@ -4286,96 +4286,8 @@ int viewpanel::pcDataProc()
 	udpPcMsgOneFrame* pmsg = (udpPcMsgOneFrame*)ppmsg.get();
 	int pcFrameSize = 0;
 	double horizontal_m = 0.0;
-	bool begin_save = false;
 	bool one_frame_360 = false;
-	double horizontal_last = 0.0;
-	bool oneFramePure_ = oneFramePure;
-#if 1
-	if(udpPCBuff_last.pcDataOneFrame.empty() && !oneFramePure){
-		pcFrameSize = pmsg->pcDataOneFrame.size(); 
-		udpPCBuff_last.frameCounterLast = pmsg->pcDataOneFrame[0].UDP_PC_head.uphFrameCounter;
-		for(int j = 0; j < pcFrameSize; j++)
-		{
-			for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){	
-				udpPCBuff_last.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
-				udpPCBuff_last.frameCounter.push_back(pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter);
-			}
-		}
-		msg_queue_pc->free.at(0).put(ppmsg);
-		if(msg_queue_pc->done.at(0).get(ppmsg)){
-			return -1;
-		}
-		pmsg = (udpPcMsgOneFrame*)ppmsg.get();
-	}
-	pcFrameSize = udpPCBuff_last.pcDataOneFrame.size();
-	oneFrame360.pcDataOneFrame.clear();
-	if(!oneFramePure_){
-		oneFrame360.frameCounterLast = udpPCBuff_last.frameCounterLast;
-		for(int j = 0; j < pcFrameSize; j++)
-		{
-			horizontal_m = udpPCBuff_last.pcDataOneFrame[j].pcmHorizontal * horizontal_bin;
-			if(horizontal_m > 360.0) horizontal_m -= 360.0;
-			if(horizontal_m >= 0.0 && horizontal_m < 1.0) {
-				begin_save = true;
-			}
-			if(!begin_save) continue;
-			oneFrame360.pcDataOneFrame.push_back(udpPCBuff_last.pcDataOneFrame[j]);
-			oneFrame360.frameCounter.push_back(udpPCBuff_last.frameCounter[j]);
-
-			if(begin_save && horizontal_m > 359.5 && horizontal_m < 360.0){
-				ROS_INFO("warning! one_frame_360 is done in udpPCBuff_last");
-				one_frame_360 = true;
-				break;
-			}
-		}
-		if(oneFrame360.pcDataOneFrame.empty()){
-			ROS_INFO("oneFrame360.pcDataOneFrame is empty, can't find 0, frame index is %d", udpPCBuff_last.frameCounter[0]);
-		}
-
-		begin_save = false;
-		oneFrame360.frameCounterCur = pmsg->pcDataOneFrame[0].UDP_PC_head.uphFrameCounter;
-		if(!oneFrame360.pcDataOneFrame.empty())horizontal_last = oneFrame360.pcDataOneFrame[oneFrame360.pcDataOneFrame.size() - 1].pcmHorizontal * horizontal_bin;
-		if(horizontal_last > 360.0) horizontal_last -= 360.0; 
-	}
 	pcFrameSize = pmsg->pcDataOneFrame.size();
-	udpPCBuff_last.pcDataOneFrame.clear();
-	udpPCBuff_last.frameCounter.clear();
-	bool find_flag = true;
-	if(!one_frame_360){
-		for(int j = 0; j < pcFrameSize; j++)
-		{
-			for(int index = 0; index < UDP_PC_SIZE_SINGLE_V01; index++){	
-				if(oneFramePure_) {
-					oneFrame360.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
-					oneFrame360.frameCounter.push_back(pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter);
-					continue;
-				}
-				horizontal_m = pmsg->pcDataOneFrame[j].UDP_PC_payload[index].pcmHorizontal * horizontal_bin;
-				if(horizontal_m > 360.0) horizontal_m -= 360.0;
-				if((horizontal_last > horizontal_m) && find_flag) {
-					continue;
-				}else{
-					find_flag = false;
-				}
-				if(horizontal_m > 359.5 && horizontal_m < 360.0){
-					oneFrame360.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
-					oneFrame360.frameCounter.push_back(pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter);
-					one_frame_360 = true;
-					continue;
-				}				
-				if(one_frame_360){
-					udpPCBuff_last.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
-					udpPCBuff_last.frameCounter.push_back(pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter);
-					udpPCBuff_last.frameCounterLast = pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter;
-				}
-				else{
-					oneFrame360.frameCounter.push_back(pmsg->pcDataOneFrame[j].UDP_PC_head.uphFrameCounter);
-					oneFrame360.pcDataOneFrame.push_back(pmsg->pcDataOneFrame[j].UDP_PC_payload[index]);
-				}
-			}
-		}	
-	}
-#endif
 	if(!udpPCContinu_ && !udpPCSingle_){
 		msg_queue_pc->free.at(0).put(ppmsg);
 		return 0;
@@ -4389,15 +4301,12 @@ int viewpanel::pcDataProc()
 	rightAngle_offset = right_angle_edit->text().toDouble();
 	//color_base = color_base_edit->text().toDouble();
 	color_base = colorSlider->value();
-
 	QString strColor = colorCombo->currentText();
 	QString modeFilter = filterCombo->currentText();
 	int modeFilterCur = modeFilter_;
 	/*pc filter*/
 	auto start1 = std::chrono::steady_clock::now();
-
 	pcDataFilterPreProc(pmsg, modeFilterCur);
-
 	auto end1 = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapsed_1 = end1 - start1;
 	std::cout << "======time for pcDataFilterPreProc: " <<  elapsed_1.count() * 1000 << " ms" << std::endl;    
@@ -4602,7 +4511,7 @@ void viewpanel::udpParseFftAdcLoop()
 	while(!terminating)
 	{
 		udp_ADC_FFT_Msg* pmsg = nullptr;
-		flidarMsgPtr_ ppmsg = nullptr;
+		MsgPtr_ ppmsg = nullptr;
 		auto start = std::chrono::steady_clock::now();
 		if(msg_queue_adc_fft_raw->done.at(0).get(ppmsg)){
 			std::cout << "warning!!msg_queue_adc_fft_raw done get timeout!!!" << std::endl;
@@ -4661,14 +4570,8 @@ int viewpanel::udpRecvPCConnect()
 
 }
 
-void viewpanel::udpRecvPCOnce()
-{
-
-}
-
 void viewpanel::udpRecvPCLoop()
 {
-	uint32_t head_frame_index = 0;
 	bool ifLost  = false;
     std::chrono::duration<double> elapsed;	
 	int ret = 0;
@@ -4676,50 +4579,51 @@ void viewpanel::udpRecvPCLoop()
 	socklen_t len;
 	len = sizeof(sockaddr);
 	long bytesNum = 0;
+	bool startRecord = false;
+	std::vector<PC_pointMeta_st> pcData360;
 	while(!terminating && !udpPCStop_)
 	{
 		auto start = std::chrono::steady_clock::now();
 		pcDataOneFrame_.clear();
 		ifLost  = false;
 		bytesNum = 0;
-		for(int i = 0; i < UDP_PC_TIMES_PER_FRAME; i++){
-			memset(&pcDataRaw_, 0, sizeof(pcDataRaw_));
-			ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcDataRaw_), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
-			if(ret <= 0){
-				byteSpeed_ = 0;
-				if(udpPCStop_) {
-					ROS_INFO("pc udp recv thread quit!"); 
-    				::close(udpRecvPCSocketFd_);
-					return;
-				}
-				ROS_INFO("pc raw data recv failed, continue\n");
-				usleep(100*1000);
-				i--;
-				continue;
+		memset(&pcDataRaw_, 0, sizeof(pcDataRaw_));
+		ret = recvfrom(udpRecvPCSocketFd_, &pcDataRaw_, sizeof(pcDataRaw_), MSG_WAITALL, (struct sockaddr*)&src_addr, &len);  //接收来自server的信息
+		if(ret <= 0){
+			byteSpeed_ = 0;
+			if(udpPCStop_) {
+				ROS_INFO("pc udp recv thread quit!"); 
+				::close(udpRecvPCSocketFd_);
+				return;
 			}
-			bytesNum += ret;
-			if(i == 0) head_frame_index = pcDataRaw_.UDP_PC_head.uphFrameCounter;
-			if(pcDataRaw_.UDP_PC_head.uphFrameCounter!= head_frame_index) {
-				std::cout << "!!!warnning!!! current usFrameCounter is " << pcDataRaw_.UDP_PC_head.uphFrameCounter \
-				 << ", head_frame_index is " << head_frame_index << std::endl;	
-				break;
-			} 
-			pcDataOneFrame_.emplace_back(pcDataRaw_);
+			ROS_INFO("pc raw data recv failed, continue\n");
+			usleep(100*1000);
+			continue;
 		}
-		auto end = std::chrono::steady_clock::now();
-		elapsed = end - start;
-		std::cout << "udp cost time for recv one frame pc raw data: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
+		bytesNum += ret;
 		float temp = calcFpsAndTransSpeed(bytesNum);
 		if(temp > 0) byteSpeed_ =  temp / 1024.0;
-		if(pcDataOneFrame_.size() > 2){
-			flidarMsgPtr_ ppUdp = NULL;
-			if(msg_queue_pc->free.at(0).get(ppUdp)){
-				byteSpeed_ = -1;
-				ROS_INFO("!!!!error!!!!msg_queue_pc free is empty, continue\n");
-			}else{
-				udpPcMsgOneFrame* pUdp = (udpPcMsgOneFrame*)ppUdp.get();
-				pUdp->pcDataOneFrame = pcDataOneFrame_;
-				msg_queue_pc->done.at(0).put(ppUdp);	
+		for(int i = 0; i < PC_META_SIZE; i++){
+			double hori = pcDataRaw_.UDP_PC_payload[i].pcmHorizontal * horizontal_bin;
+			if(hori > 360.0) hori -= 360.0;
+			if(hori >= 0.0 && hori < 0.1) startRecord = true;
+			if(startRecord) {
+				pcData360.push_back(pcDataRaw_.UDP_PC_payload[i]);
+				//ROS_INFO("++++++++pcData360 size is %d", pcData360.size());
+			}
+			if(hori >= 359.5 && startRecord){
+				ROS_INFO("-------pcData360 size is %d", pcData360.size());
+				MsgPtr_ ppUdp = NULL;
+				if(msg_queue_pc->free.at(0).get(ppUdp)){
+					byteSpeed_ = -1;
+					ROS_INFO("!!!!error!!!!msg_queue_pc free is empty, continue\n");
+				}else{
+					udpPcMsgOneFrame* pUdp = (udpPcMsgOneFrame*)ppUdp.get();
+					pUdp->pcDataOneFrame = pcData360;
+					msg_queue_pc->done.at(0).put(ppUdp);	
+				}
+				pcData360.clear();
+				startRecord = false;
 			}
 		}
 	}
@@ -4822,7 +4726,7 @@ void viewpanel::udpRecvFftAdcLoop(){
 		}
 		//std::cout << "!!recv udp pkg successfully! "  << std::endl;
 		udp_ADC_FFT_Msg* pUdp = NULL;
-		flidarMsgPtr_ ppUdp = nullptr;
+		MsgPtr_ ppUdp = nullptr;
 		if(msg_queue_adc_fft_raw->free.at(0).get(ppUdp)){
 			std::cout << "error!!! msg_queue_adc_fft_raw free timeout!! "  << std::endl;
 			return;	
