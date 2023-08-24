@@ -4581,6 +4581,8 @@ void viewpanel::udpRecvPCLoop()
 	long bytesNum = 0;
 	bool startRecord = false;
 	std::vector<PC_pointMeta_st> pcData360;
+	MsgPtr_ ppUdp = nullptr;
+	udpPcMsgOneFrame* pUdp = nullptr;
 	while(!terminating && !udpPCStop_)
 	{
 		auto start = std::chrono::steady_clock::now();
@@ -4609,18 +4611,15 @@ void viewpanel::udpRecvPCLoop()
 			if(hori >= 0.0 && hori < 0.1) startRecord = true;
 			if(startRecord) {
 				pcData360.push_back(pcDataRaw_.UDP_PC_payload[i]);
-				//ROS_INFO("++++++++pcData360 size is %d", pcData360.size());
 			}
-			if(hori >= 359.5 && startRecord){
-				ROS_INFO("-------pcData360 size is %d", pcData360.size());
-				MsgPtr_ ppUdp = NULL;
-				if(msg_queue_pc->free.at(0).get(ppUdp)){
-					byteSpeed_ = -1;
-					ROS_INFO("!!!!error!!!!msg_queue_pc free is empty, continue\n");
-				}else{
-					udpPcMsgOneFrame* pUdp = (udpPcMsgOneFrame*)ppUdp.get();
+			if(hori >= 359.9 && startRecord){
+				if(!msg_queue_pc->free.at(0).empty()){
+					msg_queue_pc->free.at(0).get(ppUdp);
+					pUdp = (udpPcMsgOneFrame*)ppUdp.get();
 					pUdp->pcDataOneFrame = pcData360;
 					msg_queue_pc->done.at(0).put(ppUdp);	
+				}else{
+					ROS_INFO("!!!!error!!!!msg_queue_pc free is empty, continue\n");
 				}
 				pcData360.clear();
 				startRecord = false;
