@@ -303,7 +303,8 @@ void viewpanel::init_queue()
     }
 	vertical_bin = 1 / 256.0; 
 	speed_bin = 1 / 128.0; 
-	horizontal_bin = 360.0 / 65536.0; 
+	//horizontal_bin = 360.0 / 65536.0; 
+	horizontal_bin = 0.072; 
 	distance_bin = 1 / 32768.0; 
 	vertical_offset = -2.5;
 	udpPCBuff_last.pcDataOneFrame.clear();
