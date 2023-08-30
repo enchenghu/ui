@@ -4512,18 +4512,20 @@ void viewpanel::udpParseFftAdcLoop()
 	{
 		udp_ADC_FFT_Msg* pmsg = nullptr;
 		MsgPtr_ ppmsg = nullptr;
-		auto start = std::chrono::steady_clock::now();
-		if(msg_queue_adc_fft_raw->done.at(0).get(ppmsg)){
-			std::cout << "warning!!msg_queue_adc_fft_raw done get timeout!!!" << std::endl;
+		if(msg_queue_adc_fft_raw->done.at(0).empty()){
+			std::cout << "warning!!msg_queue_adc_fft_raw done is empty!!!" << std::endl;
 		}else{
+			auto start = std::chrono::steady_clock::now();
+			msg_queue_adc_fft_raw->done.at(0).get(ppmsg);
 			pmsg = (udp_ADC_FFT_Msg*)ppmsg.get();
 			parseFFTData(pmsg->fftDataV);
 			parseADCData(pmsg->adcDataV);
 			msg_queue_adc_fft_raw->free.at(0).put(ppmsg);
+			auto end = std::chrono::steady_clock::now();
+			elapsed = end - start;
+			std::cout << "time for parse FFT and ADC data: " <<  elapsed.count() * 1000 << " ms" << std::endl;   
 		}
-		auto end = std::chrono::steady_clock::now();
-		elapsed = end - start;
-		std::cout << "time for parse FFT ADC data: " <<  elapsed.count() * 1000 << " ms" << std::endl;    
+ 
 		if(udpFftAdcStop_) break;
 	}
 	std::cout << "quit udpParseFftAdcLoop" << std::endl;
@@ -4717,7 +4719,7 @@ void viewpanel::udpRecvFftAdcLoop(){
 		}
 		auto end = std::chrono::steady_clock::now();
 		elapsed = end - start;
-		std::cout << "time for one frame udp: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
+		std::cout << "time for one frame fft adc raw data udp: " <<  elapsed.count() * 1000 << " ms" << std::endl;  
 
 		if(ifLost) {
 			std::cout << "warning!!! lost data continue! "  << std::endl;
@@ -4726,10 +4728,10 @@ void viewpanel::udpRecvFftAdcLoop(){
 		//std::cout << "!!recv udp pkg successfully! "  << std::endl;
 		udp_ADC_FFT_Msg* pUdp = NULL;
 		MsgPtr_ ppUdp = nullptr;
-		if(msg_queue_adc_fft_raw->free.at(0).get(ppUdp)){
-			std::cout << "error!!! msg_queue_adc_fft_raw free timeout!! "  << std::endl;
-			return;	
+		if(msg_queue_adc_fft_raw->free.at(0).empty()){
+			std::cout << "error!!! msg_queue_adc_fft_raw is empty!! "  << std::endl;	
 		}else{
+			msg_queue_adc_fft_raw->free.at(0).get(ppUdp);
 			pUdp = (udp_ADC_FFT_Msg*)ppUdp.get();
 			pUdp->fftDataV = fftDataV;
 			pUdp->adcDataV = adcDataV;
