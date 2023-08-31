@@ -2463,7 +2463,8 @@ void viewpanel::parseADCData(std::vector<uint8_t> &data)
 			}
 		}
 		msg_queue_adc_fft->done.at(1).put(ppadc);
-	}
+	}else
+		std::cout << "error!!!msg_queue_adc_fft->free.at(1).get(ppadc) timeout 3 sec, adc no data show" << std::endl;
 }
 
 
@@ -2510,6 +2511,8 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 				index += 1;
 		}
 		msg_queue_adc_fft->done.at(0).put(ppfft);
+	}else{
+		std::cout << "error!!!msg_queue_adc_fft->free.at(0).get(ppfft) timeout 3 sec, fft no data show" << std::endl;
 	}
 }
 
@@ -3115,7 +3118,7 @@ void viewpanel::updateFFTdata() {
 	fftMsg* pfft = NULL;
 	MsgPtr_ ppfft = nullptr;
 	if(msg_queue_adc_fft->done.at(0).empty()) return;
-	if(msg_queue_adc_fft->done.at(0).get(ppfft)){
+	if(!msg_queue_adc_fft->done.at(0).get(ppfft)){
 		pfft = (fftMsg* )ppfft.get();
 		if(ifShowdB_ == FFT_ORI){
 			pFFTchart[0]->setData(x_FFT, pfft->dataFFT_0);
@@ -3973,7 +3976,7 @@ void viewpanel::updateADCdata() {
 #else 
 	adcMsg* padc = NULL;
 	MsgPtr_ ppadc = nullptr;
-	if(msg_queue_adc_fft->done.at(1).get(ppadc)){
+	if(!msg_queue_adc_fft->done.at(1).get(ppadc)){
 		padc = (adcMsg*)ppadc.get();
 		pADCchart[0]->setData(x_adc0, padc->dataADC0);
 		pADCchart[1]->setData(x_adc1, padc->dataADC1);
@@ -4512,11 +4515,8 @@ void viewpanel::udpParseFftAdcLoop()
 	{
 		udp_ADC_FFT_Msg* pmsg = nullptr;
 		MsgPtr_ ppmsg = nullptr;
-		if(msg_queue_adc_fft_raw->done.at(0).empty()){
-			std::cout << "warning!!msg_queue_adc_fft_raw done is empty!!!" << std::endl;
-		}else{
+		if(!msg_queue_adc_fft_raw->done.at(0).get(ppmsg)){
 			auto start = std::chrono::steady_clock::now();
-			msg_queue_adc_fft_raw->done.at(0).get(ppmsg);
 			pmsg = (udp_ADC_FFT_Msg*)ppmsg.get();
 			parseFFTData(pmsg->fftDataV);
 			parseADCData(pmsg->adcDataV);
@@ -4524,6 +4524,8 @@ void viewpanel::udpParseFftAdcLoop()
 			auto end = std::chrono::steady_clock::now();
 			elapsed = end - start;
 			std::cout << "time for parse FFT and ADC data: " <<  elapsed.count() * 1000 << " ms" << std::endl;   
+		}else{
+			std::cout << "error!!!msg_queue_adc_fft_raw->done.at(0).get(ppmsg) timeout 3 sec, raw fft and adc no data parse" << std::endl;
 		}
  
 		if(udpFftAdcStop_) break;
@@ -4635,6 +4637,7 @@ void viewpanel::udpRecvPCLoop()
 void viewpanel::udpRecvFftAdcLoop(){
 
 	//int client_fd;
+#if 1
 	lidar_UDP_port = udp_port_edit->text().toInt();
 	struct sockaddr_in ser_addr;
 
@@ -4665,11 +4668,12 @@ void viewpanel::udpRecvFftAdcLoop(){
 		msgBox.exec();
 		return;
     }
-	udpFftAdcStop_ = false;
 	socklen_t len;
 	struct sockaddr_in src;
 	//printf("ready recv udp msg!\n");
 	len = sizeof(sockaddr);
+#endif
+	udpFftAdcStop_ = false;
 	std::vector<uint8_t> fftDataV;
 	std::vector<uint8_t> adcDataV;
 	uint32_t last_frame_index = 0;
@@ -4684,6 +4688,7 @@ void viewpanel::udpRecvFftAdcLoop(){
 		for(int i = 0; i < UDP_TIMES_PER_FRAME; i++){
 			memset(&g_udpMsg, 0, sizeof(g_udpMsg));
 			//printf("ready recv udp msg!\n");
+#if 1
 			ret = recvfrom(udpFftAdcSocketFd_, &g_udpMsg, sizeof(g_udpMsg), MSG_WAITALL, (struct sockaddr*)&src, &len);  //接收来自server的信息
 			if(ret <= 0){
 				if(udpFftAdcStop_) {
@@ -4701,6 +4706,7 @@ void viewpanel::udpRecvFftAdcLoop(){
 				std::cout << "!!!warnning!!! current index is " << i << ", udp msg usRollingCounter is " << g_udpMsg.mHead.usRollingCounter << std::endl;
 				break;			
 			}
+#endif
 
 			if(i == 0) last_frame_index = g_udpMsg.mHead.usFrameCounter;
 
@@ -4729,7 +4735,7 @@ void viewpanel::udpRecvFftAdcLoop(){
 		udp_ADC_FFT_Msg* pUdp = NULL;
 		MsgPtr_ ppUdp = nullptr;
 		if(msg_queue_adc_fft_raw->free.at(0).empty()){
-			std::cout << "error!!! msg_queue_adc_fft_raw is empty!! "  << std::endl;	
+			std::cout << "warning!!! msg_queue_adc_fft_raw is empty!! "  << std::endl;	
 		}else{
 			msg_queue_adc_fft_raw->free.at(0).get(ppUdp);
 			pUdp = (udp_ADC_FFT_Msg*)ppUdp.get();
