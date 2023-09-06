@@ -297,7 +297,7 @@ void viewpanel::init_queue()
 	msgQueuesMap_m.insert(TaskQueuesUnit(TASK_MOTOR_DATA_RECV, std::make_shared<MsgQueuesUnit>(MsgQueues(1), MsgQueues(1))));
 	msgQueuesMap_m.insert(TaskQueuesUnit(TASK_SYSTEM_DATA_RECV,std::make_shared<MsgQueuesUnit>(MsgQueues(1), MsgQueues(1))));
 
-	for (int loop = 0; loop < 4; loop++) {
+	for (int loop = 0; loop < MSG_BUFF_NUM; loop++) {
 		msgQueuesMap_m[TASK_FFT_ADC_DATA_RECV]->free.at(0).put(std::make_shared<udp_ADC_FFT_Msg>());
 		msgQueuesMap_m[TASK_FFT_ADC_DATA_PARSE]->free.at(0).put(std::make_shared<fftMsg>());
 		msgQueuesMap_m[TASK_FFT_ADC_DATA_PARSE]->free.at(1).put(std::make_shared<adcMsg>());

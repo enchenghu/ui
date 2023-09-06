@@ -13,7 +13,6 @@
 #include  <map>
 #include "bst_msg_queue.h"
 
-using msgBase = struct {};
 typedef enum {
 	TASK_DEFAULT = 0, 
 	TASK_FFT_ADC_DATA_RECV, 
@@ -24,7 +23,7 @@ typedef enum {
 	TASK_SYSTEM_DATA_RECV,
 	//TASK_LAST = BST_MAX_TASK_NUM - 1
 }LIGHTNING_TASK_ID;
-using MsgPtr_ = std::shared_ptr<msgBase>;
+using MsgPtr_ = std::shared_ptr<void>;
 using MsgQueue = SafeQueue<MsgPtr_>;//bstMsgQueue<std::shared_ptr<void>>;
 //using MsgQueue = bstMsgQueue<void *>;
 using MsgQueues  = std::vector<MsgQueue>;
@@ -50,14 +49,14 @@ using taskMapUnit = std::pair<int, taskUnit>;
 class BaseNode
 {
 	public:
-		BaseNode(int taskNum = 1, int queueNum = 1);
+		BaseNode(int taskNum = 1, int slotNum = 1);
 		virtual ~BaseNode(){};
 	public:	
 		virtual void deinit(void);	
 		virtual void startTask(void);
-		virtual int releaseMsg();
-		virtual int getMsg();
-		virtual int dispatchMsg();
+		virtual int releaseMsg(MsgPtr_ msg, int task_id, int slot_i = 0);
+		virtual int getMsg(MsgPtr_ & msg, int task_id, int slot_i = 0);
+		virtual int dispatchMsg(MsgPtr_ msg, int task_id, int slot_i = 0);
         virtual void process(int what, void* msg);
 		//template <class T>
 		virtual int initTask(MsgPtr_);

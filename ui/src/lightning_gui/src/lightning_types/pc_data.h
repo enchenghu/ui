@@ -36,7 +36,7 @@
 #define BUFF_LEN 1024
 #define ITEMS_NUM 5
 #define FFT_ADC_LENGTH 12288
-#define MAX_BUFF_LEN 8
+#define MSG_BUFF_NUM 4
 #define TCP_TIMES_PER_FRAME 200
 #define UDP_TIMES_PER_FRAME 192
 #define MOTOR_ITEMS_NUM 10
@@ -258,12 +258,12 @@ typedef struct
 	MotorMsgTailer 	tailer; 
 } motorShowMsg;
 
-typedef struct : msgBase
+typedef struct
 {
 	uint8_t     data[128];
 } motorMaxBuff;
 
-typedef struct : msgBase
+typedef struct
 {
 	uint8_t     data[128];
 } stateMaxBuff;
@@ -279,7 +279,7 @@ typedef struct
 
 
 
-typedef struct : public msgBase
+typedef struct 
 {
 	QVector<double> dataFFT_0;
 	QVector<double> dataFFT_1;
@@ -288,13 +288,13 @@ typedef struct : public msgBase
 
 }fftMsg;
 
-typedef struct : public msgBase
+typedef struct 
 {
 	QVector<double> dataADC0;
 	QVector<double> dataADC1;
 }adcMsg;
 
-typedef struct : public msgBase
+typedef struct 
 {
 	std::vector<uint8_t> fftDataV;
 	std::vector<uint8_t> adcDataV;
@@ -344,7 +344,7 @@ typedef struct {
 } UDP_PC_package_st;    // 1424字节
 
 
-typedef struct : public msgBase
+typedef struct 
 {
 	std::vector<PC_pointMeta_st> pcDataOneFrame;
 }udpPcMsgOneFrame;
