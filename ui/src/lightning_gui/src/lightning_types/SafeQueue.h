@@ -1,7 +1,7 @@
 
 
-#ifndef BST_SAFEQUEUE_HEAD_
-#define BST_SAFEQUEUE_HEAD_
+#pragma once
+
 #include <mutex>
 #include <queue>
 #include <condition_variable>
@@ -65,5 +65,3 @@ private:
     std::mutex mMutex;
     std::condition_variable queueCond_;
 };
-
-#endif

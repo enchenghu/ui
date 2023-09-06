@@ -25,38 +25,41 @@ void BaseNode::deinit()
     printf("Base node deinit do nothing\n");
 }
 
-//template <class T>
-int BaseNode::initTask(MsgPtr_ msg)
+template <class T>
+int BaseNode::initTask(int task_id, int slot_id, int buf_num)
 {
-    for(auto &t : nodeTaskMap){
-        for(int i = 0; i < MAX_QUEUE_BUFF; i++){
-            for(auto &e : t.second.second->free) e.put(msg);
+    auto iter =  nodeTaskMap.find(task_id);
+    if(iter != nodeTaskMap.end()){
+        for(int i = 0; i < buf_num; i++){
+            iter->second.second->free.at(slot_id).put(std::make_shared<T>());
         }        
     }
     return 0;
 }
 
-int BaseNode::getMsg(MsgPtr_ & msg, int task_id, int slot_i)
+int BaseNode::getMsg(MsgPtr_ & msg, int task_id, int slot_id)
 {
     printf("Base node init do nothing\n");    
     return 0;
 }
 
-int BaseNode::releaseMsg(MsgPtr_ msg, int task_id, int slot_i)
+int BaseNode::releaseMsg(MsgPtr_ msg, int task_id, int slot_id)
 {
     printf("Base node init do nothing\n");    
     return 0;
 }
 
-int BaseNode::dispatchMsg(MsgPtr_ msg, int task_id, int slot_i)
+template <class T>
+int BaseNode::dispatchMsg(T & msg, int task_id, int slot_id)
 {
     //printf("Base node init do nothing\n");   
     auto iter =  nodeTaskMap.find(task_id);
     if(iter != nodeTaskMap.end()){
         MsgPtr_ ptr = nullptr;
-        if(!iter->second.second->free.at(slot_i).get(ptr)){
-            //*ptr = *msg;
-            iter->second.second->done.at(slot_i).put(ptr);   
+        if(!iter->second.second->free.at(slot_id).get(ptr)){
+            T * pptr = (T *)ptr.get();
+            *pptr = msg;
+            iter->second.second->done.at(slot_id).put(ptr);   
         } else {
             return -1;
         }

@@ -412,7 +412,19 @@ typedef enum
 	MOTOR_SHOW_ITEMS_DISPLAY
 }motorCmdType;
 
+typedef enum {
+	TASK_DEFAULT = 0, 
+	TASK_FFT_ADC_DATA_RECV, 
+	TASK_FFT_ADC_DATA_PARSE, 
+	TASK_POINTCLOUD_DATA_RECV, 
+	TASK_POINTCLOUD_DATA_PARSE, 
+	TASK_MOTOR_DATA_RECV, 
+	TASK_SYSTEM_DATA_RECV,
+	//TASK_LAST = BST_MAX_TASK_NUM - 1
+}LIGHTNING_TASK_ID;
 
+using TaskQueuesUnit = std::pair<LIGHTNING_TASK_ID, std::shared_ptr<MsgQueuesUnit>>;
+using TaskQueuesMap  = std::map<LIGHTNING_TASK_ID, std::shared_ptr<MsgQueuesUnit>>;
 //PcMetadata PcMetadata_Arr[100];	// 每个UDP报文，包含2列激光数据
 //PointCloud_V1_0_Header + PcMetadata_Arr
 }
