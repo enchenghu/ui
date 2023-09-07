@@ -153,6 +153,8 @@ catkin_package(CATKIN_DEPENDS
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
+include_directories(./framework)
+
 include_directories(
  include src/lightning_types/
  include ${OpenCV_INCLUDE_DIRS}
@@ -163,6 +165,7 @@ include os
 include PolyM/include
 )
 
+add_subdirectory(framework)
 add_subdirectory(os)
 add_subdirectory(PolyM)
 
@@ -205,15 +208,16 @@ endif()
 ## Specify libraries to link a library or executable target against
 add_dependencies(lightning_gui ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(lightning_gui
-   os
-   polym
-   Qt5::Charts
-   Qt5PrintSupport
-   Qt5SerialPort
-   ${catkin_LIBRARIES}
-   ${PCL_LIBRARIES}
-   ${QT_LIBRARIES}
-   ${CXX_FILESYSTEM_LIBRARIES}
+  base_lib
+  os
+  polym
+  Qt5::Charts
+  Qt5PrintSupport
+  Qt5SerialPort
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ${QT_LIBRARIES}
+  ${CXX_FILESYSTEM_LIBRARIES}
  )
 
 

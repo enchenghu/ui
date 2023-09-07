@@ -68,3 +68,15 @@ int BaseNode::dispatchMsg(T & msg, int task_id, int slot_id)
     }
     return 0;
 }
+
+void BaseNode::taskLoop()
+{
+    while(true){
+
+    }
+}
+
+void* BaseNode::trampoline(void* p)
+{
+
+}

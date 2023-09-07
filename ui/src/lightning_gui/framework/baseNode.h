@@ -11,8 +11,8 @@
 #include "vx_queue.h"
 #include "vx_task.h"
 #include  <map>
+#include "logutil.h"
 #include "bst_msg_queue.h"
-
 
 using MsgPtr_ = std::shared_ptr<void>;
 using MsgQueue = SafeQueue<MsgPtr_>;//bstMsgQueue<std::shared_ptr<void>>;
@@ -48,6 +48,8 @@ class BaseNode
         virtual void process(int what, void* msg);
 		template <class T>
 		int initTask(int task_id = 0, int slot_id = 0, int buf_num = 4);
+    	static void* trampoline(void* p);
+		void taskLoop();
         //std::vector<TaskSharePtr_> getTask();
 
 	private:
