@@ -1,9 +1,3 @@
-/**
- * Copyright(c): Black Sesame Technologies(Shanghai)Co.,Ltd. All rights reserved.
- * Filename:
- * Author: Benson.wang
- * Date: 2021年 02月 01日
-**/
 
 #ifndef LOG_UTILS_H
 #define LOG_UTILS_H
