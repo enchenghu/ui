@@ -279,10 +279,10 @@ void viewpanel::init_queue()
 	x_FFT_1.clear();
 	x_adc0.clear();
 	x_adc1.clear();
-	for(int i = 0; i< 8192;i++) 
+	for(int i = 0; i< 4096;i++) 
 	{
 		x_FFT.append(i);
-		x_FFT_1.append(-8191 + i);
+		x_FFT_1.append(-4095 + i);
 		x_adc0.append(i);
 		x_adc1.append(i);
 	}
@@ -910,6 +910,7 @@ void viewpanel::configReg(int index){
 double viewpanel::fft2dBm(double x){
 	double inputV = x / pow(2, 17);
 	double res = 10 * log10(pow(inputV, 2) / 100) - 1.1;
+	if(res < -100.0) res = -100.0;
 	return res; 
 }
 
@@ -1776,7 +1777,7 @@ void viewpanel::CreatADCWindow()
 #endif
 	pADCchart[0] = new ChartLighting(this, ADC_ORI);
 	pADCchart[1] = new ChartLighting(this, ADC_ORI);
-	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, 8192, -32768, 32768), 0 , 0);
+	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, 4096, -32768, 32768), 0 , 0);
 	chartADCBox0->setLayout(chartADCLayout0);
 #if 0
     OSC_chart *label_OSC_1 = new OSC_chart(this);
@@ -1784,7 +1785,7 @@ void viewpanel::CreatADCWindow()
     label_OSC_1->Add_Line_Data(0, 100);
     //label_OSC_1->View_Chart(10000);
 #endif
-	chartADCLayout1->addWidget(pADCchart[1]->setChart(0, 8192, -32768, 32768), 0, 0);
+	chartADCLayout1->addWidget(pADCchart[1]->setChart(0, 4096, -32768, 32768), 0, 0);
 	chartADCBox1->setLayout(chartADCLayout1);
 
 	QVBoxLayout* adcCharts= new QVBoxLayout ;
@@ -1832,7 +1833,7 @@ void viewpanel::CreatDebugWindow()
 #endif
 	pFFTchart[0] = new ChartLighting(this, FFT_DB);
 	pFFTchart[1] = new ChartLighting(this, FFT_DB);
-	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, 8192, 0, 256 * 4096), 0 , 0);
+	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, 4096, 0, 256 * 4096), 0 , 0);
 	chartADCBox->setLayout(chartADCLayout);
 #if 0
     OSC_chart *label_OSC_1 = new OSC_chart(this);
@@ -2490,7 +2491,7 @@ void viewpanel::parseADCData(std::vector<uint8_t> &data)
 		padc->dataADC0.clear();
 		padc->dataADC1.clear();
 		for(int i = 0; i < data.size(); i++) {			
-			if(i >= data.size() / 2) break;
+			if(i >= data.size() / 3) break;
 			int flagNum = i % 2;
 			cur_data += data[i] << (8 * (flagNum));
 			if(flagNum){
@@ -2518,7 +2519,6 @@ void viewpanel::parseADCData(std::vector<uint8_t> &data)
 
 void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 {
-	//std::cout << "!!enter parseFFTData! input point num is  "  <<  data.size() / 4 << std::endl;
 #if 0
 	std::string datPath;
 	datPath = save_folder.toStdString() + "/data_index" + std::to_string(findex) +".dat";
@@ -2530,6 +2530,10 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 	datfile.close();
 #endif
 	uint32_t cur_data  = 0;
+	uint32_t cur_data_real  = 0;
+	uint32_t cur_data_imag  = 0;
+	int key = 0, flag = 0;
+
 	int index = 0;
 	fftMsg* pfft = NULL;
 	double power_offset_ = power_offset;
@@ -2543,36 +2547,29 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 	pfft->dataFFTdB_0.clear();
 	pfft->dataFFTdB_1.clear();
 	for(int i = 0; i < data.size(); i++) {
-		index += 1;
-		if(index < 5)
-			cur_data += data[i] << (8 * (index - 1));
-		else if (index < 9)
-			cur_data += data[i] << (8 * (index - 5));
-		else if (index < 13)
-			cur_data += data[i] << (8 * (index - 9));
-		else if (index < 17)
-			cur_data += data[i] << (8 * (index - 13));
-		else if (index < 21)
-			cur_data += data[i] << (8 * (index - 17));
-		else if (index < 25)
-			cur_data += data[i] << (8 * (index - 21));
-		else if (index < 29)
-			cur_data += data[i] << (8 * (index - 25));
-		else if (index < 33)
-			cur_data += data[i] << (8 * (index - 29));
+		flag = index % 8; // 0 1 2 3 4 5 6 7
+		key = index / 8;
+		if(flag < 4)
+			cur_data_real += data[i] << (8 * (index - (key * 8)));
+		else 
+			cur_data_imag += data[i] << (8 * (index - (key * 8) - 4));
 
-		if(index % 4 == 0 && index < 33){
-			if(i < data.size() / 2){
+		if(index % 8 == 7){
+			cur_data = sqrt(cur_data_real * cur_data_real + cur_data_imag * cur_data_imag);
+			if(i < data.size() / 3){
 				pfft->dataFFT_0.append(cur_data);
 				pfft->dataFFTdB_0.append(fft2dBm(cur_data) + power_offset_);
-			} else{
+			} else if (i < data.size() * 2 / 3){
 				pfft->dataFFT_1.append(cur_data);	
 				pfft->dataFFTdB_1.append(fft2dBm(cur_data) + power_offset_);
 			}
-			cur_data = 0;
+			cur_data_real = 0;
+			cur_data_imag = 0;
 		}
-		if(index == 32) index = 0;
-
+		if(index == 63) 
+			index = 0;
+		else 
+			index += 1;
 	}
 	fftMsg_done_buf_queue.put(pfft);
 	//ROS_INFO("fftMsg send finished");  //打印自己发送的信息
@@ -3077,7 +3074,7 @@ void viewpanel::updateFFTdata() {
 	y_FFT_1.clear();
 	QVector<double> y_FFT_dB;
 	QVector<double> y_FFT_1_dB;
-	for(int i = 0; i< 8192; i++) 
+	for(int i = 0; i< 4096; i++) 
 	{
 		double tmp = qrand() % 100000;
 		double tmp_log = 10 * log10(tmp);
@@ -3963,15 +3960,15 @@ void viewpanel::updateADCdata() {
 	static long long frame_index = 0;
 	x_adc0.clear();
 	x_adc1.clear();
-	for(int i = 0; i< 8192; i++) {
-		x_adc0.append(i + 8192 * frame_index);
+	for(int i = 0; i< 4096; i++) {
+		x_adc0.append(i + 4096 * frame_index);
 	}
 	x_adc1 = x_adc0;
 
 #if DEBUG_UI	
 	y_adc0.clear();
 	y_adc1.clear();
-	for(int i = 0; i< 8192; i++) {
+	for(int i = 0; i< 4096; i++) {
 		double tmp = qrand() % 10000;
 		y_adc0.append(tmp);
 		y_adc1.append(tmp);
@@ -3988,8 +3985,8 @@ void viewpanel::updateADCdata() {
 		ROS_INFO("adcMsg update");  
 	}
 #endif
-	//pADCchart[0]->setXChart(8192 * frame_index, 8192 * frame_index + 8191);
-	//pADCchart[1]->setXChart(8192 * frame_index, 8192 * frame_index + 8191);
+	//pADCchart[0]->setXChart(4096 * frame_index, 4096 * frame_index + 8191);
+	//pADCchart[1]->setXChart(4096 * frame_index, 4096 * frame_index + 8191);
 	frame_index++;
 }
 
@@ -4652,10 +4649,10 @@ void viewpanel::udpRecvLoop(){
 				 << ", last_frame_index is " << last_frame_index << std::endl;	
 				break;
 			}
-			if(i < UDP_TIMES_PER_FRAME / 2) {
-				for(int j = 0; j < 16; j++){
-					fftDataV.insert(fftDataV.end(), g_udpMsg.pcUdpData + 32 + 64 * j, g_udpMsg.pcUdpData + 64 * (j + 1));
+			if(i < UDP_TIMES_PER_FRAME) {
+				for(int j = 0; j < 8; j++){
 					adcDataV.insert(adcDataV.end(), g_udpMsg.pcUdpData + 64 * j, g_udpMsg.pcUdpData + 64 * j + 32);
+					fftDataV.insert(fftDataV.end(), g_udpMsg.pcUdpData + 32 + 64 * j, g_udpMsg.pcUdpData + 64 * (j + 1) + 32);
 				}
 			}  
 		}
