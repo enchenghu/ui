@@ -2562,6 +2562,8 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 			} else if (i < data.size() * 2 / 3){
 				pfft->dataFFT_1.append(cur_data);	
 				pfft->dataFFTdB_1.append(fft2dBm(cur_data) + power_offset_);
+			}else{
+				break;
 			}
 			cur_data_real = 0;
 			cur_data_imag = 0;
