@@ -22,6 +22,7 @@
 #include "viewpanel.h"
 #include <vector>
 #include <netinet/tcp.h>
+#include <algorithm>
 
 #define CTRL_SOCKET 0
 #define DEFAULT_AZIMUTH_BIN 0
@@ -2130,7 +2131,7 @@ void viewpanel::CreatPCWindow()
 	savePCCombo->setFixedSize(70, 25);	
 	controls_layout->addWidget( pcBWBtn, 3, 15, Qt::AlignLeft);
 	controls_layout->addWidget( pcRecordBtn, 4, 15, Qt::AlignLeft);
-	controls_layout->addWidget( pcProcBtn, 5, 15, Qt::AlignLeft);
+	//controls_layout->addWidget( pcProcBtn, 5, 15, Qt::AlignLeft);
 	controls_layout->addWidget( rotate_label, 1, 18, Qt::AlignRight);
 	controls_layout->addWidget( rotation_spin, 1, 19, Qt::AlignLeft);	
 
@@ -4426,12 +4427,15 @@ int viewpanel::pcDataProc()
 		cloud.points[j].y = distance_m * cos(vertical_m * PI_FMCW / 180) * \
 															sin(horizontal_m * PI_FMCW / 180) * (-1.0);
 		cloud.points[j].z = distance_m * sin(vertical_m * PI_FMCW / 180) * (1.0);
-		if(strColor == "range")
+		if(strColor == "range"){
 			index_rgb = distance_m / color_base * R_V_g.size();
-		else if(strColor == "intensity")
+/* 			if(index_rgb > (R_V_g.size() - 1)) index_rgb = R_V_g.size() - 1;
+			if(index_rgb < 0) index_rgb = 0;
+			index_rgb = R_V_g.size() - 1 - index_rgb; */
+		} else if (strColor == "intensity") {
 			//index_rgb = (intensity_m - indensity_min) / (indensity_max - indensity_min) * R_V_g.size();
 			index_rgb = (intensity_m) / (color_base) * R_V_g.size();
-		else if(strColor == "reflectivity"){
+		} else if (strColor == "reflectivity"){
 			index_rgb = (reflectivity_m) / (color_base) * R_V_g.size();
 		}
 		else if(strColor == "speed"){
