@@ -248,6 +248,8 @@ private:
 	void CreatDebugWindow();
 	void CreatUIWindow();
 	void CreatADCWindow();
+	void CreatFixedFreqWindow();
+
 	void CreatMotorWindow();
 	void CreatStateDetectWindow();
 	void CreatCtlPanel();
@@ -537,7 +539,7 @@ private:
 	vx_task_create_params_t bst_params;
 	std::shared_ptr<fmcw_types::fmcwPoints> fmcwPointsData_;
 	fmcw_types::fmcwPoint curPcPoint;
-	ChartLighting* pFFTchart[2];
+	ChartLighting* pFFTchart[3];
 	ChartLighting* pADCchart[2];
 	ChartLighting* pMotorchart;
 	QVector<QCheckBox*> checkShowV;
@@ -549,6 +551,7 @@ private:
 	QVector<double> y_adc1;
 	QVector<double> y_FFT;
 	QVector<double> x_FFT_1;
+	QVector<double> x_FFT_2;
 	QVector<double> y_FFT_1;
 	myTracer* plotTracer;
 	ros::Publisher  fmcw_pcl_pub;

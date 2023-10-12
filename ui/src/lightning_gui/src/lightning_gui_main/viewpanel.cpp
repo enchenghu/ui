@@ -249,8 +249,9 @@ viewpanel::viewpanel(QTabWidget* parent )
 	load_settings();
 	CreatUIWindow();
 	CreatDebugWindow();
+	CreatFixedFreqWindow();
 	CreatADCWindow();
-	CreatMotorWindow();
+	//CreatMotorWindow();
 	CreatStateDetectWindow();
 	CreatConnect();
 
@@ -277,11 +278,13 @@ void viewpanel::init_queue()
 {
 	x_FFT.clear();
 	x_FFT_1.clear();
+	x_FFT_2.clear();
 	x_adc0.clear();
 	x_adc1.clear();
 	for(int i = 0; i< 4096;i++) 
 	{
 		x_FFT.append(i);
+		x_FFT_2.append(i);
 		x_FFT_1.append(-4095 + i);
 		x_adc0.append(i);
 		x_adc1.append(i);
@@ -1760,31 +1763,55 @@ void viewpanel::CreatStateDetectWindow()
 
 }
 
+void viewpanel::CreatFixedFreqWindow()
+{
+	QWidget* multiWidget_new = new QWidget();
+	QGroupBox *chartADCBox0 = new QGroupBox(tr("Fixed Freqency FFT:"));
+	QGridLayout* chartADCLayout0 = new QGridLayout ;
+
+	pFFTchart[2] = new ChartLighting(this, FFT_DB);
+	chartADCLayout0->addWidget(pFFTchart[2]->setChart(0, 4096, -32768, 32768), 0 , 0);
+	chartADCBox0->setLayout(chartADCLayout0);
+
+	QVBoxLayout* adcCharts= new QVBoxLayout ;
+	adcCharts->addWidget(chartADCBox0);
+	
+/* 	QGridLayout* adcSettingLayout = new QGridLayout ;
+	QGroupBox* adcSettingBox = new QGroupBox(tr("ADC control:"));
+	QGridLayout* adcSettingBoxLayout = new QGridLayout ;
+	singelADCBtn_ = new QPushButton("&Single");
+	singelADCBtn_->setFixedSize(100, 25);
+	resetADCBtn_ = new QPushButton("&Reset");
+	resetADCBtn_->setFixedSize(100, 25);
+	
+	adcSettingBoxLayout->addWidget(singelADCBtn_, 0, 0);//, Qt::AlignTop);
+	adcSettingBoxLayout->addWidget(resetADCBtn_, 0, 1);//, Qt::AlignTop);
+	adcSettingBox->setLayout(adcSettingBoxLayout);
+	adcSettingLayout->addWidget(adcSettingBox); */
+
+	QGridLayout* main_show= new QGridLayout ;
+/* 	main_show->setColumnStretch(0, 9);
+	main_show->setColumnStretch(1, 1); */
+	main_show->addLayout(adcCharts, 0, 0 );
+	//main_show->addLayout(adcSettingLayout, 0, 1);
+
+	multiWidget_new->setLayout(main_show);
+	this->addTab(multiWidget_new,  "Fixed Freqency FFT");
+}
+
 void viewpanel::CreatADCWindow()
 {
 	QWidget* multiWidget_new = new QWidget();
-
 	QGroupBox *chartADCBox0 = new QGroupBox(tr("ADC chart 0-0:"));
 	QGridLayout* chartADCLayout0 = new QGridLayout ;
 	QGroupBox *chartADCBox1 = new QGroupBox(tr("ADC chart 0-1:"));
 	QGridLayout* chartADCLayout1 = new QGridLayout ;
 
-#if 0
-    OSC_chart *label_OSC_0 = new OSC_chart(this);
-    label_OSC_0->set_chart(10,20,this->width() /  2 -20,this->height()  / 2-20);
-    label_OSC_0->Add_Line_Data(0, 100);
-    label_OSC_0->View_Chart(1000);
-#endif
 	pADCchart[0] = new ChartLighting(this, ADC_ORI);
 	pADCchart[1] = new ChartLighting(this, ADC_ORI);
 	chartADCLayout0->addWidget(pADCchart[0]->setChart(0, 4096, -32768, 32768), 0 , 0);
 	chartADCBox0->setLayout(chartADCLayout0);
-#if 0
-    OSC_chart *label_OSC_1 = new OSC_chart(this);
-    label_OSC_1->set_chart(10,20,this->width() /  2 - 20,this->height() / 2 - 20);
-    label_OSC_1->Add_Line_Data(0, 100);
-    //label_OSC_1->View_Chart(10000);
-#endif
+
 	chartADCLayout1->addWidget(pADCchart[1]->setChart(0, 4096, -32768, 32768), 0, 0);
 	chartADCBox1->setLayout(chartADCLayout1);
 
@@ -1957,7 +1984,7 @@ void viewpanel::CreatConnect()
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
 	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
 
-#if 1
+#if 0
 	connect(motorConnectBtnTcp, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmdM( void )));
 	connect(motorConnectBtnSerial, SIGNAL(clicked()), this, SLOT( sendMotorConnectCmd( void )));
 	connect(motorSwitchBtn, SIGNAL(clicked()), this, SLOT( sendMotorOpenCmd( void )));
@@ -1971,7 +1998,6 @@ void viewpanel::CreatConnect()
 	connect(motorChartResetBtn, SIGNAL(clicked()), this, SLOT( resetMotor( void )));
 	connect(motorSoftVersionReadBtn, SIGNAL(clicked()), this, SLOT( readSoftVersion( void )));
 	connect(motorHardVersionReadBtn, SIGNAL(clicked()), this, SLOT( readHardVersion( void )));
-#endif
 
 	QSignalMapper * motorItemsMapper = new QSignalMapper(this);
 	for(int i = 0; i < checkShowV.size(); i++) {
@@ -1979,6 +2005,10 @@ void viewpanel::CreatConnect()
 		motorItemsMapper->setMapping(checkShowV[i], i);//这个i就是我们传给槽函数的值，可以是字符串，其他等等。
 	}
 	connect(motorItemsMapper, SIGNAL(mapped(int)), this, SLOT(motorItemsShow(int)));
+    QTimer* tcp_show_item  = new QTimer(this);
+    connect(tcp_show_item, SIGNAL(timeout()), this, SLOT(updateMotorChart(void)));
+	tcp_show_item->start(10);
+#endif
 
 
 
@@ -2008,9 +2038,7 @@ void viewpanel::CreatConnect()
 	test_show_item->start(100);
 #endif
 
-    QTimer* tcp_show_item  = new QTimer(this);
-    connect(tcp_show_item, SIGNAL(timeout()), this, SLOT(updateMotorChart(void)));
-	tcp_show_item->start(10);
+
 }
 
 void viewpanel::CreatUIWindow()
@@ -2544,8 +2572,10 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 	fftMsg_free_buf_queue.get(pfft);
 	pfft->dataFFT_0.clear();
 	pfft->dataFFT_1.clear();
+	pfft->dataFFT_2.clear();
 	pfft->dataFFTdB_0.clear();
 	pfft->dataFFTdB_1.clear();
+	pfft->dataFFTdB_2.clear();
 	for(int i = 0; i < data.size(); i++) {
 		flag = index % 8; // 0 1 2 3 4 5 6 7
 		key = index / 8;
@@ -2563,7 +2593,8 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 				pfft->dataFFT_1.append(cur_data);	
 				pfft->dataFFTdB_1.append(fft2dBm(cur_data) + power_offset_);
 			}else{
-				break;
+				pfft->dataFFT_2.append(cur_data);	
+				pfft->dataFFTdB_2.append(fft2dBm(cur_data) + power_offset_);
 			}
 			cur_data_real = 0;
 			cur_data_imag = 0;
@@ -3101,10 +3132,12 @@ void viewpanel::updateFFTdata() {
 		if(ifShowdB_ == FFT_ORI){
 			pFFTchart[0]->setData(x_FFT, pfft->dataFFT_0);
 			pFFTchart[1]->setData(x_FFT_1, pfft->dataFFT_1);
+			pFFTchart[2]->setData(x_FFT_2, pfft->dataFFT_2);
 
 		} else if(ifShowdB_ == FFT_DB){
 			pFFTchart[0]->setData(x_FFT, pfft->dataFFTdB_0);
 			pFFTchart[1]->setData(x_FFT_1, pfft->dataFFTdB_1);
+			pFFTchart[2]->setData(x_FFT_2, pfft->dataFFTdB_2);
 		}
 		fftMsg_free_buf_queue.put(pfft);
 		ROS_INFO("fftMsg update");  

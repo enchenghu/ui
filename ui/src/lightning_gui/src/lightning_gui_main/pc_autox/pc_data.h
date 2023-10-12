@@ -256,9 +256,10 @@ typedef struct
 {
 	QVector<double> dataFFT_0;
 	QVector<double> dataFFT_1;
+	QVector<double> dataFFT_2;
 	QVector<double> dataFFTdB_0;
 	QVector<double> dataFFTdB_1;
-
+	QVector<double> dataFFTdB_2;
 }fftMsg;
 
 typedef struct 
