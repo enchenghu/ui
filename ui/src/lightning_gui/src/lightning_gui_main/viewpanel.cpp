@@ -3059,7 +3059,7 @@ void viewpanel::configPointSize(){
 }
 
 void viewpanel::singleFFT() {
-	for(int i = 0 ; i < 2; i++){
+	for(int i = 0 ; i < 3; i++){
 		pFFTchart[i]->setSingleShow(true);
 		pFFTchart[i]->setContineFlag(false);
 	}
@@ -3080,7 +3080,7 @@ void viewpanel::singleMotor() {
 
 void viewpanel::resetFFT() {
 	power_offset = power_Offset_edit->text().toDouble();
-	for(int i = 0 ; i < 2; i++){
+	for(int i = 0 ; i < 3; i++){
 		pFFTchart[i]->setSingleShow(false);
 		pFFTchart[i]->setContineFlag(true);
 		pFFTchart[i]->setIfScale(true);
