@@ -1841,7 +1841,7 @@ void viewpanel::CreatDebugWindow()
     label_OSC_1->Add_Line_Data(0, 100);
     //label_OSC_1->View_Chart(10000);
 #endif
-	if(pFFTchart[1]) ChartLightingLayout->addWidget(pFFTchart[1]->setChart(-8191, 0, 0, 256 * 4096), 0, 0);
+	if(pFFTchart[1]) ChartLightingLayout->addWidget(pFFTchart[1]->setChart(-4095, 0, 0, 256 * 4096), 0, 0);
 	ChartLightingBox->setLayout(ChartLightingLayout);
 
 	QGridLayout* main_show= new QGridLayout ;
@@ -3987,8 +3987,6 @@ void viewpanel::updateADCdata() {
 		ROS_INFO("adcMsg update");  
 	}
 #endif
-	//pADCchart[0]->setXChart(4096 * frame_index, 4096 * frame_index + 8191);
-	//pADCchart[1]->setXChart(4096 * frame_index, 4096 * frame_index + 8191);
 	frame_index++;
 }
 
