@@ -4699,8 +4699,8 @@ void viewpanel::udpRecvLoop(){
 			}
 			if(i < UDP_TIMES_PER_FRAME) {
 				for(int j = 0; j < 8; j++){
-					adcDataV.insert(adcDataV.end(), g_udpMsg.pcUdpData + 64 * j, g_udpMsg.pcUdpData + 64 * j + 32);
-					fftDataV.insert(fftDataV.end(), g_udpMsg.pcUdpData + 32 + 64 * j, g_udpMsg.pcUdpData + 64 * (j + 1) + 32);
+					adcDataV.insert(adcDataV.end(), g_udpMsg.pcUdpData + 128 * j, g_udpMsg.pcUdpData + 128 * j + 32);
+					fftDataV.insert(fftDataV.end(), g_udpMsg.pcUdpData + 32 + 128 * j, g_udpMsg.pcUdpData + 128 * j + 32 + 64) ;
 				}
 			}  
 		}
