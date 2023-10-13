@@ -1776,24 +1776,24 @@ void viewpanel::CreatFixedFreqWindow()
 	QVBoxLayout* adcCharts= new QVBoxLayout ;
 	adcCharts->addWidget(chartADCBox0);
 	
-/* 	QGridLayout* adcSettingLayout = new QGridLayout ;
-	QGroupBox* adcSettingBox = new QGroupBox(tr("ADC control:"));
+	QGridLayout* adcSettingLayout = new QGridLayout ;
+	QGroupBox* adcSettingBox = new QGroupBox(tr("Fixed Freqency control:"));
 	QGridLayout* adcSettingBoxLayout = new QGridLayout ;
-	singelADCBtn_ = new QPushButton("&Single");
-	singelADCBtn_->setFixedSize(100, 25);
-	resetADCBtn_ = new QPushButton("&Reset");
-	resetADCBtn_->setFixedSize(100, 25);
+	singelFFBtn_ = new QPushButton("&Single");
+	singelFFBtn_->setFixedSize(100, 25);
+	resetFFBtn_ = new QPushButton("&Reset");
+	resetFFBtn_->setFixedSize(100, 25);
 	
-	adcSettingBoxLayout->addWidget(singelADCBtn_, 0, 0);//, Qt::AlignTop);
-	adcSettingBoxLayout->addWidget(resetADCBtn_, 0, 1);//, Qt::AlignTop);
+	adcSettingBoxLayout->addWidget(singelFFBtn_, 0, 0);//, Qt::AlignTop);
+	adcSettingBoxLayout->addWidget(resetFFBtn_, 0, 1);//, Qt::AlignTop);
 	adcSettingBox->setLayout(adcSettingBoxLayout);
-	adcSettingLayout->addWidget(adcSettingBox); */
+	adcSettingLayout->addWidget(adcSettingBox);
 
 	QGridLayout* main_show= new QGridLayout ;
-/* 	main_show->setColumnStretch(0, 9);
-	main_show->setColumnStretch(1, 1); */
+	main_show->setColumnStretch(0, 9);
+	main_show->setColumnStretch(1, 1);
 	main_show->addLayout(adcCharts, 0, 0 );
-	//main_show->addLayout(adcSettingLayout, 0, 1);
+	main_show->addLayout(adcSettingLayout, 0, 1);
 
 	multiWidget_new->setLayout(main_show);
 	this->addTab(multiWidget_new,  "Fixed Freqency FFT");
@@ -1981,6 +1981,10 @@ void viewpanel::CreatConnect()
 
 	connect(singelFFTBtn_, SIGNAL(clicked()), this, SLOT( singleFFT( void )));
 	connect(resetFFTBtn_, SIGNAL(clicked()), this, SLOT( resetFFT( void )));
+
+	connect(singelFFBtn_, SIGNAL(clicked()), this, SLOT( singleFF( void )));
+	connect(resetFFBtn_, SIGNAL(clicked()), this, SLOT( resetFF( void )));
+
 	connect(singelADCBtn_, SIGNAL(clicked()), this, SLOT( singleADC( void )));
 	connect(resetADCBtn_, SIGNAL(clicked()), this, SLOT( resetADC( void )));
 
@@ -3059,10 +3063,15 @@ void viewpanel::configPointSize(){
 }
 
 void viewpanel::singleFFT() {
-	for(int i = 0 ; i < 3; i++){
+	for(int i = 0 ; i < 2; i++){
 		pFFTchart[i]->setSingleShow(true);
 		pFFTchart[i]->setContineFlag(false);
 	}
+}
+
+void viewpanel::singleFF() {
+	pFFTchart[2]->setSingleShow(true);
+	pFFTchart[2]->setContineFlag(false);
 }
 
 void viewpanel::singleADC() {
@@ -3080,11 +3089,17 @@ void viewpanel::singleMotor() {
 
 void viewpanel::resetFFT() {
 	power_offset = power_Offset_edit->text().toDouble();
-	for(int i = 0 ; i < 3; i++){
+	for(int i = 0 ; i < 2; i++){
 		pFFTchart[i]->setSingleShow(false);
 		pFFTchart[i]->setContineFlag(true);
 		pFFTchart[i]->setIfScale(true);
 	}
+}
+
+void viewpanel::resetFF() {
+	pFFTchart[2]->setSingleShow(false);
+	pFFTchart[2]->setContineFlag(true);
+	pFFTchart[2]->setIfScale(true);
 }
 
 void viewpanel::resetADC() {

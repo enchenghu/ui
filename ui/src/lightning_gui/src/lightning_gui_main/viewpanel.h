@@ -193,8 +193,10 @@ private Q_SLOTS:
 	void showdBFFT();
 	void singleFFT();
 	void singleADC();
+	void singleFF();
 	void singleMotor();
 	void resetFFT();
+	void resetFF();
 	void resetADC();
 	void resetMotor();
 
@@ -529,6 +531,8 @@ private:
 	QPushButton * resetFFTBtn_;
 	QPushButton * singelADCBtn_;
 	QPushButton * resetADCBtn_;
+	QPushButton * singelFFBtn_;
+	QPushButton * resetFFBtn_;
 	QPushButton * mFFTShowdBBtn;
 	QDockWidget* ctrlDock;
 	std::vector<QPushButton* > ctlWriteBtn_;
