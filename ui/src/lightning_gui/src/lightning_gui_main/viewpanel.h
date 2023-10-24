@@ -146,6 +146,8 @@ public Q_SLOTS:
 	void read3DFT(void);
 	void readDiff(void);
 	void readReg(int);
+	void readADCOA();
+
 	void ctrlShowWindows(bool);
 	void ctrlPcPanel(bool);
 	void resetViews(void);
@@ -191,6 +193,7 @@ private Q_SLOTS:
 	void updateADCdata();
 	void updateMotorChart();
 	void showdBFFT();
+	void configADCDSA();
 	void singleFFT();
 	void singleADC();
 	void singleFF();
@@ -419,6 +422,9 @@ private:
 	QLineEdit *cell_size_edit;
 	QLineEdit *axes_size_edit;
 
+	QLineEdit *adc_ov_edit;
+	QPushButton*  adc_ov_read_btn;
+
 	QLineEdit *power_Offset_edit;
 	QString save_folder_;
 	QLineEdit* regAddr_line[4] ;
@@ -499,6 +505,7 @@ private:
 	bstMsgQueue<motorMaxBuff*> motorMsg_done_buf_queue;
 	bstMsgQueue<stateMaxBuff*> stateMsg_free_buf_queue;
 	bstMsgQueue<stateMaxBuff*> stateMsg_done_buf_queue;
+  	QComboBox* ADC_DSA_Combo;
 
 	std::string loadFileType_;
 	QString  loadLidarFile_;

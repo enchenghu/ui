@@ -94,7 +94,8 @@ typedef enum {
     FFT_ADC_READ_STOP           = 12,   // 读FFT_ADC值（停止）
     POINTCLOUD_TCP_READ         = 13,   // TCP读点云数据（400000个点）
     POINTCLOUD_UDP_START        = 14,   // UDP读点云数据（开始）
-    POINTCLOUD_UDP_STOP         = 15   // UDP读点云数据（停止）
+    POINTCLOUD_UDP_STOP         = 15,   // UDP读点云数据（停止）
+	ADC_OV_FLAG = 17
 } commandType;
 
 typedef enum{

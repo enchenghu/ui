@@ -577,6 +577,31 @@ void viewpanel::connectControl(void){
 	}
 }
 
+
+void viewpanel::configADCDSA(void)
+{
+/* 	QString str = ADC_DSA_Combo->currentText();
+	if(str == "clear")
+		cmdMsg_.mCommandVal[0] = 0xFF;
+	else{
+		if(str.toDouble() < 0.0 || str.toDouble() > 28){
+			QMessageBox msgBox;
+			msgBox.setText("input ADC-DSA invaild!");
+			msgBox.exec();
+			return;		
+		}
+		cmdMsg_.mCommandVal[0] = (uint32_t)(str.toInt());
+	} */
+	cmdMsg_.mCommandVal[0] = 0x00;
+	cmdMsg_.mHead.usCommand = commandType::ADC_OV_FLAG;
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("ckear ADC_OV_FLAG failed!");
+		msgBox.exec();
+		return;
+	}
+}
+
 void viewpanel::showdBFFT(void){
 	if(ifShowdB_ == FFT_ORI){
 		mFFTShowdBBtn->setStyleSheet("color: black");
@@ -979,6 +1004,48 @@ void viewpanel::readReg(int index){
 			} else {
 				QMessageBox msgBox;
 				msgBox.setText("read Reg failed!");
+				msgBox.exec();
+				return;				
+			}
+		}
+	}
+}
+
+void viewpanel::readADCOA()
+{
+	cmdMsg_.mHead.usCommand = commandType::ADC_OV_FLAG;
+	cmdMsg_.mCommandVal[0] = 0x01;
+
+	if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+		QMessageBox msgBox;
+		msgBox.setText("read ADC_OV_FLAG failed!");
+		msgBox.exec();
+		return;
+	}
+	commandMsg cmdMsg;
+	bool ifread = true;
+	int ret = 0;
+	while(1){
+		memset(&cmdMsg, 0, sizeof(cmdMsg));
+		ret = ::recv(ctrl_sock, &cmdMsg, sizeof(commandMsg), MSG_WAITALL);
+		if(ret <= 0 && ifread){
+			if(ret < 0 && errno == EAGAIN){
+				QMessageBox msgBox;
+				msgBox.setText("read ADC_OV_FLAG timeout!");
+				msgBox.exec();	
+				return;			
+			}
+			usleep(100*1000);
+			ifread = false;
+			continue;
+		}else{
+			if(cmdMsg.mHead.usCommand == commandType::ADC_OV_FLAG){
+				std::string tmp = tohex(cmdMsg.mCommandVal[0]);
+				adc_ov_edit->setText(QString::fromStdString(tmp));
+				break;
+			} else {
+				QMessageBox msgBox;
+				msgBox.setText("read ADC_OV_FLAG failed!");
 				msgBox.exec();
 				return;				
 			}
@@ -1940,6 +2007,9 @@ void viewpanel::CreatConnect()
 {
 	connect(lidar_connect_button, SIGNAL(clicked()), this, SLOT( connectControl( void )));
 	connect(ctlWriteBtn_[0], SIGNAL(clicked()), this, SLOT( configPower( void )));
+	connect(ctlWriteBtn_[1], SIGNAL(clicked()), this, SLOT( configADCDSA( void )));
+	connect(adc_ov_read_btn, SIGNAL(clicked()), this, SLOT( readADCOA( void )));
+
 /* 	connect(ctlWriteBtn_[1], SIGNAL(clicked()), this, SLOT( configCFAR( void )));
 	connect(ctlWriteBtn_[2], SIGNAL(clicked()), this, SLOT( config3DFT( void )));
 	connect(ctlWriteBtn_[3], SIGNAL(clicked()), this, SLOT( configDiff( void ))); */
@@ -2221,6 +2291,25 @@ void viewpanel::CreatUIWindow()
 	colorCombo->addItem(tr("intensity"));
 	colorCombo->addItem(tr("speed"));
 
+
+	ADC_DSA_Combo =  new QComboBox;
+	ADC_DSA_Combo->addItem(QString::number(0));
+	ADC_DSA_Combo->addItem(QString::number(27));
+	ADC_DSA_Combo->addItem("clear");
+	ADC_DSA_Combo->setCurrentIndex(1);
+	ADC_DSA_Combo->setEditable(true);
+	ADC_DSA_Combo->setFixedSize(70,25);
+	controls_layout->addWidget( ADC_DSA_Combo, 1, 3, Qt::AlignLeft);
+
+	adc_ov_edit = new QLineEdit();	
+	setReadOnlyLineEdit(adc_ov_edit);
+	adc_ov_edit->setFixedSize(90,25);
+	adc_ov_read_btn = new QPushButton("ADC-OV read");
+	setButtonStyle(adc_ov_read_btn);
+	adc_ov_read_btn->setFont(QFont("微软雅黑", 8));
+	controls_layout->addWidget( adc_ov_edit, 1, 3, Qt::AlignRight);	
+	controls_layout->addWidget( adc_ov_read_btn, 1, 4, Qt::AlignRight);	
+
 	PowerCombo->setEditable(true);
 	DiffCombo = new QComboBox;
 
@@ -2252,12 +2341,20 @@ void viewpanel::CreatUIWindow()
 	controls_layout->addWidget( m3DFTCombo, 2, 3, Qt::AlignLeft);			
 	controls_layout->addWidget( DiffCombo, 3, 3, Qt::AlignLeft);	
  */
-	for(int i = 0; i < 1; i++){
-		ctlWriteBtn_.emplace_back(new QPushButton("&Cfg", this));
+	for(int i = 0; i < 2; i++){
+		if(i == 1){
+			ctlWriteBtn_.emplace_back(new QPushButton("ADC-OV clear", this));
+			ctlWriteBtn_[i]->setFont(QFont("微软雅黑", 8));
+		}
+		else
+			ctlWriteBtn_.emplace_back(new QPushButton("&Cfg", this));
 /* 		ctlReadBtn_.emplace_back(new QPushButton("&Read", this));
 		ctlReadLine_.emplace_back(new QLineEdit);
 		setReadOnlyLineEdit(ctlReadLine_[i]); */
-		controls_layout->addWidget( ctlWriteBtn_[i], i, 4, Qt::AlignLeft);	
+		if(i == 0)
+			controls_layout->addWidget( ctlWriteBtn_[i], i, 4, Qt::AlignLeft);	
+		else
+			controls_layout->addWidget( ctlWriteBtn_[i], 1, 2, Qt::AlignLeft);	
 		ctlWriteBtn_[i]->setFixedSize(70,30);
 		setButtonStyle(ctlWriteBtn_[i]);
 /* 		controls_layout->addWidget( ctlReadLine_[i], i, 5, Qt::AlignLeft);			
