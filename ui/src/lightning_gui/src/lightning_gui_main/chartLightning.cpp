@@ -184,7 +184,7 @@ void ChartLighting::showTracer(QMouseEvent* event)
     if(showType_ == ADC_ORI)
         real_X = x;
     else
-        real_X = x * 0.4;
+        real_X = x * 0.6;
     plotTracer->setText(QString::number(real_X, 'f', 2), QString::number(y, 'f', 2));//x轴取整数，y轴保留两位小数
     pCustomPlot->replot();
 }
