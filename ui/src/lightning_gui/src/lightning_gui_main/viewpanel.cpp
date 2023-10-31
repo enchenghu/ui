@@ -256,8 +256,8 @@ viewpanel::viewpanel(QTabWidget* parent )
 	CreatADCWindow();
 	CreatMotorWindow();
 	CreatStateDetectWindow();
-/* 	systemMonitor_m  = new SystemMonitor();
-	this->addTab(systemMonitor_m, "test"); */
+	lightSourceDriver_m  = new LightSourceDriver();
+	this->addTab(lightSourceDriver_m, "光源驱动");
 	CreatConnect();
 	registerPointcloudRviz();
 	resize(QDesktopWidget().availableGeometry(this).size() * 0.85);
@@ -1505,6 +1505,7 @@ void viewpanel::CreatADCWindow()
 void viewpanel::CreatFFTWindow()
 {
 	QWidget* multiWidget_new = new QWidget();
+	
 	QGroupBox *chartADCBox = new QGroupBox(tr("FFT  chart 0:"));
 	QGridLayout* chartADCLayout = new QGridLayout ;
 	QGroupBox *ChartLightingBox = new QGroupBox(tr("FFT  chart 1:"));

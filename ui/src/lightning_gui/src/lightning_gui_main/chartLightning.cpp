@@ -56,6 +56,7 @@ QCustomPlot* ChartLighting::setChart(int xmin, int xmax, int ymin, int ymax){
 	pCustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 	//pCustomPlot->xAxis->setNumberPrecision(1);
 	pCustomPlot->replot();
+    //if(showType_ == showModel::Linearity)pCustomPlot->xAxis->setLabel("time / s");
     return pCustomPlot;
 }
 
@@ -80,19 +81,24 @@ void ChartLighting::setContineFlag(bool t)
 void ChartLighting::setData(const QVector<double> &x, const QVector<double> &y, uint8_t index_graph)
 {
     static showModel lastType = FFT_DB;
-    if(singleShow_ || contineFlag_) {
+    if(singleShow_ || contineFlag_) {  
         if(showType_ == FFT_ORI || showType_ == FFT_DB){
             pCustomPlot->graph(index_graph)->setData(x, y);
-        }else if(showType_ == ADC_ORI) {
+        } else if(showType_ == ADC_ORI) {
             pCustomPlot->graph(index_graph)->setData(x, y);
             pCustomPlot->xAxis->setRange(x[0], x[x.size() - 1]);
-        }else if(showType_ == MOTOR_ORI){
+        } else if(showType_ == MOTOR_ORI){
             pCustomPlot->graph(index_graph)->addData(x, y);
             setGraph(index_graph);
             pCustomPlot->legend->setVisible(true);
             pCustomPlot->legend->setBrush(QColor(255, 255, 255, 150));
             if(x[x.size() - 1] > 100) pCustomPlot->xAxis->setRange(x[x.size() - 1] - 200, x[x.size() - 1]);
-        }   
+        } else if(showType_ == showModel::Linearity) {
+            pCustomPlot->graph(index_graph)->addData(x, y);
+            if(x[x.size() - 1] > 1000) pCustomPlot->xAxis->setRange(x[x.size() - 1] - 1000, x[x.size() - 1]);
+        } else if(showType_ == showModel::Correction) {
+            pCustomPlot->graph(index_graph)->setData(x, y);
+        }
     }
 /*     if(lastType != showType_) {
         std::cout << "last is " << lastType << "showType_ is " << showType_ << std::endl;

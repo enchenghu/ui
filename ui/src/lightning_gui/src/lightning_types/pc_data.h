@@ -115,7 +115,9 @@ typedef enum{
     FFT_ORI = 0,
     FFT_DB,
     ADC_ORI,
-    MOTOR_ORI
+    MOTOR_ORI,
+	Linearity,
+	Correction 
 } showModel;
 
 typedef enum{

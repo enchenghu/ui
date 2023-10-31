@@ -66,6 +66,7 @@
 #include "types_fmcw.hpp"
 #include <visualization_msgs/MarkerArray.h>
 #include "systemMonitor.h"
+#include "LightSourceDriver.h"
 
 using namespace fmcw_types;
 namespace rviz {
@@ -559,6 +560,8 @@ class viewpanel : public QTabWidget {
   std::map<uint32_t, int> reflectNumMap;
 
   SystemMonitor* systemMonitor_m;
+  LightSourceDriver* lightSourceDriver_m;
+
   int modeFilter_;
   bool getMaxIntensityNum;
   bool getMaxReflectNum;
