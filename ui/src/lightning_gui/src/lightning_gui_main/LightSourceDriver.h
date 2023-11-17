@@ -30,5 +30,9 @@ private:
     ChartLighting* linearityChart;
 
     ChartLighting* correctionChart;
+    
+    void creatUI();
+    void creatConnection();
+
 
 };

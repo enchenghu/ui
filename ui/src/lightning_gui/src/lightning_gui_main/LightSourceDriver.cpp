@@ -2,6 +2,16 @@
 
 LightSourceDriver::LightSourceDriver(QWidget* parent)
 {
+    creatUI();
+    creatConnection();
+}
+
+void LightSourceDriver::creatConnection()
+{
+    
+}
+void LightSourceDriver::creatUI()
+{
     mainLayout = new QGridLayout();
     correctionBox = new QGroupBox(tr("矫正波形:")); 
     stateBox = new QGroupBox(tr("状态信息:")); 
@@ -38,5 +48,4 @@ LightSourceDriver::LightSourceDriver(QWidget* parent)
     mainLayout->addLayout(chartLayout, 0, 0);
     mainLayout->addLayout(configLayout, 0, 1);
     this->setLayout(mainLayout);
-
 }
