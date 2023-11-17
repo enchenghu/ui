@@ -2710,6 +2710,90 @@ void viewpanel::parseFFTData(std::vector<uint8_t> &data)
 	//ROS_INFO("fftMsg send finished");  //打印自己发送的信息
 }
 
+void viewpanel::Save2filecsvMulti(std::vector<uint8_t> &data, bool ifsave)
+{
+	if(!ifsave) return;
+	//memset(&curPcData, 0, sizeof(curPcData));
+	static long findex = 0;
+#if 1
+	std::string datPath;
+	datPath = save_folder_.toStdString() + "/MR_savePC_raw_data_index" + std::to_string(findex++) +".bin";
+	ROS_INFO("datPath is %s \n", datPath.c_str());
+	std::ofstream datfile; 
+	datfile.open(datPath, std::ios::out | std::ios::binary); 
+	for(int i = 0; i < data.size(); i++) {
+		datfile << data[i];
+	}
+	datfile.close();
+#endif
+	time_t rawtime;
+	struct tm *ptminfo;
+	time(&rawtime);
+	ptminfo = localtime(&rawtime);
+	printf("current: %02d-%02d-%02d %02d:%02d:%02d\n",
+	ptminfo->tm_year + 1900, ptminfo->tm_mon + 1, ptminfo->tm_mday,
+	ptminfo->tm_hour, ptminfo->tm_min, ptminfo->tm_sec);
+#if 1
+	std::string csvPath;
+	csvPath = save_folder_.toStdString() + "/MR_savePC_data_convert_" + 
+	std::to_string(ptminfo->tm_year + 1900) + 
+	"-" + std::to_string(ptminfo->tm_mon + 1) +
+	"-" + std::to_string(ptminfo->tm_mday) +
+	"-" + std::to_string(ptminfo->tm_hour) +
+	"-" + std::to_string(ptminfo->tm_min) +
+	"-" + std::to_string(ptminfo->tm_sec) +
+	+".csv";
+	ROS_INFO("csvPath is %s \n", csvPath.c_str());
+	std::ofstream csvfile; 
+	csvfile.open(csvPath, std::ios::out); 
+	int32_t cur_data = 0;
+	double distance;
+	double speed;
+	double vAngle;
+	double hAngle;
+
+	int index = 0;
+	csvfile << "distance0(m)" << "," << "distance1(m)" << "," << "distance2(m)" << "," 
+			<< "speed0(m/s)" << "," << "speed1(m/s)" << "," << "speed2(m/s)"  << "\n";	
+	for(int i = 0; i < data.size(); i++) {
+		index += 1;
+		if(index <= 3 )
+			cur_data += data[i] << (8 * (index - 1));
+		else if (index <= 6)
+			cur_data += data[i] << (8 * (index - 4));
+		else if (index <= 9)
+			cur_data += data[i] << (8 * (index - 7));
+		else if (index <= 11)
+			cur_data += data[i] << (8 * (index - 10));
+		else if (index <= 13)
+			cur_data += data[i] << (8 * (index - 12));
+		else if (index <= 15)
+			cur_data += data[i] << (8 * (index - 14));
+
+		if(index == 3 || index == 6 || index == 9){
+			distance = cur_data / 65536.0 - distance_offset; //distance
+			csvfile << distance << ",";	
+			cur_data = 0;
+		}
+
+		if(index == 11 || index == 13 || index == 15){
+			if(cur_data > SIGN_LIMIT_NUM)
+				cur_data -= SIGN_OFFSET_NUM;
+			speed = cur_data / 128.0;
+			if(index < 15)
+				csvfile << speed << ",";	 
+			else
+				csvfile << speed << "\n";	 // speed
+			cur_data = 0;
+		}
+		if(index == 16){
+			index = 0;
+		}
+	}
+	csvfile.close();
+#endif
+}
+
 void viewpanel::Save2filecsv(std::vector<uint8_t> &data, bool ifsave)
 {
 	if(!ifsave) return;
@@ -2859,7 +2943,7 @@ void viewpanel::saveData(){
 			continue;
 		}		
 	}
-	Save2filecsv(mv, ifsave);
+	Save2filecsvMulti(mv, ifsave);
 	//}
 	saveBtn->setStyleSheet("color: black");
 	saveBtn->setText("Save PC");

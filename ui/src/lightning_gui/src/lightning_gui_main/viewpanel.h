@@ -281,6 +281,7 @@ private:
 
 	void CreatConnect();
 	void Save2filecsv(std::vector<uint8_t> &, bool );
+	void Save2filecsvMulti(std::vector<uint8_t> &, bool );
 	void parseFFTData(std::vector<uint8_t> &data);
 	void parseADCData(std::vector<uint8_t> &data);
 	void simulateADCData();

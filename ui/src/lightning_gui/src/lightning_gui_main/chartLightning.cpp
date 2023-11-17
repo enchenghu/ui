@@ -54,6 +54,9 @@ QCustomPlot* ChartLighting::setChart(int xmin, int xmax, int ymin, int ymax){
 	//pCustomPlot->resize(ui->label->width(),ui->label->height());
 	pCustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 	//pCustomPlot->xAxis->setNumberPrecision(1);
+/*     connect(pCustomPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), pCustomPlot->xAxis2, SLOT(setRange(QCPRange)));
+    connect(pCustomPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), pCustomPlot->yAxis2, SLOT(setRange(QCPRange))); */
+
 	plotTracer = new myTracer(pCustomPlot, pCustomPlot->graph(0), TracerType::DataTracer, showType_);
 	connect(pCustomPlot, &QCustomPlot::mouseMove, this, &ChartLighting::showTracer);
 	pCustomPlot->replot();
