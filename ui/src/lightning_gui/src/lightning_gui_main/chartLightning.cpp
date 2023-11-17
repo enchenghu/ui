@@ -47,9 +47,9 @@ QCustomPlot* ChartLighting::setChart(int xmin, int xmax, int ymin, int ymax){
 	pCustomPlot->yAxis->setRange(ymin, ymax);
 	pCustomPlot->xAxis->setRange(xmin, xmax);
 	//x轴名字
-	//pCustomPlot->xAxis->setLabel("X");
+	if(showType_ == FFT_ORI || showType_ == FFT_DB)pCustomPlot->xAxis->setLabel("Frequency / MHz");
 	//Y轴名字
-	pCustomPlot->yAxis->setLabel("Y");
+	pCustomPlot->yAxis->setLabel("amplitude");
 	//设置大小
 	//pCustomPlot->resize(ui->label->width(),ui->label->height());
 	pCustomPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
@@ -180,12 +180,12 @@ void ChartLighting::showTracer(QMouseEvent* event)
     //m_TracerY->setText(QString::number(y, 'f', 2));
     //由原来的x，y分别显示改为x，y显示在一起，xy单位直接在setText中设置好
     plotTracer->updatePosition(x, y);
-    double real_X;
+/*     double real_X = x;;
     if(showType_ == ADC_ORI)
         real_X = x;
     else
-        real_X = x * 0.6;
-    plotTracer->setText(QString::number(real_X, 'f', 2), QString::number(y, 'f', 2));//x轴取整数，y轴保留两位小数
+        real_X = x * 0.6; */
+    plotTracer->setText(QString::number(x, 'f', 2), QString::number(y, 'f', 2));//x轴取整数，y轴保留两位小数
     pCustomPlot->replot();
 }
 

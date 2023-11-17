@@ -283,9 +283,10 @@ void viewpanel::init_queue()
 	x_adc1.clear();
 	for(int i = 0; i< 4096;i++) 
 	{
-		x_FFT.append(i);
-		x_FFT_2.append(i);
-		x_FFT_1.append(-4095 + i);
+		double index = i * 0.6;
+		x_FFT.append(index);
+		x_FFT_2.append(index);
+		x_FFT_1.append(-4095 * 0.6 + index);
 		x_adc0.append(i);
 		x_adc1.append(i);
 	}
@@ -1927,7 +1928,7 @@ void viewpanel::CreatDebugWindow()
 #endif
 	pFFTchart[0] = new ChartLighting(this, FFT_DB);
 	pFFTchart[1] = new ChartLighting(this, FFT_DB);
-	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, 4096, 0, 256 * 4096), 0 , 0);
+	if(pFFTchart[0]) chartADCLayout->addWidget(pFFTchart[0]->setChart(0, 4096 * 0.6, 0, 256 * 4096), 0 , 0);
 	chartADCBox->setLayout(chartADCLayout);
 #if 0
     OSC_chart *label_OSC_1 = new OSC_chart(this);
@@ -1935,7 +1936,7 @@ void viewpanel::CreatDebugWindow()
     label_OSC_1->Add_Line_Data(0, 100);
     //label_OSC_1->View_Chart(10000);
 #endif
-	if(pFFTchart[1]) ChartLightingLayout->addWidget(pFFTchart[1]->setChart(-4095, 0, 0, 256 * 4096), 0, 0);
+	if(pFFTchart[1]) ChartLightingLayout->addWidget(pFFTchart[1]->setChart(-4095 * 0.6, 0, 0, 256 * 4096), 0, 0);
 	ChartLightingBox->setLayout(ChartLightingLayout);
 
 	QGridLayout* main_show= new QGridLayout ;
