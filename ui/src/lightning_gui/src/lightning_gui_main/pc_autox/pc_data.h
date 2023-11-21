@@ -23,7 +23,7 @@
 #include <QtCore/QCache>
 #include <QtCore/QMargins>
 #define MAX_RADARS 10
-#define TCP_PC_SIZE_SINGLE 32000
+#define TCP_PC_SIZE_SINGLE 128000
 #define UDP_PC_SIZE_SINGLE 1024
 
 #define UDP_PC_SIZE_SINGLE_V01 100
