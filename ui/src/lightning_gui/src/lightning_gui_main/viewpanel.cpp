@@ -2752,11 +2752,12 @@ void viewpanel::Save2filecsvMulti(std::vector<uint8_t> &data, bool ifsave)
 	double vAngle;
 	double hAngle;
 
-	int index = 0;
+	int index = 0, frame_index = 0, id_lidar = 0;
 	csvfile << "distance0(m)" << "," << "distance1(m)" << "," << "distance2(m)" << "," 
 			<< "speed0(m/s)" << "," << "speed1(m/s)" << "," << "speed2(m/s)"  << "\n";	
 	for(int i = 0; i < data.size(); i++) {
 		index += 1;
+		id_lidar = frame_index % 4;
 		if(index <= 3 )
 			cur_data += data[i] << (8 * (index - 1));
 		else if (index <= 6)
@@ -2770,24 +2771,28 @@ void viewpanel::Save2filecsvMulti(std::vector<uint8_t> &data, bool ifsave)
 		else if (index <= 15)
 			cur_data += data[i] << (8 * (index - 14));
 
-		if(index == 3 || index == 6 || index == 9){
-			distance = cur_data / 65536.0 - distance_offset; //distance
-			csvfile << distance << ",";	
-			cur_data = 0;
+		if(id_lidar == 2){
+			if(index == 3 || index == 6 || index == 9){
+				distance = cur_data / 65536.0 - distance_offset; //distance
+				csvfile << distance << ",";	
+				cur_data = 0;
+			}
+
+			if(index == 11 || index == 13 || index == 15){
+				if(cur_data > SIGN_LIMIT_NUM)
+					cur_data -= SIGN_OFFSET_NUM;
+				speed = cur_data / 256.0;
+				if(index < 15)
+					csvfile << speed << ",";	 
+				else
+					csvfile << speed << "\n";	 // speed
+				cur_data = 0;
+			}
 		}
 
-		if(index == 11 || index == 13 || index == 15){
-			if(cur_data > SIGN_LIMIT_NUM)
-				cur_data -= SIGN_OFFSET_NUM;
-			speed = cur_data / 128.0;
-			if(index < 15)
-				csvfile << speed << ",";	 
-			else
-				csvfile << speed << "\n";	 // speed
-			cur_data = 0;
-		}
 		if(index == 16){
 			index = 0;
+			frame_index++;
 		}
 	}
 	csvfile.close();
