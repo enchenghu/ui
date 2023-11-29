@@ -2793,6 +2793,7 @@ void viewpanel::Save2filecsvMulti(std::vector<uint8_t> &data, bool ifsave)
 		if(index == 16){
 			index = 0;
 			frame_index++;
+			cur_data = 0;
 		}
 	}
 	csvfile.close();
