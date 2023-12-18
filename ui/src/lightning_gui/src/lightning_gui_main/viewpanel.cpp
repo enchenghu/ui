@@ -2752,9 +2752,19 @@ void viewpanel::Save2filecsvMulti(std::vector<uint8_t> &data, bool ifsave)
 	double vAngle;
 	double hAngle;
 
+	QProgressDialog *progressDialog = new QProgressDialog(this);
+/* 	QFont font("ZYSong18030", 12);
+	progressDialog->setFont(font); */
+	progressDialog->setWindowModality(Qt::WindowModal);
+	progressDialog->setMinimumDuration(0);
+	progressDialog->setWindowTitle(tr("Please Wait"));
+	progressDialog->setLabelText(tr("保存中..."));
+	progressDialog->setCancelButtonText(tr("Cancel"));
+	progressDialog->setRange(0, data.size() - 1);
+
 	int index = 0, frame_index = 0, id_lidar = 0;
 	csvfile << "distance0(m)" << "," << "distance1(m)" << "," << "distance2(m)" << "," 
-			<< "speed0(m/s)" << "," << "speed1(m/s)" << "," << "speed2(m/s)"  << "\n";	
+			<< "speed0(m/s)" << "," << "speed1(m/s)" << "," << "speed2(m/s)"  << "\n";
 	for(int i = 0; i < data.size(); i++) {
 		index += 1;
 		id_lidar = frame_index % 4;
@@ -2795,7 +2805,15 @@ void viewpanel::Save2filecsvMulti(std::vector<uint8_t> &data, bool ifsave)
 			frame_index++;
 			cur_data = 0;
 		}
+
+		progressDialog->setValue(i);
+		if (progressDialog->wasCanceled())
+		{
+			delete progressDialog;
+			return ;
+		}
 	}
+	delete progressDialog;
 	csvfile.close();
 #endif
 }
@@ -2955,7 +2973,7 @@ void viewpanel::saveData(){
 	saveBtn->setText("Save PC");
 	if(ifsave){
 		QMessageBox msgBox;
-		msgBox.setText("save pc data successfully!");
+		msgBox.setText("save pc data done!");
 		msgBox.exec();
 	}
 	ifSave = false;
@@ -3114,6 +3132,7 @@ void viewpanel::saveDataThead()
 	if(!udpStop_) udpClose();
 	if(!udpPCStop_) udpPcClose();
 	saveData();
+
 #if 0
     vx_task_set_default_create_params(&bst_params);
     bst_params.app_var = this;
