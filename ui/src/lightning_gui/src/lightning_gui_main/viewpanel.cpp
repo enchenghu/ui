@@ -2760,7 +2760,7 @@ void viewpanel::Save2filecsvMulti(std::vector<uint8_t> &data, bool ifsave)
 	progressDialog->setWindowTitle(tr("Please Wait"));
 	progressDialog->setLabelText(tr("保存中..."));
 	progressDialog->setCancelButtonText(tr("Cancel"));
-	progressDialog->setRange(0, data.size() - 1);
+	progressDialog->setRange(1, 10);
 
 	int index = 0, frame_index = 0, id_lidar = 0;
 	csvfile << "distance0(m)" << "," << "distance1(m)" << "," << "distance2(m)" << "," 
@@ -2806,12 +2806,16 @@ void viewpanel::Save2filecsvMulti(std::vector<uint8_t> &data, bool ifsave)
 			cur_data = 0;
 		}
 
-		progressDialog->setValue(i);
-		if (progressDialog->wasCanceled())
-		{
-			delete progressDialog;
-			return ;
+		if((i + 1) % 640000 == 0){
+			int flag_num = (i + 1) / 640000;
+			progressDialog->setValue(flag_num);
+			if (progressDialog->wasCanceled())
+			{
+				delete progressDialog;
+				return ;
+			}
 		}
+
 	}
 	delete progressDialog;
 	csvfile.close();
