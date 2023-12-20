@@ -2714,6 +2714,7 @@ void viewpanel::Save2filecsvMulti(std::vector<uint8_t> &data, bool ifsave)
 {
 	if(!ifsave) return;
 	//memset(&curPcData, 0, sizeof(curPcData));
+	if(progressDialog) progressDialog->setRange(0, data.size() - 1);
 	static long findex = 0;
 #if 1
 	std::string datPath;
@@ -2751,16 +2752,6 @@ void viewpanel::Save2filecsvMulti(std::vector<uint8_t> &data, bool ifsave)
 	double speed;
 	double vAngle;
 	double hAngle;
-
-	QProgressDialog *progressDialog = new QProgressDialog(this);
-/* 	QFont font("ZYSong18030", 12);
-	progressDialog->setFont(font); */
-	progressDialog->setWindowModality(Qt::WindowModal);
-	progressDialog->setMinimumDuration(0);
-	progressDialog->setWindowTitle(tr("Please Wait"));
-	progressDialog->setLabelText(tr("保存中..."));
-	progressDialog->setCancelButtonText(tr("Cancel"));
-	progressDialog->setRange(1, 10);
 
 	int index = 0, frame_index = 0, id_lidar = 0;
 	csvfile << "distance0(m)" << "," << "distance1(m)" << "," << "distance2(m)" << "," 
@@ -2806,18 +2797,19 @@ void viewpanel::Save2filecsvMulti(std::vector<uint8_t> &data, bool ifsave)
 			cur_data = 0;
 		}
 
-		if((i + 1) % 640000 == 0){
-			int flag_num = (i + 1) / 640000;
-			progressDialog->setValue(flag_num);
+		if((i + 1) % 640000 == 0 && progressDialog){
+			progressDialog->setValue(i);
 			if (progressDialog->wasCanceled())
 			{
 				delete progressDialog;
+				progressDialog = nullptr;
 				return ;
 			}
 		}
 
 	}
 	delete progressDialog;
+	progressDialog = nullptr;
 	csvfile.close();
 #endif
 }
@@ -2936,6 +2928,15 @@ void viewpanel::saveData(){
 		msgBox.exec();
 		return;
 	}
+	progressDialog = new QProgressDialog(this);
+/* 	QFont font("ZYSong18030", 12);
+	progressDialog->setFont(font); */
+	progressDialog->setWindowModality(Qt::WindowModal);
+	progressDialog->setMinimumDuration(0);
+	progressDialog->setWindowTitle(tr("Please Wait"));
+	progressDialog->setLabelText(tr("保存中..."));
+	progressDialog->setCancelButtonText(tr("Cancel"));
+	progressDialog->setValue(0);
 	std::vector<uint8_t> mv;
 	for(int i = 0; i < TCP_TIMES_PER_FRAME; i++){
 		memset(&g_msg, 0, sizeof(g_msg));
@@ -2944,6 +2945,8 @@ void viewpanel::saveData(){
 			ROS_INFO("saveData tcp recv failed, continue\n");
 			sleep(1);
 			i--;
+			delete progressDialog;
+			progressDialog = nullptr;
 			continue;
 		}
 		//std::cout << "receive byte is " << ret << std::endl;
@@ -2952,6 +2955,8 @@ void viewpanel::saveData(){
 			if(g_msg.cmdmsg.mCommandVal[1] != i){
 				std::cout << "!!!error!!! current index is " << i << ", tcp msg count is " << g_msg.cmdmsg.mCommandVal[1] << std::endl;
 				ifsave  =false;
+				delete progressDialog;
+				progressDialog = nullptr;
 				QMessageBox msgBox;
 				msgBox.setText("error!!TCP data loss, save task quit!");
 				msgBox.exec();	
@@ -2962,6 +2967,8 @@ void viewpanel::saveData(){
 			ROS_INFO("msg is %d, not pc data msg, continue\n", g_msg.cmdmsg.mHead.usCommand);
 			cmdMsg_.mHead.usCommand = commandType::POINTCLOUD_TCP_READ;
 			if(::write(ctrl_sock, &cmdMsg_, sizeof(commandMsg)) < 0){
+				delete progressDialog;
+				progressDialog = nullptr;
 				QMessageBox msgBox;
 				msgBox.setText("pc data save failed!");
 				msgBox.exec();
@@ -2976,6 +2983,8 @@ void viewpanel::saveData(){
 	saveBtn->setStyleSheet("color: black");
 	saveBtn->setText("Save PC");
 	if(ifsave){
+		delete progressDialog;
+		progressDialog = nullptr;
 		QMessageBox msgBox;
 		msgBox.setText("save pc data done!");
 		msgBox.exec();

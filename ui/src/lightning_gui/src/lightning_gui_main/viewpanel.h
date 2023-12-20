@@ -428,6 +428,7 @@ private:
 
 	QLineEdit *power_Offset_edit;
 	QString save_folder_;
+	QProgressDialog *progressDialog;
 	QLineEdit* regAddr_line[4] ;
 	QLineEdit* regVal_line[4] ;
 	QLineEdit* regRead_line[4];
