@@ -2937,6 +2937,7 @@ void viewpanel::saveData(){
 	progressDialog->setLabelText(tr("保存中..."));
 	progressDialog->setCancelButtonText(tr("Cancel"));
 	progressDialog->setValue(0);
+	progressDialog->show();
 	std::vector<uint8_t> mv;
 	for(int i = 0; i < TCP_TIMES_PER_FRAME; i++){
 		memset(&g_msg, 0, sizeof(g_msg));
