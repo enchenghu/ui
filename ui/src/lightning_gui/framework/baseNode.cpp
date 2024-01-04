@@ -6,7 +6,7 @@ BaseNode::BaseNode(int taskNum, int slotNum)
     for(int i = 0; i < taskNum; i++)
     {
         nodeTaskMap.insert(taskMapUnit(i, \
-        taskUnit(std::make_unique<Task_>(), std::make_shared<MsgQueuesUnit>(MsgQueues(slotNum), MsgQueues(slotNum)))));
+        taskUnit(new Task_(), std::make_shared<MsgQueuesUnit>(MsgQueues(slotNum), MsgQueues(slotNum)))));
     }
 }
 void BaseNode::process(int what, void* msg)
@@ -15,7 +15,27 @@ void BaseNode::process(int what, void* msg)
 }
 
 
-void BaseNode::startTask()
+void BaseNode::TaskFunc(void* arg)
+{
+    if(arg){
+        BaseNode* ptr = (BaseNode*)arg;
+        ptr->handleLoop();
+    }
+}
+void BaseNode::startTask(int task_id)
+{
+    //printf("Base node start_task do nothing\n");
+    auto iter =  nodeTaskMap.find(task_id);
+    if(iter != nodeTaskMap.end()){
+        vx_task_set_default_create_params(&taskPara);
+        taskPara.app_var = this;
+        taskPara.task_mode = 0;
+        taskPara.task_main = TaskFunc;
+        vx_task_create(nodeTaskMap[task_id].first, &taskPara);       
+    }
+}
+
+int BaseNode::handleLoop()
 {
     printf("Base node start_task do nothing\n");
 }

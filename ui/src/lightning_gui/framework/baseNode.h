@@ -26,7 +26,7 @@ struct MsgQueuesUnit{
   MsgQueues done;
 };
 using msgQueueSharePtr = std::shared_ptr<MsgQueuesUnit>;
-using taskUnit = std::pair<TaskPtr_, msgQueueSharePtr>;
+using taskUnit = std::pair<Task_ *, msgQueueSharePtr>;
 using taskMap_ = std::map<int, taskUnit>;
 using taskMapUnit = std::pair<int, taskUnit>;
 
@@ -40,7 +40,8 @@ class BaseNode
 		virtual ~BaseNode(){};
 	public:	
 		virtual void deinit(void);	
-		virtual void startTask(void);
+		virtual void startTask(int task_id);
+		virtual int handleLoop();
 		virtual int releaseMsg(MsgPtr_ msg, int task_id = 0, int slot_id = 0);
 		virtual int getMsg(MsgPtr_ & msg, int task_id = 0, int slot_id = 0);
 		template <class T>
@@ -50,12 +51,16 @@ class BaseNode
 		int initTask(int task_id = 0, int slot_id = 0, int buf_num = 4);
     	static void* trampoline(void* p);
 		void taskLoop();
+
         //std::vector<TaskSharePtr_> getTask();
 
 	private:
 		TaskPara_ taskPara;
         std::vector<msgQueueSharePtr> msgQueues;
         taskMap_ nodeTaskMap;
+	protected:
+  		static void TaskFunc(void* arg);
+
 };
 
 
