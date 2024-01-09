@@ -108,6 +108,7 @@ MainWindow::MainWindow()
 	int height = 300;
 	viewPanel->setMinimumSize(width, height);
 	setCentralWidget(viewPanel);
+	this->showMaximized();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

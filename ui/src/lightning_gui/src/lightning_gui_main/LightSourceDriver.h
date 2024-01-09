@@ -30,9 +30,18 @@ private:
     ChartLighting* linearityChart;
 
     ChartLighting* correctionChart;
-    
+	QLineEdit* ip_edit;
+	QLineEdit* port_edit;
+	QPushButton* connect_button;
+  	QLabel* netStateLED;
+
+private:
+
     void creatUI();
+    void creatCtrlUI();
+    void creatStateUI();
     void creatConnection();
+	void initComponent();
 
 
 };

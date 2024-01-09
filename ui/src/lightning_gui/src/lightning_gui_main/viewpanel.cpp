@@ -156,16 +156,7 @@ inline float calcFps()
 }
 
 
-inline int tcpSocketCheck(int sock)
-{
-	struct tcp_info info; 
-	int len = sizeof(info); 
-	getsockopt(sock, IPPROTO_TCP, TCP_INFO, &info, (socklen_t *)&len);
-	if((info.tcpi_state == TCP_ESTABLISHED))
-		return 0;
-	else 
-		return -1;
-}
+
 
 bool check_file_exist(const std::string &path) {
 #ifdef _MSC_VER  
@@ -229,7 +220,7 @@ viewpanel::viewpanel(QTabWidget* parent )
 	ifStarted(false),saveadc_(false), oneFramePure(true), ifConnectedStateTcp(false), ctrl_sock(-1), modeFilter_(0), \
 	th_radius(1), radius_sf(0.1), width_radius(0), scale_text_size_(1)
 {
-	init_queue();
+/* 	init_queue();
 	memset(&cmdMsg_, 0, sizeof(cmdMsg_));
 	memset(&motorMsgSend_, 0, sizeof(motorMsgSend_));
 	cmdMsg_.mHead.usPrefix = 0xeeff;
@@ -255,13 +246,13 @@ viewpanel::viewpanel(QTabWidget* parent )
 	CreatFFTWindow();
 	CreatADCWindow();
 	CreatMotorWindow();
-	CreatStateDetectWindow();
+	CreatStateDetectWindow(); */
 	lightSourceDriver_m  = new LightSourceDriver();
-	this->addTab(lightSourceDriver_m, "光源驱动");
-	CreatConnect();
+	this->addTab(lightSourceDriver_m, "主控界面");
+/* 	CreatConnect();
 	registerPointcloudRviz();
 	resize(QDesktopWidget().availableGeometry(this).size() * 0.85);
-	std::cout << "R: " << R_V_g.size() << " G: " << G_V_g.size() <<  " B: " << B_V_g.size() << std::endl;
+	std::cout << "R: " << R_V_g.size() << " G: " << G_V_g.size() <<  " B: " << B_V_g.size() << std::endl; */
 }
 
 // Destructor.

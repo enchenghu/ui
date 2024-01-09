@@ -1,5 +1,17 @@
 #pragma once
-
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <cmath>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <sstream>
+#include <vector>
+#include <netinet/tcp.h>
+#include <algorithm>
 #include <QApplication>
 #include <QCheckBox>
 #include <QColor>
@@ -42,3 +54,14 @@ void setButtonStyle(QPushButton* btn);
 void setCheckBoxUnvaild(QCheckBox* checkBox, bool check);
 
 void setCheckBoxUnvaild(QCheckBox* checkBox);
+
+inline int tcpSocketCheck(int sock)
+{
+	struct tcp_info info; 
+	int len = sizeof(info); 
+	getsockopt(sock, IPPROTO_TCP, TCP_INFO, &info, (socklen_t *)&len);
+	if((info.tcpi_state == TCP_ESTABLISHED))
+		return 0;
+	else 
+		return -1;
+}

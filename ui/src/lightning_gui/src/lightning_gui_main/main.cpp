@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 #if 1
 	QApplication app(argc, argv);
 	QCoreApplication::setOrganizationName("Lightning Lidar");
-	QCoreApplication::setApplicationName("Lightning V1.0 Lidar ROS GUI");
+	QCoreApplication::setApplicationName("光源驱动上位机 V1.0");
 	QCoreApplication::setApplicationVersion(QT_VERSION_STR);
 	QCommandLineParser parser;
 	parser.setApplicationDescription(QCoreApplication::applicationName());
