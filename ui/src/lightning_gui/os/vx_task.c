@@ -42,14 +42,14 @@ static void *vx_task_main(void *arg)
 
     //printf("task->para.task_mode is %d\n", task->para.task_mode);
 
-    if( task && (task->task_func || task->task_func_fishnet))
+    if( task && (task->task_func || task->task_multi))
     {
         switch(task->para.task_mode){
             case 0:
                 task->task_func(task->app_var);
                 break;
             case 1:
-                task->task_func_fishnet(task->app_var, task->para.fishnet_index);
+                task->task_multi(task->app_var, task->para.fishnet_index);
                 break;
             default:
                 break;
@@ -87,7 +87,7 @@ vx_status vx_task_create(vx_task *task, const vx_task_create_params_t *params)
             task->app_var = params->app_var;
             task->para.task_mode = params->task_mode;
             if (params->task_mode == 1){
-                task->task_func_fishnet = params->task_main_fishnet;
+                task->task_multi = params->task_multi;
                 task->para.fishnet_index = params->fishnet_index;
             }
 

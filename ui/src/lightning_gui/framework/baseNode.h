@@ -29,37 +29,38 @@ using msgQueueSharePtr = std::shared_ptr<MsgQueuesUnit>;
 using taskUnit = std::pair<Task_ *, msgQueueSharePtr>;
 using taskMap_ = std::map<int, taskUnit>;
 using taskMapUnit = std::pair<int, taskUnit>;
-
+using taskBuffAddrs = std::vector<std::vector<std::shared_ptr<void>>>;
+using taskBuffAddrsMap = std::map<int, taskBuffAddrs>;
+using taskBuffAddrsMapUnit = std::pair<int, taskBuffAddrs>;
 
 #define MAX_QUEUE_BUFF 4
+#define MAX_TASK_NUM 3
 //template<class T>
 class BaseNode
 {
 	public:
-		BaseNode(int taskNum = 1, int slotNum = 1);
+		BaseNode(int slotNum = 1);
 		virtual ~BaseNode(){};
 	public:	
+		virtual void init(void);	
 		virtual void deinit(void);	
 		virtual void startTask(int task_id);
-		virtual int handleLoop();
+		virtual void handleLoopTask0();
+		virtual void handleLoopTask1();
+		virtual void handleLoopTask2();
 		virtual int releaseMsg(MsgPtr_ msg, int task_id = 0, int slot_id = 0);
-		virtual int getMsg(MsgPtr_ & msg, int task_id = 0, int slot_id = 0);
-		template <class T>
-		int dispatchMsg(T & , int task_id = 0, int slot_id = 0);
-        virtual void process(int what, void* msg);
-		template <class T>
-		int initTask(int task_id = 0, int slot_id = 0, int buf_num = 4);
-    	static void* trampoline(void* p);
-		void taskLoop();
-
-        //std::vector<TaskSharePtr_> getTask();
+		virtual MsgPtr_ getFreeMsg(int task_id = 0, int slot_id = 0);
+		virtual MsgPtr_ getDoneMsg(int task_id = 0, int slot_id = 0);
+		int dispatchMsg(MsgPtr_, int task_id = 0, int slot_id = 0);
+		int initTaskQueue(std::vector<std::shared_ptr<void>>buff_addrs, int task_id = 0, int slot_id = 0);
+		//taskBuffAddrsMap buff_addrs_m;
 
 	private:
 		TaskPara_ taskPara;
         std::vector<msgQueueSharePtr> msgQueues;
         taskMap_ nodeTaskMap;
 	protected:
-  		static void TaskFunc(void* arg);
+  		static void TaskFunc(void* arg, int task_id);
 
 };
 

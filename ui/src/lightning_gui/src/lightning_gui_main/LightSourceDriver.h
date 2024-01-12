@@ -2,7 +2,23 @@
 #include "qtCommon.hpp"
 #include "flidar_stat.h"
 #include "chartLightning.h"
-class LightSourceDriver : public QWidget
+#include "baseNode.h"
+
+#define TASK_NUMS 1
+typedef enum{
+	TASK0,
+	TASK1,
+	TASK2
+} LightSourceDriver_TASK_ID;
+
+typedef struct 
+{
+	std::vector<int> data;
+	int num;
+} linearityData;
+
+
+class LightSourceDriver : public QWidget, public BaseNode
 {
     Q_OBJECT
 public:
@@ -33,7 +49,13 @@ private:
 	QLineEdit* ip_edit;
 	QLineEdit* port_edit;
 	QPushButton* connect_button;
+	QPushButton* save_button;
   	QLabel* netStateLED;
+
+
+ private Q_SLOTS:
+	void connectControl(void);
+	void saveControl(void);
 
 private:
 
@@ -42,6 +64,6 @@ private:
     void creatStateUI();
     void creatConnection();
 	void initComponent();
-
-
+	void handleLoopTask0() override;
+	void handleLoopTask1() override;
 };

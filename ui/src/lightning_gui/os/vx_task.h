@@ -45,7 +45,7 @@ typedef struct _vx_task_create_params
 
 	uint32_t priority;
 	vx_task_main_f task_main;
-	vx_task_main_f_fishnet task_main_fishnet;
+	vx_task_main_f_fishnet task_multi;
 	uint32_t fishnet_index;
 	void *app_var;
 	char task_name[64];
@@ -61,7 +61,7 @@ typedef struct _vx_task_t
 	uint32_t priority;
 
 	vx_task_main_f task_func;
-	vx_task_main_f_fishnet task_func_fishnet;
+	vx_task_main_f_fishnet task_multi;
 
 	void *app_var;
 	char  task_name[64];

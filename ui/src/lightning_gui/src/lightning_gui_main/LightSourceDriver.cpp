@@ -1,14 +1,61 @@
 #include "LightSourceDriver.h"
-LightSourceDriver::LightSourceDriver(QWidget* parent)
+LightSourceDriver::LightSourceDriver(QWidget* parent):BaseNode(TASK_NUMS)
 {
+    //initTaskQueue(TASK0);
+    std::vector<std::shared_ptr<void>> queueBuffTask0;
+    for(int i = 0; i < 4; i++)
+    {
+        queueBuffTask0.emplace_back(std::make_shared<linearityData>());
+    }
+    initTaskQueue(queueBuffTask0, TASK0);
     initComponent();
     creatUI();
     creatConnection();
 }
 
-void LightSourceDriver::creatConnection()
+void LightSourceDriver::connectControl()
 {
-    
+    startTask(TASK0);
+    startTask(TASK1);
+}
+
+void LightSourceDriver::saveControl()
+{
+}
+
+void LightSourceDriver::handleLoopTask0()
+{
+    long index = 0;
+    while (true)
+    {
+        //std::cout << "=======task0 handleloop=======" << std::endl;
+        usleep(500 * 1000);
+        MsgPtr_ msg = getFreeMsg(TASK0);
+        if(msg){
+            linearityData* pdata = (linearityData*)msg.get();
+            pdata->num = index++;
+            dispatchMsg(msg, TASK0);
+        }else{
+            break;
+        }
+    }
+
+}
+
+void LightSourceDriver::handleLoopTask1()
+{
+    while (true)
+    {
+        MsgPtr_ msg = getDoneMsg(TASK0);
+        if(msg){
+            linearityData* pdata = (linearityData*)msg.get();
+            printf("recv data is %d\n", pdata->num);
+            releaseMsg(msg, TASK0);
+        }else{
+            break;
+        }
+    }
+
 }
 
 void LightSourceDriver::initComponent()
@@ -32,6 +79,8 @@ void LightSourceDriver::initComponent()
 	//port_edit->setFixedSize(70,25);
 	connect_button = new QPushButton("&设备连接", this);
 	setButtonStyle(connect_button);
+	save_button = new QPushButton("&保存", this);
+	setButtonStyle(save_button);
 	netStateLED = new QLabel;
 	setLED(netStateLED, C_RED);
 }
@@ -43,6 +92,7 @@ void LightSourceDriver::creatCtrlUI()
 	ctrlBoxLayout->addWidget(new QLabel( "端口号:" ), 1, 0, Qt::AlignRight | Qt::AlignTop);
 	ctrlBoxLayout->addWidget(port_edit, 1, 1, Qt::AlignLeft | Qt::AlignTop);
 	ctrlBoxLayout->addWidget(connect_button, 2, 0, Qt::AlignRight | Qt::AlignTop);
+	ctrlBoxLayout->addWidget(save_button, 2, 1, Qt::AlignRight | Qt::AlignTop);
     for(int i = 0; i < 4; i++) {
         ctrlBoxLayout->setColumnStretch(i, 1);
         ctrlBoxLayout->setRowStretch(i, 1);
@@ -80,4 +130,10 @@ void LightSourceDriver::creatUI()
     mainLayout->addLayout(configLayout, 0, 0);
     mainLayout->addLayout(chartLayout, 0, 1);
     this->setLayout(mainLayout);
+}
+
+void LightSourceDriver::creatConnection()
+{
+	connect(connect_button, SIGNAL(clicked()), this, SLOT(connectControl( void ))); 
+	connect(save_button, SIGNAL(clicked()), this, SLOT(saveControl( void )));    
 }
