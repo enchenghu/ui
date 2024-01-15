@@ -1,8 +1,7 @@
 #include "LightSourceDriver.h"
 LightSourceDriver::LightSourceDriver(QWidget* parent):BaseNode(TASK_NUMS)
 {
-    //initTaskQueue(TASK0);
-    std::vector<std::shared_ptr<void>> queueBuffTask0;
+    std::vector<MsgPtr_> queueBuffTask0;
     for(int i = 0; i < 4; i++)
     {
         queueBuffTask0.emplace_back(std::make_shared<linearityData>());
@@ -17,19 +16,38 @@ void LightSourceDriver::connectControl()
 {
     startTask(TASK0);
     startTask(TASK1);
+/*     usleep(500 * 1000);
+    startTask(TASK1, Task1Func); */
 }
 
 void LightSourceDriver::saveControl()
 {
 }
 
-void LightSourceDriver::handleLoopTask0()
+void LightSourceDriver::Task0Func(void* arg)
+{
+    if(arg){
+       LightSourceDriver* ptr = (LightSourceDriver*)arg;
+       ptr->processTask0();
+    }
+}
+
+void LightSourceDriver::Task1Func(void* arg)
+{
+    if(arg){
+       LightSourceDriver* ptr = (LightSourceDriver*)arg;
+       ptr->processTask1();
+    }
+}
+
+void LightSourceDriver::handleLoopTask0(void)
 {
     long index = 0;
     while (true)
     {
-        //std::cout << "=======task0 handleloop=======" << std::endl;
-        usleep(500 * 1000);
+/*         usleep(500 * 1000);
+        printf("processTask0 index is %d\n",index++); */
+        //printf("processTask0 index is %d\n",index++);
         MsgPtr_ msg = getFreeMsg(TASK0);
         if(msg){
             linearityData* pdata = (linearityData*)msg.get();
@@ -38,14 +56,18 @@ void LightSourceDriver::handleLoopTask0()
         }else{
             break;
         }
+        usleep(500 * 1000);
     }
 
 }
 
 void LightSourceDriver::handleLoopTask1()
 {
+    long index = 0;
     while (true)
     {
+/*         usleep(500 * 1000);
+        printf("processTask1 index is %d\n",index++); */
         MsgPtr_ msg = getDoneMsg(TASK0);
         if(msg){
             linearityData* pdata = (linearityData*)msg.get();

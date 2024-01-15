@@ -15,6 +15,7 @@ void BaseNode::TaskFunc(void* arg, int task_id)
 {
     if(arg){
         BaseNode* ptr = (BaseNode*)arg;
+        //ptr->handleLoopCallback(ptr);
         switch (task_id)
         {
         case 0:
@@ -117,7 +118,7 @@ MsgPtr_ BaseNode::getDoneMsg(int task_id, int slot_id)
     return nullptr;
 }
 
-int BaseNode::releaseMsg(MsgPtr_ msg, int task_id, int slot_id)
+int BaseNode::releaseMsg(MsgPtr_& msg, int task_id, int slot_id)
 {
     auto iter =  nodeTaskMap.find(task_id);
     if(iter != nodeTaskMap.end()){
@@ -128,9 +129,8 @@ int BaseNode::releaseMsg(MsgPtr_ msg, int task_id, int slot_id)
     return 0; 
 }
 
-int BaseNode::dispatchMsg(MsgPtr_ msg, int task_id, int slot_id)
+int BaseNode::dispatchMsg(MsgPtr_& msg, int task_id, int slot_id)
 {
-    //printf("Base node init do nothing\n");   
     auto iter =  nodeTaskMap.find(task_id);
     if(iter != nodeTaskMap.end()){
         iter->second.second->done.at(slot_id).put(msg); 

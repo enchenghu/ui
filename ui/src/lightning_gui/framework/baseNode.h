@@ -48,12 +48,12 @@ class BaseNode
 		virtual void handleLoopTask0();
 		virtual void handleLoopTask1();
 		virtual void handleLoopTask2();
-		virtual int releaseMsg(MsgPtr_ msg, int task_id = 0, int slot_id = 0);
+		void (*handleLoopCallback)(void*);
+		virtual int releaseMsg(MsgPtr_& msg, int task_id = 0, int slot_id = 0);
 		virtual MsgPtr_ getFreeMsg(int task_id = 0, int slot_id = 0);
 		virtual MsgPtr_ getDoneMsg(int task_id = 0, int slot_id = 0);
-		int dispatchMsg(MsgPtr_, int task_id = 0, int slot_id = 0);
-		int initTaskQueue(std::vector<std::shared_ptr<void>>buff_addrs, int task_id = 0, int slot_id = 0);
-		//taskBuffAddrsMap buff_addrs_m;
+		int dispatchMsg(MsgPtr_&, int task_id = 0, int slot_id = 0);
+		int initTaskQueue(std::vector<MsgPtr_> buff_addrs, int task_id = 0, int slot_id = 0);
 
 	private:
 		TaskPara_ taskPara;
