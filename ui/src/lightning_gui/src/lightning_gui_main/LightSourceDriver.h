@@ -24,8 +24,6 @@ class LightSourceDriver : public QWidget, public BaseNode
 public:
     LightSourceDriver(QWidget* parent = 0);
     virtual ~LightSourceDriver(){}
-	void processTask0(){}
-	void processTask1(){}
 
 private:
 	QGridLayout* mainLayout;
@@ -60,7 +58,6 @@ private:
 	void saveControl(void);
 
 private:
-
     void creatUI();
     void creatCtrlUI();
     void creatStateUI();
@@ -68,8 +65,5 @@ private:
 	void initComponent();
 	void handleLoopTask0() override;
 	void handleLoopTask1() override;
-protected:
-	static void Task0Func(void*);
-	static void Task1Func(void*);
 
 };

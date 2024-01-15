@@ -24,30 +24,11 @@ void LightSourceDriver::saveControl()
 {
 }
 
-void LightSourceDriver::Task0Func(void* arg)
-{
-    if(arg){
-       LightSourceDriver* ptr = (LightSourceDriver*)arg;
-       ptr->processTask0();
-    }
-}
-
-void LightSourceDriver::Task1Func(void* arg)
-{
-    if(arg){
-       LightSourceDriver* ptr = (LightSourceDriver*)arg;
-       ptr->processTask1();
-    }
-}
-
 void LightSourceDriver::handleLoopTask0(void)
 {
     long index = 0;
     while (true)
     {
-/*         usleep(500 * 1000);
-        printf("processTask0 index is %d\n",index++); */
-        //printf("processTask0 index is %d\n",index++);
         MsgPtr_ msg = getFreeMsg(TASK0);
         if(msg){
             linearityData* pdata = (linearityData*)msg.get();
@@ -66,8 +47,6 @@ void LightSourceDriver::handleLoopTask1()
     long index = 0;
     while (true)
     {
-/*         usleep(500 * 1000);
-        printf("processTask1 index is %d\n",index++); */
         MsgPtr_ msg = getDoneMsg(TASK0);
         if(msg){
             linearityData* pdata = (linearityData*)msg.get();
