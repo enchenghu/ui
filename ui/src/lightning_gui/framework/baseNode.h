@@ -49,8 +49,9 @@ private:
 	TaskPara_ taskPara;
 	std::vector<msgQueueSharePtr> msgQueues;
 	taskMap_ nodeTaskMap;
-protected:
 	static void TaskFunc(void* arg, int task_id);
+	
+protected:
 	BaseNode* inputNode;
 	MsgPtr_ getFreeMsg(int task_id = 0, int slot_id = 0);
 	int dispatchMsg(MsgPtr_&, int task_id = 0, int slot_id = 0);
