@@ -261,6 +261,7 @@ viewpanel::~viewpanel()
 	if(!udpFftAdcStop_) udpFftAdcClose();
 	if(!udpPCStop_) udpPcClose();
 	delete manager_;
+	delete lightSourceDriver_m;
 	save_settings();
 	::close(udpFftAdcSocketFd_);
 	::close(udpRecvPCSocketFd_);

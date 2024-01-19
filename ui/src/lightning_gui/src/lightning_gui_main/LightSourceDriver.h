@@ -23,39 +23,45 @@ class LightSourceDriver : public QWidget, public BaseNode
     Q_OBJECT
 public:
     LightSourceDriver(QWidget* parent = 0);
-    virtual ~LightSourceDriver(){}
+    virtual ~LightSourceDriver();
 
 private:
 	QGridLayout* mainLayout;
-
 	QGroupBox* linearityBox;
 	QGridLayout* linearityBoxLayout;
-
+	QGroupBox* linearityCtrlBox;
+	QGridLayout* linearityCtrlBoxLayout;
+	QGroupBox* correctionCtrlBox;
+	QGridLayout* correctionCtrlBoxLayout;
 	QGroupBox* correctionBox;
 	QGridLayout* correctionBoxLayout;
-
     QGroupBox* stateBox;
 	QGridLayout* stateBoxLayout;
-
 	QGroupBox* ctrlBox;
 	QGridLayout* ctrlBoxLayout;
-
 	QVBoxLayout* chartLayout;    
 	QVBoxLayout* configLayout;    
-
     ChartLighting* linearityChart;
-
     ChartLighting* correctionChart;
 	QLineEdit* ip_edit;
 	QLineEdit* port_edit;
 	QPushButton* connect_button;
 	QPushButton* save_button;
+	QPushButton* reset_button_l;
+	QPushButton* reset_button_c;
+	QPushButton* single_button_l;
+	QPushButton* single_button_c;
   	QLabel* netStateLED;
-
+	QString device_ip_port_;
+	QString device_ip_;
+private:
+	int socket_id;
+	bool connectionState;
 
  private Q_SLOTS:
-	void connectControl(void);
+	void startConnect(void);
 	void saveControl(void);
+	void startXXTask(void);
 
 private:
     void creatUI();
@@ -63,7 +69,9 @@ private:
     void creatStateUI();
     void creatConnection();
 	void initComponent();
+	int deviceConnect();
 	void handleLoopTask0() override;
 	void handleLoopTask1() override;
-
+	void loadSettings();
+	void saveSettings();
 };
