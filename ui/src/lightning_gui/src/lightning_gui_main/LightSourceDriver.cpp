@@ -176,7 +176,7 @@ void LightSourceDriver::creatUI()
 
 void LightSourceDriver::creatConnection()
 {
-	connect(connect_button, SIGNAL(clicked()), this, SLOT(startConnect( void ))); 
+	connect(connect_button, SIGNAL(clicked()), this, SLOT(startXXTask( void ))); 
 	connect(save_button, SIGNAL(clicked()), this, SLOT(saveControl( void )));    
 }
 

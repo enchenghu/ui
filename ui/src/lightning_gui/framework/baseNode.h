@@ -42,18 +42,8 @@ public:
 	BaseNode();
 	virtual ~BaseNode(){};
 public:	
-	void initNode(int slotNum = 1);	
-	void startTask(int task_id);
-	MsgPtr_ getFreeMsg(int task_id = 0, int slot_id = 0);
 	MsgPtr_ getDoneMsg(int task_id = 0, int slot_id = 0);
-	int dispatchMsg(MsgPtr_&, int task_id = 0, int slot_id = 0);
 	int releaseMsg(MsgPtr_& msg, int task_id = 0, int slot_id = 0);
-	int initTaskQueue(std::vector<MsgPtr_> buff_addrs, int task_id = 0, int slot_id = 0);
-	virtual void initTaskQueue(void);	
-	virtual void deinit(void);	
-	virtual void handleLoopTask0();
-	virtual void handleLoopTask1();
-	virtual void handleLoopTask2();
 
 private:
 	TaskPara_ taskPara;
@@ -61,6 +51,17 @@ private:
 	taskMap_ nodeTaskMap;
 protected:
 	static void TaskFunc(void* arg, int task_id);
+	BaseNode* inputNode;
+	MsgPtr_ getFreeMsg(int task_id = 0, int slot_id = 0);
+	int dispatchMsg(MsgPtr_&, int task_id = 0, int slot_id = 0);
+	int initTaskQueue(std::vector<MsgPtr_> buff_addrs, int task_id = 0, int slot_id = 0);
+	virtual void initTaskQueue(void);	
+	virtual void deinit(void);	
+	virtual void handleLoopTask0();
+	virtual void handleLoopTask1();
+	virtual void handleLoopTask2();
+	void initNode(int slotNum = 1);	
+	void startTask(int task_id);
 
 };
 

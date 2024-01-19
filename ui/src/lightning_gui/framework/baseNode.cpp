@@ -1,8 +1,9 @@
 #include "baseNode.h"
 
-BaseNode::BaseNode()
+BaseNode::BaseNode():inputNode(nullptr)
 {
-
+    msgQueues.clear();
+    nodeTaskMap.clear();
 }
 
 void BaseNode::initNode(int slotNum)
