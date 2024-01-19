@@ -1,21 +1,37 @@
 #include "baseNode.h"
 
-BaseNode::BaseNode(int slotNum)
+BaseNode::BaseNode()
+{
+
+}
+
+void BaseNode::initNode(int slotNum)
 {
     nodeTaskMap.clear();
     for(int i = 0; i < MAX_TASK_NUM; i++)
     {
         nodeTaskMap.insert(taskMapUnit(i, \
         taskUnit(new Task_(), std::make_shared<MsgQueuesUnit>(MsgQueues(slotNum), MsgQueues(slotNum)))));
-        //buff_addrs_m.insert(taskBuffAddrsMapUnit(i, taskBuffAddrs(slotNum)));
     }
+    initTaskQueue();
+}
+
+void BaseNode::deinit()
+{
+
+}
+
+void BaseNode::initTaskQueue()
+{
+    /*Inherited node should use initTaskQueue(std::vector<MsgPtr_> buff_addrs, int task_id = 0, int slot_id = 0) 
+    to init task queues*/
+    printf("Base node initTaskQueue do nothing\n");
 }
 
 void BaseNode::TaskFunc(void* arg, int task_id)
 {
     if(arg){
         BaseNode* ptr = (BaseNode*)arg;
-        //ptr->handleLoopCallback(ptr);
         switch (task_id)
         {
         case 0:
@@ -35,7 +51,7 @@ void BaseNode::TaskFunc(void* arg, int task_id)
 }
 void BaseNode::startTask(int task_id)
 {
-    printf("task%d begin........\n", task_id);
+    LOGI("task%d begin........", task_id);
     auto iter =  nodeTaskMap.find(task_id);
     if(iter != nodeTaskMap.end()){
         vx_task_set_default_create_params(&taskPara);
@@ -44,34 +60,27 @@ void BaseNode::startTask(int task_id)
         taskPara.task_multi = TaskFunc;
         taskPara.fishnet_index = task_id;
         vx_task_create(nodeTaskMap[task_id].first, &taskPara);       
+    }else{
+        LOGE("Invaild task ID");
     }
 }
 
 void BaseNode::handleLoopTask0()
 {
-    printf("Base node start_task do nothing\n");
+    LOGI("Base node handleLoopTask0 do nothing");
 }
 
 void BaseNode::handleLoopTask1()
 {
-    printf("Base node start_task do nothing\n");
+    LOGI("Base node handleLoopTask1 do nothing");
 }
 
 void BaseNode::handleLoopTask2()
 {
-    printf("Base node start_task do nothing\n");
+    LOGI("Base node handleLoopTask2 do nothing");
 }
 
 
-void BaseNode::deinit()
-{
-    printf("Base node deinit do nothing\n");
-}
-
-void BaseNode::init()
-{
-    printf("Base node deinit do nothing\n");
-}
 
 int BaseNode::initTaskQueue(std::vector<std::shared_ptr<void>> buff_addrs,  int task_id, int slot_id)
 {

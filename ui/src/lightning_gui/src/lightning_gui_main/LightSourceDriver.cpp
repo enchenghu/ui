@@ -1,13 +1,8 @@
 #include "LightSourceDriver.h"
-LightSourceDriver::LightSourceDriver(QWidget* parent):BaseNode(TASK_NUMS), \
+LightSourceDriver::LightSourceDriver(QWidget* parent):BaseNode(), \
 connectionState(false)
 {
-    std::vector<MsgPtr_> queueBuffTask0;
-    for(int i = 0; i < 4; i++)
-    {
-        queueBuffTask0.emplace_back(std::make_shared<linearityData>());
-    }
-    initTaskQueue(queueBuffTask0, TASK0);
+    initNode();
     loadSettings();
     initComponent();
     creatUI();
@@ -18,12 +13,20 @@ void LightSourceDriver::startXXTask()
 {
     startTask(TASK0);
     startTask(TASK1);
-/*     usleep(500 * 1000);
-    startTask(TASK1, Task1Func); */
 }
 
 void LightSourceDriver::saveControl()
 {
+
+}
+void LightSourceDriver::initTaskQueue()
+{
+    std::vector<MsgPtr_> queueBuffTask0;
+    for(int i = 0; i < 4; i++)
+    {
+        queueBuffTask0.emplace_back(std::make_shared<linearityData>());
+    }
+    BaseNode::initTaskQueue(queueBuffTask0, TASK0);
 }
 
 void LightSourceDriver::handleLoopTask0(void)
@@ -36,6 +39,7 @@ void LightSourceDriver::handleLoopTask0(void)
             linearityData* pdata = (linearityData*)msg.get();
             pdata->num = index++;
             dispatchMsg(msg, TASK0);
+            LOGD("send data is %d", pdata->num);
         }else{
             break;
         }
@@ -43,7 +47,6 @@ void LightSourceDriver::handleLoopTask0(void)
     }
 
 }
-
 void LightSourceDriver::handleLoopTask1()
 {
     long index = 0;
@@ -52,7 +55,7 @@ void LightSourceDriver::handleLoopTask1()
         MsgPtr_ msg = getDoneMsg(TASK0);
         if(msg){
             linearityData* pdata = (linearityData*)msg.get();
-            printf("recv data is %d\n", pdata->num);
+            LOGI("recv data is %d", pdata->num);
             releaseMsg(msg, TASK0);
         }else{
             break;
@@ -185,14 +188,14 @@ int LightSourceDriver::deviceConnect()
 
 	std::string device_ip = ip_edit->text().toStdString();
 	int device_ip_ctrl_port = port_edit->text().toInt();
-	printf(L_GREEN"device_ip is %s, device_ctrl_port is %d\n"NONE_COLOR, device_ip.c_str(), device_ip_ctrl_port);
+	LOGI("device_ip is %s, device_ctrl_port is %d", device_ip.c_str(), device_ip_ctrl_port);
 
 	struct sockaddr_in ctrl_serv_addr;
 	struct sockaddr_in data_serv_addr;
 	struct sockaddr_in logs_serv_addr;
 
 	if ((socket_id=socket(AF_INET, SOCK_STREAM, 0))==-1){
-		printf(L_RED"ERROR: Could not create socket!\n"NONE_COLOR);
+		LOGE("ERROR: Could not create socket!");
 		return -1;
 	}
 
@@ -215,7 +218,7 @@ int LightSourceDriver::deviceConnect()
 
 	if(::connect(socket_id, (struct sockaddr*)&ctrl_serv_addr, sizeof(ctrl_serv_addr))<0)
 	{
-		printf(L_RED"Failed to connect to device_ip %s\n"NONE_COLOR, device_ip.c_str());
+		LOGE("Failed to connect to device_ip %s", device_ip.c_str());
 		return -2; 
 	}
 	//fcntl(ctrl_sock, F_SETFL, O_NONBLOCK); /* Set the socket to non blocking mode */
@@ -259,7 +262,6 @@ void LightSourceDriver::loadSettings()
 {
 	QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
 	device_ip_ = settings.value("device IP Addr","10.20.30.40").toString();
-	qDebug() << "device_ip_ is " << device_ip_;
 	device_ip_port_ = settings.value("device TCP Port","5000").toString();
 }
 void LightSourceDriver::saveSettings()

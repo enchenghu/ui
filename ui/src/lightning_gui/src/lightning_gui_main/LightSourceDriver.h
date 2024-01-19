@@ -72,6 +72,7 @@ private:
 	int deviceConnect();
 	void handleLoopTask0() override;
 	void handleLoopTask1() override;
+	void initTaskQueue() override;
 	void loadSettings();
 	void saveSettings();
 };

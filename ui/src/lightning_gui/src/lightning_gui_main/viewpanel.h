@@ -88,7 +88,6 @@ class viewpanel : public QTabWidget {
   viewpanel(QTabWidget* parent = 0);
   virtual ~viewpanel();
   void setView(view_vals_t& view_vals);
-  void printView();
   static viewpanel* Instance();
 
  public Q_SLOTS:

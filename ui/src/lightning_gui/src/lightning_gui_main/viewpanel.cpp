@@ -258,16 +258,16 @@ viewpanel::viewpanel(QTabWidget* parent )
 // Destructor.
 viewpanel::~viewpanel()
 {
-	if(!udpFftAdcStop_) udpFftAdcClose();
+/* 	if(!udpFftAdcStop_) udpFftAdcClose();
 	if(!udpPCStop_) udpPcClose();
-	delete manager_;
+	delete manager_; */
 	delete lightSourceDriver_m;
-	save_settings();
+/* 	save_settings();
 	::close(udpFftAdcSocketFd_);
 	::close(udpRecvPCSocketFd_);
 	::close(ctrl_sock);
 	serialClose(m_serialPort);	
-	serialClose(m_serialPort_test);	
+	serialClose(m_serialPort_test);	 */
 }
 
 void viewpanel::init_queue()
@@ -871,15 +871,6 @@ void viewpanel::readReg(int index){
 			}
 		}
 	}
-}
-
-void viewpanel::printView(  )
-{
-	ROS_INFO("Like this view? [D,Y,P,F] = [%f,%f,%f,%s]",
-			manager_->getViewManager()->getCurrent()->subProp("Distance")->getValue().toFloat(),
-			manager_->getViewManager()->getCurrent()->subProp("Yaw")->getValue().toFloat(),
-			manager_->getViewManager()->getCurrent()->subProp("Pitch")->getValue().toFloat(),
-			manager_->getViewManager()->getCurrent()->subProp("Focal Point")->getValue().toString().toStdString().c_str());
 }
 
 void viewpanel::setView( view_vals_t &view_vals )

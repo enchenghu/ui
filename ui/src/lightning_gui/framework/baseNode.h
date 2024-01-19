@@ -39,16 +39,16 @@ using taskBuffAddrsMapUnit = std::pair<int, taskBuffAddrs>;
 class BaseNode
 {
 	public:
-		BaseNode(int slotNum = 1);
+		BaseNode();
 		virtual ~BaseNode(){};
 	public:	
-		virtual void init(void);	
+		virtual void initNode(int slotNum = 1);	
+		virtual void initTaskQueue(void);	
 		virtual void deinit(void);	
 		virtual void startTask(int task_id);
 		virtual void handleLoopTask0();
 		virtual void handleLoopTask1();
 		virtual void handleLoopTask2();
-		void (*handleLoopCallback)(void*);
 		virtual int releaseMsg(MsgPtr_& msg, int task_id = 0, int slot_id = 0);
 		virtual MsgPtr_ getFreeMsg(int task_id = 0, int slot_id = 0);
 		virtual MsgPtr_ getDoneMsg(int task_id = 0, int slot_id = 0);

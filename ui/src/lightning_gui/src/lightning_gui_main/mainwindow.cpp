@@ -113,8 +113,6 @@ MainWindow::MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-	viewPanel->printView();
-	//viewPanel->print_cam_widg_location();
 	event->accept();
 	writeSettings();
 	int ret = system("pkill -f rqt_bag");
@@ -348,7 +346,7 @@ void MainWindow::createActions()
 
 	updateAct = new QAction(tr("&System update"), this);
 
-#if 1
+#if 0
 	showCtrlDockAct = new QAction(tr("Control Panel"), this);
 	//recParsedAct->setStatusTip(tr("When recording, record *all* parsed topics"));
 	showCtrlDockAct->setCheckable(true);
@@ -417,15 +415,15 @@ void MainWindow::createMenus()
 	fileMenu->addAction(exitAct);
 	menuBar()->addSeparator();
 	systemMenu = menuBar()->addMenu(tr("&Settings"));
-#if 1
+#if 0
 	systemMenu->addSeparator();
-#endif
 	//systemMenu->addAction(captureRadarDebugDataAct);
 	menuBar()->addSeparator();
 	viewFMCWMenu = menuBar()->addMenu(tr("&View"));
 	viewFMCWMenu->addAction(showCtrlDockAct);
 	viewFMCWMenu->addAction(showPcPanelAct);
 	viewFMCWMenu->addAction(pcOffsetDockAct);
+#endif
 
 	menuBar()->addSeparator();
 	helpMenu = menuBar()->addMenu(tr("&帮助"));
