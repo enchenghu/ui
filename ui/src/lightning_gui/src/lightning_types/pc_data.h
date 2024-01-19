@@ -402,8 +402,8 @@ typedef enum {
 	//TASK_LAST = BST_MAX_TASK_NUM - 1
 }LIGHTNING_TASK_ID;
 
-using TaskQueuesUnit = std::pair<LIGHTNING_TASK_ID, std::shared_ptr<MsgQueuesUnit>>;
-using TaskQueuesMap  = std::map<LIGHTNING_TASK_ID, std::shared_ptr<MsgQueuesUnit>>;
+using TaskQueuesUnit = std::pair<LIGHTNING_TASK_ID, std::shared_ptr<BaseNode::MsgQueuesUnit>>;
+using TaskQueuesMap  = std::map<LIGHTNING_TASK_ID, std::shared_ptr<BaseNode::MsgQueuesUnit>>;
 //PcMetadata PcMetadata_Arr[100];	// 每个UDP报文，包含2列激光数据
 //PointCloud_V1_0_Header + PcMetadata_Arr
 }

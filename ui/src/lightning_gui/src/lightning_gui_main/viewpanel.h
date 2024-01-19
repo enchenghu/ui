@@ -430,11 +430,11 @@ class viewpanel : public QTabWidget {
   udpPcMsgOneFrame360 udpPCBuff_last;
 
   TaskQueuesMap msgQueuesMap_m;
-  std::shared_ptr<MsgQueuesUnit> msg_queue_pc;
-  std::shared_ptr<MsgQueuesUnit> msg_queue_sys;
-  std::shared_ptr<MsgQueuesUnit> msg_queue_motor;
-  std::shared_ptr<MsgQueuesUnit> msg_queue_adc_fft_raw;
-  std::shared_ptr<MsgQueuesUnit> msg_queue_adc_fft;
+  std::shared_ptr<BaseNode::MsgQueuesUnit> msg_queue_pc;
+  std::shared_ptr<BaseNode::MsgQueuesUnit> msg_queue_sys;
+  std::shared_ptr<BaseNode::MsgQueuesUnit> msg_queue_motor;
+  std::shared_ptr<BaseNode::MsgQueuesUnit> msg_queue_adc_fft_raw;
+  std::shared_ptr<BaseNode::MsgQueuesUnit> msg_queue_adc_fft;
 
   std::string loadFileType_;
   QString loadLidarFile_;

@@ -93,7 +93,7 @@ int BaseNode::initTaskQueue(std::vector<std::shared_ptr<void>> buff_addrs,  int 
     return 0;
 }
 
-MsgPtr_ BaseNode::getFreeMsg(int task_id, int slot_id)
+BaseNode::MsgPtr_ BaseNode::getFreeMsg(int task_id, int slot_id)
 {
     auto iter =  nodeTaskMap.find(task_id);
     if(iter != nodeTaskMap.end()){
@@ -110,7 +110,7 @@ MsgPtr_ BaseNode::getFreeMsg(int task_id, int slot_id)
     return nullptr;
 }
 
-MsgPtr_ BaseNode::getDoneMsg(int task_id, int slot_id)
+BaseNode::MsgPtr_ BaseNode::getDoneMsg(int task_id, int slot_id)
 {
     auto iter =  nodeTaskMap.find(task_id);
     if(iter != nodeTaskMap.end()){

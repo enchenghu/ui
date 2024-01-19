@@ -21,7 +21,7 @@ void LightSourceDriver::saveControl()
 }
 void LightSourceDriver::initTaskQueue()
 {
-    std::vector<MsgPtr_> queueBuffTask0;
+    std::vector<BaseNode::MsgPtr_> queueBuffTask0;
     for(int i = 0; i < 4; i++)
     {
         queueBuffTask0.emplace_back(std::make_shared<linearityData>());
@@ -34,7 +34,7 @@ void LightSourceDriver::handleLoopTask0(void)
     long index = 0;
     while (true)
     {
-        MsgPtr_ msg = getFreeMsg(TASK0);
+        BaseNode::MsgPtr_ msg = getFreeMsg(TASK0);
         if(msg){
             linearityData* pdata = (linearityData*)msg.get();
             pdata->num = index++;
@@ -52,7 +52,7 @@ void LightSourceDriver::handleLoopTask1()
     long index = 0;
     while (true)
     {
-        MsgPtr_ msg = getDoneMsg(TASK0);
+        BaseNode::MsgPtr_ msg = getDoneMsg(TASK0);
         if(msg){
             linearityData* pdata = (linearityData*)msg.get();
             LOGI("recv data is %d", pdata->num);
