@@ -392,7 +392,7 @@ void LightSourceDriver::setSaveFolder()
 void LightSourceDriver::dacEnable()
 {
 	qDebug() << "sizeof brst_mOpCode is " << sizeof(brst_mOpCode);
-
+	uint16_t cnt = 0;
 	if(!connectionState){
 		QMessageBox::warning(0, "提示", "设备网络未连接，请检查网络！", QMessageBox::Ok | QMessageBox::Default, 0);
 		return;
@@ -404,16 +404,19 @@ void LightSourceDriver::dacEnable()
 		QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
 		return;
 	}
+	uint8_t* ptr = (uint8_t*)(&socket_msg_header_s);
+	for(int i = 0; i < sizeof(socket_msg_header_s) - 2; i++)
+	{
+		cnt += ptr[i + 2];
+	}
 	usleep(100);
 	if(!dacEnable_){
 		dacEnable_ = 1;
-		if(::write(socket_id, &dacEnable_, 1) < 0){
-			QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
-			return;
-		}
-		usleep(100);
-		uint16_t cnt = 0;
-		if(::write(socket_id, &cnt, sizeof(uint16_t)) < 0){
+		cnt += dacEnable_;
+		uint8_t data_s[3];
+		memcpy(data_s, (uint8_t*)&dacEnable_, 1);
+		memcpy(data_s + 1, (uint8_t*)&cnt, 2);
+		if(::write(socket_id, data_s, 3) < 0){
 			QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
 			return;
 		}
@@ -421,13 +424,11 @@ void LightSourceDriver::dacEnable()
 		send_dac_enbale_button->setText("DAC off");
 	} else {
 		dacEnable_ = 0;
-		if(::write(socket_id, &dacEnable_, 1) < 0){
-			QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
-			return;
-		}
-		usleep(100);
-		uint16_t cnt = 0;
-		if(::write(socket_id, &cnt, sizeof(uint16_t)) < 0){
+		cnt += dacEnable_;
+		uint8_t data_s[3];
+		memcpy(data_s, (uint8_t*)&dacEnable_, 1);
+		memcpy(data_s + 1, (uint8_t*)&cnt, 2);
+		if(::write(socket_id, data_s, 3) < 0){
 			QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
 			return;
 		}
@@ -453,7 +454,7 @@ void LightSourceDriver::loadWaveformFile()
 											"waveform file(*.bin)",0,QFileDialog::DontUseNativeDialog);	
 
 	if(loadLidarFile_.isNull()) return; 	
-
+	uint16_t cnt = 0;
 	std::string temp = loadLidarFile_.toStdString();
 	lastAlgPath_ = QString::fromStdString(temp.substr(0, temp.find_last_of('/')));
 	settings.setValue("lastAlgPath_", lastAlgPath_);
@@ -467,25 +468,31 @@ void LightSourceDriver::loadWaveformFile()
 	qDebug() << "size_w  is " << size_w;
 
 	in.seekg(0, std::ios::beg);
-	wave_buffer = new char [size_w];
+	wave_buffer = new char [size_w + 2];
 	in.read(wave_buffer, size_w);
 	in.close();
 	initSocketMsg();
 	socket_msg_header_s.mOpCode.ocMsgType = mID_h2d_waveform;
 	socket_msg_header_s.mPaySize = size_w;
+	uint8_t* ptr = (uint8_t*)(&socket_msg_header_s);
+	uint8_t* ptr_w = (uint8_t*)(&wave_buffer);
+	for(int i = 0; i < sizeof(socket_msg_header_s) - 2; i++)
+	{
+		cnt += ptr[i + 2];
+	}
+
+	for(int i = 0; i < size_w; i++)
+	{
+		cnt += ptr_w[i];
+	}
 
 	if(::write(socket_id, &socket_msg_header_s, sizeof(msg_frame_header)) < 0){
 		QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
 		return;
 	}
 	usleep(100);
-	if(::write(socket_id, wave_buffer, size_w) < 0){
-		QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
-		return;
-	}
-	usleep(100);
-	uint16_t cnt = 0;
-	if(::write(socket_id, &cnt, sizeof(uint16_t)) < 0){
+	memcpy((uint8_t*)wave_buffer + size_w, &cnt, 2);
+	if(::write(socket_id, wave_buffer, size_w + 2) < 0){
 		QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
 		return;
 	}
