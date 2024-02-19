@@ -472,10 +472,10 @@ void LightSourceDriver::loadWaveformFile()
 	in.read(wave_buffer, size_w);
 	in.close();
 	initSocketMsg();
-	socket_msg_header_s.mOpCode.ocMsgType = mID_h2d_waveform;
+	socket_msg_header_s.mOpCode.ocMsgID = mID_h2d_waveform;
 	socket_msg_header_s.mPaySize = size_w;
 	uint8_t* ptr = (uint8_t*)(&socket_msg_header_s);
-	uint8_t* ptr_w = (uint8_t*)(&wave_buffer);
+	uint8_t* ptr_w = (uint8_t*)(wave_buffer);
 	for(int i = 0; i < sizeof(socket_msg_header_s) - 2; i++)
 	{
 		cnt += ptr[i + 2];
