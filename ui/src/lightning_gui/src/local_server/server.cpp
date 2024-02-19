@@ -21,6 +21,7 @@
 #include <thread>
 #include <mutex>
 #include <list>
+#include "socket_msg_local.h"
 using namespace std;
 #define MAXLINE 4096 
 #define INFO "info"
@@ -506,6 +507,12 @@ void *pc_sub_loop(void *)
 
 }
 
+
+void *msg_sender_ls(void *)
+{
+
+}
+
 void *udp_msg_sender(void *)
  {
      int ret;
@@ -986,12 +993,12 @@ void change( int & a,  int &b)
 }
 int main(int argc, char** argv) 
 { 
-    int a = 666;
+/*     int a = 666;
     int b = 777;
     //auto x = std::ref(a);
     //auto y = std::ref(b);
     change((int &)a, (int &)b);
-    cout << "a is "  << a << ", b is "  << b <<endl; 
+    cout << "a is "  << a << ", b is "  << b <<endl;  */
 /* 	Things DoSomeThing;
 	thread t1(&Things::goToilet, &DoSomeThing);
 	thread t2(&Things::goBath, &DoSomeThing);
@@ -1117,9 +1124,19 @@ int main(int argc, char** argv)
     pc_raw_path_sub = roshandle.subscribe("/fmcw/pc_raw_data", 10, pc_raw_path_callback);
 
 #if 1
-    while(1)
+    uint8_t data[] = {1,2,3,4,5,6};
+    msg_frame_header header;
+    header.mFrameHead = 0x55aa;
+    header.mPaySize = 6;
+    uint16_t cnt_l = 0;
+    while(ros::ok)
     {
-        memset(&msg, 0,  sizeof(msg)); 
+        write(connfd, &header, sizeof(msg_frame_header));        
+        write(connfd, data, 6);        
+        write(connfd, &cnt_l, sizeof(cnt_l));   
+        usleep(500*1000); 
+        printf("server send data\n"); 
+/*         memset(&msg, 0,  sizeof(msg)); 
         n = recv(connfd, &msg, sizeof(msg), MSG_WAITALL); 
         printf("recv len is %d\n", n); 
         if(n == 0){
@@ -1158,7 +1175,7 @@ int main(int argc, char** argv)
         }
 
         //if(ifPCstop) break;
-        printf("wait for next cmd.....\n"); 
+        printf("wait for next cmd.....\n");  */
     } 
     close(connfd); 
     close(listenfd); 

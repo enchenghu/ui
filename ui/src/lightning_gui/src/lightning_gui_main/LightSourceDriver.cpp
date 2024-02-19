@@ -1,8 +1,10 @@
 #include "LightSourceDriver.h"
+using Msg_l = BaseNode::MsgPtr_;
 LightSourceDriver::LightSourceDriver(QWidget* parent):BaseNode(), \
-connectionState(false)
+connectionState(false), dacEnable_(0)
 {
     initNode();
+	initSocketMsg();
     loadSettings();
     initComponent();
     creatUI();
@@ -19,6 +21,14 @@ void LightSourceDriver::saveControl()
 {
 
 }
+
+void LightSourceDriver::initSocketMsg()
+{
+	memset(&socket_msg_header_s, 0, sizeof(msg_frame_header));
+	socket_msg_header_s.mFrameHead = 0x55aa;
+	socket_msg_header_s.mModuleID = 1;
+}
+
 void LightSourceDriver::initTaskQueue()
 {
     std::vector<BaseNode::MsgPtr_> queueBuffTask0;
@@ -31,10 +41,32 @@ void LightSourceDriver::initTaskQueue()
 
 void LightSourceDriver::handleLoopTask0(void)
 {
-    long index = 0;
-    while (true)
+	int ret = 0;
+	int databodylen = 0;
+    while (connectionState)
     {
-        BaseNode::MsgPtr_ msg = getFreeMsg(TASK0);
+		memset(&socket_msg_header_r, 0, sizeof(msg_frame_header));
+		ret = ::recv(socket_id, &socket_msg_header_r, sizeof(msg_frame_header), MSG_WAITALL);
+		if (ret <= 0){
+			printf("recv scoket msg timeout!\n");
+			continue;
+		} 
+		if(socket_msg_header_r.mFrameHead != 0x55aa){
+            QMessageBox::warning(0, "提示", "消息类型错误， 0x55aa!", QMessageBox::Ok | QMessageBox::Default, 0);
+			break;
+		}
+
+		databodylen = socket_msg_header_r.mPaySize + 2;
+		std::shared_ptr<uint8_t[]> recvDataPtr(new uint8_t[databodylen], [](uint8_t* p) { delete[] p; });
+		ret = ::recv(socket_id, recvDataPtr.get(), databodylen, MSG_WAITALL);
+		if (ret <= 0){
+			printf("recv scoket msg timeout!\n");
+			break;
+		} 
+		printf("recv scoket msg len is %d!\n", ret);
+		procSocketMsg(recvDataPtr, socket_msg_header_r.mOpCode.ocMsgID, socket_msg_header_r.mPaySize);
+#if 0
+       	Msg_l msg = getFreeMsg(TASK0);
         if(msg){
             linearityData* pdata = (linearityData*)msg.get();
             pdata->num = index++;
@@ -44,15 +76,26 @@ void LightSourceDriver::handleLoopTask0(void)
             break;
         }
         usleep(500 * 1000);
+#endif
     }
-
+	printf("handleLoopTask0 quit!\n");
 }
+
+int LightSourceDriver::procSocketMsg(std::shared_ptr<uint8_t[]> & data, mID_em type, int size)
+{
+	//uint8_t* ptr = (uint8_t*)data.get();
+	for(int i = 0; i < size; i++){
+		printf("data is %d\n", data[i]);
+	}
+	return 0;
+}
+
 void LightSourceDriver::handleLoopTask1()
 {
     long index = 0;
     while (true)
     {
-        BaseNode::MsgPtr_ msg = getDoneMsg(TASK0);
+        Msg_l msg = getDoneMsg(TASK0);
         if(msg){
             linearityData* pdata = (linearityData*)msg.get();
             LOGI("recv data is %d", pdata->num);
@@ -62,6 +105,23 @@ void LightSourceDriver::handleLoopTask1()
         }
     }
 
+}
+
+void LightSourceDriver::updateState()
+{
+	if(tcpSocketCheck(socket_id))
+	{
+		setLED(netStateLED, C_RED);
+		if(connectionState)
+		{
+			connect_button->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}");
+			connect_button->setText("设备连接");
+			connectionState = false;
+			::close(socket_id);
+		}
+	} else {
+		setLED(netStateLED, C_GREEN);
+	};
 }
 
 void LightSourceDriver::initComponent()
@@ -94,8 +154,22 @@ void LightSourceDriver::initComponent()
 	//port_edit->setFixedSize(70,25);
 	connect_button = new QPushButton("设备连接", this);
 	setButtonStyle(connect_button);
+
+	send_waveform_button = new QPushButton("波形下发", this);
+	setButtonStyle(send_waveform_button);
+
+	send_dac_enbale_button = new QPushButton("DAC on", this);
+	setButtonStyle(send_dac_enbale_button);
+	send_dac_enbale_button->setFixedSize(75, 30);
+
 	save_button = new QPushButton("保存", this);
 	setButtonStyle(save_button);
+	save_dir_button = new QPushButton("保存路径", this);
+	setButtonStyle(save_dir_button);
+
+    saveDataCombo = new QComboBox();
+	saveDataCombo->addItem(tr("线性度"));
+	saveDataCombo->addItem(tr("矫正波形"));
 
 	reset_button_l = new QPushButton("reset", this);
 	setButtonStyle(reset_button_l);
@@ -120,7 +194,13 @@ void LightSourceDriver::creatCtrlUI()
 	ctrlBoxLayout->addWidget(new QLabel( "端口号:" ), 1, 0, Qt::AlignRight | Qt::AlignTop);
 	ctrlBoxLayout->addWidget(port_edit, 1, 1, Qt::AlignLeft | Qt::AlignTop);
 	ctrlBoxLayout->addWidget(connect_button, 2, 0, Qt::AlignRight | Qt::AlignTop);
-	ctrlBoxLayout->addWidget(save_button, 2, 1, Qt::AlignRight | Qt::AlignTop);
+	ctrlBoxLayout->addWidget(send_waveform_button, 2, 1, Qt::AlignRight | Qt::AlignTop);
+	ctrlBoxLayout->addWidget(send_dac_enbale_button, 2, 2, Qt::AlignRight | Qt::AlignTop);
+
+	ctrlBoxLayout->addWidget(save_button, 3, 2, Qt::AlignRight | Qt::AlignTop);
+	ctrlBoxLayout->addWidget(saveDataCombo, 3, 1, Qt::AlignRight | Qt::AlignTop);
+	ctrlBoxLayout->addWidget(save_dir_button, 3, 0, Qt::AlignRight | Qt::AlignTop);
+
     for(int i = 0; i < 4; i++) {
         ctrlBoxLayout->setColumnStretch(i, 1);
         ctrlBoxLayout->setRowStretch(i, 1);
@@ -176,8 +256,19 @@ void LightSourceDriver::creatUI()
 
 void LightSourceDriver::creatConnection()
 {
-	connect(connect_button, SIGNAL(clicked()), this, SLOT(startXXTask( void ))); 
-	connect(save_button, SIGNAL(clicked()), this, SLOT(saveControl( void )));    
+	connect(connect_button, SIGNAL(clicked()), this, SLOT(startConnect(void))); 
+	connect(save_button, SIGNAL(clicked()), this, SLOT(saveControl(void)));    
+	connect(save_dir_button, SIGNAL(clicked()), this, SLOT(setSaveFolder(void)));    
+	connect(single_button_l, SIGNAL(clicked()), this, SLOT(singleLine(void)));    
+	connect(reset_button_l, SIGNAL(clicked()), this, SLOT(resetLine(void)));    
+	connect(single_button_c, SIGNAL(clicked()), this, SLOT(singleCor(void)));    
+	connect(reset_button_c, SIGNAL(clicked()), this, SLOT(resetCor(void)));    
+	connect(send_waveform_button, SIGNAL(clicked()), this, SLOT(loadWaveformFile(void)));    
+	connect(send_dac_enbale_button, SIGNAL(clicked()), this, SLOT(dacEnable(void)));    
+
+    QTimer* timer_state  = new QTimer(this);
+    connect(timer_state, SIGNAL(timeout()), this, SLOT(updateState(void)));
+    timer_state->start(100);
 }
 
 
@@ -235,6 +326,7 @@ void LightSourceDriver::startConnect()
 			connect_button->setText("设备断开");
 			connectionState = true;
             setLED(netStateLED, C_GREEN);
+			startTask(TASK0);
 /* 			commandMsg cmdMsg;
 			memset(&cmdMsg, 0, sizeof(commandMsg));
 			cmdMsg.mHead.usCommand = commandType::FFT_ADC_READ_SETCH;
@@ -253,6 +345,8 @@ void LightSourceDriver::startConnect()
 		connect_button->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}");
 		connect_button->setText("设备连接");
 		connectionState = false;
+		::close(socket_id);
+		setLED(netStateLED, C_RED);
 /* 		::close(ctrl_sock);
 		::close(state_ctrl_sock);
 		vx_task_delete(&bst_task[TASK_SYSTEM_DATA_RECV]); */
@@ -274,4 +368,154 @@ void LightSourceDriver::saveSettings()
 LightSourceDriver::~LightSourceDriver()
 {
     saveSettings();
+}
+
+void LightSourceDriver::setSaveFolder()
+{
+ 	QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+	QString lastPath_ = settings.value("lastPath_",".").toString();
+
+	save_folder_ =  QFileDialog::getExistingDirectory(this, "选择存储路径", lastPath_,
+		QFileDialog::DontUseNativeDialog | QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+	if( !save_folder_.isNull() )
+	{
+		qDebug() << "selected default recording folder : " << save_folder_.toUtf8();
+	    settings.setValue("lastPath_", save_folder_);
+	}
+	else
+	{
+		save_folder_ = QString(".");
+	}
+}
+
+void LightSourceDriver::dacEnable()
+{
+	if(!connectionState){
+		QMessageBox::warning(0, "提示", "设备网络未连接，请检查网络！", QMessageBox::Ok | QMessageBox::Default, 0);
+		return;
+	}
+	initSocketMsg();
+	socket_msg_header_s.mOpCode.ocMsgType = mID_h2d_DACen;
+	socket_msg_header_s.mPaySize = 1;
+	if(::write(socket_id, &socket_msg_header_s, sizeof(msg_frame_header)) < 0){
+		QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
+		return;
+	}
+	usleep(100);
+	if(!dacEnable_){
+		dacEnable_ = 1;
+		if(::write(socket_id, &dacEnable_, 1) < 0){
+			QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
+			return;
+		}
+		usleep(100);
+		uint16_t cnt = 0;
+		if(::write(socket_id, &cnt, sizeof(uint16_t)) < 0){
+			QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
+			return;
+		}
+		send_dac_enbale_button->setStyleSheet("QPushButton{background-color:rgba(127, 255, 0, 100);}");
+		send_dac_enbale_button->setText("DAC off");
+	} else {
+		dacEnable_ = 0;
+		if(::write(socket_id, &dacEnable_, 1) < 0){
+			QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
+			return;
+		}
+		usleep(100);
+		uint16_t cnt = 0;
+		if(::write(socket_id, &cnt, sizeof(uint16_t)) < 0){
+			QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
+			return;
+		}
+		send_dac_enbale_button->setStyleSheet("QPushButton{background-color:rgba(192, 192, 192, 100);}");
+		send_dac_enbale_button->setText("DAC on");
+	}
+}
+
+void LightSourceDriver::loadWaveformFile()
+{
+	if(!connectionState){
+		QMessageBox::warning(0, "提示", "设备网络未连接，请检查网络！", QMessageBox::Ok | QMessageBox::Default, 0);
+		return;
+	}
+	QSettings settings(QCoreApplication::organizationName(),QCoreApplication::applicationName());
+
+	QString lastAlgPath_ = settings.value("lastAlgPath_",".").toString();
+
+	QString loadLidarFile_  =  QFileDialog::getOpenFileName(
+											this,
+											"Choose waveform file",
+											lastAlgPath_,
+											"waveform file(*.bin)",0,QFileDialog::DontUseNativeDialog);	
+
+	if(loadLidarFile_.isNull()) return; 	
+
+	std::string temp = loadLidarFile_.toStdString();
+	lastAlgPath_ = QString::fromStdString(temp.substr(0, temp.find_last_of('/')));
+	settings.setValue("lastAlgPath_", lastAlgPath_);
+
+	qDebug() << "wabeform file is " << loadLidarFile_;
+
+	char * wave_buffer;
+	long size_w;
+	std::ifstream in(temp.c_str(), std::ios::in | std::ios::binary);
+	size_w = in.tellg();
+	in.seekg(0, std::ios::beg);
+	wave_buffer = new char [size_w];
+	in.read(wave_buffer, size_w);
+	in.close();
+	initSocketMsg();
+	socket_msg_header_s.mOpCode.ocMsgType = mID_h2d_waveform;
+	socket_msg_header_s.mPaySize = size_w;
+
+	if(::write(socket_id, &socket_msg_header_s, sizeof(msg_frame_header)) < 0){
+		QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
+		return;
+	}
+	usleep(100);
+	if(::write(socket_id, wave_buffer, size_w) < 0){
+		QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
+		return;
+	}
+	usleep(100);
+	uint16_t cnt = 0;
+	if(::write(socket_id, &cnt, sizeof(uint16_t)) < 0){
+		QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
+		return;
+	}
+	delete []wave_buffer;
+}
+
+void LightSourceDriver::setLoadFileType( void )
+{
+	QString str = saveDataCombo->currentText();
+	saveFileType_.assign(str.toStdString());
+}
+
+void LightSourceDriver::singleLine()
+{
+    linearityChart->setSingleShow(true);
+    linearityChart->setContineFlag(false);
+}
+
+void LightSourceDriver::resetLine()
+{
+    linearityChart->setSingleShow(false);
+    linearityChart->setContineFlag(true);
+    linearityChart->setIfScale(true);
+}
+
+void LightSourceDriver::singleCor()
+{
+    correctionChart->setSingleShow(true);
+    correctionChart->setContineFlag(false);
+}
+
+void LightSourceDriver::resetCor()
+{
+    correctionChart->setSingleShow(false);
+    correctionChart->setContineFlag(true);
+    correctionChart->setIfScale(true);
 }

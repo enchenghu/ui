@@ -63,7 +63,6 @@ protected:
 	virtual void handleLoopTask2();
 	void initNode(int slotNum = 1);	
 	void startTask(int task_id);
-
 };
 
 
