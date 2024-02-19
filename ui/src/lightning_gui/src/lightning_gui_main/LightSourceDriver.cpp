@@ -85,7 +85,7 @@ int LightSourceDriver::procSocketMsg(std::shared_ptr<uint8_t[]> & data, mID_em t
 {
 	//uint8_t* ptr = (uint8_t*)data.get();
 	for(int i = 0; i < size; i++){
-		printf("data is %d\n", data[i]);
+		//printf("data is %d\n", data[i]);
 	}
 	return 0;
 }
@@ -460,8 +460,10 @@ void LightSourceDriver::loadWaveformFile()
 
 	char * wave_buffer;
 	long size_w;
-	std::ifstream in(temp.c_str(), std::ios::in | std::ios::binary);
+	std::ifstream in(temp.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
 	size_w = in.tellg();
+	qDebug() << "size_w  is " << size_w;
+
 	in.seekg(0, std::ios::beg);
 	wave_buffer = new char [size_w];
 	in.read(wave_buffer, size_w);
