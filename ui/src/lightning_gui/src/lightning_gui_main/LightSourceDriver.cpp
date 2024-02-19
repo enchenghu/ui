@@ -398,7 +398,7 @@ void LightSourceDriver::dacEnable()
 		return;
 	}
 	initSocketMsg();
-	socket_msg_header_s.mOpCode.ocMsgType = mID_h2d_DACen;
+	socket_msg_header_s.mOpCode.ocMsgID = mID_h2d_DACen;
 	socket_msg_header_s.mPaySize = 1;
 	if(::write(socket_id, &socket_msg_header_s, sizeof(msg_frame_header)) < 0){
 		QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
