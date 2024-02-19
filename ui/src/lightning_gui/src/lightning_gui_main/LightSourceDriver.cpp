@@ -391,6 +391,8 @@ void LightSourceDriver::setSaveFolder()
 
 void LightSourceDriver::dacEnable()
 {
+	qDebug() << "sizeof brst_mOpCode is " << sizeof(brst_mOpCode);
+
 	if(!connectionState){
 		QMessageBox::warning(0, "提示", "设备网络未连接，请检查网络！", QMessageBox::Ok | QMessageBox::Default, 0);
 		return;

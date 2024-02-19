@@ -24,10 +24,10 @@ typedef struct {
 } mTimespec_st;
 
 typedef struct {
-    uint8_t  ocDirection;     // 消息方向 // 0:dev->hui
-    uint8_t  ocMsgType;     // 消息类型 // 0:Command
-    uint16_t ocMsgFlag;    // 消息标志
-    mID_em  ocMsgID;     // 消息ID
+    uint8_t  ocDirection : 4;     // 消息方向 // 0:dev->hui
+    uint8_t  ocMsgType : 4;     // 消息类型 // 0:Command
+    uint16_t ocMsgFlag : 16;    // 消息标志
+    mID_em  ocMsgID : 8;     // 消息ID
 } brst_mOpCode;
 
 typedef struct {
