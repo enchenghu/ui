@@ -134,7 +134,7 @@ void LightSourceDriver::initComponent()
     ctrlBoxLayout = new QGridLayout; 
     chartLayout = new QVBoxLayout;
     configLayout = new QVBoxLayout;
-    linearityBox = new QGroupBox(tr("线性度:")); 
+    linearityBox = new QGroupBox(tr("ADC:")); 
     linearityBoxLayout = new QGridLayout ;
 
     linearityCtrlBox = new QGroupBox(tr("控制:")); 
@@ -144,7 +144,7 @@ void LightSourceDriver::initComponent()
     correctionCtrlBoxLayout = new QGridLayout ;
 
     correctionBoxLayout = new QGridLayout ;
-    linearityChart = new ChartLighting(this, Linearity);
+    linearityChart = new ChartLighting(this, ADC_ORI);
     correctionChart = new ChartLighting(this, Correction);
 	ip_edit =  new QLineEdit();
 	ip_edit->setText(device_ip_);
@@ -160,11 +160,11 @@ void LightSourceDriver::initComponent()
 
 	send_dac_enbale_button = new QPushButton("DAC on", this);
 	setButtonStyle(send_dac_enbale_button);
-	send_dac_enbale_button->setFixedSize(75, 30);
+	//send_dac_enbale_button->setFixedSize(75, 32);
 
-	save_button = new QPushButton("保存", this);
+	save_button = new QPushButton("保存");
 	setButtonStyle(save_button);
-	save_dir_button = new QPushButton("保存路径", this);
+	save_dir_button = new QPushButton("保存路径");
 	setButtonStyle(save_dir_button);
 
     saveDataCombo = new QComboBox();
@@ -191,15 +191,15 @@ void LightSourceDriver::creatCtrlUI()
 {
 	ctrlBoxLayout->addWidget(new QLabel( "设备IP地址:" ), 0, 0, Qt::AlignRight | Qt::AlignTop);
 	ctrlBoxLayout->addWidget(ip_edit, 0, 1, Qt::AlignLeft | Qt::AlignTop);
-	ctrlBoxLayout->addWidget(new QLabel( "端口号:" ), 1, 0, Qt::AlignRight | Qt::AlignTop);
-	ctrlBoxLayout->addWidget(port_edit, 1, 1, Qt::AlignLeft | Qt::AlignTop);
-	ctrlBoxLayout->addWidget(connect_button, 2, 0, Qt::AlignRight | Qt::AlignTop);
-	ctrlBoxLayout->addWidget(send_waveform_button, 2, 1, Qt::AlignRight | Qt::AlignTop);
-	ctrlBoxLayout->addWidget(send_dac_enbale_button, 2, 2, Qt::AlignRight | Qt::AlignTop);
+	ctrlBoxLayout->addWidget(new QLabel( "端口号:" ), 0, 2, Qt::AlignRight | Qt::AlignTop);
+	ctrlBoxLayout->addWidget(port_edit, 0, 3, Qt::AlignLeft | Qt::AlignTop);
+	ctrlBoxLayout->addWidget(connect_button, 1, 0, Qt::AlignRight | Qt::AlignTop);
+	ctrlBoxLayout->addWidget(send_waveform_button, 2, 0, Qt::AlignRight | Qt::AlignTop);
+	ctrlBoxLayout->addWidget(send_dac_enbale_button, 3, 0, Qt::AlignRight | Qt::AlignTop);
 
-	ctrlBoxLayout->addWidget(save_button, 3, 2, Qt::AlignRight | Qt::AlignTop);
+/* 	ctrlBoxLayout->addWidget(save_button, 3, 2, Qt::AlignRight | Qt::AlignTop);
 	ctrlBoxLayout->addWidget(saveDataCombo, 3, 1, Qt::AlignRight | Qt::AlignTop);
-	ctrlBoxLayout->addWidget(save_dir_button, 3, 0, Qt::AlignRight | Qt::AlignTop);
+	ctrlBoxLayout->addWidget(save_dir_button, 3, 0, Qt::AlignRight | Qt::AlignTop); */
 
     for(int i = 0; i < 4; i++) {
         ctrlBoxLayout->setColumnStretch(i, 1);
@@ -221,7 +221,7 @@ void LightSourceDriver::creatUI()
 {
     creatCtrlUI();
     creatStateUI();
-    linearityBoxLayout->addWidget(linearityChart->setChart(0, 1000, 0, 1), 0 , 0);
+    linearityBoxLayout->addWidget(linearityChart->setChart(0, 4096, -500, 500), 0 , 0);
     linearityCtrlBoxLayout->addWidget(reset_button_l, 0, 0);
     linearityCtrlBoxLayout->addWidget(single_button_l, 1, 0);
     linearityCtrlBox->setLayout(linearityCtrlBoxLayout);
@@ -355,7 +355,7 @@ void LightSourceDriver::startConnect()
 void LightSourceDriver::loadSettings()
 {
 	QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
-	device_ip_ = settings.value("device IP Addr","10.20.30.40").toString();
+	device_ip_ = settings.value("device IP Addr","10.20.30.41").toString();
 	device_ip_port_ = settings.value("device TCP Port","5000").toString();
 }
 void LightSourceDriver::saveSettings()
@@ -391,7 +391,6 @@ void LightSourceDriver::setSaveFolder()
 
 void LightSourceDriver::dacEnable()
 {
-	qDebug() << "sizeof brst_mOpCode is " << sizeof(brst_mOpCode);
 	uint16_t cnt = 0;
 	if(!connectionState){
 		QMessageBox::warning(0, "提示", "设备网络未连接，请检查网络！", QMessageBox::Ok | QMessageBox::Default, 0);
@@ -404,7 +403,7 @@ void LightSourceDriver::dacEnable()
 		QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
 		return;
 	}
-	uint8_t* ptr = (uint8_t*)(&socket_msg_header_s);
+	uint8_t* ptr = reinterpret_cast<uint8_t*>(&socket_msg_header_s);
 	for(int i = 0; i < sizeof(socket_msg_header_s) - 2; i++)
 	{
 		cnt += ptr[i + 2];
@@ -414,8 +413,8 @@ void LightSourceDriver::dacEnable()
 		dacEnable_ = 1;
 		cnt += dacEnable_;
 		uint8_t data_s[3];
-		memcpy(data_s, (uint8_t*)&dacEnable_, 1);
-		memcpy(data_s + 1, (uint8_t*)&cnt, 2);
+		memcpy(data_s, reinterpret_cast<uint8_t*>(&dacEnable_), 1);
+		memcpy(data_s + 1, reinterpret_cast<uint8_t*>(&cnt), 2);
 		if(::write(socket_id, data_s, 3) < 0){
 			QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
 			return;
@@ -426,8 +425,8 @@ void LightSourceDriver::dacEnable()
 		dacEnable_ = 0;
 		cnt += dacEnable_;
 		uint8_t data_s[3];
-		memcpy(data_s, (uint8_t*)&dacEnable_, 1);
-		memcpy(data_s + 1, (uint8_t*)&cnt, 2);
+		memcpy(data_s, reinterpret_cast<uint8_t*>(&dacEnable_), 1);
+		memcpy(data_s + 1, reinterpret_cast<uint8_t*>(&cnt), 2);
 		if(::write(socket_id, data_s, 3) < 0){
 			QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
 			return;
@@ -461,28 +460,24 @@ void LightSourceDriver::loadWaveformFile()
 
 	qDebug() << "wabeform file is " << loadLidarFile_;
 
-	char * wave_buffer;
 	long size_w;
 	std::ifstream in(temp.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
 	size_w = in.tellg();
 	qDebug() << "size_w  is " << size_w;
-
 	in.seekg(0, std::ios::beg);
-	wave_buffer = new char [size_w + 2];
-	in.read(wave_buffer, size_w);
+	std::shared_ptr<char[]> wave_buffer(new char[size_w + 2], [](char* p) { delete[]p; });
+	in.read(wave_buffer.get(), size_w);
 	in.close();
 	initSocketMsg();
 	socket_msg_header_s.mOpCode.ocMsgID = mID_h2d_waveform;
 	socket_msg_header_s.mPaySize = size_w;
-	uint8_t* ptr = (uint8_t*)(&socket_msg_header_s);
-	uint8_t* ptr_w = (uint8_t*)(wave_buffer);
-	for(int i = 0; i < sizeof(socket_msg_header_s) - 2; i++)
-	{
+	uint8_t* ptr = reinterpret_cast<uint8_t*>(&socket_msg_header_s);
+	uint8_t* ptr_w = reinterpret_cast<uint8_t*>(wave_buffer.get());
+	for(int i = 0; i < sizeof(socket_msg_header_s) - 2; i++) {
 		cnt += ptr[i + 2];
 	}
 
-	for(int i = 0; i < size_w; i++)
-	{
+	for(int i = 0; i < size_w; i++) {
 		cnt += ptr_w[i];
 	}
 
@@ -491,12 +486,11 @@ void LightSourceDriver::loadWaveformFile()
 		return;
 	}
 	usleep(100);
-	memcpy((uint8_t*)wave_buffer + size_w, &cnt, 2);
-	if(::write(socket_id, wave_buffer, size_w + 2) < 0){
+	memcpy((uint8_t*)wave_buffer.get() + size_w, &cnt, 2);
+	if(::write(socket_id, wave_buffer.get(), size_w + 2) < 0){
 		QMessageBox::warning(0, "提示", "网络异常，下发失败！", QMessageBox::Ok | QMessageBox::Default, 0);
 		return;
 	}
-	delete []wave_buffer;
 }
 
 void LightSourceDriver::setLoadFileType( void )
