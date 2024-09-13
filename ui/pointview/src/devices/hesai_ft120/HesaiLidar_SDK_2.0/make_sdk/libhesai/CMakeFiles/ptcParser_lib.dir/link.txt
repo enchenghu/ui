@@ -1,0 +1,2 @@
+/usr/bin/ar qc libptcParser_lib.a  CMakeFiles/ptcParser_lib.dir/PtcParser/src/general_ptc_parser.cc.o CMakeFiles/ptcParser_lib.dir/PtcParser/src/ptc_1_0_parser.cc.o CMakeFiles/ptcParser_lib.dir/PtcParser/src/ptc_2_0_parser.cc.o CMakeFiles/ptcParser_lib.dir/PtcParser/ptc_parser.cc.o
+/usr/bin/ranlib libptcParser_lib.a

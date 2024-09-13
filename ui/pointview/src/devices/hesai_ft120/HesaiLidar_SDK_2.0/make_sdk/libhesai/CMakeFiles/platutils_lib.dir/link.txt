@@ -1,0 +1,2 @@
+/usr/bin/ar qc libplatutils_lib.a  CMakeFiles/platutils_lib.dir/src/plat_utils.cc.o CMakeFiles/platutils_lib.dir/src/auto_tick_count.cc.o
+/usr/bin/ranlib libplatutils_lib.a

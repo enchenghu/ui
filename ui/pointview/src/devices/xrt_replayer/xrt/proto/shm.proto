@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+package autox.common;
+
+option cc_enable_arenas = true;
+
+message ShmData {
+  optional uint32 key = 1;
+  // shm buf total size
+  optional uint64 size = 2;
+  // user data offset
+  optional uint64 offset = 3;
+  // user data length
+  optional uint64 length = 4;
+  // for other CPU
+  optional string hostname = 5;
+}

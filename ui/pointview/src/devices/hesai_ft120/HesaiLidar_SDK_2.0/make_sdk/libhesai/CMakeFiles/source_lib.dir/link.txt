@@ -1,0 +1,2 @@
+/usr/bin/ar qc libsource_lib.a  CMakeFiles/source_lib.dir/Source/src/source.cc.o CMakeFiles/source_lib.dir/Source/src/socket_source.cc.o CMakeFiles/source_lib.dir/Source/src/pcap_source.cc.o CMakeFiles/source_lib.dir/Source/src/pcap_saver.cc.o
+/usr/bin/ranlib libsource_lib.a

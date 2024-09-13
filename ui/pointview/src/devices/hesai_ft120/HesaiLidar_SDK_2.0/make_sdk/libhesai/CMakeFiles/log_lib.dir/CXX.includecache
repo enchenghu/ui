@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../libhesai/Logger/include/logger.h
+string
+-
+memory
+-
+thread
+-
+mutex
+-
+condition_variable
+-
+list
+-
+functional
+-
+algorithm
+-
+
+/home/tongdayang/pointview/src/devices/hesai_ft120/HesaiLidar_SDK_2.0/libhesai/Logger/src/logger.cc
+logger.h
+/home/tongdayang/pointview/src/devices/hesai_ft120/HesaiLidar_SDK_2.0/libhesai/Logger/src/logger.h
+time.h
+-
+stdio.h
+-
+memory
+-
+stdarg.h
+-
+

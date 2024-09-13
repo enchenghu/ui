@@ -1,0 +1,2 @@
+/usr/bin/ar qc libptcClient_lib.a  CMakeFiles/ptcClient_lib.dir/PtcClient/src/ptc_client.cc.o CMakeFiles/ptcClient_lib.dir/PtcClient/src/tcp_client.cc.o CMakeFiles/ptcClient_lib.dir/PtcClient/src/tcp_ssl_client.cc.o
+/usr/bin/ranlib libptcClient_lib.a

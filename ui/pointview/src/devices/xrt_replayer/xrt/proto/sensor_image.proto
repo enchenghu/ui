@@ -1,0 +1,311 @@
+syntax = "proto2";
+
+package autox.drivers;
+
+import "header.proto";
+import "shm.proto";
+// Encoding of pixels -- channel meaning, ordering, size
+enum PixelFormat {
+  RGB8 = 1001;
+  RGBA8 = 1002;
+  RGB16 = 1003;
+  RGBA16 = 1004;
+  BGR8 = 1005;
+  BGRA8 = 1006;
+  BGR16 = 1007;
+  BGRA16 = 1008;
+  MONO8 = 1009;
+  MONO16 = 1010;
+
+  // OpenCV CvMat types
+  TYPE_8UC1 = 2001;
+  TYPE_8UC2 = 2002;
+  TYPE_8UC3 = 2003;
+  TYPE_8UC4 = 2004;
+  TYPE_8SC1 = 2005;
+  TYPE_8SC2 = 2006;
+  TYPE_8SC3 = 2007;
+  TYPE_8SC4 = 2008;
+  TYPE_16UC1 = 2009;
+  TYPE_16UC2 = 2010;
+  TYPE_16UC3 = 2011;
+  TYPE_16UC4 = 2012;
+  TYPE_16SC1 = 2013;
+  TYPE_16SC2 = 2014;
+  TYPE_16SC3 = 2015;
+  TYPE_16SC4 = 2016;
+  TYPE_32SC1 = 2017;
+  TYPE_32SC2 = 2018;
+  TYPE_32SC3 = 2019;
+  TYPE_32SC4 = 2020;
+  TYPE_32FC1 = 2021;
+  TYPE_32FC2 = 2022;
+  TYPE_32FC3 = 2023;
+  TYPE_32FC4 = 2024;
+  TYPE_64FC1 = 2025;
+  TYPE_64FC2 = 2026;
+  TYPE_64FC3 = 2027;
+  TYPE_64FC4 = 2028;
+
+  // Bayer encodings
+  BAYER_RGGB8 = 3001;
+  BAYER_BGGR8 = 3002;
+  BAYER_GBRG8 = 3003;
+  BAYER_GRBG8 = 3004;
+  BAYER_RGGB16 = 3005;
+  BAYER_BGGR16 = 3006;
+  BAYER_GBRG16 = 3007;
+  BAYER_GRBG16 = 3008;
+
+  // Miscellaneous
+  // This is the UYVY version of YUV422 codec http://www.fourcc.org/yuv.php#UYVY
+  // with an 8-bit depth
+  YUV422 = 4001;
+}
+
+enum CameraID {
+  // The _cam suffix should be avoided in future camera Gen2 channel naming
+  // The camera channel naming should follow
+  // Gen2: ${camera_id_string}
+  // GenX(compressed):
+  // /xurban/sensor/camera/${camera_id_string}/image/compressed
+  // GenX(uncompressed): /xurban/sensor/camera/${camera_id_string}/image
+  // DON"T CHANGE FIELD_NAME AND ID
+  unknown = 0;  // 0 would be default value
+  front_12mm = 1;
+  front_4mm = 2;
+  front_center_4mm = 3;
+  front_right_4mm = 4;
+  front_6mm = 5;
+  left_4mm = 6;
+  right_4mm = 7;
+  front_left_4mm = 8;
+  front_inside_4mm = 9;
+  left_fisheye = 10;
+  right_fisheye = 11;
+  rear_fisheye = 12;
+  inside_fisheye = 13;
+  front_fisheye = 14;
+  front_narrow = 15;
+  front_left_narrow = 16;
+  front_right_narrow = 17;
+  rear_narrow = 18;
+  left_narrow = 19;
+  right_narrow = 20;
+  rear_left_narrow = 21;
+  rear_right_narrow = 22;
+  rear_4mm = 23;
+  left_2_8mm = 24;
+  right_2_8mm = 25;
+  front_2_8mm = 26;
+  rear_2_8mm = 27;
+  // for pacifica
+  front_left_12mm = 28;
+  front_right_12mm = 29;
+  front_left_2_8mm = 30;
+  front_right_2_8mm = 31;
+  // deprecated
+  up_0 = 100;
+  up_1 = 101;
+  up_2 = 102;
+  up_3 = 103;
+  up_4 = 104;
+  up_5 = 105;
+  up_6 = 106;
+  up_7 = 107;
+  dn_8 = 108;
+  dn_9 = 109;
+  dn_10 = 110;
+  dn_11 = 111;
+  dn_12 = 112;
+  dn_13 = 113;
+  dn_14 = 114;
+  dn_15 = 115;
+  dn_16 = 116;
+
+  // for v5 cameras. Take left_45_n_12mm as an example.
+  // 1.where is the camera. as our cameras always bound with lidar, we represent
+  //   the camera by rotation and lidar position. left_45 means the camera is
+  //   around left lidar, and ratote 45 degree colockwise. The vehicle heading
+  //   is 0 degree.
+  // 2.dark or not. d means dark, n means normal camera
+  // 3.focal-lenght. 12mm, 4mm, 6mm, 2_8mm
+
+  // for v5_default mount.16 cameras in total.
+  center_0_n_12mm = 1001;
+  center_0_d_12mm = 1002;
+  center_0_n_6mm = 1003;
+  center_0_d_6mm = 1004;
+  center_45_n_6mm = 1005;
+  center_45_d_6mm = 1006;
+  center_90_n_6mm = 1007;
+  center_90_d_6mm = 1008;
+  center_135_n_6mm = 1009;
+  center_135_d_6mm = 1010;
+  center_180_n_6mm = 1011;
+  center_180_d_6mm = 1012;
+  center_225_n_6mm = 1013;
+  center_225_d_6mm = 1014;
+  center_270_n_6mm = 1015;
+  center_270_d_6mm = 1016;
+  center_315_n_6mm = 1017;
+  center_315_d_6mm = 1018;
+  center_0_n_2_8mm = 1019;
+  center_30_n_6mm = 1020;
+  center_330_n_6mm = 1021;
+  center_150_n_6mm = 1022;
+  center_210_n_6mm = 1023;  // temporary
+  // for v5 paficia and light truck camera
+  // the colockwise camera of left_lidar
+  left_0_n_12mm = 1101;
+  left_0_d_12mm = 1102;
+  left_0_n_2_8mm = 1103;
+  left_0_d_2_8mm = 1104;
+  left_45_n_2_8mm = 1105;
+  left_45_d_2_8mm = 1106;
+  left_90_n_2_8mm = 1107;
+  left_90_d_2_8mm = 1108;
+  left_135_n_2_8mm = 1109;
+  left_135_d_2_8mm = 1110;
+  left_180_n_2_8mm = 1111;
+  left_180_d_2_8mm = 1112;
+  left_225_n_2_8mm = 1113;
+  left_225_d_2_8mm = 1114;
+  left_270_n_2_8mm = 1115;
+  left_270_d_2_8mm = 1116;
+  left_315_n_2_8mm = 1117;
+  left_315_d_2_8mm = 1118;
+  left_0_n_6mm = 1120;
+  left_0_d_6mm = 1121;
+  left_45_n_6mm = 1122;
+  left_45_d_6mm = 1123;
+  left_90_n_6mm = 1124;
+  left_90_d_6mm = 1125;
+  left_135_n_6mm = 1126;
+  left_135_d_6mm = 1127;
+  left_180_n_6mm = 1128;
+  left_180_d_6mm = 1129;
+  left_225_n_6mm = 1130;
+  left_225_d_6mm = 1131;
+  left_270_n_6mm = 1132;
+  left_270_d_6mm = 1133;
+  left_315_n_6mm = 1134;
+  left_315_d_6mm = 1135;
+  left_352_n_12mm = 1136;
+  // the colockwise camera of right lidar
+  right_0_n_12mm = 1201;
+  right_0_d_12mm = 1202;
+  right_0_n_2_8mm = 1203;
+  right_0_d_2_8mm = 1204;
+  right_45_n_2_8mm = 1205;
+  right_45_d_2_8mm = 1206;
+  right_90_n_2_8mm = 1207;
+  right_90_d_2_8mm = 1208;
+  right_135_n_2_8mm = 1209;
+  right_135_d_2_8mm = 1210;
+  right_180_n_2_8mm = 1211;
+  right_180_d_2_8mm = 1212;
+  right_225_n_2_8mm = 1213;
+  right_225_d_2_8mm = 1214;
+  right_270_n_2_8mm = 1215;
+  right_270_d_2_8mm = 1216;
+  right_315_n_2_8mm = 1217;
+  right_315_d_2_8mm = 1218;
+  right_0_n_6mm = 1220;
+  right_0_d_6mm = 1221;
+  right_45_n_6mm = 1222;
+  right_45_d_6mm = 1223;
+  right_90_n_6mm = 1224;
+  right_90_d_6mm = 1225;
+  right_135_n_6mm = 1226;
+  right_135_d_6mm = 1227;
+  right_180_n_6mm = 1228;
+  right_180_d_6mm = 1229;
+  right_225_n_6mm = 1230;
+  right_225_d_6mm = 1231;
+  right_270_n_6mm = 1232;
+  right_270_d_6mm = 1233;
+  right_315_n_6mm = 1234;
+  right_315_d_6mm = 1235;
+  right_8_n_12mm = 1236;
+  // for v5 paficia blindspot camera
+  blindspot_0_fisheye = 1301;
+  blindspot_90_fisheye = 1302;
+  blindspot_180_fisheye = 1303;
+  blindspot_270_fisheye = 1304;
+  blindspot_90_6mm = 1305;
+  blindspot_135_6mm = 1306;
+  blindspot_225_6mm = 1307;
+  blindspot_270_6mm = 1308;
+  // not real camera, spliced camera image
+  surround_view = 1309;
+  top_camera_view = 1310;
+}
+
+message TaskStats {
+  optional string name = 1;
+  optional double time_ms = 2;
+}
+
+message LatencyStats {
+  repeated TaskStats task_stats = 1;
+}
+
+message Image {
+  optional autox.common.Header header = 1;
+  optional string frame_id = 2 [deprecated = true];
+  optional double measurement_time = 3;
+
+  optional uint32 height = 4;  // image height, that is, number of rows
+  optional uint32 width = 5;   // image width, that is, number of columns
+
+  optional string encoding = 6;
+  optional uint32 step = 7;  // Full row length in bytes
+  optional bytes data = 8;   // actual matrix data, size is (step * rows)
+  optional autox.common.ShmData shm_data =
+      9;  // use ShmData to transfer big topic, but not use data
+  optional LatencyStats latency_stats = 10;
+  optional string shmdata_file_name =
+      11;  // filled by recorder for recording shmdata
+}
+
+message CompressedImage {
+  optional autox.common.Header header = 1;
+  optional string frame_id = 2 [deprecated = true];
+
+  // Specifies the format of the data
+  //  Acceptable values: jpeg, png
+  optional string format = 3;
+  optional bytes data = 4;  // Compressed image buffer
+  optional double measurement_time = 5;
+  optional autox.common.ShmData shm_data =
+      6;  // use ShmData to transfer big topic, but not use data
+  optional uint32 height = 7;  // image height, that is, number of rows
+  optional uint32 width = 8;   // image width, that is, number of columns
+  optional LatencyStats latency_stats = 9;
+  optional string shmdata_file_name =
+      10;  // filled by recorder for recording shmdata
+  optional string encoding = 11;
+}
+
+message CudaImage {
+  optional autox.common.Header header = 1;
+  repeated bytes cuda_buffer_ptr = 2;
+  repeated bytes cuda_header_ptr = 3;
+  optional uint32 image_size = 4;
+  optional uint32 gpu_id = 5;
+  optional uint32 cuda_buffer_count = 6;
+  optional double measurement_time = 7;
+  optional string encoding = 8;
+  optional uint32 step = 9;  // Full row length in bytes
+  optional bytes data = 10;  // actual matrix data, size is (step * rows)
+  optional autox.common.ShmData shm_data =
+      11;  // use ShmData to transfer big topic, but not use data
+  optional uint32 height = 12;  // image height, that is, number of rows
+  optional uint32 width = 13;   // image width, that is, number of columns
+  optional uint32 index = 14;
+  optional uint64 cuda_buffer_ptr_feedcompress = 15;
+  repeated uint64 gdr_mr = 16;
+  optional string shmdata_file_name =
+      17;  // filled by recorder for recording shmdata
+}

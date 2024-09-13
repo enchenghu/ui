@@ -1,0 +1,120 @@
+syntax = "proto2";
+
+package autox.common;
+
+option cc_enable_arenas = true;
+
+// Error codes enum for API's categorized by modules.
+enum ErrorCode {
+  // No error, reutrns on success.
+  OK = 0;
+
+  // Warning.
+  WARN = 1;
+
+  // Control module error codes start from here.
+  CONTROL_ERROR = 1000;
+  CONTROL_INIT_ERROR = 1001;
+  CONTROL_COMPUTE_ERROR = 1002;
+
+  // Canbus module error codes start from here.
+  CANBUS_ERROR = 2000;
+  CAN_CLIENT_ERROR_BASE = 2100;
+  CAN_CLIENT_ERROR_OPEN_DEVICE_FAILED = 2101;
+  CAN_CLIENT_ERROR_FRAME_NUM = 2102;
+  CAN_CLIENT_ERROR_SEND_FAILED = 2103;
+  CAN_CLIENT_ERROR_RECV_FAILED = 2104;
+
+  // Localization module error codes start from here.
+  LOCALIZATION_ERROR = 3000;
+  LOCALIZATION_ERROR_MSG = 3100;
+  LOCALIZATION_ERROR_LIDAR = 3200;
+  LOCALIZATION_ERROR_INTEG = 3300;
+  LOCALIZATION_ERROR_GNSS = 3400;
+
+  // Perception module error codes start from here.
+  PERCEPTION_ERROR = 4000;
+  PERCEPTION_ERROR_TF = 4001;
+  PERCEPTION_ERROR_PROCESS = 4002;
+  PERCEPTION_FATAL = 4003;
+  PERCEPTION_ERROR_NONE = 4004;
+  PERCEPTION_ERROR_UNKNOWN = 4005;
+
+  // Prediction module error codes start from here.
+  PREDICTION_ERROR = 5000;
+
+  // Planning module error codes start from here
+  PLANNING_ERROR = 6000;
+  PLANNING_ERROR_NOT_READY = 6001;
+
+  // HDMap module error codes start from here
+  HDMAP_DATA_ERROR = 7000;
+
+  // Routing module error codes
+  ROUTING_ERROR = 8000;  // deprecated
+  ROUTING_ERROR_REQUEST = 8001;  // deprecated
+  ROUTING_ERROR_RESPONSE = 8002;  // deprecated
+  ROUTING_ERROR_NOT_READY = 8003;  // deprecated
+  ROUTING_ALREADY_ARRIVED = 8004;
+  ROUTING_UNKNOWN = 8005;
+  ROUTING_TOPO_NOT_READY = 8006;
+  ROUTING_NAVIGATOR_NOT_READY = 8007;
+  ROUTING_GET_LANE_ERROR = 8008;
+  ROUTING_INVAILD_WAYPOINT = 8009;
+  ROUTING_INVAILD_BLACKLIST_LANE = 8010;
+  ROUTING_INVAILD_REQUEST_TYPE = 8011;
+  ROUTING_SEARCH_FAIL = 8012;
+  ROUTING_GENERATE_PASSAGE_REGIONS_FAIL = 8013;
+  ROUTING_INFEASIBLE_CONSECUTIVE_LANE_CHANGE = 8014;
+  ROUTING_RESULT_EMPTY = 8015;
+  ROUTING_MERGE_ROUTE_FAIL = 8016;
+  ROUTING_ADD_END_WAYPOINT_FAIL = 8017;
+  ROUTING_BLACKLIST_NODE_ERROR = 8018;
+
+  // Indicates an input has been exhausted.
+  END_OF_INPUT = 9000;
+
+  // HTTP request error codes.
+  HTTP_LOGIC_ERROR = 10000;
+  HTTP_RUNTIME_ERROR = 10001;
+
+  // Relative Map error codes.
+  RELATIVE_MAP_ERROR = 11000;  // general relative map error code
+  RELATIVE_MAP_NOT_READY = 11001;
+
+  // Driver error codes.
+  DRIVER_ERROR_GNSS = 12000;
+  DRIVER_ERROR_VELODYNE = 13000;
+  DRIVER_ERROR_HESAI = 13001;
+
+  // Simulation error codes
+  SIMULATION_ERROR = 14000;
+
+  // Cloud routing
+  CLOUD_ROUTING_FETCH_MAP_ERROR = 15000;
+  CLOUD_ROUTING_NAVIGATOR_ERROR = 15001;
+  CLOUD_ROUTING_INVALID_REQUEST = 15002;
+  CLOUD_ROUTING_SEARCH_ROUTE_ERROR = 15003;
+  CLOUD_ROUTING_PARKABLE_LANE_QUERY_ERROR = 15004;
+  CLOUD_ROUTING_UNKNOWN_ERROR = 15005;
+  CLOUD_ROUTING_LONG_DETOUR_ERROR = 15006;
+  CLOUD_ROUTING_TERMINAL_LOCATOR_ERROR = 15007;
+  CLOUD_ROUTING_PARKABLE_CURBS_LOCATOR_ERROR = 15008;
+
+  // ExMonitor error
+  EXMONITOR_ERROR = 16000;
+  EXMONITOR_KAFKA_PRODUCE_ERROR = 16001;
+
+  // sensor error codes start from here.
+  SENSOR_TIME_SYNC_ERROR = 17000;
+  SENSOR_DATA_LOST = 17001;
+  SENSOR_OVERHEAT = 17002;
+  SENSOR_POWER_ERROR = 17003;
+  SENSOR_COMMUNICATION_ERROR = 17004;
+
+}
+
+message StatusPb {
+  optional ErrorCode error_code = 1 [default = OK];
+  optional string msg = 2;
+}

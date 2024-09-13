@@ -1,0 +1,721 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1280</width>
+    <height>779</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>10</pointsize>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>PointView</string>
+  </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">#centralWidget{background-color: rgb(230, 230, 230);}</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QGridLayout" name="gridLayout_5">
+    <item row="0" column="0">
+     <layout class="QVBoxLayout" name="verticalLayout_2" stretch="9,0">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout" stretch="3">
+        <item>
+         <widget class="QSplitter" name="splitter">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="opaqueResize">
+           <bool>true</bool>
+          </property>
+          <widget class="PCLQVTKWidget" name="PCLViewer">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>2</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+          <widget class="QTabWidget" name="tabWidget">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <widget class="QWidget" name="tab">
+            <attribute name="title">
+             <string>Deivce</string>
+            </attribute>
+            <layout class="QGridLayout" name="gridLayout_2">
+             <property name="leftMargin">
+              <number>4</number>
+             </property>
+             <property name="topMargin">
+              <number>4</number>
+             </property>
+             <property name="rightMargin">
+              <number>4</number>
+             </property>
+             <property name="bottomMargin">
+              <number>4</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QTreeWidget" name="PointCloudTree">
+               <attribute name="headerDefaultSectionSize">
+                <number>130</number>
+               </attribute>
+               <column>
+                <property name="text">
+                 <string>Property</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>value</string>
+                </property>
+               </column>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <item>
+                <widget class="QPushButton" name="AddSourceButton">
+                 <property name="font">
+                  <font>
+                   <family>DejaVu Serif</family>
+                   <pointsize>12</pointsize>
+                   <weight>75</weight>
+                   <italic>true</italic>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">background-color: rgb(190,
+                                                                            230,
+                                                                            220);
+                                                                        </string>
+                 </property>
+                 <property name="text">
+                  <string>Add source</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="DeleteButton">
+                 <property name="font">
+                  <font>
+                   <family>DejaVu Serif</family>
+                   <pointsize>12</pointsize>
+                   <weight>75</weight>
+                   <italic>true</italic>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">background-color: rgb(190,
+                                                                            230,
+                                                                            220);
+                                                                        </string>
+                 </property>
+                 <property name="text">
+                  <string>Delete</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tab_2">
+            <attribute name="title">
+             <string>ToolSetting</string>
+            </attribute>
+            <layout class="QGridLayout" name="gridLayout_3">
+             <property name="leftMargin">
+              <number>5</number>
+             </property>
+             <property name="topMargin">
+              <number>5</number>
+             </property>
+             <property name="rightMargin">
+              <number>5</number>
+             </property>
+             <property name="bottomMargin">
+              <number>5</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QTreeWidget" name="ToolTree">
+               <column>
+                <property name="text">
+                 <string>property</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
+                 <string>value</string>
+                </property>
+               </column>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QWidget" name="PlayerWidget" native="true">
+        <layout class="QGridLayout" name="gridLayout_4">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <item row="0" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <property name="spacing">
+            <number>5</number>
+           </property>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <item>
+              <widget class="QLabel" name="label">
+               <property name="text">
+                <string>Device Id</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="DeviceComboBox">
+               <property name="maximumSize">
+                <size>
+                 <width>50</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QPushButton" name="RecordButton">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>40</width>
+               <height>40</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QPushButton{border-image:
+                                                url(:/pointview_icon/record-on-disable.png);}
+                                                QPushButton:hover{border-image: url(:/pointview_icon/record-on.png);}
+
+                                            </string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTextEdit" name="textEdit">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>50</width>
+               <height>30</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTextEdit" name="textEdit_2">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>50</width>
+               <height>30</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="PlayButton">
+             <property name="minimumSize">
+              <size>
+               <width>50</width>
+               <height>50</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QPushButton{border-image:
+                                                url(:/pointview_icon/play-start-disable.png);}
+                                                QPushButton:hover{border-image: url(:/pointview_icon/play-start.png);}
+                                            </string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QWidget" name="PlayBackWidget" native="true">
+             <layout class="QGridLayout" name="gridLayout">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <property name="horizontalSpacing">
+               <number>5</number>
+              </property>
+              <property name="verticalSpacing">
+               <number>0</number>
+              </property>
+              <item row="0" column="0">
+               <layout class="QHBoxLayout" name="horizontalLayout_4">
+                <item>
+                 <widget class="QPushButton" name="ResetButton">
+                  <property name="minimumSize">
+                   <size>
+                    <width>30</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="toolTip">
+                   <string>Reset to start</string>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QPushButton{border-image:
+                                                                    url(:/pointview_icon/to-begin-disable.png);}QPushButton:hover{border-image:
+                                                                    url(:/pointview_icon/to-begin.png);}
+                                                                </string>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="PrevButton">
+                  <property name="minimumSize">
+                   <size>
+                    <width>30</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QPushButton{border-image:
+                                                                    url(:/pointview_icon/speed-down-disable.png);}
+                                                                    QPushButton:hover{border-image:
+                                                                    url(:/pointview_icon/speed-down.png);}
+                                                                </string>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="NextButton">
+                  <property name="minimumSize">
+                   <size>
+                    <width>30</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QPushButton{border-image:
+                                                                    url(:/pointview_icon/speed-up-disable.png);}
+                                                                    QPushButton:hover{border-image:
+                                                                    url(:/pointview_icon/speed-up.png);}
+
+                                                                </string>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSlider" name="PlaySlider">
+                  <property name="sliderPosition">
+                   <number>0</number>
+                  </property>
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="invertedAppearance">
+                   <bool>false</bool>
+                  </property>
+                  <property name="invertedControls">
+                   <bool>false</bool>
+                  </property>
+                  <property name="tickPosition">
+                   <enum>QSlider::NoTicks</enum>
+                  </property>
+                  <property name="tickInterval">
+                   <number>1</number>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSpinBox" name="CurrentFrameSpinBox"/>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_2">
+                  <property name="maximumSize">
+                   <size>
+                    <width>5</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>/</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="TotalFrameLabel">
+                  <property name="text">
+                   <string>TextLabel</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="MenuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1280</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::NoFocus</enum>
+   </property>
+   <widget class="QMenu" name="FileBar">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="AddSourceAction"/>
+    <addaction name="OpenConfigAction"/>
+    <addaction name="SaveConfigAction"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="VersionAction"/>
+    <addaction name="HelpAction"/>
+   </widget>
+   <widget class="QMenu" name="menuTool">
+    <property name="title">
+     <string>Tool</string>
+    </property>
+    <addaction name="FrameAction"/>
+    <addaction name="GridAction"/>
+    <addaction name="SelectAction"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="FrontViewAction"/>
+    <addaction name="TopViewAction"/>
+    <addaction name="LeftViewAction"/>
+    <addaction name="RightViewAction"/>
+    <addaction name="ResetViewAction"/>
+    <addaction name="DemoModeAction"/>
+   </widget>
+   <addaction name="FileBar"/>
+   <addaction name="menuTool"/>
+   <addaction name="menuView"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QToolBar::separator { width: 35;}</string>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>35</width>
+     <height>35</height>
+    </size>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonIconOnly</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="AddSourceAction"/>
+   <addaction name="OpenConfigAction"/>
+   <addaction name="SaveConfigAction"/>
+   <addaction name="separator"/>
+   <addaction name="FrameAction"/>
+   <addaction name="GridAction"/>
+   <addaction name="SelectAction"/>
+   <addaction name="separator"/>
+   <addaction name="FrontViewAction"/>
+   <addaction name="TopViewAction"/>
+   <addaction name="LeftViewAction"/>
+   <addaction name="RightViewAction"/>
+   <addaction name="ResetViewAction"/>
+   <addaction name="DemoModeAction"/>
+  </widget>
+  <action name="AddSourceAction">
+   <property name="icon">
+    <iconset resource="../resource/icon.qrc">
+     <normaloff>:/pointview_icon/folder.png</normaloff>:/pointview_icon/folder.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add source</string>
+   </property>
+   <property name="toolTip">
+    <string>add source device</string>
+   </property>
+  </action>
+  <action name="VersionAction">
+   <property name="text">
+    <string>Version 1.4.7</string>
+   </property>
+   <property name="toolTip">
+    <string>Version 1.4.7</string>
+   </property>
+  </action>
+  <action name="FrameAction">
+   <property name="icon">
+    <iconset resource="../resource/icon.qrc">
+     <normaloff>:/pointview_icon/coordinates.png</normaloff>:/pointview_icon/coordinates.png</iconset>
+   </property>
+   <property name="text">
+    <string>Frame</string>
+   </property>
+  </action>
+  <action name="GridAction">
+   <property name="icon">
+    <iconset resource="../resource/icon.qrc">
+     <normaloff>:/pointview_icon/grid.png</normaloff>:/pointview_icon/grid.png</iconset>
+   </property>
+   <property name="text">
+    <string>Grid</string>
+   </property>
+   <property name="toolTip">
+    <string>Grid</string>
+   </property>
+  </action>
+  <action name="FrontViewAction">
+   <property name="icon">
+    <iconset resource="../resource/icon.qrc">
+     <normaloff>:/pointview_icon/FrontSight.png</normaloff>:/pointview_icon/FrontSight.png</iconset>
+   </property>
+   <property name="text">
+    <string>Front View</string>
+   </property>
+   <property name="toolTip">
+    <string>set front view</string>
+   </property>
+  </action>
+  <action name="TopViewAction">
+   <property name="icon">
+    <iconset resource="../resource/icon.qrc">
+     <normaloff>:/pointview_icon/TopSight.png</normaloff>:/pointview_icon/TopSight.png</iconset>
+   </property>
+   <property name="text">
+    <string>Top View</string>
+   </property>
+   <property name="toolTip">
+    <string>set top view</string>
+   </property>
+  </action>
+  <action name="ResetViewAction">
+   <property name="icon">
+    <iconset resource="../resource/icon.qrc">
+     <normaloff>:/pointview_icon/reset.png</normaloff>:/pointview_icon/reset.png</iconset>
+   </property>
+   <property name="text">
+    <string>ResetView</string>
+   </property>
+   <property name="toolTip">
+    <string>reset view to initial</string>
+   </property>
+  </action>
+  <action name="SelectAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/icon.qrc">
+     <normaloff>:/pointview_icon/Crop.png</normaloff>:/pointview_icon/Crop.png</iconset>
+   </property>
+   <property name="text">
+    <string>Select point</string>
+   </property>
+   <property name="toolTip">
+    <string>select area of point</string>
+   </property>
+  </action>
+  <action name="OpenConfigAction">
+   <property name="icon">
+    <iconset resource="../resource/icon.qrc">
+     <normaloff>:/pointview_icon/files.png</normaloff>:/pointview_icon/files.png</iconset>
+   </property>
+   <property name="text">
+    <string>Open config</string>
+   </property>
+   <property name="toolTip">
+    <string>Open config file</string>
+   </property>
+  </action>
+  <action name="SaveConfigAction">
+   <property name="icon">
+    <iconset resource="../resource/icon.qrc">
+     <normaloff>:/pointview_icon/export.png</normaloff>:/pointview_icon/export.png</iconset>
+   </property>
+   <property name="text">
+    <string>Save config</string>
+   </property>
+   <property name="toolTip">
+    <string>save config</string>
+   </property>
+  </action>
+  <action name="LeftViewAction">
+   <property name="icon">
+    <iconset resource="../resource/icon.qrc">
+     <normaloff>:/pointview_icon/LeftSight.png</normaloff>:/pointview_icon/LeftSight.png</iconset>
+   </property>
+   <property name="text">
+    <string>Left View</string>
+   </property>
+   <property name="toolTip">
+    <string>set left view</string>
+   </property>
+  </action>
+  <action name="RightViewAction">
+   <property name="icon">
+    <iconset resource="../resource/icon.qrc">
+     <normaloff>:/pointview_icon/RightSight.png</normaloff>:/pointview_icon/RightSight.png</iconset>
+   </property>
+   <property name="text">
+    <string>Right View</string>
+   </property>
+   <property name="toolTip">
+    <string>set right view</string>
+   </property>
+  </action>
+  <action name="SetRecordFileAction">
+   <property name="icon">
+    <iconset resource="../resource/icon.qrc">
+     <normaloff>:/pointview_icon/folder.png</normaloff>:/pointview_icon/folder.png</iconset>
+   </property>
+   <property name="text">
+    <string>Set record path</string>
+   </property>
+  </action>
+  <action name="HelpAction">
+   <property name="text">
+    <string>Help</string>
+   </property>
+   <property name="toolTip">
+    <string>Help</string>
+   </property>
+  </action>
+  <action name="DemoModeAction">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource/icon.qrc">
+     <normaloff>:/pointview_icon/live.png</normaloff>:/pointview_icon/live.png</iconset>
+   </property>
+   <property name="text">
+    <string>Demo Mode</string>
+   </property>
+   <property name="toolTip">
+    <string>Demo Mode</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>PCLQVTKWidget</class>
+   <extends>QOpenGLWidget</extends>
+   <header>qvtk_compatibility.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="../resource/icon.qrc"/>
+  <include location="../resource/icon.qrc"/>
+  <include location="../resource/icon.qrc"/>
+ </resources>
+ <connections/>
+</ui>

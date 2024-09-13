@@ -1,0 +1,56 @@
+syntax = "proto2";
+package autox.drivers;
+
+import "header.proto";
+
+option cc_enable_arenas = true;
+
+message PointXYZIT {
+  optional float x = 1 [default = nan];
+  optional float y = 2 [default = nan];
+  optional float z = 3 [default = nan];
+  optional uint32 intensity = 4 [default = 0];
+  optional uint64 timestamp = 5 [default = 0];
+  optional uint32 laser_id = 8 [default = 0];
+  optional uint32 confidence = 9 [default = 0];
+}
+
+message PointCloud {
+  optional autox.common.Header header = 1;
+  optional string frame_id = 2;
+  optional bool is_dense = 3;
+  repeated PointXYZIT point = 4;
+  optional double measurement_time = 5;
+  optional uint32 width = 6;
+  optional uint32 height = 7;
+  optional bool is_dual_return = 8 [default = true];
+}
+
+message PointCloudPack {
+  optional autox.common.Header header = 101;
+  optional string frame_id = 102;
+  optional bool is_dense = 103;
+  optional double measurement_time = 104;
+  optional uint32 width = 105;
+  optional uint32 height = 106;
+  optional bool is_dual_return = 107 [default = true];
+  optional bool is_motor_clockwise = 108 [default = true];
+  // Number of scans per udp
+  optional uint32 scans_per_udp = 109;
+
+  repeated float x = 1 [packed = true];
+  repeated float y = 2 [packed = true];
+  repeated float z = 3 [packed = true];
+  repeated fixed32 intensity = 4 [packed = true];
+  repeated fixed64 timestamp = 5 [packed = true];
+  repeated fixed32 laser_id = 6 [packed = true];
+  repeated fixed32 confidence = 7 [packed = true];
+  repeated float doppler = 8 [packed = true];
+  repeated uint32 return_type = 9 [deprecated = true];
+
+  repeated int32 scan_offset = 301 [packed = true];
+  repeated fixed64 scan_timestamp = 302 [packed = true];
+  repeated float scan_azimuth = 303 [packed = true];
+  repeated uint32 udp_sequence = 304 [packed = true, deprecated = true];
+  repeated fixed64 scan_sequence = 305 [packed = true];
+}

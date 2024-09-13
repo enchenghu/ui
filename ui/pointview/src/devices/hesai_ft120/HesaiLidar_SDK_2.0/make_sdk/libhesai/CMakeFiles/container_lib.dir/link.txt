@@ -1,0 +1,2 @@
+/usr/bin/ar qc libcontainer_lib.a  CMakeFiles/container_lib.dir/Container/src/ring_2d_shared.cc.o CMakeFiles/container_lib.dir/Container/src/ring_2dex.cc.o
+/usr/bin/ranlib libcontainer_lib.a
