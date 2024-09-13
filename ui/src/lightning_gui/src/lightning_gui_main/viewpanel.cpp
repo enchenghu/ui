@@ -4808,7 +4808,7 @@ int viewpanel::motorConnect()
 		return -2; /* Completely fail only if first radar didn't connect */
 	}
 	ifConnectedMotorTcp  = true;
-	//fcntl(ctrl_sock, F_SETFL, O_NONBLOCK); /* Set the socket to non blocking mode */
+	fcntl(ctrl_sock, F_SETFL, O_NONBLOCK); /* Set the socket to non blocking mode */
 	return 0;
 }
 
@@ -4902,7 +4902,7 @@ int viewpanel::lidarConnect()
 		ROS_INFO("Failed to connect to lidar_ip %s", lidar_ip.c_str());
 		return -2; /* Completely fail only if first radar didn't connect */
 	}
-	//fcntl(ctrl_sock, F_SETFL, O_NONBLOCK); /* Set the socket to non blocking mode */
+	fcntl(ctrl_sock, F_SETFL, O_NONBLOCK); /* Set the socket to non blocking mode */
 	return 0;
 }
 
