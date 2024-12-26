@@ -107,7 +107,7 @@ void RangeImage::on_saveButtonClicked() {
                                      QDir::homePath() + "/Untitled.png",
                                      "PNG Files(*.png);;All Files(*.*)");
   if (fileName.isNull()) {
-    Debug("Do not select a target file.");
+    LOG(INFO) << "Do not select a target file.";
     return;
   }
   QMessageBox msgBox;
@@ -173,10 +173,10 @@ void RangeImage::on_RecordButton_clicked() {
         this, "Record range image to directory", QDir::homePath() + "",
         QFileDialog::ShowDirsOnly | QFileDialog::DontUseNativeDialog);
     if (record_dir_.isNull()) {
-      Debug("Do not select a target directory.");
+      LOG(INFO) << "Do not select a target directory.";
       return;
     }
-    Debug("directory name: " + record_dir_.toStdString());
+    LOG(INFO) << "directory name: " + record_dir_.toStdString();
     record_id_ = 0;
     is_record_ = true;
   }
@@ -200,8 +200,8 @@ void RangeImage::on_enlargeButtonClicked() {
   float old_scale = scale_size_;
   scale_size_ += 0.2;
   if (scale_size_ > max_scale_) scale_size_ = max_scale_;
-  Debug("old size: " + std::to_string(old_scale) +
-        ", new: " + std::to_string(scale_size_));
+  LOG(INFO) << "old size: " + std::to_string(old_scale) +
+                   ", new: " + std::to_string(scale_size_);
   if (scale_size_ != old_scale) {
     device_context_->refreshPointCloud();
     ShowImage(current_image_);
@@ -212,8 +212,8 @@ void RangeImage::on_shrinkButtonClicked() {
   float old_scale = scale_size_;
   scale_size_ -= 0.2;
   if (scale_size_ < min_scale_) scale_size_ = min_scale_;
-  Debug("old size: " + std::to_string(old_scale) +
-        ", new: " + std::to_string(scale_size_));
+  LOG(INFO) << "old size: " + std::to_string(old_scale) +
+                   ", new: " + std::to_string(scale_size_);
   if (scale_size_ != old_scale) {
     device_context_->refreshPointCloud();
     ShowImage(current_image_);
@@ -222,11 +222,11 @@ void RangeImage::on_shrinkButtonClicked() {
 
 bool RangeImage::eventFilter(QObject* object, QEvent* event) {
   if (object == imageLabel_ && event->type() == QEvent::MouseButtonPress) {
-    Debug("event filter");
     QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
     QPoint pos = mouseEvent->pos() / real_scale_;
-    if (pos.x() < 10000 && pos.y() < 256) {
+    if (pos.x() < width_ && pos.y() < height_) {
       set_position(pos.x(), pos.y());
+      LOG(INFO) << "Pick pixel: " << pos.x() << ", " << pos.y();
       emit PickRangeImagePoint(pos.x(), pos.y());
     }
   }
@@ -245,9 +245,9 @@ void RangeImage::UpdateImage(const QImage& image) {
     QString fileName = record_dir_ + "/" + QString::number(record_id_) + ".png";
     SaveImage(fileName);
     if (SaveImage(fileName)) {
-      Debug("successfully record id: " + std::to_string(record_id_));
+      LOG(INFO) << "successfully record id: " + std::to_string(record_id_);
     } else {
-      Debug("failedly record id: " + std::to_string(record_id_));
+      LOG(INFO) << "failedly record id: " + std::to_string(record_id_);
     }
     record_id_++;
   }
@@ -255,7 +255,7 @@ void RangeImage::UpdateImage(const QImage& image) {
 }
 
 void RangeImage::set_position(int x, int y) {
-  Debug("new position: " + std::to_string(x) + ", " + std::to_string(y));
+  LOG(INFO) << "new position: " + std::to_string(x) + ", " + std::to_string(y);
   QImage img = current_image_;
   QPoint pos(x, y);
   if (select_status_) {
@@ -328,18 +328,18 @@ bool RangeImage::SaveImage(QString file_name) {
                     ? low_bound - bound_width_
                     : half_bound_width_;
     painter.drawLine(QPoint(low_bound, 0), QPoint(low_bound, 255));
-    high_bound = high_bound + bound_width_ < 10000 - half_bound_width_
+    high_bound = high_bound + bound_width_ < width_ - half_bound_width_
                      ? high_bound + bound_width_
-                     : 10000 - half_bound_width_;
+                     : width_ - half_bound_width_;
     painter.drawLine(QPoint(high_bound, 0), QPoint(high_bound, 255));
     painter.end();
     return img.save(file_name, "PNG");
   }
   bool result = current_image_.save(file_name, "PNG");
   if (result) {
-    Debug("successfully save to: " + file_name.toStdString());
+    LOG(INFO) << "successfully save to: " + file_name.toStdString();
   } else {
-    Debug("failed record to: " + file_name.toStdString());
+    LOG(INFO) << "failed record to: " + file_name.toStdString();
   }
   return result;
 }

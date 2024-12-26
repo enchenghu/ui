@@ -97,7 +97,7 @@ typedef struct {
   uint8_t flag;
   uint16_t motor_speed;
   uint64_t timestamp_s;
-  uint32_t timestamp_us;
+  uint32_t timestamp_ns;
   uint32_t udp_sequence;
   uint8_t reserved[10];
   // data
@@ -175,6 +175,22 @@ static const float g_azimuth_offset[] = {
     3.2, -3.2, 2.2857, -2.2858, 1.3714, -1.3715, 0.4571, -0.4572,
     3.2, -3.2, 2.2857, -2.2858, 1.3714, -1.3715, 0.4571, -0.4572};
 
+static const uint8_t kDistanceGroup[] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2,
+    3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5,
+    4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4,
+    5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7,
+    6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6,
+    7, 7, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7,
+    4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 2, 2, 2, 2, 2, 2, 2, 2,
+    3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
+    2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1};
+
+static const uint64_t kTimeOffset[] = {0,    400,  800,  1600,
+                                       2400, 3900, 5400, 7600};
+
 inline double normalize_angle_deg(double a) {
   while (a > 360) {
     a -= 360;
@@ -188,7 +204,7 @@ inline double normalize_angle_deg(double a) {
 XLidarDriver::XLidarDriver() {
   // time offset
   for (size_t i = 0; i < kLaserNum; ++i) {
-    laser_time_offset_[i] = 10.0f + 2.31f + 2.06f * i;
+    laser_time_offset_[i] = kTimeOffset[kDistanceGroup[i]];
   }
   // init sin/cos table
   for (size_t i = 0; i < kRotationMaxUnits; ++i) {
@@ -257,8 +273,8 @@ bool XLidarDriver::SetMultiThreadMode(int thread_mum) {
   // for multiple threads
   parser_thread_number_ = thread_mum;
   use_multiple_threads_ = true;
-  Debug("[driver] parser thread number:" +
-        std::to_string(parser_thread_number_));
+  LOG(INFO) << "[driver] parser thread number:" +
+                   std::to_string(parser_thread_number_);
   // create a assembler thread
   assembler_thread_ =
       std::make_unique<std::thread>([this]() { AssemblerLoop(); });
@@ -314,7 +330,7 @@ void XLidarDriver::ClearPointcloud(std::shared_ptr<PointCloud> point_cloud) {
 bool XLidarDriver::ParseLidarPacket(const uint8_t* data, size_t len) {
   // check valid
   if (len > 1500 || len < 10) {
-    Debug("Packet len invalid.");
+    LOG(INFO) << "Packet len invalid.";
     return false;
   }
   if (use_multiple_threads_) {
@@ -375,7 +391,7 @@ bool XLidarDriver::ParsePacket(const uint8_t* data, size_t len,
     std::stringstream ss;
     ss << "Packet Header Error: " << std::hex << (0xFF & header->sop[0])
        << (0xFF & header->sop[1]) << std::dec;
-    Debug(ss.str());
+    LOG(INFO) << ss.str();
     return false;
   }
   if (header->major_version == 0x04 && header->minor_version == 0x01) {
@@ -383,9 +399,9 @@ bool XLidarDriver::ParsePacket(const uint8_t* data, size_t len,
   } else if (header->major_version == 0x04 && header->minor_version == 0x02) {
     return ParsePacket4_2(data, len, point_cloud);
   } else {
-    Debug("Invalid packet, packet version: " +
-          std::to_string(header->major_version) + "." +
-          std::to_string(header->minor_version) + ". new firmware?");
+    LOG(INFO) << "Invalid packet, packet version: " +
+                     std::to_string(header->major_version) + "." +
+                     std::to_string(header->minor_version) + ". new firmware?";
   }
   return false;
 }
@@ -393,8 +409,9 @@ bool XLidarDriver::ParsePacket(const uint8_t* data, size_t len,
 bool XLidarDriver::ParsePacket4_1(const uint8_t* data, size_t len,
                                   std::shared_ptr<PointCloud> point_cloud) {
   if (len != kLidarPacketSize4_1) {
-    Debug("Invalid packet, packet size need be: " +
-          std::to_string(kLidarPacketSize4_1) + ", but " + std::to_string(len));
+    LOG(INFO) << "Invalid packet, packet size need be: " +
+                     std::to_string(kLidarPacketSize4_1) + ", but " +
+                     std::to_string(len);
     return false;
   }
   auto udp_pkt = reinterpret_cast<const LidarPacket4_1*>(data);
@@ -414,15 +431,15 @@ bool XLidarDriver::ParsePacket4_1(const uint8_t* data, size_t len,
   auto timestamp_s = static_cast<double>(timegm(&tTm));
   // TODO(kewei) consider endianness, e.g. HsByteArrToUint(udp_pkt->timestamp)
   // The sub second part of the timestamp
-  const unsigned int timestamp_us = udp_pkt->timestamp;
+  const unsigned int timestamp_ns = udp_pkt->timestamp;
   uint64_t pkt_timestamp_ns =
-      static_cast<uint64_t>(timestamp_s * 1e9) + timestamp_us * 1e3;
+      static_cast<uint64_t>(timestamp_s * 1e9) + timestamp_ns;
   const double distance_unit = udp_pkt->chDisUnit / 1000.0;
   unsigned int laser_num = udp_pkt->chLaserNumber;
   assert(udp_pkt->chLaserNumber == 128 && udp_pkt->chBlockNumber == 2);
   unsigned int block_type = udp_pkt->chBlockType;
   if (block_type > kSectionNum - 1) {
-    Debug("Error section number: " + std::to_string(block_type));
+    LOG(INFO) << "Error section number: " + std::to_string(block_type);
     return false;
   }
   // for each block
@@ -509,17 +526,18 @@ bool XLidarDriver::ParsePacket4_2(const uint8_t* data, size_t len,
   auto udp_pkt = reinterpret_cast<const LidarPacket4_2*>(data);
   // check
   if (udp_pkt->header.data_size + 8 != len) {
-    Debug("Invalid packet, packet size need be data size + 8, packet size:" +
-          std::to_string(len) +
-          ", data size:" + std::to_string(udp_pkt->header.data_size));
+    LOG(INFO)
+        << "Invalid packet, packet size need be data size + 8, packet size:" +
+               std::to_string(len) +
+               ", data size:" + std::to_string(udp_pkt->header.data_size);
     return false;
   }
   if (data[len - 2] != 0x0d || data[len - 1] != 0x0a) {
-    Debug("Invalid packet, tail need be 0x0d0a.");
+    LOG(INFO) << "Invalid packet, tail need be 0x0d0a.";
     return false;
   }
   uint64_t pkt_timestamp_ns =
-      udp_pkt->timestamp_s * 1e9 + udp_pkt->timestamp_us * 1e3;
+      udp_pkt->timestamp_s * 1e9 + udp_pkt->timestamp_ns;
   float distance_unit = udp_pkt->distance_unit / 1000.0;
   float encoder = udp_pkt->encoder * azimuth_unit_;
   size_t laser_num = udp_pkt->laser_num;
@@ -527,7 +545,7 @@ bool XLidarDriver::ParsePacket4_2(const uint8_t* data, size_t len,
   size_t laser_data_size = udp_pkt->header.data_size - 40;
   int section_type = (int)udp_pkt->section_type;
   if (section_type > kSectionNum - 1) {
-    Debug("Error section number: " + std::to_string(section_type));
+    LOG(INFO) << "Error section number: " + std::to_string(section_type);
     return false;
   }
   // parse point for each laser unit
@@ -540,8 +558,8 @@ bool XLidarDriver::ParsePacket4_2(const uint8_t* data, size_t len,
     data_offset = data_offset + 1 + laser_unit->return_num * 4;
     // check offset
     if (data_offset > laser_data_size) {
-      Debug("Invalid packet, laser unit data overflow, laser id: " +
-            std::to_string(laser_id));
+      LOG(INFO) << "Invalid packet, laser unit data overflow, laser id: " +
+                       std::to_string(laser_id);
       return false;
     }
     for (size_t j = 0; j < laser_unit->return_num; j++) {

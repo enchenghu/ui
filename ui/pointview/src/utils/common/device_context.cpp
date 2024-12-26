@@ -9,13 +9,14 @@ namespace pointview {
 
 DeviceContext::DeviceContext(QObject* parent,
                              std::shared_ptr<DisplayContext> display_context,
-                             int device_id, const std::string& device_name) {
+                             DeviceBaseParameter& parameter) {
   parent_ = parent;
-  device_id_ = device_id;
+  device_id_ = parameter.device_id;
   display_context_ = display_context;
-  device_name_ = device_name;
+  device_name_ = parameter.device_name;
+  type_name_ = parameter.type_name;
   device_property_tree_ = display_context->createDevicePropertyTree(
-      QString::fromStdString(device_name));
+      QString::fromStdString(device_name_));
   // add device_id in device property_tree
   device_id_label_ = std::make_shared<QLabel>();
   device_id_label_->setText(QString::number(device_id_));
@@ -168,9 +169,7 @@ void DeviceContext::updatePlayerType(bool is_playback) {
   player_state_.is_playback = is_playback;
 }
 
-void DeviceContext::updateRecordWait(bool n) {
-  player_state_.record_wait = n;
-}
+void DeviceContext::updateRecordWait(bool n) { player_state_.record_wait = n; }
 
 void DeviceContext::resetPlaybackJump() {
   player_state_.need_playback_jumb = false;

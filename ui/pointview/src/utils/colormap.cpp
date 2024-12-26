@@ -7,7 +7,11 @@
 #include <assert.h>
 
 #include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
+#include <glog/logging.h>
 namespace jet {
 static const std::uint8_t r[] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -370,20 +374,18 @@ void Colormap::setRangeMax(double max) {
 }
 
 void Colormap::get(double v, uint8_t& r, uint8_t& g, uint8_t& b) {
-  //[range_min_, range_max_] -> [0, 255]
   v = (v - range_min_) / (range_max_ - range_min_) * 255;
   auto idx = static_cast<int>(v);
-  idx = std::clamp(idx, 0, 255);
+  idx = getGammaV(static_cast<uint8_t>(std::clamp(idx, 0, 255)));
   r = r_[idx];
   g = g_[idx];
   b = b_[idx];
 }
 
 uint32_t Colormap::get(double v) {
-  //[range_min_, range_max_] -> rgba
   v = (v - range_min_) / (range_max_ - range_min_) * 255;
   auto idx = static_cast<int>(v);
-  idx = std::clamp(idx, 0, 255);
+  idx = getGammaV(static_cast<uint8_t>(std::clamp(idx, 0, 255)));
   return rgba_[idx];
 }
 
@@ -394,6 +396,34 @@ void Colormap::initColormap(const std::uint8_t* r, const std::uint8_t* g,
     g_[i] = g[i];
     b_[i] = b[i];
   }
+}
+
+bool Colormap::readGammaFile(std::string filename) {
+  gamma_v_.clear();
+  std::ifstream csv_data(filename, std::ios::in);
+  std::string line;
+  if (!csv_data.is_open()) {
+    LOG(ERROR) << "Error! open failed: " << filename << std::endl;
+    return false;
+  }
+  gamma_v_.push_back(0);
+  while (std::getline(csv_data, line)) {
+    uint8_t num = static_cast<uint8_t>(std::atoi(line.c_str()));
+    gamma_v_.push_back(num);
+  }
+  if (gamma_v_.size() != 256) {
+    LOG(ERROR) << "Error! gamma_v_ size is " << gamma_v_.size() << std::endl;
+    return false;
+  }
+  csv_data.close();
+  return true;
+}
+
+uint8_t Colormap::getGammaV(uint8_t idx) {
+  if (gamma_v_.size() > idx && use_gamma_)
+    return gamma_v_.at(idx);
+  else
+    return idx;
 }
 
 }  // namespace pointview

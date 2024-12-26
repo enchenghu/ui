@@ -4,11 +4,11 @@ package autox.xrt.safety.proto;
 
 enum SafetyLevel {
   MRC_UNKNOWN = 0;  // sentinel value, prevents compile error
-  S1 = 1 [deprecated=true];
-  S2 = 2 [deprecated=true];
-  S3 = 3 [deprecated=true];
-  S4 = 4 [deprecated=true];
-  S5 = 5 [deprecated=true];
+  S1 = 1 [deprecated = true];
+  S2 = 2 [deprecated = true];
+  S3 = 3 [deprecated = true];
+  S4 = 4 [deprecated = true];
+  S5 = 5 [deprecated = true];
   MRC1 = 6;
   MRC2 = 7;
   MRC3 = 8;
@@ -18,4 +18,14 @@ enum SafetyLevel {
 
 message ModuleLevel {
   optional SafetyLevel stored_level = 1 [default = MRC2];
+}
+
+message MRCItem {
+  optional string name = 1;
+  optional SafetyLevel level = 2 [default = MRC2];
+}
+
+message MRCInfo {
+  optional string nspace = 1 [default = "module_manager"];
+  repeated MRCItem nodes = 2;
 }

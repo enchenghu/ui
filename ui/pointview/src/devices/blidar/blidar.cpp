@@ -7,18 +7,14 @@
 #include <QMessageBox>
 #include <iostream>
 
-#include <pcl/io/pcd_io.h>
-
-#include "driver/driver.h"
+#include "driver/blidar_driver.h"
 
 using namespace std::chrono_literals;
 
-namespace autox {
-namespace drivers {
-namespace blidar {
+namespace autox::drivers::blidar {
 BLidar::BLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
-               int device_id, const std::string& device_name)
-    : LidarBase<RawPointCloud>(context, device_id, device_name),
+               autox::pointview::DeviceBaseParameter& parameter)
+    : LidarBase<RawPointCloud>(context, parameter),
       viewer_(context->getViewerPtr()) {
   // point cloud manipulator
   channel_settings_.push_back({"intensity", "jet", 0, 255});
@@ -33,9 +29,9 @@ BLidar::BLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
   // add point cloud to pcl viewer
   viewer_->addPointCloud(current_frame_.pcl_pointcloud,
                          std::to_string(device_context_->getDeviceId()));
-  // point cloud pose
-  pose_setting_ =
-      std::make_shared<autox::pointview::PoseSetting>(device_context_);
+  // adc plot
+  adc_plot_ =
+      std::make_shared<autox::pointview::BLidarAdcPlot>(device_context_);
   // player setting
   player_setting_->setSyncPlayerCb([this]() { emit SyncPlayer(); });
   player_setting_->setResetDriverCb([this](bool /*is_playback*/) {
@@ -59,8 +55,9 @@ BLidar::BLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
       [this](size_t idx, std::vector<double>& data) {
         return getPointInfo(idx, data);
       });
-  video_player_ =
-      std::make_shared<autox::pointview::VideoPlayer>(device_context_);
+  // range image
+  range_image_ = std::make_shared<autox::pointview::RangeImage>(
+      device_context_, range_image_width_, range_image_height_);
   // lidar correction
   lidar_intrinsics_ =
       std::make_shared<autox::pointview::LidarIntrinsics>(device_context_, 4);
@@ -100,6 +97,26 @@ BLidar::BLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
   initPointFilterSetting(point_filter_setting);
   point_filter_ = std::make_shared<autox::pointview::PointFilter>(
       device_context_, point_filter_setting);
+  // debug
+  auto debug_sub =
+      device_context_->getPropertyTree()->createPropertySubTree("debug");
+  checkbox_range_image_correction_ = std::make_shared<QCheckBox>();
+  debug_sub->addProperty("Range Image correction",
+                         checkbox_range_image_correction_);
+  // signal and slots
+  connect(checkbox_range_image_correction_.get(), &QCheckBox::stateChanged,
+          [this](int state) {
+            enable_range_image_correction_ = state > 0;
+            device_context_->refreshPointCloud();
+          });
+  connect(range_image_.get(), SIGNAL(PickRangeImagePoint(int, int)),
+          adc_plot_.get(), SLOT(set_position(int, int)));
+  connect(adc_plot_.get(), SIGNAL(PostionValueChanged(int, int)),
+          range_image_.get(), SLOT(set_position(int, int)));
+  connect(adc_plot_.get(), SIGNAL(SelectMultiPoints(bool)), range_image_.get(),
+          SLOT(set_select_status(bool)));
+  connect(adc_plot_.get(), SIGNAL(SaveImage(QString)), range_image_.get(),
+          SLOT(SaveImage(QString)));
 }
 
 BLidar::~BLidar() {
@@ -119,7 +136,7 @@ void BLidar::initDriver() {
     driver_->setCurPacketOffset(offset);
   };
 
-  auto reset_cb = [this](void) { driver_->resetDriver(); };
+  auto reset_cb = [this]() { driver_->resetDriver(); };
 
   auto point_cloud_cb = [this](std::shared_ptr<RawPointCloud> point_cloud,
                                long long frame_index) {
@@ -139,8 +156,8 @@ void BLidar::initDriver() {
           playback_buffer_->addFrame(find_index - 1, new_point_cloud->timestamp,
                                      new_point_cloud);
         } else {
-          std::cout << "can't find frame in map,  offset_in_pcap is "
-                    << new_point_cloud->offset_in_pcap << std::endl;
+          LOG(INFO) << "can't find frame in map,  offset_in_pcap is "
+                    << new_point_cloud->offset_in_pcap;
         }
       } else {
         write_end = false;
@@ -151,7 +168,7 @@ void BLidar::initDriver() {
                                       new_point_cloud->begin_index_in_pacp - 1);
       }
     } else {
-      std::cout << "Add point cloud to buffer" << std::endl;
+      LOG(INFO) << "Add point cloud to buffer";
       std::lock_guard<std::mutex> lock(raw_pointcloud_buffer_mutex_);
       // for live streaming
       raw_pointcloud_buffer_.push_back(point_cloud);
@@ -162,13 +179,12 @@ void BLidar::initDriver() {
       }
       if (raw_pointcloud_buffer_.size() > 2) {
         raw_pointcloud_buffer_.pop_front();
-        std::cout << "[warning] rendering too long, drop raw point cloud!"
-                  << std::endl;
+        LOG(INFO) << "[warning] rendering too long, drop raw point cloud!";
       }
     }
   };
   // driver
-  driver_ = std::make_shared<autox::drivers::blidar::Driver>();
+  driver_ = std::make_shared<autox::drivers::blidar::BLidarDriver>();
   driver_->setPointCloudCallback(point_cloud_cb);
   // for live streaming
   udp_input_->setMaxRecordPacket(3600 * 10 * 60 * 10);  // 10min
@@ -185,8 +201,7 @@ void BLidar::initDriver() {
           raw_pointcloud_buffer_.push_back(data);
           device_context_->updateCurrentFrame(idx);
         } else {
-          std::cout << "[warning] rendering too long, drop raw point cloud!"
-                    << std::endl;
+          LOG(INFO) << "[warning] rendering too long, drop raw point cloud!";
         }
       });
 }
@@ -200,34 +215,51 @@ void BLidar::convertToPclPointCloud(Frame& frame) {
     std::uint8_t r, g, b;
     PointT p2;
     auto& p = raw_pointcloud->points[i];
-    if (channel_idx == 0) {
-      v = 100;
-    } else if (channel_idx == 1) {
-      // x
-      v = p.x;
-    } else if (channel_idx == 2) {
-      // y
-      v = p.y;
-    } else if (channel_idx == 3) {
-      // z
-      v = p.z;
-    } else if (channel_idx == 4) {
-      // dis
-      v = p.distance;
-    } else if (channel_idx == 5) {
-      // intensity
-      v = p.intensity;
-    } else if (channel_idx == 6) {
-      // laser id
-      v = 1 + p.laser_id;
-    } else if (channel_idx == 7) {
-      // frame id
-      v = 1 + p.frame_id;
-    } else if (channel_idx == 8) {
-      // return id
-      v = 1 + p.return_id;
-    } else if (channel_idx == 9) {
-      v = p.elongation;
+    switch (channel_idx) {
+      case 0: {
+        v = 100;
+        break;
+      }
+      case 1: {
+        v = p.x;
+        break;
+      }
+      case 2: {
+        v = p.y;
+        break;
+      }
+      case 3: {
+        v = p.z;
+        break;
+      }
+      case 4: {
+        v = p.distance;
+        break;
+      }
+      case 5: {
+        v = p.intensity;
+        break;
+      }
+      case 6: {
+        v = 1 + p.laser_id;
+        break;
+      }
+      case 7: {
+        // frame id
+        v = 1 + p.frame_id;
+        break;
+      }
+      case 8: {
+        v = p.return_id + 1;
+        break;
+      }
+      case 9: {
+        v = p.elongation;
+        break;
+      }
+      default: {
+        break;
+      }
     }
     // v -> [0, 255]
     manipulator_->transformColor(v, r, g, b);
@@ -242,6 +274,7 @@ void BLidar::convertToPclPointCloud(Frame& frame) {
 }
 
 bool BLidar::updateUI() {
+  adc_plot_->Update();
   {
     std::lock_guard<std::mutex> lock(raw_pointcloud_buffer_mutex_);
     if (!raw_pointcloud_buffer_.empty()) {
@@ -309,16 +342,19 @@ bool BLidar::updateUI() {
   info_->update(current_frame_.timestamp, current_frame_.n_valid_points,
                 current_frame_.max_return_num, current_frame_.n_udp_packets, 5,
                 current_frame_.version);
+  // update range image
+  convertToRangeImage(current_frame_);
+  range_image_->Update(current_frame_.range_image);
   // update flag
   device_context_->resetRefreshState();
   auto end = std::chrono::steady_clock::now();
   // debug
   auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
                 .count();
-  std::cout << "udp packet number: " << current_frame_.n_udp_packets
+  LOG(INFO) << "udp packet number: " << current_frame_.n_udp_packets
             << ", total point number: " << current_frame_.n_points
             << ", valid point number: " << current_frame_.n_valid_points
-            << ", update time: " << dt << " ms" << std::endl;
+            << ", update time: " << dt << " ms";
   return true;
 }
 
@@ -359,16 +395,18 @@ bool BLidar::initFromConfig(std::shared_ptr<autox::pointview::Config>
   if (!config) {
     return false;
   }
-  pose_setting_->initFromConfig(config);
   point_filter_->initFromConfig(config);
   lidar_intrinsics_->initFromConfig(config);
+  range_image_->InitFromConfig(config);
+  adc_plot_->InitFromConfig(config);
   return LidarBase::initFromConfig(config);
 }
 
 bool BLidar::storeToConfig(std::shared_ptr<autox::pointview::Config> config) {
-  pose_setting_->storeToConfig(config);
   point_filter_->storeToConfig(config);
   lidar_intrinsics_->storeToConfig(config);
+  range_image_->StoreToConfig(config);
+  adc_plot_->StoreToConfig(config);
   return LidarBase::storeToConfig(config);
 }
 
@@ -470,6 +508,49 @@ bool BLidar::updatePlayerState(autox::pointview::PlayerCmd cmd) {
   }
   return DeviceBase::updatePlayerState(cmd);
 }
-}  // namespace blidar
-}  // namespace drivers
-}  // namespace autox
+
+void BLidar::convertToRangeImage(Frame& frame) {
+  auto& pcl_pointcloud = frame.pcl_pointcloud;
+  auto& raw_pointcloud = frame.raw_pointcloud;
+  auto& image = frame.range_image;
+  size_t num_points = raw_pointcloud->points.size();
+  // init range image
+  image = QImage(range_image_width_, range_image_height_, QImage::Format_RGB32);
+  image.fill(0);
+  std::vector<QRgb*> image_row_ptr;
+  image_row_ptr.resize(image.height());
+  for (int i = 0; i < image.height(); i++) {
+    image_row_ptr[i] = reinterpret_cast<QRgb*>(image.scanLine(i));
+  }
+  for (size_t i = 0; i < num_points; i++) {
+    auto& p = raw_pointcloud->points[i];
+    auto& p2 = pcl_pointcloud->points[i];
+    // range image
+    if (p2.a != 0) {
+      int range_image_x;
+      if (enable_range_image_correction_) {
+        range_image_x =
+            (int)(atan2(p.x, p.y) * range_image_width_ / (2 * M_PI));
+        if (range_image_x < 0) {
+          range_image_x += range_image_width_;
+        }
+        range_image_x = std::clamp(range_image_x, 0, range_image_width_ - 1);
+      } else {
+        range_image_x = p.scan_column;
+      }
+      int range_image_y = p.scan_row;
+      if (range_image_x > range_image_width_ - 1 || range_image_x < 0) {
+        LOG(INFO) << "x out of range: " << range_image_x;
+        continue;
+      }
+      if (range_image_y > range_image_height_ - 1 || range_image_x < 0) {
+        LOG(INFO) << "y out of range: " << range_image_y;
+        continue;
+      }
+      auto range_image_color = qRgb(uint(p2.r), uint(p2.g), uint(p2.b));
+      QRgb* row = image_row_ptr[range_image_y];
+      row[range_image_x] = range_image_color;
+    }
+  }
+}
+}  // namespace autox::drivers::blidar

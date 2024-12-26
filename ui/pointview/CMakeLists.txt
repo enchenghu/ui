@@ -31,6 +31,8 @@ find_package(yaml-cpp REQUIRED)
 find_package(Boost REQUIRED)
 find_package(CURL REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(glog REQUIRED libglog)
 
 message("************************************************************************************")
 message("  Qt version: ${QTX}, VTK version: ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}, PCL version: ${PCL_VERSION}")
@@ -62,14 +64,15 @@ target_link_libraries(${PROJECT_NAME}
         fakelidar
         hesai_pandar128
         hesai_qt64
+        hesai_qt128
         xlidar
         xradar
         blidar
-        device_example
         udp_replayer
         xrt_replayer
         hesai_ft120
         xradar_2d
+        ${glog_LIBRARIES}
         )
 
 # for VTK7

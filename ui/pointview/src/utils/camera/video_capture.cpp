@@ -64,7 +64,7 @@ void VideoCapture::on_SelectFilePushButton_clicked() {
       GetSaveFileName("Save videeo to file", QDir::homePath() + "/Untitled.mp4",
                       "PNG Files(*.mp4);;All Files(*.*)");
   if (fileName.isNull()) {
-    Debug("Do not select a target file.");
+    LOG(INFO) << "Do not select a target file.";
     return;
   }
   ui->SavePathLabel->setText(fileName);

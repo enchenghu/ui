@@ -24,6 +24,8 @@ class Colormap {
   void get(double v, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b);
   // v -> rgba[255,255,255,255]
   uint32_t get(double v);
+  bool readGammaFile(std::string filename);
+  void setUseGamma(bool state) {use_gamma_ = state;}
 
  private:
   void initColormap(const std::uint8_t* r, const std::uint8_t* g,
@@ -36,6 +38,9 @@ class Colormap {
 
   double range_min_{0};
   double range_max_{255};
+  bool use_gamma_{false};
+  std::vector<std::uint32_t> gamma_v_;
+  uint8_t getGammaV(uint8_t idx);
 };
 
 }  // namespace pointview

@@ -251,6 +251,23 @@ message LatencyStats {
   repeated TaskStats task_stats = 1;
 }
 
+message CameraExposureInfo {
+  optional uint32 hts_spd = 1;
+  optional uint32 hts_vs = 2;
+  optional uint32 hcg_exp_cur = 3;
+  optional uint32 spd_exp_cur = 4;
+  optional uint32 vs_exp_cur = 5;
+  optional uint32 hcg_real_gain = 6;
+  optional uint32 lcg_real_gain = 7;
+  optional uint32 spd_real_gain = 8;
+  optional uint32 vs_real_gain = 9;
+  optional uint32 hcg_digital_gain = 10;
+  optional uint32 lcg_digital_gain = 11;
+  optional uint32 spd_digital_gain = 12;
+  optional uint32 vs_digital_gain = 13;
+  optional string camera_type = 14;
+}
+
 message Image {
   optional autox.common.Header header = 1;
   optional string frame_id = 2 [deprecated = true];
@@ -262,11 +279,21 @@ message Image {
   optional string encoding = 6;
   optional uint32 step = 7;  // Full row length in bytes
   optional bytes data = 8;   // actual matrix data, size is (step * rows)
-  optional autox.common.ShmData shm_data =
-      9;  // use ShmData to transfer big topic, but not use data
+  // use ShmData to transfer big topic, but not use data
+  optional autox.common.ShmData shm_data = 9 [deprecated = true];
   optional LatencyStats latency_stats = 10;
-  optional string shmdata_file_name =
-      11;  // filled by recorder for recording shmdata
+  // filled by recorder for recording shmdata
+  optional string shmdata_file_name = 11 [deprecated = true];
+
+  // external memory that is not own/managed by this msg
+  // typically, addr of a large mmap'd mem region
+  optional uint64 mem_chunk_start_addr = 12;
+  optional uint64 mem_chunk_byte_size = 13;
+  // this field is a placeholder to allow reflection-based parsing,
+  // e.g. xrt_monitor. Do NOT use this field. Use mem_chunk_start_addr instead
+  optional bytes mem_chunk_data = 14;
+  optional uint64 cuda_buffer_ptr_feedcompress = 15;
+  optional CameraExposureInfo camera_exposure_info = 16;
 }
 
 message CompressedImage {
@@ -278,14 +305,15 @@ message CompressedImage {
   optional string format = 3;
   optional bytes data = 4;  // Compressed image buffer
   optional double measurement_time = 5;
-  optional autox.common.ShmData shm_data =
-      6;  // use ShmData to transfer big topic, but not use data
+  // use ShmData to transfer big topic, but not use data
+  optional autox.common.ShmData shm_data = 6;
   optional uint32 height = 7;  // image height, that is, number of rows
   optional uint32 width = 8;   // image width, that is, number of columns
   optional LatencyStats latency_stats = 9;
-  optional string shmdata_file_name =
-      10;  // filled by recorder for recording shmdata
+  // filled by recorder for recording shmdata
+  optional string shmdata_file_name = 10;
   optional string encoding = 11;
+  optional CameraExposureInfo camera_exposure_info = 12;
 }
 
 message CudaImage {
@@ -308,4 +336,6 @@ message CudaImage {
   repeated uint64 gdr_mr = 16;
   optional string shmdata_file_name =
       17;  // filled by recorder for recording shmdata
+  optional LatencyStats latency_stats = 18;
+  optional CameraExposureInfo camera_exposure_info = 19;
 }

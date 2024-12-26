@@ -3,6 +3,7 @@ add_library(utils SHARED
 
         camera/video_player.cpp
         camera/video_capture.cpp
+        camera/camera_image.cpp
         common/display_context.cpp
         common/device_context.cpp
         common/device_base.cpp
@@ -37,9 +38,9 @@ add_library(utils SHARED
         pose_setting.cpp
         log_viewer.cpp
         udp_logger.cpp
-        utils.h
         adc_plot.cpp
         property_tree.cpp
+        utils.h
         utils.cpp
         pointcloud/point_data.cpp
         )

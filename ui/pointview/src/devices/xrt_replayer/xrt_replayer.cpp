@@ -17,9 +17,9 @@
 using namespace std::chrono_literals;
 
 XrtReplayer::XrtReplayer(
-    std::shared_ptr<autox::pointview::DisplayContext> context, int device_id,
-    const std::string& device_name)
-    : autox::pointview::DeviceBase(context, device_id, device_name) {
+    std::shared_ptr<autox::pointview::DisplayContext> context,
+    autox::pointview::DeviceBaseParameter& parameter)
+    : autox::pointview::DeviceBase(context, parameter) {
   dispatcher_ = XrtMessageDispatcher::getInstance();
   last_open_dirpath_ = QDir::homePath();
   // playback
@@ -88,8 +88,7 @@ XrtReplayer::~XrtReplayer() {
 
 bool XrtReplayer::parseRecord(const std::string& record_file) {
   // open record
-  record_reader_ =
-      std::make_unique<autox::xrt::record::RecordReader>(record_file);
+  record_reader_ = std::make_unique<autox::recorder::RecordReader>(record_file);
   if (!record_reader_->IsValid()) {
     return false;
   }
@@ -155,7 +154,7 @@ void XrtReplayer::openRecordClicked() {
   QString record_file =
       GetOpenFileName("Open Record File", last_open_dirpath_, "All Files(*.*)");
   if (record_file.isNull()) {
-    Debug("Do not select a target file.");
+    LOG(INFO) << "Do not select a target file.";
     return;
   }
   last_open_dirpath_ = QFileInfo(record_file).dir().absolutePath();

@@ -87,7 +87,7 @@ void LaserTrack::on_saveRuleButtonClicked() {
   start_angle = start_angle_widget_->getWidget()->value() * 10;
   end_angle = end_angle_widget_->getWidget()->value() * 10;
   if (start_channel > end_channel || start_angle > end_angle) {
-    std::cout << "error, reset to origin value" << std::endl;
+    LOG(INFO) << "error, reset to origin value" ;
     setRuletoSpinBox();
   } else {
     rules_["start_channel"] = start_channel;

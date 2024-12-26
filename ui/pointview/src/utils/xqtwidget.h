@@ -11,9 +11,11 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDoubleSpinBox>
+#include <QGroupBox>
 #include <QLabel>
 #include <QLayout>
 #include <QLineEdit>
+#include <QPushButton>
 #include <QSpinBox>
 #include <memory>
 
@@ -47,6 +49,7 @@ using XTextField = XQtWidget<QLineEdit>;
 using XSpinBox = XQtWidget<QSpinBox>;
 using XDoubleSpinBox = XQtWidget<QDoubleSpinBox>;
 using XCheckBox = XQtWidget<QCheckBox>;
+using XLabel = XQtWidget<QLabel>;
 
 }  // namespace pointview
 }  // namespace autox

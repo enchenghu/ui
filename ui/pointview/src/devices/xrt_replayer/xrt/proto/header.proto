@@ -18,7 +18,7 @@ message PerformanceStats {
   // delta_time = (start_time - prev_start_time)
   optional double delta_time = 3;
 
-  // total cpu_time used  
+  // total cpu_time used
   optional double cpu_time_used = 4;
 
   // attributes below are for future use
@@ -71,6 +71,6 @@ message Header {
 
   optional uint32 num_frames_lidar_data_unavailable = 11 [default = 1];
 
-  optional autox.xrt.safety.proto.SafetyLevel safety_level = 12 [default = MRC1];
+  optional autox.xrt.safety.proto.SafetyLevel safety_level = 12
+      [default = MRC1];
 }
-

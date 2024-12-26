@@ -22,8 +22,8 @@ class DeviceBase : public QObject {
   enum class PlayerState { Start, Stop, Record, FinishRecord };
 
  public:
-  explicit DeviceBase(std::shared_ptr<DisplayContext> context, int device_id,
-                      const std::string& device_name);
+  explicit DeviceBase(std::shared_ptr<DisplayContext> context,
+                      DeviceBaseParameter& parameter);
   virtual ~DeviceBase() = default;
 
  signals:

@@ -75,6 +75,8 @@ class AppControl : public QObject {
   std::map<int, std::string> device_type_map_;
   // init camera position
   std::vector<float> init_camera_position_;
+  // sum of active device
+  int active_device_{0};
 };
 
 }  // namespace pointview

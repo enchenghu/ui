@@ -22,6 +22,7 @@ RadarImageViewer::RadarImageViewer(QWidget* parent, bool is_polar_viewer,
       width_resolution_(width_resolution) {
   scene = new QGraphicsScene(this);
   this->setScene(scene);
+  this->setMinimumSize(400, 400);
 
   setDragMode(QGraphicsView::DragMode::NoDrag);
   setInteractive(false);

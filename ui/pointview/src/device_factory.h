@@ -17,7 +17,7 @@ namespace pointview {
 
 class DeviceFactory {
   using Creator = std::function<std::shared_ptr<DeviceBase>(
-      std::shared_ptr<DisplayContext>, int, const std::string&)>;
+      std::shared_ptr<DisplayContext>, DeviceBaseParameter&)>;
 
  public:
   DeviceFactory();
@@ -27,14 +27,14 @@ class DeviceFactory {
   std::vector<std::string> getDeviceTypes();
 
  private:
-  bool registerDevice(const std::string& type, Creator func);
+  bool AddCreator(const std::string& type, Creator func);
   template <typename T>
-  bool registerDevice(const std::string& type) {
-    auto func = [](std::shared_ptr<DisplayContext> context, int id,
-                   const std::string& device_name) {
-      return std::make_shared<T>(context, id, device_name);
+  bool RegisterDevice(const std::string& type) {
+    Creator func = [](std::shared_ptr<DisplayContext> context,
+                      DeviceBaseParameter& para) {
+      return std::make_shared<T>(context, para);
     };
-    return registerDevice(type, func);
+    return AddCreator(type, func);
   }
   bool unregisterDevice(const std::string& type);
 

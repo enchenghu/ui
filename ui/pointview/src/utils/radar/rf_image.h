@@ -24,6 +24,7 @@
 #include "utils/pointcloud/point_manipulator.h"
 #include "utils/pointcloud/pointcloud.h"
 #include "utils/property_tree.h"
+#include "devices/xradar_2d/driver/xradar_2d_driver.h"
 
 namespace Ui {
 class RfImage;
@@ -49,23 +50,23 @@ class RfImage : public QMainWindow {
  public:
   using PointToPixelCallback = std::function<bool(size_t idx, int& x, int& y)>;
   RfImage(
-      std::shared_ptr<DeviceContext> device_context, int range_bins,
-      int azimuth_bins,
+      std::shared_ptr<DeviceContext> device_context,
       const std::shared_ptr<autox::pointview::PointManipulator>& manipulator);
   ~RfImage();
-  bool Init(const double range_resolution, const double azimuth_resolution);
   bool IsInited() const { return inited_; };
   // update using image
-  void Update(const PointCloud& point_cloud);
-  void Update(const cv::Mat& rf_polar_power, const cv::Mat& rf_polar_doppler);
+  void Update(const drivers::xradar_2d::PointCloud& point_cloud);
 
-  bool RequestRfByPointcloud(pcl::PointCloud<pcl::PointXYZRGBA>& rf_pointcloud);
+  bool RequestRfByPointcloud(PointCloudT& rf_pointcloud);
 
  protected:
   void closeEvent(QCloseEvent* event) override;
   void showEvent(QShowEvent* event) override;
 
  private:
+  bool Init(const drivers::xradar_2d::PointCloud& point_cloud);
+  bool PointcloudToRawRf0_0(const drivers::xradar_2d::PointCloud& point_cloud);
+  bool PointcloudToRawRf1_0(const drivers::xradar_2d::PointCloud& point_cloud);
   void ConvertRfToRgb();
   void UpdateViewers();
 
@@ -89,9 +90,18 @@ class RfImage : public QMainWindow {
   int azimuth_bins_;
   int cart_pixel_width_;
 
+  double base_range_resolution_;
+  double base_azimuth_resolution_;
+
   cv::Mat current_power_rf_;
   cv::Mat current_doppler_rf_;
 
+  // RGB data
+  cv::Mat cv_current_power_polar_rgb_;
+  cv::Mat cv_current_doppler_polar_rgb_;
+  cv::Mat cv_current_power_cartesian_rgb_;
+  cv::Mat cv_current_doppler_cartesian_rgb_;
+  // only viewers
   QImage current_power_polar_rgb_;
   QImage current_doppler_polar_rgb_;
   QImage current_power_cartesian_rgb_;
@@ -112,6 +122,34 @@ class RfImage : public QMainWindow {
   // data
   bool render_{false};
   bool inited_;
+
+  // member for vesion 1_0
+  struct DetectTypeInfo {
+    enum RemapType{
+      CV_REMAP,
+      POINT_ASSINE_REMAP
+    };
+    // on init
+    int detact_type;
+    int origin_range_bins;
+    int origin_azimuth_bins;
+    double origin_range_resolution;
+    double origin_azimuth_resolution;
+    RemapType remap_type;
+    cv::Mat remap_mat;
+    // on run
+    cv::Mat origin_power_rf;
+    cv::Mat origin_doppler_rf;
+    cv::Mat remaped_power_rf;
+    cv::Mat remaped_doppler_rf;
+
+    bool GenerateRemapMat(const int target_range_bins,
+                          const int target_azimuth_bins,
+                          const double target_range_resolution,
+                          const double target_azimuth_resolution);
+    bool CvRemap();
+  };
+   std::vector<DetectTypeInfo> detect_type_infos_;
 };
 
 }  // namespace rf_image

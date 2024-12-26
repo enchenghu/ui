@@ -3,26 +3,18 @@
 
 #include <QCheckBox>
 
-#include "utils/adc_plot.h"
-#include "utils/camera/video_capture.h"
-#include "utils/camera/video_player.h"
+#include "adc/xlidar_adc_plot.h"
+#include "utils/camera/camera_image.h"
 #include "utils/common/lidar_base.h"
-#include "utils/io/pcap_udp_parser.h"
-#include "utils/io/playback_buffer.h"
-#include "utils/io/simple_player_setting.h"
 #include "utils/io/udp_input.h"
 #include "utils/lidar/laser_track.h"
-#include "utils/lidar/lidar_frame_info.h"
 #include "utils/lidar/lidar_intrinsics.h"
 #include "utils/lidar/lidar_return_info.h"
 #include "utils/lidar/range_image.h"
 #include "utils/pointcloud/point_data.h"
 #include "utils/pointcloud/point_exporter.h"
 #include "utils/pointcloud/point_filter.h"
-#include "utils/pointcloud/point_manipulator.h"
 #include "utils/pointcloud/point_selection.h"
-#include "utils/pointcloud/pointcloud.h"
-#include "utils/pose_setting.h"
 #include "utils/udp_logger.h"
 
 namespace autox {
@@ -51,8 +43,8 @@ class XLidar : public autox::pointview::LidarBase<RawPointCloud> {
     uint8_t version;
     uint8_t max_return_num;
   };
-  XLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
-         int device_id, const std::string& device_name);
+  XLidar(std::shared_ptr<pointview::DisplayContext> context,
+         autox::pointview::DeviceBaseParameter& parameter);
   ~XLidar();
   bool updateUI() override;
   bool initFromConfig(
@@ -76,16 +68,15 @@ class XLidar : public autox::pointview::LidarBase<RawPointCloud> {
   // visualizer ptr
   autox::visualization::PCLVisualizer::Ptr viewer_;
   // helper utils
-  std::shared_ptr<autox::pointview::PoseSetting> pose_setting_;
   std::shared_ptr<autox::pointview::PointSelection> point_selection_;
   std::shared_ptr<autox::pointview::PointExporter> point_exporter_;
   std::shared_ptr<autox::pointview::LaserTrack> laser_track_;
   std::shared_ptr<autox::pointview::RangeImage> range_image_;
-  std::shared_ptr<autox::pointview::VideoPlayer> video_player_;
   std::shared_ptr<autox::pointview::PointFilter> point_filter_;
   std::shared_ptr<autox::pointview::LidarIntrinsics> lidar_intrinsics_;
   std::shared_ptr<autox::pointview::UdpLogger> udp_logger_;
   std::shared_ptr<autox::pointview::PointData> point_data_;
+  std::shared_ptr<autox::pointview::CameraImage> camera_image_;
   // ui for debug
   std::shared_ptr<QCheckBox> checkbox_range_image_correction_;
   bool enable_range_image_correction_{false};
@@ -125,10 +116,8 @@ class XLidar : public autox::pointview::LidarBase<RawPointCloud> {
   std::unique_ptr<std::thread> data_thread_;
   bool exit_{false};
   // adc
-  std::shared_ptr<autox::pointview::AdcPlot> adc_plot_;
+  std::shared_ptr<XLidarAdcPlot> adc_plot_;
   long long record_frame_index{0};
-  // video capture
-  std::shared_ptr<autox::pointview::VideoCapture> video_capture_;
 };
 
 }  // namespace xlidar

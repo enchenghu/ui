@@ -8,12 +8,16 @@
 #ifndef POINTVIEW_UTILS_H
 #define POINTVIEW_UTILS_H
 #include <QFileDialog>
+#include <QMessageBox>
 #include <iostream>
 
-#define Debug(a) \
-  std::cout << __FILE__ << ", " << __LINE__ << ": " << (a) << std::endl;
+#include <glog/logging.h>
 
 QString GetOpenFileName(QString title, QString dir_path, QString file_type);
 QString GetSaveFileName(QString title, QString dir_path, QString file_type);
 QString GetSaveDirectory(QString title, QString dir_path);
+int OpenMessageBox(QString title_text, QString informative_text,
+                   QFlags<QMessageBox::StandardButton> buttons);
+std::string Uint8toHex(uint8_t i);
+
 #endif  // POINTVIEW_UTILS_H

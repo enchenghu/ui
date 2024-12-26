@@ -3,8 +3,8 @@
 #include "driver/driver_qt64.h"
 
 HesaiQt64::HesaiQt64(std::shared_ptr<autox::pointview::DisplayContext> context,
-                     int device_id, const std::string& device_name)
-    : autox::pointview::DeviceBase(context, device_id, device_name),
+                     autox::pointview::DeviceBaseParameter& parameter)
+    : autox::pointview::DeviceBase(context, parameter),
       viewer_(context->getViewerPtr()) {
   initDriver();
   current_frame_.pcl_pointcloud.reset(new PointCloudT);
@@ -119,8 +119,7 @@ void HesaiQt64::initDriver() {
       raw_pointcloud_buffer_.push_back(point_cloud);
       if (raw_pointcloud_buffer_.size() > 2) {
         raw_pointcloud_buffer_.pop_front();
-        std::cout << "[warning] rendering too long, drop raw point cloud!"
-                  << std::endl;
+        LOG(INFO) << "[warning] rendering too long, drop raw point cloud!";
       }
     }
   };
@@ -145,8 +144,7 @@ void HesaiQt64::initDriver() {
           raw_pointcloud_buffer_.push_back(data);
           device_context_->updateCurrentFrame(idx);
         } else {
-          std::cout << "[warning] rendering too long, drop raw point cloud!"
-                    << std::endl;
+          LOG(INFO) << "[warning] rendering too long, drop raw point cloud!";
         }
       });
 }
@@ -266,10 +264,10 @@ bool HesaiQt64::updateUI() {
   // debug
   auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
                 .count();
-  std::cout << "udp packet number: " << current_frame_.n_udp_packets
+  LOG(INFO) << "udp packet number: " << current_frame_.n_udp_packets
             << ", total point number: " << current_frame_.n_points
             << ", valid point number: " << current_frame_.n_valid_points
-            << ", update time: " << dt << " ms" << std::endl;
+            << ", update time: " << dt << " ms";
   return true;
 }
 

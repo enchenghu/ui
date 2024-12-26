@@ -10,12 +10,15 @@
 
 #include <memory>
 
+#include "utils/camera/video_capture.h"
+#include "utils/camera/video_player.h"
 #include "utils/common/device_base.h"
 #include "utils/io/pcap_udp_parser.h"
 #include "utils/io/simple_player_setting.h"
 #include "utils/io/udp_input.h"
 #include "utils/lidar/lidar_frame_info.h"
 #include "utils/pointcloud/point_manipulator.h"
+#include "utils/pose_setting.h"
 
 namespace autox {
 namespace pointview {
@@ -26,7 +29,7 @@ class LidarBase : public DeviceBase {
 
  public:
   LidarBase(std::shared_ptr<autox::pointview::DisplayContext> context,
-            int device_id, const std::string& device_name);
+            DeviceBaseParameter& parameter);
   ~LidarBase();
   void InitLidarBase();
   // config
@@ -39,11 +42,15 @@ class LidarBase : public DeviceBase {
   std::vector<autox::pointview::ChannelSetting> channel_settings_;
   std::shared_ptr<autox::pointview::PointManipulator> manipulator_;
   std::shared_ptr<autox::pointview::SimplePlayerSetting> player_setting_;
+  std::shared_ptr<autox::pointview::PoseSetting> pose_setting_;
   // for live streaming
   std::shared_ptr<autox::pointview::UdpInput> udp_input_;
   // for pcap playback
   std::shared_ptr<autox::pointview::PcapUdpParser> pcap_parser_;
   std::shared_ptr<PlaybackBuffer> playback_buffer_;
+  // video
+  std::shared_ptr<autox::pointview::VideoCapture> video_capture_;
+  std::shared_ptr<autox::pointview::VideoPlayer> video_player_;
 };
 
 }  // namespace pointview

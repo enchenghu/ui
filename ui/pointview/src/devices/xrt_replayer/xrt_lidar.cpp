@@ -16,8 +16,8 @@
 using namespace std::chrono_literals;
 
 XrtLidar::XrtLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
-                   int device_id, const std::string& device_name)
-    : autox::pointview::DeviceBase(context, device_id, device_name),
+                   autox::pointview::DeviceBaseParameter& parameter)
+    : autox::pointview::DeviceBase(context, parameter),
       viewer_(context->getViewerPtr()) {
   // xrt message dispatcher
   dispatcher_ = XrtMessageDispatcher::getInstance();
@@ -120,14 +120,13 @@ XrtLidar::XrtLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
             point_cloud->ParseFromString(message->content);
             if (point_cloud->x_size() != point_cloud->y_size() ||
                 point_cloud->x_size() != point_cloud->z_size()) {
-              std::cout << "invalid point cloud frame!" << std::endl;
+              LOG(INFO) << "invalid point cloud frame!";
               continue;
             }
             swap_point_cloud_ = point_cloud;
             buffer_full_ = true;
           } else {
-            std::cout << "rendering too long, drop a point cloud frame!"
-                      << std::endl;
+            LOG(INFO) << "rendering too long, drop a point cloud frame!";
           }
         } else {
           std::this_thread::sleep_for(10ms);
@@ -247,16 +246,16 @@ bool XrtLidar::updateUI() {
   auto end = std::chrono::steady_clock::now();
   auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
                 .count();
-  std::cout << "total point number: " << total_cnt << ", update time: " << dt
-            << " ms" << std::endl;
+  LOG(INFO) << "total point number: " << total_cnt << ", update time: " << dt
+            << " ms";
   // debug info
   auto convert_time =
       std::chrono::duration_cast<std::chrono::milliseconds>(end2 - end1)
           .count();
   auto viewer_time =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - end3).count();
-  std::cout << "convert time: " << convert_time
-            << ", viewer time: " << viewer_time << std::endl;
+  LOG(INFO) << "convert time: " << convert_time
+            << ", viewer time: " << viewer_time;
   return true;
 }
 

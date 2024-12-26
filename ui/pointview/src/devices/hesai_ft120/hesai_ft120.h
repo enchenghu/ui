@@ -47,7 +47,7 @@ class HesaiFT120 : public autox::pointview::DeviceBase {
     size_t n_valid_points;
   };
   HesaiFT120(std::shared_ptr<autox::pointview::DisplayContext> context,
-             int device_id, const std::string& device_name);
+             autox::pointview::DeviceBaseParameter& parameter);
   ~HesaiFT120();
   bool updateUI() override;
   bool updatePlayerState(autox::pointview::PlayerCmd cmd) override;

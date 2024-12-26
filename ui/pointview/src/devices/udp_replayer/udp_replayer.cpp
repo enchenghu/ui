@@ -8,14 +8,14 @@
 using namespace std::chrono_literals;
 
 UdpReplayer::UdpReplayer(
-    std::shared_ptr<autox::pointview::DisplayContext> context, int device_id,
-    const std::string& device_name)
-    : autox::pointview::DeviceBase(context, device_id, device_name) {
+    std::shared_ptr<autox::pointview::DisplayContext> context,
+    autox::pointview::DeviceBaseParameter& parameter)
+    : autox::pointview::DeviceBase(context, parameter) {
   last_pcap_open_dirpath_ = QDir::homePath();
   // create udp socket
   udp_sock_ = socket(AF_INET, SOCK_DGRAM, 0);
   if (udp_sock_ < 0) {
-    std::cout << "[UdpReplayer] create socket failed!" << std::endl;
+    LOG(INFO) << "[UdpReplayer] create socket failed!";
   }
   // playback
   device_context_->updatePlayerType(true);
@@ -27,7 +27,11 @@ UdpReplayer::UdpReplayer(
         struct sockaddr_in addr;
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+        std::string ip = "127.0.0.1";
+        if (use_custom_ip_) {
+          ip = custom_ip_edit_->text().toStdString();
+        }
+        addr.sin_addr.s_addr = inet_addr(ip.c_str());
         addr.sin_port = htons(pkt->port);
         sendto(udp_sock_, pkt->data.data(), pkt->len, 0,
                reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
@@ -42,13 +46,15 @@ UdpReplayer::UdpReplayer(
       return false;
     }
     lidar_type_fps_->setEnabled(false);
-    playback_buffer_->sync();
     btn_pcap_file_->setEnabled(false);
+    checkbox_custom_ip_->setEnabled(false);
+    playback_buffer_->sync();
     return true;
   });
   device_context_->registerPausePlayerCb([this]() {
     btn_pcap_file_->setEnabled(true);
     lidar_type_fps_->setEnabled(true);
+    checkbox_custom_ip_->setEnabled(true);
     return true;
   });
   // pcap file
@@ -66,7 +72,7 @@ UdpReplayer::UdpReplayer(
   auto debug_sub =
       device_context_->getPropertyTree()->createPropertySubTree("debug");
   checkbox_enable_constant_fps_ = std::make_shared<QCheckBox>();
-  debug_sub->addProperty("enable", checkbox_enable_constant_fps_);
+  debug_sub->addProperty("constant fps", checkbox_enable_constant_fps_);
   connect(checkbox_enable_constant_fps_.get(), &QCheckBox::stateChanged,
           [this](int state) {
             use_constant_fps_ = state > 0;
@@ -94,7 +100,8 @@ UdpReplayer::UdpReplayer(
       lidar_type_fps_.get(),
       static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
       [this](int index) {
-        Debug(std::to_string(index));
+        LOG(INFO) << "udp replayer type: "
+                  << lidar_type_fps_->itemText(index).toStdString();
         if (index == 0) {
           spinbox_constant_fps_->setValue(200000);
         } else if (index == 1) {
@@ -102,6 +109,17 @@ UdpReplayer::UdpReplayer(
         }
       });
   lidar_type_fps_->setCurrentIndex(1);
+  // custom ip
+  checkbox_custom_ip_ = std::make_shared<QCheckBox>();
+  debug_sub->addProperty("custom ip", checkbox_custom_ip_);
+  connect(checkbox_custom_ip_.get(), &QCheckBox::stateChanged,
+          [this](int state) {
+            use_custom_ip_ = state > 0;
+            LOG(INFO) << "custom: " + std::to_string(use_custom_ip_);
+          });
+  custom_ip_edit_ = std::make_shared<QLineEdit>();
+  custom_ip_edit_->setText("127.0.0.1");
+  debug_sub->addProperty("ip:", custom_ip_edit_);
   // create thread
   player_thread_ = std::make_unique<std::thread>([this]() {
     while (!exit_) {
@@ -156,8 +174,7 @@ bool UdpReplayer::parsePcap(const std::string& pcap_file) {
   // parse pcap loop
   playback_buffer_->clear();
   packet_cnt_ = pcap_parser_->getPacketNumber();
-  std::cout << "stat parse pcap, the number of packets: " << packet_cnt_
-            << std::endl;
+  LOG(INFO) << "stat parse pcap, the number of packets: " << packet_cnt_;
   uint8_t data[65536];
   size_t len = 0;
   double timestamp;
@@ -185,7 +202,7 @@ bool UdpReplayer::parsePcap(const std::string& pcap_file) {
   parse_all_thread_ = std::make_unique<std::thread>([this]() {
     std::unique_lock<std::mutex> lk(read_packets_mutex_);
     read_packets_ok_.wait(lk);
-    Debug("start parsing packets loop");
+    LOG(INFO) << "start parsing packets loop";
     while (!exit_parse_) {
       uint8_t data[65536];
       size_t len = 0;
@@ -225,7 +242,7 @@ bool UdpReplayer::parsePcap(const std::string& pcap_file) {
       }
       pcap_parser_->reset();
     }
-    Debug("quit parsing packets loop");
+    LOG(INFO) << "quit parsing packets loop";
   });
   // update label_pcap
   if (cnt == packet_cnt_) {
@@ -249,7 +266,7 @@ void UdpReplayer::openPcapClicked() {
   QString pcap_file = GetOpenFileName("Open Pcap File", last_pcap_open_dirpath_,
                                       "Pcap File(*.pcap);;All Files(*.*)");
   if (pcap_file.isNull()) {
-    Debug("Do not select a target file.");
+    LOG(INFO) << "Do not select a target file.";
     return;
   }
   last_pcap_open_dirpath_ = QFileInfo(pcap_file).dir().absolutePath();

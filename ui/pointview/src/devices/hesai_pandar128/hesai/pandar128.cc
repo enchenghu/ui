@@ -11,6 +11,8 @@
 #include <utility>
 #include <vector>
 
+#include <glog/logging.h>
+
 #include "hesai/laser_ts.h"
 
 #ifndef GLOBAL_CONFIG_DIR
@@ -235,10 +237,7 @@ void Pandar128Driver::resetDriver() {
   accumulate_azimuth_ = 0;
 }
 
-
-void Pandar128Driver::resetFrameIndex() {
-  index_f_single_thread_ = 0;
-}
+void Pandar128Driver::resetFrameIndex() { index_f_single_thread_ = 0; }
 
 bool Pandar128Driver::ParseLidarPacket(const uint8_t* data, size_t len) {
   if (len != kHsLidarL128_PacketSize && len != kHsLidarL128_CSC_PacketSize) {
@@ -275,7 +274,7 @@ bool Pandar128Driver::ParseLidarPacket(const uint8_t* data, size_t len) {
                        (static_cast<uint64_t>(hs128_pkt->timestamp)) * 1000;
 
   // point_cloud_->set_height(kHsLidarL128UnitNum);
-  if(point_cloud_->points.empty()){
+  if (point_cloud_->points.empty()) {
     point_cloud_->begin_index_in_pacp = cur_packet_index_;
   }
   point_cloud_->udp_packet_number++;
@@ -287,7 +286,7 @@ bool Pandar128Driver::ParseLidarPacket(const uint8_t* data, size_t len) {
       continue;
     }
     const int cur_azimuth = hs128_pkt->blocks[i].azimuth;
-    // std::cout<<"cur_azimuth: " << cur_azimuth << ", accumulate_azimuth_: " <<
+    // LOG(INFO)<<"cur_azimuth: " << cur_azimuth << ", accumulate_azimuth_: " <<
     // accumulate_azimuth_ <<std::endl;
     if (CheckAngle(cur_azimuth) && point_cloud_->points.size() > 0 &&
         point_cloud_callback_) {
@@ -326,7 +325,7 @@ void Pandar128Driver::CalcBlockXYZIT(const Pandar128Packet* pkt,
   }
   // If current azimuth is out of lidar range(FOV), Do not calculate.
   if (!CheckLidarRange(pkt->blocks[blockid].azimuth)) {
-    std::cout << "Current azimuth is out of lidar range.";
+    LOG(INFO) << "Current azimuth is out of lidar range.";
     return;
   }
   uint32_t scans_per_udp = 0;

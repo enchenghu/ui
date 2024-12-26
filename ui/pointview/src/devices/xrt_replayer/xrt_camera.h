@@ -27,7 +27,7 @@ class XrtCamera : public autox::pointview::DeviceBase {
  public:
   using RawImage = autox::drivers::Image;
   XrtCamera(std::shared_ptr<autox::pointview::DisplayContext> context,
-            int device_id, const std::string& device_name);
+            autox::pointview::DeviceBaseParameter& parameter);
   ~XrtCamera();
   bool updateUI() override;
   bool initFromConfig(

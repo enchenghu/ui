@@ -10,6 +10,7 @@
 #include <string>
 #include <thread>
 
+#include <glog/logging.h>
 #include <pcap/pcap.h>
 
 #include "utils/common/device_context.h"
@@ -25,17 +26,23 @@ class PcapUdpParser {
 
  public:
   PcapUdpParser(std::shared_ptr<autox::pointview::DeviceContext> device_context)
-      : device_context_(device_context){
+      : device_context_(device_context) {
     file_offset_maps_.clear();
     file_offset_r_maps_.clear();
     pcap_index_maps_.clear();
     pcap_cnt_map_.clear();
   };
   ~PcapUdpParser();
-  void setResetDriverCallback(ResetDriverCallbackType cb) { reset_driver_cb_ = cb; }
+  void setResetDriverCallback(ResetDriverCallbackType cb) {
+    reset_driver_cb_ = cb;
+  }
   void setUdpCallback(PacketCallbackType cb) { udp_cb_ = cb; }
-  void setPacketIndexCallback(PacketIndexCallbackType cb) { packet_index_cb_ = cb; }
-  void setPacketOffsetCallback(PacketOffsetCallbackType cb) { packet_offset_cb_ = cb; }
+  void setPacketIndexCallback(PacketIndexCallbackType cb) {
+    packet_index_cb_ = cb;
+  }
+  void setPacketOffsetCallback(PacketOffsetCallbackType cb) {
+    packet_offset_cb_ = cb;
+  }
 
   void setFilter(std::string ip, uint16_t port);
   void setTargetUdpLength(uint32_t len) { target_udp_len_ = len; };
@@ -56,26 +63,29 @@ class PcapUdpParser {
   void breakParseAllPackets(bool);
   bool parseAllPackets(std::function<bool(double)> progress_cb = nullptr);
   bool getParserState() { return ifInited; }
-  int getFrameNum() {return file_offset_maps_[pcap_file_real_].size() - 1;}
-  void setPcapSearchMap(int index, long int p){
+  int getFrameNum() { return file_offset_maps_[pcap_file_real_].size() - 1; }
+  void setPcapSearchMap(int index, long int p) {
     pcap_offset_map_[index] = p;
     offset_index_map_[p] = index;
   }
-  void setPcapSearchMap(int index){
+  void setPcapSearchMap(int index) {
     pcap_offset_map_[index] = ftell(pcap_file(pcap_handle_));
   }
-  void setPcapBeginIndexMap(int index, size_t p){pcap_index_map_[index] = p;}
-  int findFrameIndexInMap(long int offset){
-    if(file_offset_r_maps_[pcap_file_real_].find(offset) != file_offset_r_maps_[pcap_file_real_].end())
+  void setPcapBeginIndexMap(int index, size_t p) { pcap_index_map_[index] = p; }
+  int findFrameIndexInMap(long int offset) {
+    if (file_offset_r_maps_[pcap_file_real_].find(offset) !=
+        file_offset_r_maps_[pcap_file_real_].end())
       return file_offset_r_maps_[pcap_file_real_][offset];
     return -1;
   }
-  //void buildFileOffsetMap(std::string file_name) {file_offset_maps_[file_name] =  std::map<int, long>();}
+  // void buildFileOffsetMap(std::string file_name)
+  // {file_offset_maps_[file_name] =  std::map<int, long>();}
   void setFileOffsetMap(int index, long offset) {
-    if(outOffsetFile_.is_open()) {
-      outOffsetFile_ << offset << ',';  
-      std::cout << "=====outOffsetFile_ write, index is " << index  << ", offset is " << offset<< std::endl;
-    }; 
+    if (outOffsetFile_.is_open()) {
+      outOffsetFile_ << offset << ',';
+      LOG(INFO) << "=====outOffsetFile_ write, index is " << index
+                << ", offset is " << offset;
+    };
     file_offset_maps_[pcap_file_real_][index] = offset;
     file_offset_r_maps_[pcap_file_real_][offset] = index;
   }
@@ -88,24 +98,26 @@ class PcapUdpParser {
   }
 
   void setPcapIndexMap(int index, size_t p) {
-    if(outPcapIndexFile_.is_open()) {
-      outPcapIndexFile_ << p << ',';  
+    if (outPcapIndexFile_.is_open()) {
+      outPcapIndexFile_ << p << ',';
     };
     pcap_index_maps_[pcap_file_real_][index] = p;
   }
 
-  void writeFileEnd(){
-    if(outPcapIndexFile_.is_open()) {
-      outPcapIndexFile_ << std::endl;  
+  void writeFileEnd() {
+    if (outPcapIndexFile_.is_open()) {
+      outPcapIndexFile_;
       outPcapIndexFile_.close();
     }
-    if(outOffsetFile_.is_open()){
-      outOffsetFile_ << std::endl;  
+    if (outOffsetFile_.is_open()) {
+      outOffsetFile_;
       outOffsetFile_.close();
     }
   }
 
   int findCntInMap(int);
+  std::string getMdsum(const std::string& filename);
+
  private:
   std::string pcap_file_{""};
   std::string pcap_file_real_{""};
@@ -138,7 +150,6 @@ class PcapUdpParser {
   std::map<std::string, std::map<int, size_t>> pcap_index_maps_;
   std::map<std::string, size_t> pcap_cnt_map_;
   std::string pcap_mem_path;
-
 };
 
 }  // namespace pointview

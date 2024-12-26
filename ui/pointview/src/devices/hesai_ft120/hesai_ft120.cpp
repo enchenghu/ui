@@ -4,9 +4,9 @@
 #include "utils/utils.h"
 
 HesaiFT120::HesaiFT120(
-    std::shared_ptr<autox::pointview::DisplayContext> context, int device_id,
-    const std::string& device_name)
-    : autox::pointview::DeviceBase(context, device_id, device_name),
+    std::shared_ptr<autox::pointview::DisplayContext> context,
+    autox::pointview::DeviceBaseParameter& parameter)
+    : autox::pointview::DeviceBase(context, parameter),
       viewer_(context->getViewerPtr()) {
   initDriver();
   current_frame_.pcl_pointcloud.reset(new PointCloudT);
@@ -246,7 +246,7 @@ bool HesaiFT120::openPcapClicked() {
   QString pcap_file = GetOpenFileName("Open Pcap File", last_pcap_open_dirpath_,
                                       "Pcap File(*.pcap);;All Files(*.*)");
   if (pcap_file.isNull()) {
-    Debug("Do not select a target file.");
+    LOG(INFO) << "Do not select a target file.";
     label_pcap_file_->setText("no pcap file");
     return false;
   }
@@ -307,7 +307,7 @@ void HesaiFT120::openCorrectionFileClicked() {
   QString pcap_file = GetOpenFileName("Open Pcap File", last_pcap_open_dirpath_,
                                       "All Files(*.*)");
   if (pcap_file.isNull()) {
-    Debug("Do not select a target file.");
+    LOG(INFO) << "Do not select a target file.";
     label_correction_file_->setText("no pcap file");
     return;
   }

@@ -11,8 +11,8 @@
 using namespace std::chrono_literals;
 
 XRadar::XRadar(std::shared_ptr<autox::pointview::DisplayContext> context,
-               int device_id, const std::string& device_name)
-    : autox::pointview::DeviceBase(context, device_id, device_name),
+               autox::pointview::DeviceBaseParameter& parameter)
+    : autox::pointview::DeviceBase(context, parameter),
       viewer_(context->getViewerPtr()) {
   initDriver();
   // create point cloud data

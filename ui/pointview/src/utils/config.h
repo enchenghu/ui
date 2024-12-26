@@ -15,6 +15,7 @@
 
 #include <boost/algorithm/string/classification.hpp>  // Include boost::for is_any_of
 #include <boost/algorithm/string/split.hpp>  // Include for boost::split
+#include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 
 namespace autox {
@@ -60,7 +61,7 @@ class Config {
     try {
       value = currNode.as<T>();
     } catch (...) {
-      std::cout << "type convert failed" << std::endl;
+      LOG(INFO) << "type convert failed";
       return false;
     }
     return true;

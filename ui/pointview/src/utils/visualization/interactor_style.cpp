@@ -160,7 +160,7 @@ bool autox::visualization::PCLVisualizerInteractorStyle::saveCameraParameters(
           << "," << focal[2] << "/" << pos[0] << "," << pos[1] << "," << pos[2]
           << "/" << view[0] << "," << view[1] << "," << view[2] << "/"
           << cam->GetViewAngle() / 180.0 * M_PI << "/" << win_size[0] << ","
-          << win_size[1] << "/" << win_pos[0] << "," << win_pos[1] << std::endl;
+          << win_size[1] << "/" << win_pos[0] << "," << win_pos[1] ;
   ofs_cam.close();
 
   return (true);
@@ -884,19 +884,19 @@ void autox::visualization::PCLVisualizerInteractorStyle::OnKeyDown() {
       pcl::visualization::Camera cam(*CurrentRenderer->GetActiveCamera(),
                                      *Interactor->GetRenderWindow());
       std::cerr << "Clipping plane [near,far] " << cam.clip[0] << ", "
-                << cam.clip[1] << std::endl
+                << cam.clip[1]
                 << "Focal point [x,y,z] " << cam.focal[0] << ", "
-                << cam.focal[1] << ", " << cam.focal[2] << std::endl
+                << cam.focal[1] << ", " << cam.focal[2]
                 << "Position [x,y,z] " << cam.pos[0] << ", " << cam.pos[1]
-                << ", " << cam.pos[2] << std::endl
+                << ", " << cam.pos[2]
                 << "View up [x,y,z] " << cam.view[0] << ", " << cam.view[1]
-                << ", " << cam.view[2] << std::endl
+                << ", " << cam.view[2]
                 << "Camera view angle [degrees] " << pcl::rad2deg(cam.fovy)
-                << std::endl
+
                 << "Window size [x,y] " << cam.window_size[0] << ", "
-                << cam.window_size[1] << std::endl
+                << cam.window_size[1]
                 << "Window position [x,y] " << cam.window_pos[0] << ", "
-                << cam.window_pos[1] << std::endl;
+                << cam.window_pos[1] ;
       break;
     }
     case '=': {

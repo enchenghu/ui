@@ -14,7 +14,7 @@ bool Config::setNamespace(std::string name) {
   return true;
 }
 
-void Config::printConfig() { std::cout << node_ << std::endl; }
+void Config::printConfig() { LOG(INFO) << node_ ; }
 
 std::shared_ptr<Config> Config::getSubConfig(std::string name) {
   std::vector<std::string> prefix;

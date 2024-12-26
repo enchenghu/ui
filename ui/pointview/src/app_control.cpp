@@ -4,6 +4,8 @@
 
 #include "app_control.h"
 
+#include "utils/utils.h"
+
 namespace autox {
 namespace pointview {
 AppControl::AppControl()
@@ -22,17 +24,23 @@ AppControl::~AppControl() {}
 
 void AppControl::selectPointCloudCallback(
     const pcl::visualization::AreaPickingEvent& event, void* userData) {
+  if (active_device_ > 1) {
+    std::string error_msg = "Do not support multi-devices selection now.";
+    LOG(ERROR) << error_msg;
+    OpenMessageBox("Error", QString::fromStdString(error_msg), QMessageBox::Ok);
+    return;
+  }
   std::vector<int> indices;
+
   if (event.getPointsIndices(indices)) {
     for (auto device : device_list_) {
       if (device->getDeviceContext()->getPlayerState().is_playing) {
-        QMessageBox msgBox;
-        msgBox.setText("Error.");
-        msgBox.setInformativeText(
+        std::string error_msg =
             "Can not select points when it's playing.\n Please pause and then "
-            "select.");
-        msgBox.setStandardButtons(QMessageBox::Ok);
-        msgBox.exec();
+            "select.";
+        LOG(ERROR) << error_msg;
+        OpenMessageBox("Error", QString::fromStdString(error_msg),
+                       QMessageBox::Ok);
         return;
       }
     }
@@ -40,7 +48,7 @@ void AppControl::selectPointCloudCallback(
       device->getDeviceContext()->updatePointSelection(indices);
     }
   } else {
-    std::cout << "Empty" << std::endl;
+    LOG(ERROR) << "Select empty.";
   }
 }
 
@@ -85,7 +93,7 @@ int AppControl::addDevice(std::string device_type,
                                               unique_device_id_, device_name);
   if (device == nullptr) {
     // unknown device
-    std::cout << "unknown device:" << device_type << std::endl;
+    LOG(ERROR) << "unknown device:" << device_type;
     return -1;
   }
   if (config != nullptr) {
@@ -98,6 +106,9 @@ int AppControl::addDevice(std::string device_type,
   // add to devices
   device_list_.push_back(device);
   unique_device_id_++;
+  if (device_type != "UdpReplayer") {
+    active_device_++;
+  }
   return device->getDeviceContext()->getDeviceId();
 }
 
@@ -124,6 +135,9 @@ int AppControl::isValidTreeItem(QTreeWidgetItem* item) {
 bool AppControl::removeDevice(int device_id) {
   for (unsigned int i = 0; i < device_list_.size(); i++) {
     if (device_list_[i]->getDeviceContext()->getDeviceId() == device_id) {
+      if (device_list_[i]->getDeviceContext()->getTypeName() != "UdpReplayer") {
+        active_device_--;
+      }
       // remove device
       current_player_device_.reset();
       device_list_.erase(device_list_.begin() + i);

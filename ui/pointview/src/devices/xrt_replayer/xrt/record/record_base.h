@@ -1,22 +1,7 @@
 /******************************************************************************
- * Copyright 2018 The Apollo Authors. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright 2022 AutoX. All Rights Reserved.
  *****************************************************************************/
-
-#ifndef XRT_RECORD_RECORD_BASE_H_
-#define XRT_RECORD_RECORD_BASE_H_
-
+#pragma once
 #include <stdint.h>
 
 #include <set>
@@ -25,8 +10,7 @@
 #include "xrt/proto/record.pb.h"
 
 namespace autox {
-namespace xrt {
-namespace record {
+namespace recorder {
 
 static const std::string& kEmptyString = "";
 
@@ -81,7 +65,7 @@ class RecordBase {
    *
    * @return Record header.
    */
-  const proto::Header& GetHeader() const { return header_; }
+  const autox::xrt::proto::Header& GetHeader() const { return header_; }
 
   /**
    * @brief Get record file path.
@@ -92,12 +76,9 @@ class RecordBase {
 
  protected:
   std::string file_;
-  proto::Header header_;
+  autox::xrt::proto::Header header_;
   bool is_opened_ = false;
 };
 
-}  // namespace record
-}  // namespace xrt
+}  // namespace recorder
 }  // namespace autox
-
-#endif  // XRT_RECORD_RECORD_BASE_H_

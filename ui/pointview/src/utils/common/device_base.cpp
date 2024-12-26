@@ -8,11 +8,10 @@
 namespace autox {
 namespace pointview {
 
-DeviceBase::DeviceBase(std::shared_ptr<DisplayContext> context, int device_id,
-                       const std::string& device_name)
+DeviceBase::DeviceBase(std::shared_ptr<DisplayContext> context,
+                       DeviceBaseParameter& parameter)
     : QObject(context->getParent()) {
-  device_context_ =
-      std::make_shared<DeviceContext>(this, context, device_id, device_name);
+  device_context_ = std::make_shared<DeviceContext>(this, context, parameter);
 };
 
 std::shared_ptr<DeviceContext> DeviceBase::getDeviceContext() {

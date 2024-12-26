@@ -16,8 +16,8 @@
 using namespace std::chrono_literals;
 
 XrtCamera::XrtCamera(std::shared_ptr<autox::pointview::DisplayContext> context,
-                     int device_id, const std::string& device_name)
-    : autox::pointview::DeviceBase(context, device_id, device_name) {
+                     autox::pointview::DeviceBaseParameter& parameter)
+    : autox::pointview::DeviceBase(context, parameter) {
   // xrt message dispatcher
   dispatcher_ = XrtMessageDispatcher::getInstance();
   // player
@@ -85,8 +85,7 @@ XrtCamera::XrtCamera(std::shared_ptr<autox::pointview::DisplayContext> context,
           // publish msg
           if (raw_image_buffer_.size() > 3) {
             raw_image_buffer_.pop_front();
-            std::cout << "rendering too long, drop a raw image frame!"
-                      << std::endl;
+            LOG(INFO) << "rendering too long, drop a raw image frame!";
           }
         } else {
           std::this_thread::sleep_for(10ms);
@@ -122,7 +121,7 @@ bool XrtCamera::convertImage(const std::shared_ptr<RawImage>& raw_image,
     }
   } else {
     std::cerr << "Cannot support this format (" << raw_image->encoding()
-              << ") image" << std::endl;
+              << ") image";
     return false;
   }
   return true;
@@ -161,11 +160,11 @@ bool XrtCamera::updateUI() {
   auto update_time =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
           .count();
-  std::cout << "image size: " << current_raw_image_->width() << "x"
+  LOG(INFO) << "image size: " << current_raw_image_->width() << "x"
             << current_raw_image_->height() << "x"
             << current_raw_image_->step() / current_raw_image_->width()
             << ", encoding:" << current_raw_image_->encoding()
-            << ", update time:" << update_time << std::endl;
+            << ", update time:" << update_time;
   return true;
 }
 

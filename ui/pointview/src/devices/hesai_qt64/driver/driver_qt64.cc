@@ -11,6 +11,8 @@
 #include <utility>
 #include <vector>
 
+#include <glog/logging.h>
+
 namespace autox {
 namespace drivers {
 namespace hesai_qt64 {
@@ -215,14 +217,14 @@ bool DriverQt64::ParseLidarPacket(const uint8_t* data, size_t len) {
 
   auto qt_pkt = reinterpret_cast<const PandarQtPacket*>(data);
   if (qt_pkt->header.sop[0] != '\xEE' || qt_pkt->header.sop[1] != '\xFF') {
-    std::cout << "Start of Packet error: " << std::hex
+    LOG(INFO) << "Start of Packet error: " << std::hex
               << (0xFF & qt_pkt->header.sop[0])
               << (0xFF & qt_pkt->header.sop[1]);
     return false;
   }
   if (qt_pkt->header.protocalVersionMajor != 0x03 ||
       qt_pkt->header.protocalVersionMinor != 0x01) {
-    std::cout << "Lidar UDP packet format version: "
+    LOG(INFO) << "Lidar UDP packet format version: "
               << qt_pkt->header.protocalVersionMajor << '.'
               << qt_pkt->header.protocalVersionMinor << ". New firmware?";
     return false;
@@ -246,7 +248,7 @@ bool DriverQt64::ParseLidarPacket(const uint8_t* data, size_t len) {
   pkt_timestamp += timestamp_in_us * 1e-6;
 
   const double distance_unit = qt_pkt->header.chDisUnit / 1000.0;
-  if(point_cloud_->points.empty()){
+  if (point_cloud_->points.empty()) {
     point_cloud_->begin_index_in_pacp = cur_packet_index_;
   }
   point_cloud_->udp_packet_number++;
@@ -406,9 +408,7 @@ void DriverQt64::resetDriver() {
   accumulate_azimuth_ = 0;
 }
 
-void DriverQt64::resetFrameIndex() {
-  index_f_single_thread_ = 0;
-}
+void DriverQt64::resetFrameIndex() { index_f_single_thread_ = 0; }
 
 }  // namespace hesai_qt64
 }  // namespace drivers

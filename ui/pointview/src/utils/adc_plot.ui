@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>977</width>
     <height>697</height>
    </rect>
   </property>
@@ -14,7 +14,7 @@
    <string>Adc data</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout_8">
+   <layout class="QGridLayout" name="gridLayout_7">
     <item row="0" column="0">
      <widget class="QCustomPlot" name="AdcWidget" native="true">
       <property name="minimumSize">
@@ -36,151 +36,6 @@
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="0" column="0">
         <layout class="QHBoxLayout" name="FirstHorizontalLayout">
-         <item>
-          <widget class="QGroupBox" name="groupBox_6">
-           <property name="title">
-            <string>Azimuth Code in File</string>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_4">
-            <item>
-             <widget class="QPushButton" name="OpenAzimuthCodeButton">
-              <property name="text">
-               <string>Open Azimuth Code</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="SaveAzimuthCodeButton">
-              <property name="text">
-               <string>Save Azimuth Code</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QGroupBox" name="groupBox_2">
-           <property name="title">
-            <string>Id Reflection Config</string>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <item>
-             <widget class="QPushButton" name="OpenFileButton">
-              <property name="text">
-               <string>Open Config file</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_5">
-              <property name="text">
-               <string>File name:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="FileNameLabel">
-              <property name="text">
-               <string/>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QGroupBox" name="groupBox_7">
-           <property name="title">
-            <string>Status</string>
-           </property>
-           <layout class="QGridLayout" name="gridLayout">
-            <item row="0" column="0">
-             <widget class="QLabel" name="StatusLabel">
-              <property name="text">
-               <string>Start</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_6">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item row="2" column="0">
-     <widget class="QWidget" name="widget_2" native="true">
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>120</height>
-       </size>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_7">
-       <item row="0" column="0">
-        <layout class="QHBoxLayout" name="SecondHorizontalLayout">
-         <item>
-          <widget class="QGroupBox" name="groupBox_8">
-           <property name="title">
-            <string>Parameter Setting</string>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_6">
-            <property name="sizeConstraint">
-             <enum>QLayout::SetDefaultConstraint</enum>
-            </property>
-            <item row="0" column="1">
-             <widget class="QSpinBox" name="SampleNumberSpinBox">
-              <property name="maximum">
-               <number>100000</number>
-              </property>
-              <property name="value">
-               <number>500</number>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_3">
-              <property name="text">
-               <string>Sample number:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0" colspan="2">
-             <layout class="QHBoxLayout" name="horizontalLayout_10">
-              <item>
-               <widget class="QLabel" name="label_6">
-                <property name="text">
-                 <string>Ip:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="MasterIpLineEdit">
-                <property name="text">
-                 <string>192.168.1.21</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </item>
          <item>
           <widget class="QGroupBox" name="groupBox_3">
            <property name="title">
@@ -233,34 +88,40 @@
           </widget>
          </item>
          <item>
-          <widget class="QGroupBox" name="groupBox">
+          <widget class="QGroupBox" name="groupBox_7">
            <property name="title">
-            <string>Adc Data in File</string>
+            <string>Status</string>
            </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <item>
-             <widget class="QPushButton" name="OpenAdcDataButton">
+           <layout class="QGridLayout" name="gridLayout">
+            <item row="0" column="0">
+             <widget class="QLabel" name="StatusLabel">
               <property name="text">
-               <string>Open Adc Data</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="SaveAdcDataButton">
-              <property name="text">
-               <string>Save Adc Data</string>
+               <string>Start</string>
               </property>
              </widget>
             </item>
            </layout>
           </widget>
          </item>
+         <item>
+          <spacer name="horizontalSpacer_6">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
         </layout>
        </item>
       </layout>
      </widget>
     </item>
-    <item row="3" column="0">
+    <item row="2" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="maximumSize">
        <size>
@@ -285,14 +146,14 @@
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_9">
              <item>
-              <widget class="QLabel" name="label">
+              <widget class="QLabel" name="FirstParameterLabel">
                <property name="text">
-                <string>Laser id:</string>
+                <string>First:</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QSpinBox" name="LaserIdSpinBox">
+              <widget class="QSpinBox" name="FirstPSpinBox">
                <property name="minimum">
                 <number>1</number>
                </property>
@@ -302,14 +163,14 @@
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="label_2">
+              <widget class="QLabel" name="SecondParameterLabel">
                <property name="text">
-                <string>Azimuth code: </string>
+                <string>Second: </string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QSpinBox" name="AzimuthCodeSpinBox">
+              <widget class="QSpinBox" name="SecondPSpinBox">
                <property name="maximum">
                 <number>40000</number>
                </property>
@@ -365,31 +226,6 @@
             <height>16777215</height>
            </size>
           </property>
-          <column>
-           <property name="text">
-            <string>Laser id</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Azimuth code</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Status</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Save Path</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Operation</string>
-           </property>
-          </column>
          </widget>
         </item>
         <item row="0" column="1">
@@ -441,6 +277,159 @@
       </widget>
      </widget>
     </item>
+    <item row="0" column="1" rowspan="3">
+     <widget class="QWidget" name="SettingGroup" native="true">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QGroupBox" name="groupBox_8">
+         <property name="title">
+          <string>Parameter Setting</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_6">
+          <property name="sizeConstraint">
+           <enum>QLayout::SetDefaultConstraint</enum>
+          </property>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="SampleNumberSpinBox">
+            <property name="maximum">
+             <number>100000</number>
+            </property>
+            <property name="value">
+             <number>500</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Sample number:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <layout class="QHBoxLayout" name="horizontalLayout_10">
+            <item>
+             <widget class="QLabel" name="label_6">
+              <property name="text">
+               <string>Ip:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="IpLineEdit">
+              <property name="text">
+               <string>192.168.1.21</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Adc Data in File</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_9">
+          <item row="0" column="1">
+           <widget class="QPushButton" name="SaveAdcDataButton">
+            <property name="text">
+             <string>Save Adc Data</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QPushButton" name="OpenAdcDataButton">
+            <property name="text">
+             <string>Open Adc Data</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QLabel" name="label_9">
+              <property name="text">
+               <string>Adc file:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="AdcPathLabel">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>Looping Sample</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_8">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Time Gap:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="LoopTimesBox"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Loop Times:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="QPushButton" name="LoopingStartButton">
+            <property name="text">
+             <string>Looping Start</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="TimeGapBox">
+            <property name="suffix">
+             <string>ms</string>
+            </property>
+            <property name="prefix">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="SettingLayout"/>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -449,7 +438,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>977</width>
      <height>22</height>
     </rect>
    </property>

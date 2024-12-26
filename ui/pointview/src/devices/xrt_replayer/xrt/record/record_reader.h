@@ -1,22 +1,7 @@
 /******************************************************************************
- * Copyright 2018 The Apollo Authors. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright 2022 AutoX. All Rights Reserved.
  *****************************************************************************/
-
-#ifndef XRT_RECORD_RECORD_READER_H_
-#define XRT_RECORD_RECORD_READER_H_
-
+#pragma once
 #include <memory>
 #include <set>
 #include <string>
@@ -29,8 +14,7 @@
 #include "xrt/record/record_message.h"
 
 namespace autox {
-namespace xrt {
-namespace record {
+namespace recorder {
 
 /**
  * @brief The record reader.
@@ -38,7 +22,18 @@ namespace record {
 class RecordReader : public RecordBase {
  public:
   using FileReaderPtr = std::unique_ptr<RecordFileReader>;
-  using ChannelInfoMap = std::unordered_map<std::string, proto::ChannelCache>;
+  using ChannelInfoMap =
+      std::unordered_map<std::string, autox::xrt::proto::ChannelCache>;
+
+  enum ErrorEnum {
+    NONE,
+    E_NOT_EXIST,
+    E_IO,
+    E_FILE_BROKEN,
+    E_TIME_OUT_OF_HEADER,
+    E_END_TIME_REACHED,
+    E_NO_CHUNK_TO_READ
+  };
 
   /**
    * @brief The constructor with record file path as parameter.
@@ -68,8 +63,28 @@ class RecordReader : public RecordBase {
    *
    * @return True for success, flase for not.
    */
-  bool ReadMessage(RecordMessage* message, uint64_t begin_time = 0,
-                   uint64_t end_time = UINT64_MAX);
+  bool ReadMessage(autox::xrt::record::RecordMessage* message,
+                   uint64_t begin_time = 0, uint64_t end_time = UINT64_MAX);
+
+  /**
+   * @brief Read one message from reader.
+   *
+   * @param error detailed error when return false
+   * @param message
+   * @param begin_time
+   * @param end_time
+   *
+   * @return True for success, flase for not.
+   */
+  bool ReadMessage(ErrorEnum* error, autox::xrt::record::RecordMessage* message,
+                   uint64_t begin_time = 0, uint64_t end_time = UINT64_MAX);
+
+  /**
+   * @brief Return detailed error of last read message.
+   *
+   * @return error enum.
+   */
+  ErrorEnum GetError() const { return last_error_; }
 
   /**
    * @brief Reset the message index of record reader.
@@ -113,10 +128,10 @@ class RecordReader : public RecordBase {
   std::set<std::string> GetChannelList() const override;
 
   /**
-  * @brief Is this record reader is read completed.
-  *
-  * @return True for reach end, false for not.
-  */
+   * @brief Is this record reader is read completed.
+   *
+   * @return True for reach end, false for not.
+   */
   bool ReachEnd() const { return reach_end_; }
 
   /**
@@ -124,22 +139,26 @@ class RecordReader : public RecordBase {
    *
    * @return proto with debug info.
    */
-  proto::RecordDebugInfo GetDebugInfo();
+  autox::xrt::proto::BagFileDebugInfo GetDebugInfo();
+
+  /**
+   * @brief Get the Index by traversing the file
+   */
+  void RecoverIndex();
 
  private:
   bool ReadNextChunk(uint64_t begin_time, uint64_t end_time);
 
   bool is_valid_ = false;
   bool reach_end_ = false;
-  std::unique_ptr<proto::ChunkBody> chunk_ = nullptr;
-  proto::Index index_;
+  std::unique_ptr<autox::xrt::proto::ChunkBody> chunk_ = nullptr;
+  autox::xrt::proto::Index index_;
+  autox::xrt::proto::RecordDebugInfo record_debug_info_;
   int message_index_ = 0;
   ChannelInfoMap channel_info_;
   FileReaderPtr file_reader_;
+  ErrorEnum last_error_ = NONE;
 };
 
-}  // namespace record
-}  // namespace xrt
+}  // namespace recorder
 }  // namespace autox
-
-#endif  // XRT_RECORD_RECORD_READER_H_

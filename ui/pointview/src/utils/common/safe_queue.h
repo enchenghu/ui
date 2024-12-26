@@ -18,8 +18,8 @@ class SafeQueue {
   void setName(std::string name) { mName = name; }
   bool clear() {
     std::unique_lock<std::mutex> lock(mMutex);
-    while(!mQueue.empty()){
-        mQueue.pop();
+    while (!mQueue.empty()) {
+      mQueue.pop();
     }
     return true;
   };
@@ -53,10 +53,10 @@ class SafeQueue {
 
     auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapsed_1 = end - start;
-    // std::cout << "======time for timeoutOccured: " <<  elapsed_1.count() *
-    // 1000 << " ms" << std::endl;
+    // LOG(INFO) << "======time for timeoutOccured: " <<  elapsed_1.count() *
+    // 1000 << " ms" ;
     if (timeoutOccured) {
-      // std::cout << mName << " get element timeoutOccured!!!!!! "<< std::endl;
+      // LOG(INFO) << mName << " get element timeoutOccured!!!!!! ";
       return true;
     }
     t = std::move(mQueue.front());

@@ -18,6 +18,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt update && \
                 libprotobuf-dev \
                 protobuf-compiler \
                 libopencv-dev \
+                libgoogle-glog-dev \
+                libgflags-dev \
                 && \
     rm -rf /var/lib/apt/lists/*
 

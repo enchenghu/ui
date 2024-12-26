@@ -4,6 +4,8 @@
 
 #include "point_selection.h"
 
+#include <glog/logging.h>
+
 namespace autox {
 namespace pointview {
 PointSelection::PointSelection(std::shared_ptr<DeviceContext> device_context,
@@ -66,7 +68,7 @@ void PointSelection::update(PointCloudT::Ptr cloud, bool refresh_table) {
         }
       }
     }
-    std::cout << "selected point number:" << valid_indices_.size() << std::endl;
+    LOG(INFO) << "selected point number:" << valid_indices_.size();
     // update table and mark points
     if (valid_indices_.size() == 0 || !point_info_cb_) {
       return;
@@ -75,7 +77,7 @@ void PointSelection::update(PointCloudT::Ptr cloud, bool refresh_table) {
       if (i >= 0 && i < cloud->points.size()) {
         markPoint(cloud->points[i]);
       } else {
-        std::cout << "point_selection out of range:" << i << std::endl;
+        LOG(INFO) << "point_selection out of range:" << i;
       }
     }
     if (refresh_table) {

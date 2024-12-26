@@ -4,6 +4,8 @@
 
 #include "udp_logger.h"
 
+#include <glog/logging.h>
+
 static_assert(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__,
               "Currently the driver only work with little endian systems!");
 
@@ -115,28 +117,27 @@ bool UdpLogger::checkPacket(const uint8_t* data, size_t len) {
   // check head
   auto header = reinterpret_cast<const PacketHeader*>(data);
   if (header->sop[0] != 0xee || header->sop[1] != 0xff) {
-    std::cout << "Invalid log packet, head need be 0xeeff: " << std::hex
-              << (0xFF & header->sop[0]) << (0xFF & header->sop[1]) << std::dec
-              << std::endl;
+    LOG(INFO) << "Invalid log packet, head need be 0xeeff: " << std::hex
+              << (0xFF & header->sop[0]) << (0xFF & header->sop[1]) << std::dec;
     return false;
   }
   // check version
   if (header->major_version != 0xff || header->minor_version != 0x01) {
-    std::cout << "Invalid log packet, version need be 255.1: " << std::hex
+    LOG(INFO) << "Invalid log packet, version need be 255.1: " << std::hex
               << header->major_version << '.' << header->minor_version
-              << std::dec << std::endl;
+              << std::dec;
     return false;
   }
   // check data size
   if (header->data_size + 8 != len) {
-    std::cout
+    LOG(INFO)
         << "Invalid log packet, packet size need be data size + 8, packet size:"
-        << len << ", data size:" << header->data_size << std::endl;
+        << len << ", data size:" << header->data_size;
     return false;
   }
   // check tail
   if (data[len - 2] != 0x0d || data[len - 1] != 0x0a) {
-    std::cout << "Invalid log packet, tail need be 0x0d0a." << std::endl;
+    LOG(INFO) << "Invalid log packet, tail need be 0x0d0a.";
     return false;
   }
   return true;

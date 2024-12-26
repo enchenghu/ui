@@ -4,14 +4,14 @@ add_subdirectory(fakelidar)
 add_subdirectory(hesai_pandar128)
 # hesai_qt64
 add_subdirectory(hesai_qt64)
+# hesai_qt128
+add_subdirectory(hesai_qt128)
 # xlidar
 add_subdirectory(xlidar)
 # xradar
 add_subdirectory(xradar)
 # blidar
 add_subdirectory(blidar)
-# device_example
-add_subdirectory(device_example)
 # udp_replayer
 add_subdirectory(udp_replayer)
 # xrt_replayer

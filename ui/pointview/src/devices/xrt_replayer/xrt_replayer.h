@@ -13,11 +13,16 @@
 
 #include "xrt_message_dispatcher.h"
 namespace autox {
+namespace recorder {
+class RecordReader;
+}  // namespace recorder
+}  // namespace autox
+
+namespace autox {
 namespace xrt {
 namespace record {
-class RecordReader;
 class RecordMessage;
-}  // namespace record
+}
 }  // namespace xrt
 }  // namespace autox
 
@@ -27,7 +32,7 @@ class XrtReplayer : public autox::pointview::DeviceBase {
   using PlaybackBuffer =
       autox::pointview::PlaybackBuffer<autox::xrt::record::RecordMessage>;
   XrtReplayer(std::shared_ptr<autox::pointview::DisplayContext> context,
-              int device_id, const std::string& device_name);
+              autox::pointview::DeviceBaseParameter& parameter);
   ~XrtReplayer() override;
   bool updateUI() override { return true; };
   bool initFromConfig(
@@ -46,7 +51,7 @@ class XrtReplayer : public autox::pointview::DeviceBase {
   std::shared_ptr<QLabel> label_record_file_;
   // for xrd record playback
   std::string record_file_;
-  std::unique_ptr<autox::xrt::record::RecordReader> record_reader_;
+  std::unique_ptr<autox::recorder::RecordReader> record_reader_;
   std::shared_ptr<PlaybackBuffer> playback_buffer_;
   // xrt channel dispatcher
   XrtMessageDispatcher* dispatcher_;

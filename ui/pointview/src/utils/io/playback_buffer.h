@@ -164,7 +164,7 @@ class PlaybackBuffer : public PlaybackBufferBase {
       }
     } else {
       std::this_thread::sleep_for(100ms);
-      std::cout << " player_thread_ noing is doing" << std::endl;
+      LOG(INFO) << " player_thread_ noing is doing" ;
     }
   };
 
@@ -175,8 +175,8 @@ class PlaybackBuffer : public PlaybackBufferBase {
     }
     using namespace std::chrono_literals;
     if (buffer_.size() == 0) {
-      std::cout << "invalid palyback buffer when call consumeNextBuffer()"
-                << std::endl;
+      LOG(INFO) << "invalid palyback buffer when call consumeNextBuffer()"
+                ;
       std::this_thread::sleep_for(100ms);
       return;
     }

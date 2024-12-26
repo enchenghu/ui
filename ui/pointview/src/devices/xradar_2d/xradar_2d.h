@@ -3,21 +3,11 @@
 
 #include <QCheckBox>
 
-#include "utils/adc_plot.h"
-#include "utils/camera/video_capture.h"
 #include "utils/common/lidar_base.h"
-#include "utils/io/pcap_udp_parser.h"
-#include "utils/io/playback_buffer.h"
-#include "utils/io/simple_player_setting.h"
-#include "utils/io/udp_input.h"
-#include "utils/lidar/lidar_frame_info.h"
 #include "utils/pointcloud/point_data.h"
 #include "utils/pointcloud/point_exporter.h"
 #include "utils/pointcloud/point_filter.h"
-#include "utils/pointcloud/point_manipulator.h"
 #include "utils/pointcloud/point_selection.h"
-#include "utils/pointcloud/pointcloud.h"
-#include "utils/pose_setting.h"
 #include "utils/radar/rf_image.h"
 
 namespace autox {
@@ -40,10 +30,11 @@ class XRadar2D : public autox::pointview::LidarBase<RawPointCloud> {
     double timestamp;
     size_t n_udp_packets;
     size_t n_points;
-    uint8_t version;
+    uint8_t major_version;
+    uint8_t minor_version;
   };
   XRadar2D(std::shared_ptr<autox::pointview::DisplayContext> context,
-           int device_id, const std::string& device_name);
+           autox::pointview::DeviceBaseParameter& parameter);
   ~XRadar2D();
   bool updateUI() override;
   bool initFromConfig(
@@ -67,7 +58,6 @@ class XRadar2D : public autox::pointview::LidarBase<RawPointCloud> {
   // visualizer ptr
   autox::visualization::PCLVisualizer::Ptr viewer_;
   // helper utils
-  std::shared_ptr<autox::pointview::PoseSetting> pose_setting_;
   std::shared_ptr<autox::pointview::PointSelection> point_selection_;
   std::shared_ptr<autox::pointview::PointExporter> point_exporter_;
   std::shared_ptr<autox::pointview::PointFilter> point_filter_;
@@ -98,9 +88,6 @@ class XRadar2D : public autox::pointview::LidarBase<RawPointCloud> {
   float max_distance_{262};
   float hfov_start_{0};
   float hfov_end_{360};
-
-  // video capture
-  std::shared_ptr<autox::pointview::VideoCapture> video_capture_;
 };
 
 }  // namespace xradar_2d

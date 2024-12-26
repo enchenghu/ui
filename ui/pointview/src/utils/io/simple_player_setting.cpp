@@ -25,12 +25,12 @@ SimplePlayerSetting::SimplePlayerSetting(
   pcap_parser_ = pcap_parser;
   playback_buffer_ = playback_buffer;
   last_pcap_open_dirpath_ = QDir::homePath();
-  last_pcap_memory_open_dirpath_ = "./config";
+  last_pcap_memory_open_dirpath_ = QDir::homePath() + "/.pointview/config";
   if (pcap_parser_->readPcapMemory(
           last_pcap_memory_open_dirpath_.toStdString())) {
-    std::cout << "===readPcapMemory init ok" << std::endl;
+    LOG(INFO) << "===readPcapMemory init ok";
   } else {
-    std::cout << "===readPcapMemory init failed" << std::endl;
+    LOG(ERROR) << "===readPcapMemory init failed";
   };
   // init callback
   reset_driver_cb_ = [](bool /*is_playback*/) {};
@@ -52,7 +52,7 @@ SimplePlayerSetting::SimplePlayerSetting(
       [this]() { udp_input_->stopRecorder(); });
   // create property
   auto sub = device_context->getPropertyTree()->createPropertySubTree(
-      "player setting");
+      "Player Setting");
   // combobox_player_type_
   combobox_player_type_ = std::make_shared<QComboBox>();
   combobox_player_type_->addItems({"UDP", "PCAP"});
@@ -210,11 +210,11 @@ bool SimplePlayerSetting::parsePcap() {
   playback_buffer_->clear();
   pcap_parser_->breakParseAllPackets(false);
   parse_all_thread_ = std::make_unique<std::thread>([this]() {
-    std::cout << "======make parse_all_thread_ =====" << std::endl;
+    LOG(INFO) << "======make parse_all_thread_ =====";
     exit_a = false;
     std::unique_lock<std::mutex> lk(read_packets_mutex_);
     read_packets_ok_.wait(lk);
-    std::cout << "======start parse_all_thread_ =====" << std::endl;
+    LOG(INFO) << "======start parse_all_thread_ =====";
     if (set_driver_thread_cb_) set_driver_thread_cb_(driver_thread_num_);
     playback_buffer_->sync();
     while (!exit_a) {
@@ -223,14 +223,14 @@ bool SimplePlayerSetting::parsePcap() {
       std::this_thread::sleep_for(100ms);
     }
     pcap_parser_->breakParseAllPackets(true);
-    std::cout << "======quit parse_all_thread_ =====" << std::endl;
+    LOG(INFO) << "======quit parse_all_thread_ =====";
   });
 
   if (pcap_parser_->getParserState()) {
     std::string pcap_file = pcap_parser_->getPcapFilePath();
     label_pcap_file_->setText(QString::fromStdString(pcap_file));
     playback_buffer_->addRTFrameNum(pcap_parser_->getFrameNum());
-    std::cout << "===init already done before===" << std::endl;
+    LOG(INFO) << "===init already done before===";
     device_context_->updateTotalFrame(playback_buffer_->getRTFrameNum());
     std::this_thread::sleep_for(100ms);
     read_packets_ok_.notify_one();
@@ -256,9 +256,9 @@ bool SimplePlayerSetting::parsePcap() {
   if (pcap_parser_->isOpen() && pcap_parser_->parseAllPackets(progress_cb)) {
     std::string pcap_file = pcap_parser_->getPcapFilePath();
     label_pcap_file_->setText(QString::fromStdString(pcap_file));
-    std::cout
+    LOG(INFO)
         << "=========init done=========: playback_buffer_->getRTFrameNum() is "
-        << playback_buffer_->getRTFrameNum() << std::endl;
+        << playback_buffer_->getRTFrameNum();
     device_context_->updateTotalFrame(playback_buffer_->getRTFrameNum());
   } else {
     pcap_parser_->close();
@@ -281,12 +281,10 @@ void SimplePlayerSetting::setRecordPath() {
           QFileDialog::DontResolveSymlinks);
 
   if (!save_folder_.isNull()) {
-    std::cout << "selected recording folder : " << save_folder_.toStdString()
-              << std::endl;
+    LOG(INFO) << "selected recording folder : " << save_folder_.toStdString();
   } else {
     save_folder_ = QDir::homePath();
-    std::cout << "default recording folder : " << save_folder_.toStdString()
-              << std::endl;
+    LOG(INFO) << "default recording folder : " << save_folder_.toStdString();
   }
   label_record_path_->setText(save_folder_);
   device_context_->updateRecordPath(save_folder_.toStdString());
@@ -301,8 +299,8 @@ bool SimplePlayerSetting::openPcapMemoryClicked() {
 
   last_pcap_memory_open_dirpath_ = pcap_memory_folder_;
   if (!pcap_memory_folder_.isNull()) {
-    std::cout << "selected Pcap Memory file path : "
-              << pcap_memory_folder_.toStdString() << std::endl;
+    LOG(INFO) << "selected Pcap Memory file path : "
+              << pcap_memory_folder_.toStdString();
     if (pcap_parser_->readPcapMemory(pcap_memory_folder_.toStdString())) {
       return true;
     } else {
@@ -324,7 +322,7 @@ bool SimplePlayerSetting::openPcapClicked() {
   QString pcap_file = GetOpenFileName("Open Pcap File", last_pcap_open_dirpath_,
                                       "Pcap File(*.pcap);;All Files(*.*)");
   if (pcap_file.isNull()) {
-    Debug("Do not select a target file.");
+    LOG(INFO) << "Do not select a target file.";
     return false;
   }
   last_pcap_open_dirpath_ = QFileInfo(pcap_file).dir().absolutePath();

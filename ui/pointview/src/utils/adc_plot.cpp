@@ -15,32 +15,7 @@
 #include "ui_adc_plot.h"
 #include "utils.h"
 
-struct PacketHeader {
-  uint8_t sop[2];         // 0xEEFF 2bytes
-  uint8_t major_version;  // 0xff
-  uint8_t minor_version;  // 0x01
-  uint16_t first_sample;
-  uint16_t data_size;
-  uint16_t azimuth_code;
-  uint16_t adc_channel;
-  uint16_t distance_group;
-  uint16_t section;
-  uint8_t status;
-  uint8_t reserve[7];
-};
-
-struct AdcPacket {
-  PacketHeader header;
-  uint8_t data[0];
-};
-
 using namespace std::chrono_literals;
-
-void Int2Bytes(int num, std::vector<uint8_t>& array) {
-  uint16_t value = static_cast<uint16_t>(num);
-  array.push_back(static_cast<uint8_t>(value >> 8));
-  array.push_back(static_cast<uint8_t>(value & 0xff));
-}
 
 namespace autox {
 namespace pointview {
@@ -51,6 +26,7 @@ AdcPlot::AdcPlot(std::shared_ptr<DeviceContext> device_context)
   // ui
   ui_->setupUi(this);
   device_context_ = device_context;
+  ui_->TimeGapBox->setMaximum(10000);
   ui_->AdcWidget->addGraph();
   ui_->AdcWidget->xAxis->setLabel("Sample");
   ui_->AdcWidget->yAxis->setLabel("Volt(mv)");
@@ -62,10 +38,6 @@ AdcPlot::AdcPlot(std::shared_ptr<DeviceContext> device_context)
   cursor_x_ = new QCPItemLine(ui_->AdcWidget);
   ui_->MultiAddPointsPushButton->setCheckable(true);
   ui_->MultiAddPointsPushButton->setChecked(select_status_);
-  // parameter
-  distance_group_.resize(256, 0);
-  master_slavery_.resize(256, 0);
-  adc_channel_.resize(256, 0);
   // property
   open_button_ = std::make_shared<QPushButton>();
   open_button_->setText("Open");
@@ -80,21 +52,14 @@ AdcPlot::AdcPlot(std::shared_ptr<DeviceContext> device_context)
   udp_input_->setUdpCallback(udp_cb);
   connect(ui_->CancelPushButton, SIGNAL(clicked(bool)), this,
           SLOT(StopCollectData()));
-  // azimuth code buffer
-  azimuth_code_buffer_.resize(10000);
-  azimuth_code_flag_.resize(10000);
-  for (int i = 0; i < 10000; i++) {
-    azimuth_code_buffer_[i].resize(256, 0);
-    azimuth_code_flag_[i].resize(256, false);
-  }
   // init adc table
   for (int i = 0; i < 10; i++) {
     adc_data_.push_back(i);
   }
-  ShowAdcData(adc_data_);
-  connect(ui_->LaserIdSpinBox, SIGNAL(editingFinished()), this,
+  //  ShowAdcData(adc_data_);
+  connect(ui_->FirstPSpinBox, SIGNAL(editingFinished()), this,
           SLOT(SpinboxValueChangeSlot()));
-  connect(ui_->AzimuthCodeSpinBox, SIGNAL(editingFinished()), this,
+  connect(ui_->SecondPSpinBox, SIGNAL(editingFinished()), this,
           SLOT(SpinboxValueChangeSlot()));
   // player thread
   player_thread_ = std::make_unique<std::thread>([this]() {
@@ -118,124 +83,14 @@ AdcPlot::~AdcPlot() {
   delete ui_;
 }
 
-void AdcPlot::ParseAdcPacket(const uint8_t* data, size_t len) {
-  // check packet
-  if (!CheckPacket(data, len)) {
-    return;
-  }
-  if (render_) {
-    return;
-  }
-  // save adc data
-  auto udp_pkt = reinterpret_cast<const AdcPacket*>(data);
-  if (udp_pkt->header.status != 0) {
-    set_status(false, udp_pkt->header.status);
-    StopCollectData();
-    return;
-  }
-  // check data valid
-  if (udp_pkt->header.azimuth_code != current_parameter_.azimuth_code) return;
-  if (udp_pkt->header.adc_channel != current_parameter_.adc_channel) return;
-  if (udp_pkt->header.distance_group != current_parameter_.distance_group)
-    return;
-
-  adc_title_ =
-      "laser id: " + std::to_string(current_parameter_.laser_id) +
-      " , azimuth code: " + std::to_string(udp_pkt->header.azimuth_code) +
-      " , channel: " + std::to_string(udp_pkt->header.adc_channel) +
-      " , distance group: " + std::to_string(udp_pkt->header.distance_group);
-  for (int i = 0; i < udp_pkt->header.data_size; i += 2) {
-    uint16_t value =
-        (static_cast<uint16_t>(udp_pkt->data[i + 1]) << 8) | udp_pkt->data[i];
-    bool is_negative = (value & 0x8000) != 0;
-    if (is_negative) {
-      value = ~value + 1;
-    }
-    int16_t signed_value = static_cast<int16_t>(value);
-    if (is_negative) {
-      signed_value = -signed_value;
-    }
-    adc_data_.push_back(signed_value);
-  }
-  // recover ui
-  if (adc_data_.size() >= need_sample_number_) {
-    if (collect_mode_ == CollectMode::Multi) {
-      collect_finish_ = true;
-    } else {
-      render_ = true;
-    }
-  }
-}
-
-bool AdcPlot::CheckPacket(const uint8_t* data, size_t len) {  // check packet
-  if (len <= 16) {
-    return false;
-  }
-  // check head
-  auto header = reinterpret_cast<const PacketHeader*>(data);
-  if (header->sop[0] != 0xee || header->sop[1] != 0xff) {
-    std::stringstream ss;
-    ss << "Invalid log packet, head need be 0xeeff: " << std::hex
-       << (0xFF & header->sop[0]) << (0xFF & header->sop[1]) << std::dec;
-    Debug(ss.str());
-    return false;
-  }
-  // check version
-  if (header->major_version != 0x06 || header->minor_version != 0x01) {
-    std::stringstream ss;
-    ss << "Invalid log packet, version need be 6.1: " << std::hex
-       << header->major_version << '.' << header->minor_version << std::dec;
-    Debug(ss.str());
-    return false;
-  }
-  // check data size
-  if (header->data_size + 24 != len) {
-    std::stringstream ss;
-    ss << "Invalid log packet, packet size need be data size + 24, "
-          "packet size:"
-       << len << ", data size:" << header->data_size;
-    Debug(ss.str());
-    return false;
-  }
-  return true;
-}
-
-void AdcPlot::set_position(int x, int y) {
-  int laser_id = y + 1;
-  int azimuth_code = azimuth_code_buffer_[x][y];
-  if (select_status_) {
-    AddPoint(laser_id, azimuth_code);
-  } else {
-    if (ui_->LaserIdSpinBox->value() != laser_id) {
-      ui_->LaserIdSpinBox->setValue(laser_id);
-    }
-    if (ui_->AzimuthCodeSpinBox->value() != azimuth_code) {
-      ui_->AzimuthCodeSpinBox->setValue(azimuth_code);
-    }
-  }
-}
-
 void AdcPlot::on_StartButton_clicked() {
-  current_parameter_.laser_id = ui_->LaserIdSpinBox->value() - 1;
-  current_parameter_.azimuth_code = ui_->AzimuthCodeSpinBox->value();
-  current_parameter_.distance_group =
-      distance_group_[current_parameter_.laser_id];
-  current_parameter_.master_slavery =
-      master_slavery_[current_parameter_.laser_id];
-  current_parameter_.adc_channel = adc_channel_[current_parameter_.laser_id];
   need_sample_number_ = ui_->SampleNumberSpinBox->value();
-
+  std::string url =
+      FillParameter(ui_->FirstPSpinBox->value(), ui_->SecondPSpinBox->value());
   collect_mode_ = CollectMode::Single;
-  if (!SendCollectRequest()) {
+  if (!SendCollectRequest(url)) {
     StopCollectData();
   }
-}
-
-void AdcPlot::on_OpenFileButton_clicked() {
-  QString config_file = GetOpenFileName("Open Config File", last_open_dir_,
-                                        "Csv File(*.csv);;All Files(*.*)");
-
-  OpenIdReflectionConfig(config_file);
 }
 
 void AdcPlot::Open() {
@@ -246,18 +101,17 @@ void AdcPlot::Open() {
 void AdcPlot::SetUiState(bool state) {
   ui_->OpenAdcDataButton->setEnabled(state);
   ui_->SaveAdcDataButton->setEnabled(state);
-  ui_->OpenFileButton->setEnabled(state);
   ui_->StartButton->setEnabled(state);
   ui_->CancelPushButton->setEnabled(!state);
 }
 
 void AdcPlot::ShowAdcData(std::vector<int16_t>& adc_data) {
-  double min_value = adc_data[0] / 65536.0 * std::pow(10, 0.75) * 1000;
+  double min_value = AdcToVolt(adc_data[0]);
   double max_value = min_value;
   QVector<double> y;
   QVector<double> x;
   for (int i = 0; i < adc_data.size(); i++) {
-    double value = adc_data[i] / 65536.0 * std::pow(10, 0.75) * 1000;
+    double value = AdcToVolt(adc_data[i]);
     min_value = std::min(value, min_value);
     max_value = std::max(value, max_value);
     x.append(i);
@@ -312,10 +166,6 @@ void AdcPlot::StopCollectData() {
   SetUiState(true);
 }
 
-int AdcPlot::adc_channel(int laser_id) { return adc_channel_[laser_id]; }
-
-int AdcPlot::distance_group(int laser_id) { return distance_group_[laser_id]; }
-
 void AdcPlot::on_OpenAdcDataButton_clicked() {
   QString adc_file = GetOpenFileName("Open Adc Data", last_open_dir_,
                                      "Csv File(*.csv);;All Files(*.*)");
@@ -327,65 +177,10 @@ void AdcPlot::on_SaveAdcDataButton_clicked() {
       GetSaveFileName("Save adc data", QDir::homePath() + "/Untitled.csv",
                       "CSV Files(*.csv);;All Files(*.*)");
   if (filename.isNull()) {
-    Debug("Do not select a target file.");
+    LOG(INFO) << "Do not select a target file.";
     return;
   }
   SaveAdcData(filename);
-}
-
-void AdcPlot::set_azimuth_code(int x, int y, int azimuth_code) {
-  if (!azimuth_code_flag_[x][y]) {
-    azimuth_code_buffer_[x][y] = azimuth_code;
-    azimuth_code_flag_[x][y] = true;
-  }
-}
-
-void AdcPlot::on_OpenAzimuthCodeButton_clicked() {
-  QString azimuth_file = GetOpenFileName("Open Azimuth code", last_open_dir_,
-                                         "Csv File(*.csv);;All Files(*.*)");
-  if (azimuth_file.isNull()) {
-    Debug("Do not select a target file.");
-    return;
-  }
-  // open file
-  ifstream f(azimuth_file.toStdString());
-  std::string line;
-  int j = 0;
-  while (getline(f, line)) {
-    std::stringstream ss(line);
-    std::string str;
-    for (int i = 0; i < 256; i++) {
-      getline(ss, str, ',');
-      azimuth_code_buffer_[j][i] = std::stoi(str);
-      azimuth_code_flag_[j][i] = true;
-    }
-    j++;
-  }
-}
-
-void AdcPlot::on_SaveAzimuthCodeButton_clicked() {
-  QString filename =
-      GetSaveFileName("Save Azimuth code", QDir::homePath() + "/Untitled.csv",
-                      "CSV Files(*.csv);;All Files(*.*)");
-  if (filename.isNull()) {
-    Debug("Do not select a target file.");
-    return;
-  }
-  // open file
-  std::ofstream out_file(filename.toStdString());
-  if (!out_file) {
-    return;
-  }
-  // save data
-  for (int i = 0; i < azimuth_code_buffer_.size(); i++) {
-    for (int j = 0; j < azimuth_code_buffer_[i].size(); j++) {
-      out_file << azimuth_code_buffer_[i][j] << ",";
-    }
-    out_file << std::endl;
-  }
-  QMessageBox::information(nullptr, "Adc Plot", "save CSV successfully!",
-                           QMessageBox::Ok);
-  Debug("save csv successfully :" + filename.toStdString());
 }
 
 void AdcPlot::set_status(bool status, int fail_code) {
@@ -398,84 +193,35 @@ void AdcPlot::set_status(bool status, int fail_code) {
   ui_->StatusLabel->setText(status_str_);
 }
 
-void AdcPlot::SpinboxValueChangeSlot() {
-  int y = ui_->LaserIdSpinBox->value() - 1;
-  int azimuth_code = ui_->AzimuthCodeSpinBox->value();
-  int x = 0;
-  for (; x < 10000; x++) {
-    if (azimuth_code_buffer_[x][y] == azimuth_code) {
-      break;
-    }
-  }
-  if (x < 10000) {
-    emit PostionValueChanged(x, y);
-  }
-}
-
 bool AdcPlot::InitFromConfig(std::shared_ptr<autox::pointview::Config> config) {
   int value;
-  config->getParameter(namespace_ + ".laser_id", value);
-  ui_->LaserIdSpinBox->setValue(value);
-  config->getParameter(namespace_ + ".azimuth_code", value);
-  ui_->AzimuthCodeSpinBox->setValue(value);
+  config->getParameter(namespace_ + ".f_p", value);
+  ui_->FirstPSpinBox->setValue(value);
+  config->getParameter(namespace_ + ".s_p", value);
+  ui_->SecondPSpinBox->setValue(value);
   config->getParameter(namespace_ + ".sample_number", value);
   ui_->SampleNumberSpinBox->setValue(value);
   std::string str;
   config->getParameter(namespace_ + ".ip", str);
-  ui_->MasterIpLineEdit->setText(QString::fromStdString(str));
-  config->getParameter(namespace_ + ".id_reflection_config", str);
-  OpenIdReflectionConfig(QString::fromStdString(str));
+  ui_->IpLineEdit->setText(QString::fromStdString(str));
   return true;
 }
 
 bool AdcPlot::StoreToConfig(std::shared_ptr<autox::pointview::Config> config) {
-  config->setParameter(namespace_ + ".laser_id", ui_->LaserIdSpinBox->value());
-  config->setParameter(namespace_ + ".azimuth_code",
-                       ui_->AzimuthCodeSpinBox->value());
+  config->setParameter(namespace_ + ".f_p", ui_->FirstPSpinBox->value());
+  config->setParameter(namespace_ + ".s_p", ui_->SecondPSpinBox->value());
   config->setParameter(namespace_ + ".sample_number",
                        ui_->SampleNumberSpinBox->value());
   config->setParameter(namespace_ + ".ip",
-                       ui_->MasterIpLineEdit->text().toStdString());
-  config->setParameter(namespace_ + ".id_reflection_config",
-                       ui_->FileNameLabel->text().toStdString());
+                       ui_->IpLineEdit->text().toStdString());
   return true;
-}
-
-void AdcPlot::OpenIdReflectionConfig(QString config_path) {
-  if (config_path.isNull()) {
-    Debug("Do not select a target file.");
-    return;
-  }
-  last_open_dir_ = QFileInfo(config_path).dir().absolutePath();
-  adc_channel_.clear();
-  distance_group_.clear();
-  master_slavery_.clear();
-  // open file
-  ifstream f(config_path.toStdString());
-  std::string line;
-  while (getline(f, line)) {
-    std::stringstream ss(line);
-    std::string str;
-    // laser id
-    getline(ss, str, ',');
-    // adc channel
-    getline(ss, str, ',');
-    adc_channel_.push_back(std::stoi(str));
-    // distance group
-    getline(ss, str, ',');
-    distance_group_.push_back(std::stoi(str));
-    // board(master, slaver)
-    getline(ss, str, ',');
-    master_slavery_.push_back(std::stoi(str));
-  }
-  ui_->FileNameLabel->setText(config_path);
 }
 
 void AdcPlot::on_MultiStartPushButton_clicked() {
   // set mode
   collect_mode_ = CollectMode::Multi;
   // get new save path
-  if (!GetMultiSavePushButton()) {
+  if (!getMultiSavePath()) {
     return;
   }
   // progress bar
@@ -484,30 +230,20 @@ void AdcPlot::on_MultiStartPushButton_clicked() {
   progress.setWindowModality(Qt::WindowModal);
   progress.setValue(0);
   progress.show();
-
+  need_sample_number_ = ui_->SampleNumberSpinBox->value();
   for (int i = 0; i < multi_paramters_.size(); i++) {
-    current_parameter_.laser_id = multi_paramters_[i].laser_id;
-    current_parameter_.azimuth_code = multi_paramters_[i].azimuth_code;
-    current_parameter_.distance_group =
-        distance_group_[current_parameter_.laser_id];
-    current_parameter_.master_slavery =
-        master_slavery_[current_parameter_.laser_id];
-    current_parameter_.adc_channel = adc_channel_[current_parameter_.laser_id];
-    need_sample_number_ = ui_->SampleNumberSpinBox->value();
-
+    std::string url =
+        FillParameter(multi_paramters_[i].f_p, multi_paramters_[i].s_p);
     collect_finish_ = false;
     progress.setValue(i);
-    if (SendCollectRequest()) {
+    if (SendCollectRequest(url)) {
       // wait for data
       while (1) {
         if (progress.wasCanceled()) {
           break;
         }
         if (collect_finish_) {
-          QString save_path =
-              save_dir_ + "/" + QString::number(i + 1) + "_" +
-              QString::number(current_parameter_.laser_id) + "_" +
-              QString::number(current_parameter_.azimuth_code) + ".csv";
+          QString save_path = GetSavePath(i);
           SaveAdcData(save_path);
           set_status(true, 0);
           // write status
@@ -538,13 +274,8 @@ void AdcPlot::on_MultiStartPushButton_clicked() {
   emit SaveImage(save_dir_ + "/" + "range_image.png");
 }
 
-bool AdcPlot::SendCollectRequest() {
-  if (ui_->FileNameLabel->text().isNull()) {
-    QMessageBox::information(nullptr, "Adc Plot", "Please open config first!.",
-                             QMessageBox::Ok);
-    return false;
-  }
-  std::string ip = ui_->MasterIpLineEdit->text().toStdString();
+bool AdcPlot::SendCollectRequest(std::string url) {
+  std::string ip = ui_->IpLineEdit->text().toStdString();
   adc_data_.clear();
   // sent http request
   CURL* curl = curl_easy_init();
@@ -555,14 +286,7 @@ bool AdcPlot::SendCollectRequest() {
     SetUiState(false);
     // send http request
     curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
-    std::string url =
-        ip + "/adc-info?Gt0x25&adcchannel=" +
-        std::to_string(current_parameter_.adc_channel) +
-        "&distancegroup=" + std::to_string(current_parameter_.distance_group) +
-        "&section=" + std::to_string(current_parameter_.master_slavery) +
-        "&sample=" + std::to_string(need_sample_number_) +
-        "&udpport=" + std::to_string(udp_receive_port_) +
-        "&azimuthcode=" + std::to_string(current_parameter_.azimuth_code);
+    LOG(INFO) << "send request :" + url;
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "http");
@@ -603,15 +327,15 @@ void AdcPlot::SaveAdcData(QString filename) {
   if (collect_mode_ == CollectMode::Single) {
     QMessageBox::information(nullptr, "Adc Plot", "save CSV successfully!",
                              QMessageBox::Ok);
-    Debug("save csv successfully :" + filename.toStdString());
+    LOG(INFO) << "save csv successfully :" + filename.toStdString();
   }
 }
 
-bool AdcPlot::GetMultiSavePushButton() {
+bool AdcPlot::getMultiSavePath() {
   save_dir_ =
       GetSaveDirectory("Choose folder for Recording File", QDir::currentPath());
   if (save_dir_.isNull()) {
-    Debug("Do not select a target file.");
+    LOG(INFO) << "Do not select a target file.";
     return false;
   }
   ui_->MultiFilePathLabel->setText(save_dir_);
@@ -639,15 +363,15 @@ void AdcPlot::on_MultiAddPointsPushButton_clicked(bool status) {
 }
 
 void AdcPlot::on_AddPointPushButton_clicked() {
-  int laser_id = ui_->LaserIdSpinBox->value() - 1;
-  int azimuth_code = ui_->AzimuthCodeSpinBox->value();
-  AddPoint(laser_id, azimuth_code);
+  int f_p = ui_->FirstPSpinBox->value();
+  int s_p = ui_->SecondPSpinBox->value();
+  AddPoint(f_p, s_p);
 }
 
-void AdcPlot::LoadAdcData(QString adc_file) {
+bool AdcPlot::LoadAdcData(QString adc_file) {
   if (adc_file.isNull()) {
-    Debug("Do not select a target file.");
-    return;
+    LOG(INFO) << "Do not select a target file.";
+    return false;
   }
   adc_data_.clear();
   // open file
@@ -665,19 +389,21 @@ void AdcPlot::LoadAdcData(QString adc_file) {
     adc_data_.push_back(std::stoi(str));
   }
   ShowAdcData(adc_data_);
+  ui_->AdcPathLabel->setText(adc_file);
+  return true;
 }
 
-void AdcPlot::AddPoint(int laser_id, int azimuth_code) {
+void AdcPlot::AddPoint(int f_p, int s_p) {
   int rowCount = ui_->ParameterTableWidget->rowCount();
   ui_->ParameterTableWidget->insertRow(rowCount);
 
   // laser_id
   QTableWidgetItem* item = new QTableWidgetItem();
-  item->setData(Qt::DisplayRole, laser_id);
+  item->setData(Qt::DisplayRole, f_p);
   ui_->ParameterTableWidget->setItem(rowCount, 0, item);
   // azimuth_code
   QTableWidgetItem* item2 = new QTableWidgetItem();
-  item2->setData(Qt::DisplayRole, azimuth_code);
+  item2->setData(Qt::DisplayRole, s_p);
   ui_->ParameterTableWidget->setItem(rowCount, 1, item2);
   // status
   QString init_str;
@@ -693,15 +419,60 @@ void AdcPlot::AddPoint(int laser_id, int azimuth_code) {
   connect(button.get(), SIGNAL(clicked(bool)), this,
           SLOT(OperationButtonClicked()));
   ui_->ParameterTableWidget->setCellWidget(rowCount, 4, button.get());
-  multi_paramters_.push_back({laser_id, azimuth_code, button});
+  multi_paramters_.push_back({f_p, s_p, button});
 }
 
 void AdcPlot::OperationButtonClicked() {
   int row_index = ui_->ParameterTableWidget->currentRow();
   QString file_path = ui_->ParameterTableWidget->item(row_index, 3)->text();
-  Debug(file_path.toStdString());
-  Debug(std::to_string(row_index));
+  LOG(INFO) << file_path.toStdString();
+  LOG(INFO) << std::to_string(row_index);
   LoadAdcData(file_path);
+}
+
+void AdcPlot::setParameterTitle(QString f_t, QString s_t) {
+  ui_->FirstParameterLabel->setText(f_t + ":");
+  ui_->SecondParameterLabel->setText(s_t + ":");
+  QStringList head = {f_t, s_t, "Status", "Save path", "Operation"};
+  ui_->ParameterTableWidget->setColumnCount(5);
+  ui_->ParameterTableWidget->setHorizontalHeaderLabels(head);
+}
+
+int AdcPlot::getFirstParameter() { return ui_->FirstPSpinBox->value(); }
+
+void AdcPlot::setFirstParameter(int value) {
+  ui_->FirstPSpinBox->setValue(value);
+}
+
+int AdcPlot::getSecondParameter() { return ui_->SecondPSpinBox->value(); }
+
+void AdcPlot::setSecondParameter(int value) {
+  ui_->SecondPSpinBox->setValue(value);
+}
+std::string AdcPlot::getIp() { return ui_->IpLineEdit->text().toStdString(); }
+
+void AdcPlot::addSettingWidget(QWidget* w) { ui_->SettingLayout->addWidget(w); }
+
+void AdcPlot::on_LoopingStartButton_clicked() {
+  int times = ui_->LoopTimesBox->value();
+  int time_gap = ui_->TimeGapBox->value();
+  // progress bar
+  QProgressDialog progress("Collect Adc Data...", "Abort Parse", 0, times,
+                           nullptr);
+  progress.setWindowModality(Qt::WindowModal);
+  progress.setValue(0);
+  progress.show();
+  for (int i = 0; i < times; i++) {
+    progress.setValue(i);
+    on_StartButton_clicked();
+    std::this_thread::sleep_for(std::chrono::milliseconds(time_gap));
+    // cancel
+    if (progress.wasCanceled()) {
+      StopCollectData();
+      break;
+    }
+  }
+  progress.setValue(times);
 }
 
 }  // namespace pointview

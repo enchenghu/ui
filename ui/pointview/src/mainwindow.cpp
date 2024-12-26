@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include "pcl/io/pcd_io.h"
+#include "ui_mainwindow.h"
 #include "utils/utils.h"
 
 #if VTK_MAJOR_VERSION > 8
@@ -470,7 +471,7 @@ void MainWindow::on_SaveConfigAction_triggered() {
       GetSaveFileName("Save config file", QDir::homePath() + "/Untitled.yaml",
                       "YAML Files(*.yaml *.yml);;All Files(*.*)");
   if (fileName.isNull()) {
-    Debug("Do not select a target file.");
+    LOG(INFO) << "Do not select a target file.";
     return;
   }
   QMessageBox msgBox;
@@ -520,9 +521,11 @@ void MainWindow::on_DemoModeAction_triggered(bool checked) {
     if (demo_mode_) {
       ui_->PlayerWidget->hide();
       ui_->toolBar->hide();
+      ui_->tabWidget->hide();
     } else {
       ui_->PlayerWidget->show();
       ui_->toolBar->show();
+      ui_->tabWidget->show();
     }
   }
   if (demo_mode_ != ui_->DemoModeAction->isChecked()) {

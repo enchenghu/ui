@@ -2,95 +2,137 @@ syntax = "proto2";
 
 package autox.xrt.proto;
 
+import "topology_change.proto";
+import "role_attributes.proto";
+
 enum SectionType {
-    SECTION_HEADER       = 0;
-    SECTION_CHUNK_HEADER = 1;
-    SECTION_CHUNK_BODY   = 2;
-    SECTION_INDEX        = 3;
-    SECTION_CHANNEL      = 4;
+  SECTION_HEADER = 0;
+  SECTION_CHUNK_HEADER = 1;
+  SECTION_CHUNK_BODY = 2;
+  SECTION_INDEX = 3;
+  SECTION_CHANNEL = 4;
+  SECTION_DEBUG_INFO = 5;
 };
 
 enum CompressType {
-    COMPRESS_NONE = 0;
-    COMPRESS_BZ2  = 1;
-    COMPRESS_LZ4  = 2;
-    COMPRESS_ITEM_LZ4 = 3;
-    COMPRESS_ITEM_ZSTD = 4;
+  COMPRESS_NONE = 0;
+  COMPRESS_BZ2 = 1;
+  COMPRESS_LZ4 = 2;
+  COMPRESS_ITEM_LZ4 = 3;
+  COMPRESS_ITEM_ZSTD = 4;
 };
 
 message SingleIndex {
-    optional SectionType type = 1;
-    optional uint64 position  = 2;
-    oneof cache {
-        ChannelCache channel_cache          = 101;
-        ChunkHeaderCache chunk_header_cache = 102;
-        ChunkBodyCache chunk_body_cache     = 103;
-    }
+  optional SectionType type = 1;
+  optional uint64 position = 2;
+  oneof cache {
+    ChannelCache channel_cache = 101;
+    ChunkHeaderCache chunk_header_cache = 102;
+    ChunkBodyCache chunk_body_cache = 103;
+  }
 }
 
 message ChunkHeaderCache {
-    optional uint64 message_number = 1;
-    optional uint64 begin_time     = 2;
-    optional uint64 end_time       = 3;
-    optional uint64 raw_size       = 4;
+  optional uint64 message_number = 1;
+  optional uint64 begin_time = 2;
+  optional uint64 end_time = 3;
+  optional uint64 raw_size = 4;
 }
 
 message ChunkBodyCache {
-    optional uint64 message_number = 1;
+  optional uint64 message_number = 1;
 }
 
 message ChannelCache {
-    optional uint64 message_number = 1;
-    optional string name           = 2;
-    optional string message_type   = 3;
-    optional bytes proto_desc      = 4;
+  optional uint64 message_number = 1;
+  optional string name = 2;
+  optional string message_type = 3;
+  optional bytes proto_desc = 4;
 }
 
 message SingleMessage {
-    optional string channel_name = 1;
-    optional uint64 time         = 2;
-    optional bytes  content      = 3;
+  optional string channel_name = 1;
+  optional uint64 time = 2;
+  optional bytes content = 3;
+  optional uint64 publish_time = 4;
 }
 
 message Header {
-    optional uint32 major_version    = 1;
-    optional uint32 minor_version    = 2;
-    optional CompressType compress   = 3;
-    optional uint64 chunk_interval   = 4;
-    optional uint64 segment_interval = 5;
-    optional uint64 index_position   = 6 [default = 0];
-    optional uint64 chunk_number     = 7 [default = 0];
-    optional uint64 channel_number   = 8 [default = 0];
-    optional uint64 begin_time       = 9 [default = 0];
-    optional uint64 end_time         = 10 [default = 0];
-    optional uint64 message_number   = 11 [default = 0];
-    optional uint64 size             = 12 [default = 0];
-    optional bool is_complete        = 13 [default = false];
-    optional uint64 chunk_raw_size   = 14;
-    optional uint64 segment_raw_size = 15;
+  optional uint32 major_version = 1;
+  optional uint32 minor_version = 2;
+  optional CompressType compress = 3;
+  optional uint64 chunk_interval = 4;
+  optional uint64 segment_interval = 5;
+  optional uint64 index_position = 6 [default = 0];
+  optional uint64 chunk_number = 7 [default = 0];
+  optional uint64 channel_number = 8 [default = 0];
+  optional uint64 begin_time = 9 [default = 0];
+  optional uint64 end_time = 10 [default = 0];
+  optional uint64 message_number = 11 [default = 0];
+  optional uint64 size = 12 [default = 0];
+  optional bool is_complete = 13 [default = false];
+  optional uint64 chunk_raw_size = 14;
+  optional uint64 segment_raw_size = 15;
+  optional uint64 record_debug_info_position = 16 [default = 0];
 }
 
 message Channel {
-    optional string name         = 1;
-    optional string message_type = 2;
-    optional bytes proto_desc    = 3;
+  optional string name = 1;
+  optional string message_type = 2;
+  optional bytes proto_desc = 3;
 }
 
 message ChunkHeader {
-    optional uint64 begin_time     = 1;
-    optional uint64 end_time       = 2;
-    optional uint64 message_number = 3;
-    optional uint64 raw_size       = 4;
+  optional uint64 begin_time = 1;
+  optional uint64 end_time = 2;
+  optional uint64 message_number = 3;
+  optional uint64 raw_size = 4;
 }
 
 message ChunkBody {
-    repeated SingleMessage messages = 1;
+  repeated SingleMessage messages = 1;
 }
 
 message Index {
-    repeated SingleIndex indexes = 1;
+  repeated SingleIndex indexes = 1;
+}
+
+message ChannelOperateInfo {
+  optional uint64 operate_time = 1 [default = 0];
+  optional OperateType operate_type = 2;
+  optional string attr_key = 3;
+  optional uint64 record_operate_time = 4 [default = 0];
+}
+
+message CurrentOperateType {
+  optional uint64 operate_time = 1 [default = 0];
+  optional OperateType operate_type = 2;
+  optional uint64 record_operate_time = 3 [default = 0];
+}
+
+message ChannelChangeMsg {
+  repeated ChannelOperateInfo operate_infos = 1;
+  map<string, autox.xrt.proto.RoleAttributes> role_attr_map = 3;
+  map<string, CurrentOperateType> current_operate_type_map = 4;
+}
+
+message ChannelInfo {
+  optional string channel_name = 1;
+  optional uint64 first_message_time = 2 [default = 0];
+  optional uint64 last_message_time = 3 [default = 0];
+  optional uint64 message_number = 4 [default = 0];
 }
 
 message RecordDebugInfo {
-    optional Index index = 1;
+  // The information of each channel(Publisher)
+  // join/leave will be recorded here
+  map<string, ChannelChangeMsg> all_channels = 1;
+  // channel info of the channel that has received data
+  repeated ChannelInfo valid_channels = 2;
+  optional string recorder_host_name = 3;
+  optional string recorder_host_ip = 4;
+}
+message BagFileDebugInfo {
+  optional Index index = 1;
+  optional RecordDebugInfo record_debug_info = 2;
 }

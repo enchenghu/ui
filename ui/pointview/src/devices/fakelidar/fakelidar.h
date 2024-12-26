@@ -24,7 +24,7 @@ class FakeLidar : public autox::pointview::DeviceBase {
   Q_OBJECT
  public:
   FakeLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
-            int device_id, const std::string& device_name);
+            autox::pointview::DeviceBaseParameter& parameter);
   ~FakeLidar() override;
   bool updateUI() override;
 

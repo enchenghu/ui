@@ -29,7 +29,7 @@ class XRadar : public autox::pointview::DeviceBase {
   using RawPointCloud = autox::drivers::arbe::RawPointCloud;
   using PlaybackBuffer = autox::pointview::PlaybackBuffer<RawPointCloud>;
   XRadar(std::shared_ptr<autox::pointview::DisplayContext> context,
-         int device_id, const std::string& device_name);
+         autox::pointview::DeviceBaseParameter& parameter);
   ~XRadar() override;
   bool updateUI() override;
   bool initFromConfig(

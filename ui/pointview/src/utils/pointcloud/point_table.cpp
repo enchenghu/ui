@@ -63,7 +63,7 @@ void PointTable::on_SaveButton_clicked() {
                                      last_save_dirpath_ + "/Untitled.csv",
                                      "CSV Files(*.csv);;All Files(*.*)");
   if (fileName.isNull()) {
-    Debug("Do not select a target file.");
+    LOG(INFO) << "Do not select a target file.";
     return;
   }
   last_save_dirpath_ = QFileInfo(fileName).dir().absolutePath();
@@ -80,7 +80,7 @@ void PointTable::on_SaveButton_clicked() {
       out_file << ",";
     }
   }
-  out_file << std::endl;
+  out_file;
   for (int i = 0; i < rowCount; i++) {
     for (int j = 0; j < columnCount; j++) {
       auto item = ui->tableWidget->item(i, j);
@@ -89,7 +89,7 @@ void PointTable::on_SaveButton_clicked() {
         out_file << ",";
       }
     }
-    out_file << std::endl;
+    out_file;
   }
   out_file.close();
   QMessageBox msgBox;

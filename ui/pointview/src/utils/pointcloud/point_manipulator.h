@@ -17,12 +17,11 @@
 #include <set>
 #include <string>
 #include <vector>
-
 #include "utils/colormap.h"
 #include "utils/common/device_context.h"
 #include "utils/config.h"
 #include "utils/visualization/pcl_visualizer.h"
-
+#include "utils/utils.h"
 namespace autox {
 namespace pointview {
 
@@ -71,6 +70,7 @@ class PointManipulator : public QObject {
   void pointCloudChannelChanged(int index);
   void pointCloudRangeChanged();
   void pointCloudColormapChanged();
+  void openGammaFile();
 
  private:
   //
@@ -84,12 +84,18 @@ class PointManipulator : public QObject {
   std::shared_ptr<QComboBox> colormap_selection_;
   std::shared_ptr<QSpinBox> spinbox_point_size_;
   std::shared_ptr<QCheckBox> checkbox_hide_;
+  std::shared_ptr<QCheckBox> checkbox_enable_gamma_;
+  std::shared_ptr<QPushButton> btn_gamma_file_choose_;
+  std::shared_ptr<QLabel> label_gamma_file_path_;
   // colormap setting
   std::shared_ptr<Colormap> colormap_;
   std::map<std::string, int> colormap_idx_map_;
   std::shared_ptr<ResizeLabel> colormap_label_;
   // channel setting
   std::vector<ChannelSetting> channel_settings_;
+  //gamma
+  QString last_gamma_open_dirpath_{"."};
+  bool readGammaFile(std::string filename);
   int channel_idx_{0};
   bool is_hided_{false};
   int point_size_{1};

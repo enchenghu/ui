@@ -11,7 +11,7 @@ function error() {
 }
 # Base docker image name
 # MAIN_IMAGE="hub.autox.tech/integration/sensor/pointview:dev-22.04-20230116"
-MAIN_IMAGE="hub.autox.tech/sensor/pointview:dev-20.04-20240807"
+MAIN_IMAGE="hub.autox.tech/sensor/pointview:dev-20.04-20241106"
 # Container name
 MAIN_CONTAINER_NAME="pointview_$USER"
 # Work directory

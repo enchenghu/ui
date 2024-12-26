@@ -48,7 +48,7 @@ void PointExporter::exportCSV() {
       GetSaveFileName("Save point cloud", QDir::homePath() + "/Untitled.csv",
                       "CSV Files(*.csv);;All Files(*.*)");
   if (filename.isNull()) {
-    Debug("Do not select a target file.");
+    LOG(INFO) << "Do not select a target file.";
     return;
   }
   // open file
@@ -59,7 +59,7 @@ void PointExporter::exportCSV() {
   // save head
   for (int i = 0; i < header_.size(); i++) {
     if (i == header_.size() - 1) {
-      out_file << header_[i].toStdString() << std::endl;
+      out_file << header_[i].toStdString();
     } else {
       out_file << header_[i].toStdString() << ",";
     }
@@ -75,13 +75,13 @@ void PointExporter::exportCSV() {
       continue;
     }
     if (data.size() != header_.size()) {
-      std::cout << "invalid row size:" << data.size() << std::endl;
+      LOG(INFO) << "invalid row size:" << data.size();
       continue;
     }
     // save a row
     for (size_t i = 0; i < data.size(); i++) {
       if (i == data.size() - 1) {
-        out_file << data[i] << std::endl;
+        out_file << data[i];
       } else {
         out_file << data[i] << ",";
       }
@@ -90,7 +90,7 @@ void PointExporter::exportCSV() {
   out_file.close();
   QMessageBox::information(nullptr, "PointExporter", "save CSV successfully!",
                            QMessageBox::Ok);
-  std::cout << "save csv successfully :" << filename.toStdString() << std::endl;
+  LOG(INFO) << "save csv successfully :" << filename.toStdString();
 }
 
 void PointExporter::exportPCD() {
@@ -109,7 +109,7 @@ void PointExporter::exportPCD() {
       GetSaveFileName("Save point cloud", QDir::homePath() + "/Untitled.pcd",
                       "PCD Files(*.pcd);;All Files(*.*)");
   if (filename.isNull()) {
-    Debug("Do not select a target file.");
+    LOG(INFO) << "Do not select a target file.";
     return;
   }
   // convert to pcl::PointCloud
@@ -130,7 +130,7 @@ void PointExporter::exportPCD() {
   pcl::io::savePCDFileBinary(filename.toStdString(), *point_cloud);
   QMessageBox::information(nullptr, "PointExporter", "save PCD successfully!",
                            QMessageBox::Ok);
-  std::cout << "save PCD successfully :" << filename.toStdString() << std::endl;
+  LOG(INFO) << "save PCD successfully :" << filename.toStdString();
 }
 
 }  // namespace pointview

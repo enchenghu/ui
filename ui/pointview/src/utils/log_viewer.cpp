@@ -34,7 +34,7 @@ void LogViewer::on_saveButtonClicked() {
       GetSaveFileName("Save log to file", QDir::homePath() + "/Untitled.txt",
                       "TXT Files(*.txt);;All Files(*.*)");
   if (fileName.isNull()) {
-    Debug("Do not select a target file.");
+    LOG(INFO) << "Do not select a target file.";
     return;
   }
 

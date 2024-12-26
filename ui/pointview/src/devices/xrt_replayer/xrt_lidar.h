@@ -31,7 +31,7 @@ class XrtLidar : public autox::pointview::DeviceBase {
  public:
   using RawPointCloud = autox::drivers::PointCloudPack;
   XrtLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
-           int device_id, const std::string& device_name);
+           autox::pointview::DeviceBaseParameter& parameter);
   ~XrtLidar();
   bool updateUI() override;
   bool initFromConfig(

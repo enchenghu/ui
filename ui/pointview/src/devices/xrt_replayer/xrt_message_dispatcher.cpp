@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include <glog/logging.h>
+
 #include "xrt/record/record_message.h"
 
 void XrtMessageDispatcher::reset() {
@@ -18,7 +20,7 @@ void XrtMessageDispatcher::addChannelList(
     const std::vector<std::string>& channel_list) {
   for (auto& channel : channel_list) {
     if (message_buffer_.find(channel) != message_buffer_.end()) {
-      std::cout << "add repeated channel name:" << channel << std::endl;
+      LOG(INFO) << "add repeated channel name:" << channel;
       continue;
     }
     MessageQueue q;

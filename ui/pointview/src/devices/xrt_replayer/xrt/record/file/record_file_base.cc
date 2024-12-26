@@ -1,17 +1,5 @@
 /******************************************************************************
- * Copyright 2018 The Apollo Authors. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright 2022 AutoX. All Rights Reserved.
  *****************************************************************************/
 
 #include "xrt/record/file/record_file_base.h"
@@ -19,16 +7,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <glog/logging.h>
+
 namespace autox {
-namespace xrt {
-namespace record {
+namespace recorder {
 
 int64_t RecordFileBase::CurrentPosition() {
   off_t pos = lseek(fd_, 0, SEEK_CUR);
   if (pos < 0) {
-    std::cout << "lseek failed, file: " << path_ << ", fd: " << fd_
-           << ", offset: 0, whence: SEEK_CUR"
-           << ", position: " << pos << ", errno: " << errno;
+    LOG(ERROR) << "lseek failed, file: " << path_ << ", fd: " << fd_
+               << ", offset: 0, whence: SEEK_CUR"
+               << ", position: " << pos << ", errno: " << errno;
   }
   return pos;
 }
@@ -36,14 +25,13 @@ int64_t RecordFileBase::CurrentPosition() {
 bool RecordFileBase::SetPosition(int64_t position) {
   off_t pos = lseek(fd_, position, SEEK_SET);
   if (pos < 0) {
-    std::cout << "lseek failed, file: " << path_ << ", fd: " << fd_
-           << ", offset: 0, whence: SEEK_SET"
-           << ", position: " << pos << ", errno: " << errno;
+    LOG(ERROR) << "lseek failed, file: " << path_ << ", fd: " << fd_
+               << ", offset: 0, whence: SEEK_SET"
+               << ", position: " << pos << ", errno: " << errno;
     return false;
   }
   return true;
 }
 
-}  // namespace record
-}  // namespace xrt
+}  // namespace recorder
 }  // namespace autox

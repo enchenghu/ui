@@ -25,16 +25,10 @@ namespace pointview {
 
 class AdcPlot : public QMainWindow {
   Q_OBJECT
-  struct AdcParameter {
-    int laser_id;
-    int azimuth_code;
-    int distance_group;
-    int master_slavery;
-    int adc_channel;
-  };
+ public:
   struct AdcTableItem {
-    int laser_id;
-    int azimuth_code;
+    int f_p;
+    int s_p;
     std::shared_ptr<QPushButton> button;
   };
 
@@ -44,11 +38,8 @@ class AdcPlot : public QMainWindow {
   AdcPlot(std::shared_ptr<DeviceContext> device_context);
   ~AdcPlot();
   void Update();
-  int adc_channel(int laser_id);
-  int distance_group(int laser_id);
-  void set_azimuth_code(int x, int y, int azimuth_code);
-  bool InitFromConfig(std::shared_ptr<autox::pointview::Config> config);
-  bool StoreToConfig(std::shared_ptr<autox::pointview::Config> config);
+  virtual bool InitFromConfig(std::shared_ptr<autox::pointview::Config> config);
+  virtual bool StoreToConfig(std::shared_ptr<autox::pointview::Config> config);
 
  signals:
   void PostionValueChanged(int x, int y);
@@ -56,45 +47,48 @@ class AdcPlot : public QMainWindow {
   void SaveImage(QString file_name);
 
  public slots:
-  void set_position(int x, int y);
+  virtual void set_position(int x, int y) = 0;
 
- private slots:
+ protected slots:
+  virtual void SpinboxValueChangeSlot() = 0;
   void on_StartButton_clicked();
-  void on_OpenFileButton_clicked();
   void on_OpenAdcDataButton_clicked();
   void on_SaveAdcDataButton_clicked();
-  void on_OpenAzimuthCodeButton_clicked();
-  void on_SaveAzimuthCodeButton_clicked();
   void on_AddPointPushButton_clicked();
   void StopCollectData();
   void Open();
   void MouseHoveredSlot(QMouseEvent* event);
-  void SpinboxValueChangeSlot();
   // multi points
   void on_MultiStartPushButton_clicked();
   void on_MultiDeletePushButton_clicked();
   void on_MultiAddPointsPushButton_clicked(bool status);
   void OperationButtonClicked();
+  void on_LoopingStartButton_clicked();
 
- private:
-  bool GetMultiSavePushButton();
-  void ParseAdcPacket(const uint8_t* data, size_t len);
-  bool CheckPacket(const uint8_t* data, size_t len);
-  void SetUiState(bool state);
+ protected:
+  virtual void ParseAdcPacket(const uint8_t* data, size_t len) = 0;
+  virtual std::string FillParameter(int f_p, int s_p) = 0;
+  virtual QString GetSavePath(int index) = 0;
+  virtual double AdcToVolt(int16_t adc_value) = 0;
+  virtual void SetUiState(bool state);
+  bool getMultiSavePath();
   void ShowAdcData(std::vector<int16_t>& adc_data);
   void set_status(bool status, int fail_code);
-  void OpenIdReflectionConfig(QString config_path);
-  bool SendCollectRequest();
+  bool SendCollectRequest(std::string url);
   void SaveAdcData(QString filename);
-  void LoadAdcData(QString adc_file);
-  void AddPoint(int laser_id, int azimuth_code);
+  bool LoadAdcData(QString adc_file);
+  void AddPoint(int f_p, int s_p);
+  void setParameterTitle(QString f_t, QString s_t);
+  int getFirstParameter();
+  void setFirstParameter(int value);
+  int getSecondParameter();
+  void setSecondParameter(int value);
+  std::string getIp();
+  void addSettingWidget(QWidget* w);
 
- private:
+ protected:
   std::shared_ptr<DeviceContext> device_context_;
   std::shared_ptr<QPushButton> open_button_;
-  std::vector<int> adc_channel_;
-  std::vector<int> distance_group_;
-  std::vector<int> master_slavery_;
   std::shared_ptr<UdpInput> udp_input_;
   int need_sample_number_;
   std::unique_ptr<std::thread> player_thread_;
@@ -109,14 +103,10 @@ class AdcPlot : public QMainWindow {
   int udp_receive_port_{2500};
   QCPItemLine* cursor_y_;
   QCPItemLine* cursor_x_;
-  // azimuth code store
-  std::vector<std::vector<int>> azimuth_code_buffer_;
-  std::vector<std::vector<bool>> azimuth_code_flag_;
   std::string namespace_{"adc_plot"};
   // status string
   QString status_str_;
   // multi points setting
-  AdcParameter current_parameter_;
   std::vector<AdcTableItem> multi_paramters_;
   CollectMode collect_mode_;
   QString save_dir_;

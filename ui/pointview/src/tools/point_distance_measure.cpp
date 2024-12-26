@@ -6,6 +6,9 @@
 //
 
 #include "point_distance_measure.h"
+
+#include <glog/logging.h>
+
 PointDistanceMeasure::PointDistanceMeasure(
     std::shared_ptr<autox::pointview::DisplayContext> context)
     : autox::pointview::ToolBase(context, "PointDistanceMeasure"),
@@ -28,8 +31,8 @@ void PointDistanceMeasure::PointPickCallback(
     float dis_z = z - last_z_;
     float dis = dis_x * dis_x + dis_y * dis_y + dis_z * dis_z;
     dis = std::sqrt(dis);
-    std::cout << "PointDistanceMeasure, dx:" << dis_x << ", dy:" << dis_y
-              << ", dz:" << dis_z << ", d:" << dis << " m" << std::endl;
+    LOG(INFO) << "PointDistanceMeasure, dx:" << dis_x << ", dy:" << dis_y
+              << ", dz:" << dis_z << ", d:" << dis << " m";
     if (sphere_checkbox_->isChecked()) {
       viewer_->addSphere(pcl::PointXYZ(x, y, z), 0.05, 1.0, 0.0, 0.0, "Point2");
     }

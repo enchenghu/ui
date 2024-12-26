@@ -15,9 +15,9 @@ using namespace std::chrono_literals;
 namespace autox {
 namespace drivers {
 namespace xlidar {
-XLidar::XLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
-               int device_id, const std::string& device_name)
-    : LidarBase<RawPointCloud>(context, device_id, device_name),
+XLidar::XLidar(std::shared_ptr<pointview::DisplayContext> context,
+               autox::pointview::DeviceBaseParameter& parameter)
+    : LidarBase<RawPointCloud>(context, parameter),
       viewer_(context->getViewerPtr()) {
   laser_idx_map_.resize(laser_num_);
   for (int i = 0; i < laser_num_; i++) {
@@ -37,8 +37,12 @@ XLidar::XLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
   viewer_->addPointCloud(current_frame_.pcl_pointcloud,
                          std::to_string(device_context_->getDeviceId()));
   // add plugin
+  // camera image
+  camera_image_ = std::make_shared<autox::pointview::CameraImage>(
+      device_context_, 800, 602);
+  camera_image_->openUdpPort(2380);
   // adc plot
-  adc_plot_ = std::make_shared<autox::pointview::AdcPlot>(device_context_);
+  adc_plot_ = std::make_shared<XLidarAdcPlot>(device_context_);
   // laser_track
   laser_track_ = std::make_shared<autox::pointview::LaserTrack>(device_context_,
                                                                 table_head_);
@@ -69,15 +73,6 @@ XLidar::XLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
   // range image
   range_image_ = std::make_shared<autox::pointview::RangeImage>(
       device_context_, 10000, laser_num_);
-  // video capture
-  video_capture_ =
-      std::make_shared<autox::pointview::VideoCapture>(device_context_);
-  // video player
-  video_player_ =
-      std::make_shared<autox::pointview::VideoPlayer>(device_context_);
-  // point cloud pose
-  pose_setting_ =
-      std::make_shared<autox::pointview::PoseSetting>(device_context_);
 
   // player setting
   player_setting_->setSyncPlayerCb([this]() { emit SyncPlayer(); });
@@ -195,7 +190,7 @@ XLidar::XLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
   pthread_setname_np(data_thread_->native_handle(), "pv/data");
   //
   omp_set_num_threads(num_threads_);
-  std::cout << "OpenMP will use threads:" << omp_get_max_threads() << std::endl;
+  LOG(INFO) << "OpenMP will use threads:" << omp_get_max_threads();
 }
 
 XLidar::~XLidar() {
@@ -240,8 +235,8 @@ void XLidar::initDriver() {
           playback_buffer_->addFrame(find_index - 1, new_point_cloud->timestamp,
                                      new_point_cloud);
         } else {
-          std::cout << "can't find frame in map,  offset_in_pcap is "
-                    << new_point_cloud->offset_in_pcap << std::endl;
+          LOG(INFO) << "can't find frame in map,  offset_in_pcap is "
+                    << new_point_cloud->offset_in_pcap;
         }
       } else {
         write_end = false;
@@ -263,8 +258,7 @@ void XLidar::initDriver() {
       }
       if (raw_pointcloud_buffer_.size() > 2) {
         raw_pointcloud_buffer_.pop_front();
-        std::cout << "[warning] converting too long, drop raw point cloud!"
-                  << std::endl;
+        LOG(INFO) << "[warning] converting too long, drop raw point cloud!";
       }
     }
   };
@@ -290,8 +284,7 @@ void XLidar::initDriver() {
           raw_pointcloud_buffer_.push_back(data);
           device_context_->updateCurrentFrame(idx);
         } else {
-          std::cout << "[warning] converting too long, drop raw point cloud!"
-                    << std::endl;
+          LOG(INFO) << "[warning] converting too long, drop raw point cloud!";
         }
       });
 }
@@ -312,34 +305,50 @@ void XLidar::convertToPclPointCloud(Frame& frame) {
     double v;
     PointT p2;
     auto& p = raw_pointcloud->points[i];
-    if (channel_idx == 0) {
-      v = 100;
-    } else if (channel_idx == 1) {
-      // x
-      v = p.x;
-    } else if (channel_idx == 2) {
-      // y
-      v = p.y;
-    } else if (channel_idx == 3) {
-      // z
-      v = p.z;
-    } else if (channel_idx == 4) {
-      // dis
-      v = p.distance;
-    } else if (channel_idx == 5) {
-      // intensity
-      v = p.intensity;
-    } else if (channel_idx == 6) {
-      // elongation
-      v = p.elongation;
-    } else if (channel_idx == 7) {
-      // laser id
-      v = 1 + p.laser_id % 8;
-    } else if (channel_idx == 8) {
-      // return id
-      v = p.return_id + 1;
-    } else if (channel_idx == 9) {
-      v = p.laser_id;
+    switch (channel_idx) {
+      case 0: {
+        v = 100;
+        break;
+      }
+      case 1: {
+        v = p.x;
+        break;
+      }
+      case 2: {
+        v = p.y;
+        break;
+      }
+      case 3: {
+        v = p.z;
+        break;
+      }
+      case 4: {
+        v = p.distance;
+        break;
+      }
+      case 5: {
+        v = p.intensity;
+        break;
+      }
+      case 6: {
+        v = p.elongation;
+        break;
+      }
+      case 7: {
+        v = 1 + p.laser_id % 8;
+        break;
+      }
+      case 8: {
+        v = p.return_id + 1;
+        break;
+      }
+      case 9: {
+        v = p.laser_id;
+        break;
+      }
+      default: {
+        break;
+      }
     }
     // v -> rgba[255,255,255,255]
     uint32_t rgba = colormap->get(v);
@@ -476,8 +485,7 @@ bool XLidar::update() {
     if (rendering_frame_buffer_.size() > max_frame_buffer_size_) {
       unused_frame_buffer_.push_back(rendering_frame_buffer_.front());
       rendering_frame_buffer_.pop_front();
-      std::cout << "[warning] rendering too long, drop point cloud frame!"
-                << std::endl;
+      LOG(INFO) << "[warning] rendering too long, drop point cloud frame!";
     }
     std::shared_ptr<RawPointCloud> current_raw_pointcloud = raw_pointcloud;
     if (unused_frame_buffer_.size() > 0) {
@@ -502,14 +510,14 @@ bool XLidar::update() {
   auto range_image_time =
       std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end4)
           .count();
-  std::cout << "udp packet number: " << current_frame_.n_udp_packets
+  LOG(INFO) << "udp packet number: " << current_frame_.n_udp_packets
             << ", total point number: " << current_frame_.n_points
             << ", valid point number: " << current_frame_.n_valid_points
-            << std::endl
+
             << "converting time: " << converting_time
             << ", to pcl: " << pcl_pointcloud_time
             << ", set pcl color: " << color_time
-            << ", to range_image: " << range_image_time << std::endl;
+            << ", to range_image: " << range_image_time;
   return true;
 }
 
@@ -517,6 +525,7 @@ bool XLidar::updateUI() {
   // update udp speed
   player_setting_->refreshUdpSpeed();
   adc_plot_->Update();
+  camera_image_->Update();
   Frame frame;
   {
     std::lock_guard<std::mutex> lock(frame_mutex_);
@@ -576,8 +585,8 @@ bool XLidar::updateUI() {
   auto pointcloud_time =
       std::chrono::duration_cast<std::chrono::milliseconds>(end1 - start)
           .count();
-  std::cout << "rendering time: " << rendering_time
-            << ", pointcloud: " << pointcloud_time << std::endl;
+  LOG(INFO) << "rendering time: " << rendering_time
+            << ", pointcloud: " << pointcloud_time;
   return true;
 }
 
@@ -622,7 +631,6 @@ bool XLidar::initFromConfig(std::shared_ptr<autox::pointview::Config>
 
   driver256_->config(min_distance_, max_distance_, hfov_start_, hfov_end_);
   //
-  pose_setting_->initFromConfig(config);
 
   laser_track_->initFromConfig(config);
   range_image_->InitFromConfig(config);
@@ -639,7 +647,6 @@ bool XLidar::storeToConfig(std::shared_ptr<autox::pointview::Config> config) {
   config->setParameter("driver.max_distance", max_distance_);
   config->setParameter("driver.hfov_start", hfov_start_);
   config->setParameter("driver.hfov_end", hfov_end_);
-  pose_setting_->storeToConfig(config);
 
   laser_track_->storeToConfig(config);
   range_image_->StoreToConfig(config);

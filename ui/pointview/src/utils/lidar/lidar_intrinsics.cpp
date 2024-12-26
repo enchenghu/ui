@@ -28,7 +28,7 @@ LidarIntrinsics::LidarIntrinsics(std::shared_ptr<DeviceContext> device_context,
   // lidar intrinsics load&save
   auto sub = device_context_->getPropertyTree()->createPropertySubTree(
       "lidar intrinsics");
-  
+
   label_intrinsics_file_ = std::make_shared<QLabel>();
   label_intrinsics_file_->setText("no intrinsics file");
   label_intrinsics_file_->setAlignment(Qt::AlignRight);
@@ -39,14 +39,14 @@ LidarIntrinsics::LidarIntrinsics(std::shared_ptr<DeviceContext> device_context,
   sub->addProperty("load file", load_intrinsics_button_);
   connect(load_intrinsics_button_.get(), &QPushButton::clicked, [this]() {
     if (device_context_->getPlayerState().is_playing) {
-      std::cout << "Don't load intrinsics file when playing." << std::endl;
+      LOG(INFO) << "Don't load intrinsics file when playing.";
       return;
     }
     QString qfilename =
         GetOpenFileName("Load lidar intrinsics file", QDir::homePath(),
                         "CSV Files(*.csv);;All Files(*.*)");
     if (qfilename.isNull()) {
-      Debug("Do not select a target directory.");
+      LOG(INFO) << "Do not select a target directory.";
       return;
     }
     loadIntrinsics(qfilename.toStdString());
@@ -60,7 +60,7 @@ LidarIntrinsics::LidarIntrinsics(std::shared_ptr<DeviceContext> device_context,
                                         QDir::homePath() + "/Untitled.csv",
                                         "CSV Files(*.csv);;All Files(*.*)");
     if (qfilename.isNull()) {
-      Debug("Do not select a target file.");
+      LOG(INFO) << "Do not select a target file.";
       return;
     }
     saveIntrinsics(qfilename.toStdString());
@@ -276,7 +276,7 @@ bool LidarIntrinsics::getIntrinsics() {
     origin_x_offset_.resize(laser_num_, 0);
     origin_y_offset_.resize(laser_num_, 0);
     origin_z_offset_.resize(laser_num_, 0);
-    std::cout << "invalid size of intrinsics data." << std::endl;
+    LOG(INFO) << "invalid size of intrinsics data.";
     success = false;
   }
   return success;
@@ -305,8 +305,8 @@ void LidarIntrinsics::loadIntrinsics(const std::string& filename) {
   if ((line.substr(0, header1.size()) != header1) &&
       (line.substr(0, header2.size()) != header2) &&
       (line.substr(0, header3.size()) != header3)) {
-    std::cout << "invalid intrainsic file: " << filename << ", header: " << line
-              << std::endl;
+    LOG(INFO) << "invalid intrainsic file: " << filename
+              << ", header: " << line;
     return;
   }
   // get data
@@ -319,7 +319,7 @@ void LidarIntrinsics::loadIntrinsics(const std::string& filename) {
   }
   // set intrinsics
   if (setIntrinsics()) {
-    std::cout << "load intrinsics successfully." << std::endl;
+    LOG(INFO) << "load intrinsics successfully.";
     getIntrinsics();
     // need update calibration widget
     updateCalibWidgetValue();
@@ -333,14 +333,13 @@ void LidarIntrinsics::saveIntrinsics(const std::string& filename) {
   // save
   std::ofstream out;
   out.open(filename, std::ios::out);
-  out << "Channel,Elevation,Azimuth,Distance,Origin X,Origin Y,Origin Z"
-      << std::endl;
+  out << "Channel,Elevation,Azimuth,Distance,Origin X,Origin Y,Origin Z";
   for (size_t i = 0; i < laser_num_; i++) {
     out << i + 1 << "," << elevation_offset_[i] << "," << azimuth_offset_[i]
         << "," << distance_offset_[i] << "," << origin_x_offset_[i] << ","
-        << origin_y_offset_[i] << "," << origin_z_offset_[i] << std::endl;
+        << origin_y_offset_[i] << "," << origin_z_offset_[i];
   }
-  std::cout << "save intrinsics successfully." << std::endl;
+  LOG(INFO) << "save intrinsics successfully.";
 }
 
 void LidarIntrinsics::updateCalibWidgetValue() {

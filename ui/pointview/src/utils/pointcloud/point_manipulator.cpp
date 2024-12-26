@@ -29,8 +29,8 @@ PointManipulator::PointManipulator(
         QString::fromStdString(channel_settings_[i].channel_name));
     if (colormap_idx_map_.find(channel_settings_[i].default_colormap_name) ==
         colormap_idx_map_.end()) {
-      std::cout << "Unsupported colormap: "
-                << channel_settings_[i].default_colormap_name << std::endl;
+      LOG(INFO) << "Unsupported colormap: "
+                << channel_settings_[i].default_colormap_name ;
       channel_settings_[i].default_colormap_name =
           colormap_names.at(0).toStdString();
     }
@@ -67,6 +67,20 @@ PointManipulator::PointManipulator(
   sub->addProperty("colorbar", colormap_label_);
   connect(colormap_label_.get(), SIGNAL(Resize()), this,
           SLOT(pointCloudColormapChanged()));
+  // gamma tree
+  auto gamma_enable_sub = sub->createPropertySubTree("gamma");
+  checkbox_enable_gamma_ = std::make_shared<QCheckBox>();
+  connect(checkbox_enable_gamma_.get(), &QCheckBox::stateChanged,
+          [this](int state) {
+            colormap_->setUseGamma(state > 0);
+          });
+  gamma_enable_sub->addProperty("enable", checkbox_enable_gamma_);
+  btn_gamma_file_choose_ = std::make_shared<QPushButton>("open");
+  connect(btn_gamma_file_choose_.get(), SIGNAL(clicked(bool)), this,
+        SLOT(openGammaFile()));
+  gamma_enable_sub->addProperty("gamma file", btn_gamma_file_choose_);
+  label_gamma_file_path_ = std::make_shared<QLabel>();
+  gamma_enable_sub->addProperty("file path", label_gamma_file_path_);
   //
   spinbox_point_size_ = std::make_shared<QSpinBox>();
   spinbox_point_size_->setRange(1, 5);
@@ -100,7 +114,7 @@ bool PointManipulator::InitFromConfig(
     if (colormap_idx_map_.find(colormap) != colormap_idx_map_.end()) {
       setting.default_colormap_name = colormap;
     } else {
-      std::cout << "Unsupported colormap: " << colormap << std::endl;
+      LOG(INFO) << "Unsupported colormap: " << colormap ;
     }
     config->getParameter(namespace_ + ".min_value", setting.default_range_min);
     config->getParameter(namespace_ + ".max_value", setting.default_range_max);
@@ -136,6 +150,26 @@ void PointManipulator::pointCloudChannelChanged(int index) {
   colormap_selection_->setCurrentIndex(
       colormap_idx_map_[setting.default_colormap_name]);
   device_context_->refreshPointCloud();
+}
+
+bool PointManipulator::readGammaFile(std::string filename) {
+  return colormap_->readGammaFile(filename);
+}
+
+void PointManipulator::openGammaFile()
+{
+  QString gamma_file = GetOpenFileName("Open gamma File", last_gamma_open_dirpath_,
+                                      "gamma File(*.csv);All Files(*.*)");
+  if (gamma_file.isNull()) {
+    LOG(INFO) << "Do not select a target file.";
+    return;
+  }
+  last_gamma_open_dirpath_ = QFileInfo(gamma_file).dir().absolutePath();
+  if(!readGammaFile(gamma_file.toStdString())) {
+    label_gamma_file_path_->setText("");
+    return;
+  }
+  label_gamma_file_path_->setText(gamma_file);
 }
 
 void PointManipulator::pointCloudRangeChanged() {

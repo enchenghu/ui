@@ -133,7 +133,7 @@ class XLidarDriver {
   float azimuth_offset_sin_[kLaserNum];
   double azimuth_unit_ = 0.012;
   // time
-  double laser_time_offset_[kLaserNum];
+  uint64_t laser_time_offset_[kLaserNum];
   // sin/cos table
   double sin_lookup_table_[kRotationMaxUnits];
   double cos_lookup_table_[kRotationMaxUnits];

@@ -199,7 +199,7 @@ bool PointFilter::checkValid(size_t i, double x, double y, double z) {
         return false;
       }
     } else {
-      std::cout << "warnning, index overflow in point filter" << std::endl;
+      LOG(INFO) << "warnning, index overflow in point filter" ;
       return false;
     }
   }
@@ -210,7 +210,7 @@ bool PointFilter::checkValid(size_t i, double x, double y, double z) {
         return false;
       }
     } else {
-      std::cout << "warnning, index overflow in point filter" << std::endl;
+      LOG(INFO) << "warnning, index overflow in point filter" ;
       return false;
     }
   }

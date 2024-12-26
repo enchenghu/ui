@@ -3,8 +3,8 @@
 #include "ui_fakelidarsetting.h"
 
 FakeLidar::FakeLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
-                     int device_id, const std::string& device_name)
-    : autox::pointview::DeviceBase(context, device_id, device_name),
+                     autox::pointview::DeviceBaseParameter& parameter)
+    : autox::pointview::DeviceBase(context, parameter),
       viewer_(context->getViewerPtr()),
       point_number_label_(new QLabel),
       cloud_(new PointCloudT) {
@@ -33,11 +33,10 @@ FakeLidar::FakeLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
         std::lock_guard<std::mutex>(this->lock);
         if (!device_context_->getRefreshState()) {
           point_cloud_.swap(point_cloud);
-          std::cout << "points size: " << point_cloud_->points.size()
-                    << std::endl;
+          LOG(INFO) << "points size: " << point_cloud_->points.size();
           device_context_->refreshPointCloud();
         } else {
-          std::cout << "drop a point cloud frame" << std::endl;
+          LOG(INFO) << "drop a point cloud frame";
         }
       });
   faker_point_generator_->createFloorScan(2, 360);
@@ -51,16 +50,16 @@ FakeLidar::FakeLidar(std::shared_ptr<autox::pointview::DisplayContext> context,
         auto start = std::chrono::steady_clock::now();
         faker_point_generator_->generate(0.05, 0.3);
         auto end = std::chrono::steady_clock::now();
-        std::cout << "Generate time: "
+        LOG(INFO) << "Generate time: "
                   << std::chrono::duration_cast<std::chrono::milliseconds>(
                          end - start)
                          .count()
-                  << " ms" << std::endl;
+                  << " ms";
         auto diff = 100ms - (end - start);
         if (diff > 0ms) {
           std::this_thread::sleep_for(diff);
         } else {
-          std::cout << "over" << std::endl;
+          LOG(INFO) << "over";
         }
       } else {
         std::this_thread::sleep_for(100ms);
@@ -151,11 +150,11 @@ bool FakeLidar::updateUI() {
   manipulator_->update(cloud_id);
   device_context_->resetRefreshState();
   auto end = std::chrono::steady_clock::now();
-  std::cout << "update time: "
+  LOG(INFO) << "update time: "
             << std::chrono::duration_cast<std::chrono::milliseconds>(end -
                                                                      start)
                    .count()
-            << " ms" << std::endl;
+            << " ms";
   point_number_label_->setText(QString::number(point_cloud_->points.size()));
   return true;
 }

@@ -5,6 +5,7 @@
 
 #include "pcap_udp_parser.h"
 
+#include <sys/stat.h>
 #ifdef _WIN32
 #include <Windows.h>
 #include <Winsock2.h>
@@ -22,7 +23,6 @@
 namespace autox {
 namespace pointview {
 using namespace std::chrono_literals;
-
 PcapUdpParser::~PcapUdpParser() {
   if (isOpen()) {
     this->close();
@@ -56,6 +56,16 @@ void PcapUdpParser::setFilter(std::string ip, uint16_t port) {
   }
 }
 
+std::string PcapUdpParser::getMdsum(const std::string& filename) {
+  struct stat statbuf;
+  int ret;
+  ret = stat(filename.c_str(), &statbuf);
+  if (ret != 0) return "";
+  std::string pcap_file_name =
+      filename.substr(filename.find_last_of('/') + 1, filename.size());
+  return pcap_file_name + "_" + std::to_string(statbuf.st_size);
+}
+
 bool PcapUdpParser::open(const std::string& file) {
   if (isOpen()) {
     close();
@@ -65,32 +75,30 @@ bool PcapUdpParser::open(const std::string& file) {
   offset_index_map_.clear();
   pcap_index_map_.clear();
   pcap_file_ = file;
-  pcap_file_real_ =
-      pcap_file_.substr(pcap_file_.find_last_of('/') + 1, pcap_file_.size());
-  if (file_offset_maps_.find(pcap_file_real_) != file_offset_maps_.end() && 
+  pcap_file_real_ = getMdsum(pcap_file_);
+  LOG(INFO) << "====pcap_file_real_ is " << pcap_file_real_;
+  if (file_offset_maps_.find(pcap_file_real_) != file_offset_maps_.end() &&
       pcap_index_maps_.find(pcap_file_real_) != pcap_index_maps_.end() &&
       pcap_cnt_map_.find(pcap_file_real_) != pcap_cnt_map_.end()) {
     ifInited = true;
     cnt_ = pcap_cnt_map_[pcap_file_real_];
   } else {
     if (!pcap_mem_path.empty()) {
-      std::cout
-          << "====can't find file in offset map, now write memory file....."
-          << std::endl;
+      LOG(INFO)
+          << "====can't find file in offset map, now write memory file.....";
       ifInited = false;
       outOffsetFile_.open(pcap_mem_path + "/file_offset.csv", ios::app);
       outPcapIndexFile_.open(pcap_mem_path + "/pcap_index.csv", ios::app);
       outOffsetFile_ << pcap_file_real_ << ',';
       outPcapIndexFile_ << pcap_file_real_ << ',';
     } else {
-      std::cout << "====can't find file in offset map, not save....."
-                << std::endl;
+      LOG(INFO) << "====can't find file in offset map, not save.....";
     }
   }
 
   pcap_handle_ = pcap_open_offline(pcap_file_.c_str(), err_buf_);
   if (pcap_handle_ == nullptr) {
-    std::cerr << "pcap_open: " << err_buf_ << std::endl;
+    std::cerr << "pcap_open: " << err_buf_;
     return false;
   }
   pcap_hdr_pos_ = ftell(pcap_file(pcap_handle_));
@@ -127,7 +135,7 @@ size_t PcapUdpParser::getPacketNumber() {
 bool PcapUdpParser::getPacket(uint8_t* data, size_t* len, double* timestamp,
                               int* port) {
   if (data == nullptr || len == nullptr) {
-    std::cout << "[PcapUdpParser]getPacket Argument nullptr" << std::endl;
+    LOG(INFO) << "[PcapUdpParser]getPacket Argument nullptr";
     eof_ = true;
     return false;
   }
@@ -136,10 +144,10 @@ bool PcapUdpParser::getPacket(uint8_t* data, size_t* len, double* timestamp,
   int ret = pcap_next_ex(pcap_handle_, &header, &p);
   if (ret < 0) {
     if (ret == -2) {
-      std::cout << "[PcapUdpParser] eof" << std::endl;
+      LOG(INFO) << "[PcapUdpParser] eof";
       eof_ = true;
     } else {
-      std::cout << "[PcapUdpParser]pcap_next_ex error" << std::endl;
+      LOG(INFO) << "[PcapUdpParser]pcap_next_ex error";
     }
     return false;
   }
@@ -155,11 +163,11 @@ bool PcapUdpParser::getPacket(uint8_t* data, size_t* len, double* timestamp,
   }
   auto ip = reinterpret_cast<const struct ip*>(p + ip_offset);
   if (ip->ip_v != 4) {
-    std::cout << "[PcapUdpParser] packet isn't not ipv4" << std::endl;
+    if(!ifInited) LOG(INFO) << "[PcapUdpParser] packet isn't not ipv4" ;
     return false;
   }
   if (ip->ip_p != IPPROTO_UDP) {
-    //std::cout << "[PcapUdpParser] packet isn't udp" << std::endl;
+    if(!ifInited) LOG(INFO) << "[PcapUdpParser] packet isn't udp" ;
     return false;
   }
   size_t udp_offset = ip_offset + ip->ip_hl * 4;
@@ -193,6 +201,7 @@ bool PcapUdpParser::parseAllPackets(std::function<bool(double)> progress_cb) {
     if (outOffsetFile_.is_open()) {
       outOffsetFile_ << cnt_ << ',';
     };
+    LOG(INFO) << "pcap file packet num is " << cnt_;
     pcap_cnt_map_[pcap_file_real_] = cnt_;
   }
   // parse pcap
@@ -212,7 +221,7 @@ bool PcapUdpParser::parseAllPackets(std::function<bool(double)> progress_cb) {
         auto jump_frame_idx = play_state.jump_frame_idx;
         cnt = findCntInMap(jump_frame_idx);
         if (cnt < 0) return false;
-        if(reset_driver_cb_) reset_driver_cb_();
+        if (reset_driver_cb_) reset_driver_cb_();
         reset_jump = true;
       }
       if (getPacket(data, &len)) {
@@ -224,7 +233,11 @@ bool PcapUdpParser::parseAllPackets(std::function<bool(double)> progress_cb) {
         if (udp_cb_)
           udp_cb_(data, len);  // driver_->parseLidarPacket(data, len);
       } else {
-        if(eof()) break;
+        if (eof()) {
+          LOG(INFO)
+              << "============warning!!! reading pcap file loop quit early";
+          break;
+        }
       }
       cnt++;
       // update progress
@@ -252,29 +265,28 @@ bool PcapUdpParser::parseAllPackets(std::function<bool(double)> progress_cb) {
 int PcapUdpParser::findCntInMap(int jump_frame_idx) {
   if (file_offset_maps_[pcap_file_real_].find(jump_frame_idx) !=
       file_offset_maps_[pcap_file_real_].end()) {
-    std::cout << "====find in file_offset_maps_, jump_frame_idx is "
+    LOG(INFO) << "====find in file_offset_maps_, jump_frame_idx is "
               << jump_frame_idx << ", offset is "
-              << file_offset_maps_[pcap_file_real_][jump_frame_idx]
-              << std::endl;
+              << file_offset_maps_[pcap_file_real_][jump_frame_idx];
 
     fseek(pcap_file(pcap_handle_),
           file_offset_maps_[pcap_file_real_][jump_frame_idx], SEEK_SET);
-          
+
     if (pcap_index_maps_[pcap_file_real_].find(jump_frame_idx) !=
         pcap_index_maps_[pcap_file_real_].end()) {
       return pcap_index_maps_[pcap_file_real_][jump_frame_idx];
     } else {
       if (pcap_index_maps_[pcap_file_real_].size() != 1) {
-        std::cout << "error!!can't find jump_frame_idx in pcap_index_map_, "
+        LOG(INFO) << "error!!can't find jump_frame_idx in pcap_index_map_, "
                      "jump_frame_idx is "
-                  << jump_frame_idx << std::endl;
+                  << jump_frame_idx;
       }
       return -2;
     }
   }
-  std::cout << "error!!can't find jump_frame_idx in pcap_offset_map_, "
+  LOG(INFO) << "error!!can't find jump_frame_idx in pcap_offset_map_, "
                "jump_frame_idx is "
-            << jump_frame_idx << std::endl;
+            << jump_frame_idx;
   return -1;
 }
 
@@ -288,7 +300,7 @@ bool PcapUdpParser::readPcapIndex(std::string filename) {
   std::ifstream csv_data(filename, std::ios::in);
   std::string line;
   if (!csv_data.is_open()) {
-    std::cout << "Error: opening pcap_index fail: " << filename << std::endl;
+    LOG(ERROR) << "Error: opening pcap_index fail: " << filename;
     return false;
   }
   std::istringstream sin;
@@ -318,7 +330,7 @@ bool PcapUdpParser::readFileOffset(std::string filename) {
   std::ifstream csv_data(filename, std::ios::in);
   std::string line;
   if (!csv_data.is_open()) {
-    std::cout << "Error: opening file_offset fail: " << filename << std::endl;
+    LOG(INFO) << "Error: opening file_offset fail: " << filename;
     return false;
   }
   std::istringstream sin;
@@ -333,13 +345,13 @@ bool PcapUdpParser::readFileOffset(std::string filename) {
     while (std::getline(sin, word, ',')) {
       if (read_file_name) {
         file_name = word;
-        std::cout << "file name is " << file_name << std::endl;
+        LOG(INFO) << "file name is " << file_name;
         read_file_name = false;
         continue;
       }
       if (read_pkg_cnt) {
         if (!file_name.empty()) pcap_cnt_map_[file_name] = std::stoi(word);
-        std::cout << "pkg cnt is " << std::stoi(word) << std::endl;
+        LOG(INFO) << "pkg cnt is " << std::stoi(word);
         read_pkg_cnt = false;
         continue;
       }

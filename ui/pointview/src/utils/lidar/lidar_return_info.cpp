@@ -7,6 +7,8 @@
 
 #include <iostream>
 
+#include <glog/logging.h>
+
 namespace autox {
 namespace pointview {
 
@@ -19,8 +21,7 @@ LidarReturnInfo::LidarReturnInfo(
   // init return mode map
   for (auto& setting : return_settings) {
     if (setting.retrun_names.size() > 2) {
-      std::cout << "only support single return and dual return mode!"
-                << std::endl;
+      LOG(INFO) << "only support single return and dual return mode!";
       continue;
     }
     std::vector<QString> retrun_names;
@@ -43,7 +44,7 @@ void LidarReturnInfo::update(uint8_t return_mode) {
   return_mode_ = return_mode;
   auto it = return_mode_map_.find(return_mode);
   if (it == return_mode_map_.end()) {
-    std::cout << "unknow return mode: " << return_mode << std::endl;
+    LOG(INFO) << "unknow return mode: " << return_mode;
     return_mode_selection_->clear();
     return_mode_selection_->addItem("unknown");
     return;

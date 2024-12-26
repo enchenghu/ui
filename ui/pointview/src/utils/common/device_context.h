@@ -13,6 +13,12 @@
 namespace autox {
 namespace pointview {
 
+struct DeviceBaseParameter {
+  int device_id;
+  std::string device_name;
+  std::string type_name;
+};
+
 struct PlayerState {
   bool is_playback;
   // play
@@ -53,12 +59,13 @@ class DeviceContext {
 
  public:
   DeviceContext(QObject* parent,
-                std::shared_ptr<DisplayContext> display_context, int device_id,
-                const std::string& device_name = "unknown");
+                std::shared_ptr<DisplayContext> display_context,
+                DeviceBaseParameter& parameter);
   QObject* getParent();
   std::shared_ptr<DisplayContext> getDisplayContext();
   int getDeviceId();
   std::string getDeviceName() { return device_name_; }
+  std::string getTypeName() { return type_name_; }
   // refresh
   void refreshPointCloud();
   bool getRefreshState();
@@ -109,6 +116,7 @@ class DeviceContext {
   std::vector<TriggerCallback> stop_recorder_funcs_;
   // device name
   std::string device_name_;
+  std::string type_name_;
 };
 
 }  // namespace pointview

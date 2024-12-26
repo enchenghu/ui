@@ -43,7 +43,7 @@ class HesaiPandar128 : public autox::pointview::DeviceBase {
     size_t n_valid_points;
   };
   HesaiPandar128(std::shared_ptr<autox::pointview::DisplayContext> context,
-                 int device_id, const std::string& device_name);
+                 autox::pointview::DeviceBaseParameter& parameter);
   ~HesaiPandar128();
   bool updateUI() override;
   bool initFromConfig(

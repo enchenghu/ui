@@ -98,10 +98,11 @@ bool UdpInput::open(uint16_t port) {
   if (isOpen()) {
     this->close();
   }
+  LOG(INFO) << "Open port: " << port;
   //  std::lock_guard<std::mutex> lk(socket_mutex_);
   socket_fd_ = socket(PF_INET, SOCK_DGRAM, 0);
   if (socket_fd_ == -1) {
-    Debug("Create socket failed.");
+    LOG(INFO) << "Create socket failed.";
     return false;
   }
   if (timeout_ > 0) {
@@ -109,7 +110,7 @@ bool UdpInput::open(uint16_t port) {
     tv.tv_sec = static_cast<int>(timeout_);
     tv.tv_usec = static_cast<int>((timeout_ - tv.tv_sec) * 1e6);
     if (setsockopt(socket_fd_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-      Debug("Set timeout failed.");
+      LOG(INFO) << "Set timeout failed.";
       return false;
     }
   }
@@ -118,13 +119,13 @@ bool UdpInput::open(uint16_t port) {
   socklen_t optlen = sizeof(recv_buf_size);
   if (setsockopt(socket_fd_, SOL_SOCKET, SO_RCVBUF, &recv_buf_size, optlen) <
       0) {
-    Debug("Set socket buffer size error");
+    LOG(INFO) << "Set socket buffer size error";
     return false;
   }
   // get receive buffer
   if (getsockopt(socket_fd_, SOL_SOCKET, SO_RCVBUF, &recv_buf_size, &optlen) <
       0) {
-    Debug("Get socket buffer size error");
+    LOG(INFO) << "Get socket buffer size error";
 
     return false;
   }
@@ -132,11 +133,11 @@ bool UdpInput::open(uint16_t port) {
   const int enable = 1;
   if (setsockopt(socket_fd_, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) <
       0) {
-    Debug("Setsockopt(SO_REUSEADDR) failed.");
+    LOG(INFO) << "Setsockopt(SO_REUSEADDR) failed.";
   }
-  Debug("Set udp socket recv buff size: " +
-        std::to_string(socket_recv_buffer_size_) + "->" +
-        std::to_string(recv_buf_size / 2));
+  LOG(INFO) << "Set udp socket recv buff size: " +
+                   std::to_string(socket_recv_buffer_size_) + "->" +
+                   std::to_string(recv_buf_size / 2);
 
   sockaddr_in myAddress;                          // my address information
   memset(&myAddress, 0, sizeof(myAddress));       // initialize to zeros
@@ -145,7 +146,7 @@ bool UdpInput::open(uint16_t port) {
   myAddress.sin_addr.s_addr = htonl(INADDR_ANY);  // automatically fill in my IP
   if (bind(socket_fd_, reinterpret_cast<sockaddr*>(&myAddress),
            sizeof(sockaddr)) == -1) {
-    Debug("Socket bind failed");
+    LOG(INFO) << "Socket bind failed";
     return false;
   }
   udp_port_ = port;
@@ -185,7 +186,7 @@ bool UdpInput::getPacket(uint8_t* data, size_t& len) {
 
 bool UdpInput::poll() {
   if (!udp_cb_) {
-    std::cerr << "[UdpInput] no udp callback." << std::endl;
+    std::cerr << "[UdpInput] no udp callback.";
     std::this_thread::sleep_for(10ms);
     return false;
   }
@@ -208,8 +209,7 @@ bool UdpInput::poll() {
           unused_udp_packets_.push_back(udp_packets_.front());
           udp_packets_.pop_front();
         }
-        std::cout << "[UdpInput] warning, udp deque is full, clear all buffer."
-                  << std::endl;
+        LOG(INFO) << "[UdpInput] warning, udp deque is full, clear all buffer.";
         return false;
       }
       pkt = unused_udp_packets_.front();
@@ -245,13 +245,13 @@ bool UdpInput::stopRecorder() {
   pcap_recorder_->setRecordStatus(false);
   pcap_recorder_->stopRecordTask();
   // save record udp packets
-  /*   std::cout << "[UdpInput] recorder_buffer size:"
-              << pcap_recorder_->getPacketCount() << std::endl;
+  /*   LOG(INFO) << "[UdpInput] recorder_buffer size:"
+              << pcap_recorder_->getPacketCount() ;
     if (pcap_recorder_->getPacketCount() == 0) {
       return true;
     }
     if (pcap_recorder_->save(save_file_path, progress_cb)) {
-      std::cout << "[UdpInput] save recorder successfully!" << std::endl;
+      LOG(INFO) << "[UdpInput] save recorder successfully!" ;
     } */
   return true;
 }

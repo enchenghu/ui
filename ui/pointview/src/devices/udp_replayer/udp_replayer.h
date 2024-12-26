@@ -5,6 +5,7 @@
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QLabel>
+#include <QLineEdit>
 #include <QPushButton>
 
 #include "utils/common/device_base.h"
@@ -22,7 +23,7 @@ class UdpReplayer : public autox::pointview::DeviceBase {
   };
   using PlaybackBuffer = autox::pointview::PlaybackBuffer<UdpPacket>;
   UdpReplayer(std::shared_ptr<autox::pointview::DisplayContext> context,
-              int device_id, const std::string& device_name);
+              autox::pointview::DeviceBaseParameter& parameter);
   ~UdpReplayer() override;
   bool updateUI() override { return true; };
   bool initFromConfig(
@@ -43,6 +44,8 @@ class UdpReplayer : public autox::pointview::DeviceBase {
   std::shared_ptr<QCheckBox> checkbox_enable_constant_fps_;
   std::shared_ptr<QDoubleSpinBox> spinbox_constant_fps_;
   std::shared_ptr<QComboBox> lidar_type_fps_;
+  std::shared_ptr<QCheckBox> checkbox_custom_ip_;
+  std::shared_ptr<QLineEdit> custom_ip_edit_;
   // for pcap playback
   std::shared_ptr<autox::pointview::PcapUdpParser> pcap_parser_;
   std::shared_ptr<PlaybackBuffer> playback_buffer_;
@@ -56,8 +59,11 @@ class UdpReplayer : public autox::pointview::DeviceBase {
   std::condition_variable read_packets_ok_;
   //
   QString last_pcap_open_dirpath_;
+  // constant fps
   bool use_constant_fps_{false};
   double constant_fps_{1000};
+  // custom ip
+  bool use_custom_ip_{false};
   size_t packet_cnt_{0};
 };
 

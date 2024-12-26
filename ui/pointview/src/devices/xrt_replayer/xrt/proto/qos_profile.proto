@@ -1,0 +1,38 @@
+syntax = "proto2";
+
+package autox.xrt.proto;
+
+enum QosHistoryPolicy {
+  HISTORY_SYSTEM_DEFAULT = 0;
+  HISTORY_KEEP_LAST = 1;
+  HISTORY_KEEP_ALL = 2;
+};
+
+enum QosReliabilityPolicy {
+  RELIABILITY_SYSTEM_DEFAULT = 0;
+  RELIABILITY_RELIABLE = 1;
+  RELIABILITY_BEST_EFFORT = 2;
+};
+
+enum QosDurabilityPolicy {
+  DURABILITY_SYSTEM_DEFAULT = 0;
+  DURABILITY_TRANSIENT_LOCAL = 1;
+  DURABILITY_VOLATILE = 2;
+};
+
+enum QosPublishModePolicy {
+  SYNCHRONOUS_PUBLISH_MODE = 0;
+  ASYNCHRONOUS_PUBLISH_MODE = 1;
+};
+
+message QosProfile {
+  optional QosHistoryPolicy history = 1 [default = HISTORY_KEEP_LAST];
+  optional uint32 depth = 2 [default = 1];  // capacity of history
+  optional uint32 mps = 3 [default = 0];    // messages per second
+  optional QosReliabilityPolicy reliability = 4
+      [default = RELIABILITY_RELIABLE];
+  optional QosDurabilityPolicy durability = 5 [default = DURABILITY_VOLATILE];
+  optional QosPublishModePolicy publish_mode = 6
+      [default = SYNCHRONOUS_PUBLISH_MODE];
+  optional string flow_controller_name = 7 [default = ""];
+};

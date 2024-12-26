@@ -3,6 +3,7 @@
 
 // Qt
 
+#include <QDir>
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QTimer>
@@ -16,6 +17,8 @@
 // vtk
 #include <vtkAreaPicker.h>
 // custom
+#include <QDebug>
+
 #include "app_control.h"
 #include "device_factory.h"
 #include "tools/circle.h"
@@ -23,7 +26,6 @@
 #include "tools/grid.h"
 #include "tools/point_distance_measure.h"
 #include "tools/scale_bar.h"
-#include "ui_mainwindow.h"
 #include "utils/config.h"
 
 namespace Ui {
