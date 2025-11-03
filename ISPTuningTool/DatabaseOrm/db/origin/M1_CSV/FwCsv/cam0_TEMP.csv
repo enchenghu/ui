@@ -1,0 +1,21 @@
+"base_addr";0x30082a00;"addr_bits";8;;
+parameter;ACK_DLY=0;;;;
+;;;;;
+;;;;;
+"module_name";"cam0_TEMP";;;;
+"sub_addr";"addr";"RW";"bits";"default (hex)";"description"
+"0x00";2a00;"RW";8;5;"0~255";
+;;;"[7:0]";;"r_nMaxReadTimes[7:0]"
+"0x01";2a01;"RW";8;1;"0~1";
+;;;"[7:0]";;"r_bManualEnable[7:0]"
+"0x02";2a02;"RW";8;1;"0~1";
+;;;"[7:0]";;"r_bTemperatureOpt[7:0]"
+"0x04";2a04;"RW";8;0;"-32768~32767";
+;;;"[7:0]";;"r_nManualTemperature[7:0]"
+"0x05";2a05;"RW";8;1;;
+;;;"[7:0]";;"r_nManualTemperature[15:8]"
+"0x06";2a06;"RW";8;f;"0~255";
+;;;"[7:0]";;"r_nTemperatureThr[7:0]"
+"0x07";2a07;"RW";8;0;"0~1";
+;;;"[7:0]";;"r_nCalculateOpt[7:0]"
+"end";;;;;

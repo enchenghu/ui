@@ -1,0 +1,21 @@
+﻿cmake_minimum_required(VERSION 3.5)
+project(M1FlashLib VERSION 0.1 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+file(GLOB PROJECT_SOURCES
+    "*.cpp"
+    "*.h"
+)
+
+add_library(M1FlashLib SHARED ${PROJECT_SOURCES})
+target_compile_definitions(M1FlashLib PRIVATE M1_FLASH_LIBRARY)
+
+if(${M1FLASHLIB_COPY_OUTPUT}) 
+    add_custom_command(TARGET M1FlashLib POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/M1FlashLib.h ${CMAKE_SOURCE_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:M1FlashLib> ${CMAKE_SOURCE_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:M1FlashLib> ${CMAKE_SOURCE_DIR}/bin
+    )
+endif(${M1FLASHLIB_COPY_OUTPUT})

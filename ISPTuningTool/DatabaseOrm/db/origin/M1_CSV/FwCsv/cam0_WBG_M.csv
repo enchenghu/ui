@@ -1,0 +1,9 @@
+"base_addr";0x300800f0;"addr_bits";8;;
+parameter;ACK_DLY=0;;;;
+;;;;;
+;;;;;
+"module_name";"cam0_WBG_M";;;;
+"sub_addr";"addr";"RW";"bits";"default (hex)";"description"
+"0x00";00f0;"RW";8;0;"0~1";
+;;;"[7:0]";;"bLFS[7:0]"
+"end";;;;;

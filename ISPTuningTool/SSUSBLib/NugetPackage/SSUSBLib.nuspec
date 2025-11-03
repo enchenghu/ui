@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>SSUSBLib</id>
+    <version>1.0.6</version>
+    <authors>SmartSens</authors>
+    <description>Library for comunicating with SmartSensDemoSens</description>
+    <dependencies>
+      <dependency id="libusb-1.0" version="1.0.21.11156" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="../bin/x64/SSUSBLib.dll" target="runtimes/native/SSUSBLib.dll" />
+    <file src="../bin/x64/SSUSBLib.lib" target="lib/native/SSUSBLib.lib" />
+    <file src="../SSUSBLib/SSUSBLib.h" target="build/native/include/SSUSBLib.h" />
+    <file src="SSUSBLib.targets" target="build/native" />
+  </files>
+</package>

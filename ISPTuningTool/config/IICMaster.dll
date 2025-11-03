@@ -1,0 +1,15 @@
+//Slave addr,value,bitMask,addrlength,valuelength
+//1.bitMask0x00，将value值写入寄存器
+//2.bitMask非0x00，按寄存器bit位写入(0x01:bit位写1；0x00:bit位写0)
+[Start] 
+0x22,0x31004005,0x00,0x80,4,1
+[End]
+0x22,0x31004005,0x01,0x80,4,1
+
+
+
+
+
+
+
+

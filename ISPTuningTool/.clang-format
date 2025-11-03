@@ -1,0 +1,69 @@
+BasedOnStyle: WebKit
+
+Standard: c++17
+
+ColumnLimit: 120
+CommentPragmas: "^!|^:|^ SPDX-License-Identifier:"
+
+PointerBindsToType: false
+
+SpaceAfterTemplateKeyword: true
+
+BreakBeforeBinaryOperators: NonAssignment
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+    AfterClass: true
+    AfterControlStatement: false
+    AfterEnum: false
+    AfterFunction: true
+    AfterNamespace: false
+    AfterObjCDeclaration: false
+    AfterStruct: true
+    AfterUnion: false
+    BeforeCatch: false
+    BeforeElse: false
+    IndentBraces: false
+
+PackConstructorInitializers: Never
+BreakConstructorInitializers: BeforeComma
+ConstructorInitializerIndentWidth: 4
+
+ContinuationIndentWidth: 4
+
+NamespaceIndentation: None
+
+IndentPPDirectives: AfterHash
+PPIndentWidth: 2
+
+AlignAfterOpenBracket: DontAlign
+AlwaysBreakTemplateDeclarations: true
+
+AllowShortFunctionsOnASingleLine: Inline
+
+SortIncludes: CaseSensitive
+
+ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH, forever, Q_FOREVER, QBENCHMARK, QBENCHMARK_ONCE ]
+
+FixNamespaceComments: true
+
+ShortNamespaceLines: 1
+
+AlignEscapedNewlines: Left
+
+SpaceBeforeCpp11BracedList: false
+
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveDeclarations: Consecutive
+AlignConsecutiveMacros: AcrossEmptyLinesAndComments
+AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+
+---
+# Use the Google-based style for .proto files.
+Language: Proto
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 100

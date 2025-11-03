@@ -1,0 +1,23 @@
+<!-- locates in build/native/ -->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <SSUSBLibLibs Include="$(MSBuildThisFileDirectory)..\..\lib\native\*.lib" />
+  </ItemGroup>
+  <PropertyGroup>
+    <SSUSBLibLibraries>@(SSUSBLibLibs)</SSUSBLibLibraries>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalDependencies>$(SSUSBLibLibraries);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <SSUSBLibBinaries Include="$(MSBuildThisFileDirectory)..\..\runtimes\native\*.dll" />
+  </ItemGroup>
+  <Target Name="CopySSUSBLibBinaries" AfterTargets="Build">
+    <Copy SourceFiles="@(SSUSBLibBinaries)" DestinationFolder="$(TargetDir)" />
+  </Target>
+</Project>

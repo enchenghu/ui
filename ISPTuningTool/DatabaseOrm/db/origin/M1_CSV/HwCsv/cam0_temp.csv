@@ -1,0 +1,10 @@
+"base_addr";0x31003910;"addr_bits";8;;
+parameter;ACK_DLY=0;;;;
+;;;;;
+;;;;;
+"module_name";"NewFuncPatch_ImgFmt";;;;
+"sub_addr";"addr";"RW";"bits";"default (hex)";"description"
+"0x00";3910;"RW";8;0;;
+;;;"[7:0]";;"r_nCurTemp[7:0]"
+"0x01";3911;"RW";8;0;;
+;;;"[7:0]";;"r_nCurTemp[15:8]"

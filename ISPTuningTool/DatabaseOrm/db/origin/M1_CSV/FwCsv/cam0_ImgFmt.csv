@@ -1,0 +1,24 @@
+"base_addr";0x3008004C;"addr_bits";8;;
+parameter;ACK_DLY=0;;;;
+parameter;DW=12;;;;
+;;;;;
+;;;;;
+"module_name";"cam0_ImgFmt";;;;
+"sub_addr";"addr";"RW";"bits";"default (hex)";"description"
+"0x0a";0056;"RW";8;80;"0~8192";
+;;;"[7:0]";;"nWidth[7:0]"
+"0x0b";0057;"RW";8;7;;
+;;;"[7:0]";;"nWidth[15:8]"
+"0x0c";0058;"RW";8;d8;"0~8192";
+;;;"[7:0]";;"nHeight[7:0]"
+"0x0d";0059;"RW";8;4;;
+;;;"[7:0]";;"nHeight[15:8]"
+"0x02";004e;"RW";8;40;"256~1024";
+;;;"[7:0]";;"nBLC[7:0]"
+"0x03";004f;"RW";DW-8;0;;
+;;;"[DW-9:0]";;"nBLC[DW-1:8]"
+"0x0e";005a;"RW";8;0;"511~26";
+;;;"[7:0]";;"nCurTemperature[7:0]"
+"0x0f";005b;"RW";8;1;;
+;;;"[7:0]";;"nCurTemperature[15:8]"
+"end";;;;;

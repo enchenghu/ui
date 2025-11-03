@@ -1,0 +1,21 @@
+"base_addr";0x300813F0;"addr_bits";8;;
+parameter;ACK_DLY=0;;;;
+;;;;;
+;;;;;
+"module_name";"cam0_FPNC";;;;
+"sub_addr";"addr";"RW";"bits";"default (hex)";"description"
+"0x00";13f0;"RW";8;1;"0~1";
+;;;"[7:0]";;"bFPNGainEnable[7:0]"
+"0x02";13f2;"RW";8;0;"0~65535";
+;;;"[7:0]";;"pCaliTemperatue[0][7:0]"
+"0x03";13f3;"RW";8;0;;
+;;;"[7:0]";;"pCaliTemperatue[0][15:8]"
+"0x04";13f4;"RW";8;40;"0~65535";
+;;;"[7:0]";;"pCaliTemperatue[1][7:0]"
+"0x05";13f5;"RW";8;6;;
+;;;"[7:0]";;"pCaliTemperatue[1][15:8]"
+"0x06";13f6;"RW";8;0;"0~255";
+;;;"[7:0]";;"nNormNoiseOffset[7:0]"
+"0x07";13f7;"RW";8;40;"0~255";
+;;;"[7:0]";;"nNormMaxNoise[7:0]"
+"end";;;;;

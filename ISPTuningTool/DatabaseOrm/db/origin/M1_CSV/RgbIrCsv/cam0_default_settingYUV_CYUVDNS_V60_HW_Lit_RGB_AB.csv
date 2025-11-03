@@ -1,0 +1,9 @@
+"base_addr";30031bb0;"addr_bits";8;;
+parameter;ACK_DLY=0;;;;
+;;;;;
+;;;;;
+"module_name";"CYUVDNS_V60_HW_RGB_AB";;;;
+"sub_addr";"addr";"RW";"bits";"default (hex)";"description"
+"0x00";1bb0;"RW";3;7;;
+;;;"[2:0]";"M";"r_shp_limit_rat[2:0]"
+"end";;;;;
